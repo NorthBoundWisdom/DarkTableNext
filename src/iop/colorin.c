@@ -436,11 +436,11 @@ static inline void _apply_blue_mapping(const float *const in, float *const out)
     }
 }
 
-// legacy processing (IOP versions 1 and 2, 2014 and earlier)
-static void _process_cmatrix_bm(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
-                                const void *const ivoid, void *const ovoid,
-                                const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out,
-                                const dt_aligned_pixel_t corr)
+static void process_cmatrix_blue_mapping(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
+                                         const void *const ivoid, void *const ovoid,
+                                         const dt_iop_roi_t *const roi_in,
+                                         const dt_iop_roi_t *const roi_out,
+                                         const dt_aligned_pixel_t corr)
 {
     const dt_iop_colorin_data_t *const d = piece->data;
     const int clipping = (d->nrgb != NULL);
@@ -704,7 +704,7 @@ static void process_cmatrix(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece
     }
     else if (blue_mapping)
     {
-        _process_cmatrix_bm(self, piece, ivoid, ovoid, roi_in, roi_out, corr);
+        process_cmatrix_blue_mapping(self, piece, ivoid, ovoid, roi_in, roi_out, corr);
     }
     else
     {
@@ -712,10 +712,10 @@ static void process_cmatrix(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece
     }
 }
 
-// legacy processing (IOP versions 1 and 2, 2014 and earlier)
-static void process_lcms2_bm(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
-                             const void *const ivoid, void *const ovoid,
-                             const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
+static void process_lcms2_blue_mapping(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
+                                       const void *const ivoid, void *const ovoid,
+                                       const dt_iop_roi_t *const roi_in,
+                                       const dt_iop_roi_t *const roi_out)
 {
     const dt_iop_colorin_data_t *const d = piece->data;
     const size_t height = roi_out->height;
@@ -841,7 +841,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
         // use general lcms2 fallback
         if (blue_mapping)
         {
-            process_lcms2_bm(self, piece, ivoid, ovoid, roi_in, roi_out);
+            process_lcms2_blue_mapping(self, piece, ivoid, ovoid, roi_in, roi_out);
         }
         else
         {
