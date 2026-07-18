@@ -22,15 +22,12 @@
 
 typedef enum dt_develop_blend_mode_t
 {
-  DEVELOP_BLEND_DISABLED_OBSOLETE = 0x00, /* same as the new normal */
-  DEVELOP_BLEND_NORMAL_OBSOLETE = 0x01, /* obsolete as it did clamping */
   DEVELOP_BLEND_LIGHTEN = 0x02,
   DEVELOP_BLEND_DARKEN = 0x03,
   DEVELOP_BLEND_MULTIPLY = 0x04,
   DEVELOP_BLEND_AVERAGE = 0x05,
   DEVELOP_BLEND_ADD = 0x06,
   DEVELOP_BLEND_SUBTRACT = 0x07,
-  DEVELOP_BLEND_DIFFERENCE = 0x08, /* deprecated */
   DEVELOP_BLEND_SCREEN = 0x09,
   DEVELOP_BLEND_OVERLAY = 0x0A,
   DEVELOP_BLEND_SOFTLIGHT = 0x0B,
@@ -42,8 +39,6 @@ typedef enum dt_develop_blend_mode_t
   DEVELOP_BLEND_CHROMA = 0x11,
   DEVELOP_BLEND_HUE = 0x12,
   DEVELOP_BLEND_COLOR = 0x13,
-  DEVELOP_BLEND_INVERSE_OBSOLETE = 0x14, /* obsolete */
-  DEVELOP_BLEND_UNBOUNDED_OBSOLETE = 0x15, /* obsolete as new normal takes over */
   DEVELOP_BLEND_COLORADJUST = 0x16,
   DEVELOP_BLEND_DIFFERENCE2 = 0x17,
   DEVELOP_BLEND_NORMAL2 = 0x18,
@@ -58,10 +53,7 @@ typedef enum dt_develop_blend_mode_t
   DEVELOP_BLEND_RGB_R = 0x21,
   DEVELOP_BLEND_RGB_G = 0x22,
   DEVELOP_BLEND_RGB_B = 0x23,
-  DEVELOP_BLEND_MULTIPLY_REVERSE_OBSOLETE = 0x24, /* obsoleted by MULTIPLY + REVERSE */
-  DEVELOP_BLEND_SUBTRACT_INVERSE = 0x25,
   DEVELOP_BLEND_DIVIDE = 0x26,
-  DEVELOP_BLEND_DIVIDE_INVERSE = 0x27,
   DEVELOP_BLEND_GEOMETRIC_MEAN = 0x28,
   DEVELOP_BLEND_HARMONIC_MEAN = 0x29,
 
@@ -593,10 +585,6 @@ blendop_Lab(__read_only image2d_t in_a, __read_only image2d_t in_b, __read_only 
       o =  clamp(a * (1.0f - opacity) +  (b + a - fabs(min + max)) * opacity, min, max);
       break;
 
-    case DEVELOP_BLEND_DIFFERENCE:
-      o = clamp(la * (1.0f - opacity) + fabs(la - lb) * opacity, lmin, lmax) - fabs(min);
-      break;
-
     case DEVELOP_BLEND_DIFFERENCE2:
       to = fabs(a - b) / fabs(max - min);
       to.x = fmax(to.x, fmax(to.y, to.z));
@@ -861,7 +849,6 @@ blendop_RAW(__read_only image2d_t in_a, __read_only image2d_t in_b, __read_only 
       o =  clamp(a * (1.0f - opacity) +  (b + a - fabs(min + max)) * opacity, min, max);
       break;
 
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
       o = clamp(la * (1.0f - opacity) + fabs(la - lb) * opacity, lmin, lmax) - fabs(min);
       break;
@@ -1008,7 +995,6 @@ blendop_RAW4(__read_only image2d_t in_a, __read_only image2d_t in_b, __read_only
       o =  clamp(a * (1.0f - opacity) +  (b + a - fabs(min + max)) * opacity, min, max);
       break;
 
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
       o = clamp(la * (1.0f - opacity) + fabs(la - lb) * opacity, lmin, lmax) - fabs(min);
       break;
@@ -1157,7 +1143,6 @@ blendop_rgb_hsl(__read_only image2d_t in_a, __read_only image2d_t in_b, __read_o
       o =  clamp(a * (1.0f - opacity) +  (b + a - fabs(min + max)) * opacity, min, max);
       break;
 
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
       o = clamp(la * (1.0f - opacity) + fabs(la - lb) * opacity, lmin, lmax) - fabs(min);
       break;
@@ -1351,11 +1336,6 @@ blendop_rgb_jzczhz(__read_only image2d_t in_a, __read_only image2d_t in_b, __rea
       o = a * (1.0f - opacity) + fmax(a - blend_parameter * b, 0.0f) * opacity;
       break;
 
-    case DEVELOP_BLEND_SUBTRACT_INVERSE:
-      o = a * (1.0f - opacity) + fmax(b - blend_parameter * a, 0.0f) * opacity;
-      break;
-
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
       o = a * (1.0f - opacity) + fabs(a - b) * opacity;
       break;
@@ -1392,10 +1372,6 @@ blendop_rgb_jzczhz(__read_only image2d_t in_a, __read_only image2d_t in_b, __rea
 
     case DEVELOP_BLEND_DIVIDE:
       o = a * (1.0f - opacity) + a / fmax(b * blend_parameter, 1e-6f) * opacity;
-      break;
-
-    case DEVELOP_BLEND_DIVIDE_INVERSE:
-      o = a * (1.0f - opacity) + b / fmax(a * blend_parameter, 1e-6f) * opacity;
       break;
 
     case DEVELOP_BLEND_GEOMETRIC_MEAN:

@@ -106,6 +106,7 @@
   - 已清理通用层的残留兼容入口：移除旧缩略图缓存命名查找、空的导入会话迁移钩子、地点 API 拼写回退，并将 IOP 顺序的应用操作去除迁移命名。
   - 已移除 colorbalance 的 sRGB legacy 模式及其 CPU/OpenCL 实现；仅保留 ProPhoto RGB 的 lift/gamma/gain 与 slope/offset/power 模式。
   - 已移除 filmicrgb 的 color science v1 与未归一化 Euclidean v1：CPU/OpenCL 处理、曲线预览与隐藏 UI 入口均不再保留，highlight reconstruction 使用当前归一化 Euclidean norm。
+  - 已从 OpenCL 混合内核删除不再由宿主公开的 disabled/normal/difference、inverse、unbounded、multiply reverse、subtract inverse 与 divide inverse 枚举及其处理分支；内核仅实现当前混合合同。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
