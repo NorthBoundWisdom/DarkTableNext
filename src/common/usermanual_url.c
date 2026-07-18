@@ -231,7 +231,7 @@ char *dt_get_manual_base_url()
 {
     char *base_url = _get_base_url();
 
-    // The base_url is: docs.darktable.org/usermanual
+    // The base URL comes from the active project documentation setting.
     // The full format for the documentation pages is:
     //    <base-url>/<ver>/<lang>[/path/to/page]
     // Where:

@@ -729,7 +729,7 @@ time_error:
                                  time_str, time_str);
     }
     bytes_written += fprintf(pdf->fd,
-                             "/Producer (%s https://www.darktable.org)\n"
+                             "/Producer (%s " PACKAGE_URL ")\n"
                              ">>\n"
                              "endobj\n",
                              PACKAGE_STRING);

@@ -1,11 +1,5 @@
 add_subdirectory(external)
 if(USE_AI)
-  find_package(ONNXRuntime QUIET)
-  if(NOT ONNXRuntime_FOUND)
-    message(FATAL_ERROR "ONNX Runtime not found")
-  endif()
-endif()
-if(USE_AI)
   add_subdirectory(ai)
 endif(USE_AI)
 
@@ -367,24 +361,11 @@ if(USE_HEIF)
   endif()
 endif()
 
-# LibRaw is provided by the pinned FreeCM source root unless a suitable system
-# library is explicitly requested.
+# LibRaw is always built from the pinned FreeCM source root.
 if(USE_LIBRAW)
-  if(DONT_USE_INTERNAL_LIBRAW)
-    find_package(libraw 0.21.0)
-    if(libraw_FOUND)
-      message(STATUS "Using system LibRaw")
-      list(APPEND LIBS ${libraw_LIBRARY})
-      add_definitions(-DHAVE_LIBRAW=1)
-      list(APPEND SOURCES "imageio/imageio_libraw.c")
-    else()
-      message(STATUS "System LibRaw not found or not suitable, building from intree copy")
-    endif()
-  else()
-    message(STATUS "Building LibRaw from intree copy")
-    add_definitions(-DHAVE_LIBRAW=1)
-    list(APPEND SOURCES "imageio/imageio_libraw.c")
-  endif()
+  message(STATUS "Building LibRaw from the pinned FreeCM source root")
+  add_definitions(-DHAVE_LIBRAW=1)
+  list(APPEND SOURCES "imageio/imageio_libraw.c")
 endif()
 
 find_package(LensFun REQUIRED)
@@ -392,7 +373,7 @@ include_directories(SYSTEM ${LensFun_INCLUDE_DIRS})
 list(APPEND LIBS ${LensFun_LIBRARIES})
 
 find_package(SQLite3 3.26 REQUIRED)
-list(APPEND LIBS SQLite::SQLite3)
+list(APPEND LIBS SQLite3::SQLite3)
 
 foreach(lib ${OUR_LIBS} GIO GThread GModule PangoCairo Rsvg2 PNG JPEG TIFF LCMS2 JsonGlib)
   find_package(${lib} REQUIRED)
@@ -402,8 +383,6 @@ foreach(lib ${OUR_LIBS} GIO GThread GModule PangoCairo Rsvg2 PNG JPEG TIFF LCMS2
 endforeach(lib)
 
 if(USE_AI)
-  option(USE_AI_DOWNLOAD "Enable downloading AI models from repository" ON)
-
   list(APPEND LIBS darktable_ai)
 
   FILE(GLOB SOURCE_FILES_AI
@@ -418,12 +397,7 @@ if(USE_AI)
   )
   set(SOURCES ${SOURCES} ${SOURCE_FILES_AI})
   add_definitions("-DHAVE_AI")
-  if(USE_AI_DOWNLOAD)
-    add_definitions("-DHAVE_AI_DOWNLOAD")
-    message(STATUS "AI features: enabled (with model download)")
-  else()
-    message(STATUS "AI features: enabled (without model download)")
-  endif()
+  message(STATUS "AI features: enabled (local models only)")
 else(USE_AI)
   message(STATUS "AI features: disabled")
 endif(USE_AI)
@@ -522,21 +496,6 @@ endif(IsoCodes_FOUND)
 #
 add_definitions("-DHAVE_APPLE_KEYCHAIN")
 
-if(USE_MAC_INTEGRATION)
-  find_package(MacIntegration)
-  if(MacIntegration_FOUND)
-    include_directories(SYSTEM ${MacIntegration_INCLUDE_DIRS})
-    list(APPEND LIBS ${MacIntegration_LIBRARIES})
-    add_definitions("-DMAC_INTEGRATION")
-    find_package(P11Kit)
-    if(P11Kit_FOUND)
-      include_directories(SYSTEM ${P11Kit_INCLUDE_DIRS})
-      list(APPEND LIBS ${P11Kit_LINK_LIBRARIES})
-      add_definitions("-DHAVE_P11KIT")
-    endif()
-  endif(MacIntegration_FOUND)
-endif(USE_MAC_INTEGRATION)
-
 if(USE_GRAPHICSMAGICK)
   find_package(GraphicsMagick)
   if(GraphicsMagick_FOUND)
@@ -620,20 +579,18 @@ if(NOT HAVE_TLS)
 endif()
 
 
-if(NOT CUSTOM_CFLAGS)
-  include(march-mtune)
+include(march-mtune)
 
-  #-g MUST be set for ALL builds, or there will be no support for them when bugs happen
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
-  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+# -g is kept in every build so crash reports retain useful symbols.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-endif(NOT CUSTOM_CFLAGS)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
@@ -650,25 +607,13 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.cmake.h" "${DARKTABLE_BINDIR}
 # Build external deps
 #
 if(USE_LUA)
-  find_package(Lua54 5.4)
-  if(Lua54_FOUND)
-    message(STATUS "Lua support: Enabled")
-    include_directories(SYSTEM ${Lua54_INCLUDE_DIRS})
-    list(APPEND LIBS ${Lua54_LDFLAGS})
-  else()
-    if(DONT_USE_INTERNAL_LUA)
-      message(FATAL_ERROR "Lua support: System library for Lua 5.4 not found (to use darktable's version add -DDONT_USE_INTERNAL_LUA=Off)")
-    else(DONT_USE_INTERNAL_LUA)
-      message(STATUS "Lua support: System library not found (using darktable's version)")
-      include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/lua/src)
-      add_subdirectory(external/lua)
-      list(APPEND LIBS lua)
-    endif(DONT_USE_INTERNAL_LUA)
-  endif(Lua54_FOUND)
+  message(STATUS "Lua support: using the bundled runtime")
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/lua/src)
+  add_subdirectory(external/lua)
+  list(APPEND LIBS lua)
 
-  if(USE_LUA)
-    add_definitions("-DUSE_LUA")
-    FILE(GLOB SOURCE_FILES_LUA
+  add_definitions("-DUSE_LUA")
+  FILE(GLOB SOURCE_FILES_LUA
       "lua/ai.c"
       "lua/cairo.c"
       "lua/call.c"
@@ -711,18 +656,15 @@ if(USE_LUA)
       "lua/widget/slider.c"
       "lua/widget/stack.c"
       "lua/widget/text_view.c"
-      "lua/widget/widget.c"
-      )
-    set(SOURCES ${SOURCES} ${SOURCE_FILES_LUA})
-  endif(USE_LUA)
+    "lua/widget/widget.c"
+    )
+  set(SOURCES ${SOURCES} ${SOURCE_FILES_LUA})
 else(USE_LUA)
   message(STATUS "Lua support: Disabled")
 endif(USE_LUA)
 
 if(USE_LUA)
-  if(NOT Lua54_FOUND)
-    list(APPEND LIB_DEPS lua) # 2nd half of the ugliness :/
-  endif(NOT Lua54_FOUND)
+  list(APPEND LIB_DEPS lua)
   # liblautoc for lua automated interface generation
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LuaAutoC/)
   add_subdirectory(external/LuaAutoC)
@@ -845,37 +787,18 @@ endif()
 #
 # Setup generation of preference dialog files..
 #
-if(NOT ${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
-  add_custom_command(
-    DEPENDS ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl ${CMAKE_SOURCE_DIR}/data/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
-    COMMAND ${Xsltproc_BIN} --nonet --stringparam HAVE_OPENCL ${HAVE_OPENCL} ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl ${DARKTABLE_DATADIR}/darktableconfig.xml > ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
-    COMMENT "Generating preferences"
-  )
-  add_custom_command(
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
-    COMMAND ${Xsltproc_BIN} --nonet --stringparam HAVE_OPENCL ${HAVE_OPENCL} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.xml > ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
-    COMMENT "Generating configuration min/max/default/type"
-  )
-else(NOT ${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
-  if(NOT ${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-    add_custom_command(
-      DEPENDS ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl ${CMAKE_SOURCE_DIR}/data/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
-      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
-      COMMAND ${Saxon_BIN} ${DARKTABLE_DATADIR}/darktableconfig.xml ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl HAVE_OPENCL=${HAVE_OPENCL} > ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
-      COMMENT "Generating preferences"
-    )
-    add_custom_command(
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
-      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
-      COMMAND ${Saxon_BIN} ${DARKTABLE_DATADIR}/darktableconfig.xml ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl HAVE_OPENCL=${HAVE_OPENCL} > ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
-      COMMENT "Generating configuration min/max/default/type"
-    )
-  else(NOT ${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-    message(FATAL_ERROR "Don't know how to generate preferences")
-  endif(NOT ${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-endif(NOT ${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
+add_custom_command(
+  DEPENDS ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl ${CMAKE_SOURCE_DIR}/data/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
+  COMMAND ${Xsltproc_BIN} --nonet --stringparam HAVE_OPENCL ${HAVE_OPENCL} ${CMAKE_SOURCE_DIR}/tools/generate_prefs.xsl ${DARKTABLE_DATADIR}/darktableconfig.xml > ${CMAKE_CURRENT_BINARY_DIR}/preferences_gen.h
+  COMMENT "Generating preferences"
+)
+add_custom_command(
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
+  COMMAND ${Xsltproc_BIN} --nonet --stringparam HAVE_OPENCL ${HAVE_OPENCL} ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.xml > ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
+  COMMENT "Generating configuration min/max/default/type"
+)
 
 file(GLOB darktable_STYLES
      "${DARKTABLE_DATADIR}/styles/*.dtstyle"
@@ -999,13 +922,21 @@ set_target_properties(darktable PROPERTIES INSTALL_RPATH ${RPATH_ORIGIN}/${REL_B
 install(TARGETS darktable DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
 
 
-if(USE_LIBRAW AND NOT (DONT_USE_INTERNAL_LIBRAW AND libraw_FOUND))
+if(USE_LIBRAW)
   dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)
+  # LibRaw-cmake is a small build wrapper retained in-tree; give it the
+  # materialized FreeCM checkout explicitly instead of relying on its former
+  # adjacent-source layout.
+  set(LIBRAW_PATH "${LIBRAW_PATH}" CACHE PATH "Pinned LibRaw source root" FORCE)
   set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
   set(ENABLE_LCMS OFF CACHE BOOL "")
   set(ENABLE_JASPER OFF CACHE BOOL "")
 
   # Build LibRaw from its pinned source root.
+  set(DARKTABLE_BUILD_SHARED_LIBS_SAVE "${BUILD_SHARED_LIBS}")
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
   add_subdirectory(external/LibRaw-cmake)
+  set(BUILD_SHARED_LIBS "${DARKTABLE_BUILD_SHARED_LIBS_SAVE}" CACHE BOOL "Build shared libraries" FORCE)
+  unset(DARKTABLE_BUILD_SHARED_LIBS_SAVE)
   target_link_libraries(lib_darktable PRIVATE libraw::libraw)
 endif()

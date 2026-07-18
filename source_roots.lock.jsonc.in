@@ -1,4 +1,7 @@
 {
+  // This file is the sole source-of-truth for direct third-party source roots.
+  // FreeCM materializes the pinned commits locally; do not replace these with
+  // submodules, vendored copies, or CMake-time downloads.
   "schemaVersion": 5,
   "projectVersion": "0.9.0",
   "cmakeEnvironment": {

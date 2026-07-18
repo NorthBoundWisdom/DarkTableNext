@@ -819,6 +819,7 @@ void dt_ai_models_refresh_status(void)
     g_mutex_unlock(&registry->lock);
 }
 
+#ifdef HAVE_AI_DOWNLOAD
 void dt_ai_models_check_updates(void)
 {
     dt_ai_registry_t *registry = darktable.ai_registry;
@@ -956,6 +957,11 @@ void dt_ai_models_check_updates(void)
     g_mutex_unlock(&registry->lock);
     g_object_unref(parser);
 }
+#else
+void dt_ai_models_check_updates(void)
+{
+}
+#endif
 
 void dt_ai_models_cleanup(void)
 {

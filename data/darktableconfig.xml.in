@@ -415,14 +415,7 @@
     <type>string</type>
     <default></default>
     <shortdescription>custom ONNX Runtime library path</shortdescription>
-    <longdescription>path to a custom ONNX Runtime shared library with GPU support (e.g. CUDA, MIGraphX, OpenVINO). when empty, darktable uses its bundled CPU-only library. set this to enable GPU acceleration without rebuilding.</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/ai/repository</name>
-    <type>string</type>
-    <default>darktable-org/darktable-ai</default>
-    <shortdescription>AI models GitHub repository</shortdescription>
-    <longdescription>GitHub repository for downloading AI models (format: owner/repo)</longdescription>
+    <longdescription>path to a locally installed ONNX Runtime shared library with an additional execution provider (for example CoreML, CUDA, MIGraphX, or OpenVINO).</longdescription>
   </dtconfig>
   <dtconfig>
     <name>plugins/ai/models_path</name>
@@ -2766,7 +2759,7 @@
   <dtconfig>
     <name>context_help/url</name>
     <type>string</type>
-    <default>https://docs.darktable.org/usermanual/</default>
+    <default>https://github.com/NorthBoundWisdom/DarkTableNext</default>
     <shortdescription/>
     <longdescription/>
   </dtconfig>

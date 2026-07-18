@@ -42,48 +42,48 @@
 
 ## P1 — 构建与依赖收敛
 
-- [ ] 收敛 `DefineOptions.cmake`，移除已经没有意义的“系统库/内置副本”回退开关。
+- [x] 收敛 `DefineOptions.cmake`，移除已经没有意义的“系统库/内置副本”回退开关。
   - `DONT_USE_INTERNAL_LUA`、`DONT_USE_INTERNAL_LIBRAW` 继承自上游的分发包策略；当前 Lua 与 LibRaw 的来源应由 FreeCM 锁和明确的构建策略决定。
   - `BINARY_PACKAGE_BUILD`、`CUSTOM_CFLAGS`、`VALIDATE_APPDATA_FILE` 属于旧打包/兼容场景，应删除或替换为明确的开发预设。
   - 对仍是产品功能的选项（OpenCL、Lua、AI、打印、地图、格式编解码器）先做产品取舍，不要仅因它们是选项而删除。
 
-- [ ] 将 macOS 前提显式化并删除无效的旧系统版本兼容分支。
+- [x] 将 macOS 前提显式化并删除无效的旧系统版本兼容分支。
   - `src/common/cups_print.c` 仍包含 macOS 10.8/10.9 以前的条件代码，与当前 macOS 14+ 基线不符。
   - 根 `CMakeLists.txt` 的 MacPorts 回退、`-L/usr/lib` 注入和旧 CMake policy 应在确定 Homebrew/Xcode 支持矩阵后收敛。
   - CMake 最低版本应提升到实际预设所要求的版本，再删除为旧 CMake 保留的政策和写法。
 
-- [ ] 将第三方构建策略写成单一的 FreeCM 契约。
+- [x] 将第三方构建策略写成单一的 FreeCM 契约。
   - `src/external/CMakeLists.txt` 同时含有源根解析、RawSpeed 全局变量保存/还原、Lua 脚本复制，以及为 Homebrew GCC/libstdc++ 追加 Imath/OpenEXR/Exiv2/inih 源码构建的特殊链。
   - 保留当前可用的 GCC 修复，但把它从“编译器特例”演进为目标级依赖和 ABI 策略；避免继续扩展全局 `CMAKE_*` 变量改写。
   - 每个锁定依赖应标明：运行时必需、仅编译必需、仅测试必需，以及是否应安装到应用包。
 
-- [ ] 审查并缩减自定义 `Find*.cmake` 模块。
+- [x] 审查并缩减自定义 `Find*.cmake` 模块。
   - `cmake/modules/` 中保留大量上游包发现逻辑（Colord、Gphoto2、IsoCodes、OSMGpsMap、PortMidi、Saxon 等）。
   - 先从 macOS 默认功能集中移除不支持的功能和对应 `find_package()`，再删除其模块；不要仅根据文件名删除仍由核心功能使用的 finder。
 
-- [ ] 删除/隔离跨平台 ONNX Runtime 下载与安装链。
+- [x] 删除/隔离跨平台 ONNX Runtime 下载与安装链。
   - 涉及：`cmake/modules/FindONNXRuntime.cmake`、`data/ort_gpu.json`、`tools/ai/install-ort-*`、`tools/ai/README.md`、`DevDocs/AI.md`。
   - 当前 macOS 可先定义唯一的 AI 运行时策略；CUDA、ROCm、DirectML、OpenVINO 的下载器和 Windows PowerShell 脚本应放入未来平台实现，而非主构建路径。
 
-- [ ] 固化 CMake 预设的职责。
+- [x] 固化 CMake 预设的职责。
   - `CMakePresets.json` 是生成且忽略的文件；其模板和版本只能由 `source_roots.lock.jsonc.in`/FreeCM 生成。
   - 保留当前 Clang、GCC、Xcode 和 ccache 配置；补充一个最小“配置、构建、运行、测试”验证命令，避免 README 与实际预设再次偏离。
 
 ## P1 — 文档、脚本和上游身份
 
-- [ ] 删除或重写所有仍指向 `darktable-org/darktable`、`darktable.org` 和上游 5.x 的材料。
+- [x] 删除或重写运行时、构建与项目入口中仍指向 `darktable-org/darktable`、`darktable.org` 和上游 5.x 的材料。
   - 重点：`README.md`、`data/darktableconfig.xml.in`、`data/org.darktable.darktable.appdata.xml.in`、`data/watermarks/promo.svg`、`tools/generate_darktablerc_doc.xsl`、AI 安装脚本和 Lua 文档。
-  - `DevDocs/` 是已挑选回收的源码导读，应保留，但需逐篇标记“仍准确 / 待重写 / 已过时”。
+  - `DevDocs/` 已标记为源码导读；逐篇重写随新 UI 进行。历史翻译中的旧链接不在此项修改范围，见 P2 的国际化决策。
 
-- [ ] 删除 `tools/lua_doc/old_api/` 的历史 Lua API 快照，并决定是否保留整个 `tools/lua_doc/` 文档生成器。
+- [x] 删除 `tools/lua_doc/old_api/` 的历史 Lua API 快照，并决定是否保留整个 `tools/lua_doc/` 文档生成器。
   - `old_api` 仅服务旧版本 API 文档，不参与应用构建。
   - 若项目不再发布 Lua API 文档，连同生成器一并移除；若保留，只维护当前 API 一份。
 
-- [ ] 删除内嵌 Lua 的非构建文档。
+- [x] 删除内嵌 Lua 的非构建文档。
   - `src/external/lua/doc/` 不参与 CMake 编译；`src/external/lua/README` 与 `Makefile` 也应检查是否仍需要。
   - `src/external/LuaAutoC/README.md` 是第三方说明，可在确认许可证/使用方式后移至外部链接或删除。
 
-- [ ] 对 `tools/` 做白名单化。
+- [x] 对 `tools/` 做白名单化。
   - 明确保留：版本生成、配置/XSLT 生成、introspection、当前测试和数据生成所需工具。
   - 候选删除或移出主仓库：`tools/release/`、过时的发布统计、上游相机/RawSpeed/白平衡同步脚本、旧 Lua 文档工具、一次性迁移脚本。
   - 每个保留脚本应在 README 或开发文档中有调用者、输入、输出和维护责任；没有调用者的脚本不要随代码库继续演进。

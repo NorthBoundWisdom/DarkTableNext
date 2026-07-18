@@ -1,8 +1,8 @@
 # DarkTableNext Developer Notes
 
-> 这些文档从上游开发资料恢复而来，用作阅读现有源码的架构索引；代码行为以 `src/` 为准，后续会随重构更新。
+> 状态：0.9 源码导读。文档从上游开发资料恢复而来，用作阅读现有源码的架构索引；代码行为以 `src/` 为准。IOP、像素管线与内省章节可作为当前代码地图，GTK 与旧 UI 示例将在 UI 重写时替换；未逐篇复核的说明不构成 API 或兼容性承诺。
 
-This guide covers building Image Operation (IOP) modules for darktable's darkroom.
+This guide maps the existing Image Operation (IOP) modules and darkroom implementation that DarkTableNext is retaining during the 0.9 cleanup.
 
 ## Documentation Files
 

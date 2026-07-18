@@ -622,8 +622,8 @@ void expose(dt_view_t *self, cairo_t *cri, const int32_t width, const int32_t he
                 load_txt = g_strdup_printf(
                     _("file `%s' uses an unsupported feature, switching to lighttable now.\n\n"
                       "please check that the image format and compression mode you selected in your\n"
-                      "camera's menus is supported (see https://www.darktable.org/resources/camera-support/\n"
-                      "and the release notes for this version of darktable)"),
+                      "camera's menus is supported by this version of DarkTableNext.\n"
+                      "see " PACKAGE_URL " for project status and release notes"),
                     dev->image_storage.filename);
                 break;
             case DT_IMAGEIO_IOERROR:
@@ -634,11 +634,9 @@ void expose(dt_view_t *self, cairo_t *cri, const int32_t width, const int32_t he
                 break;
             default:
                 load_txt = g_strdup_printf(
-                    _("darktable could not load `%s', switching to lighttable now.\n\n"
-                      "please check that the camera model that produced the image is supported in darktable\n"
-                      "(list of supported cameras is at https://www.darktable.org/resources/camera-support/).\n"
-                      "if you are sure that the camera model is supported, please consider opening an issue\n"
-                      "at https://github.com/darktable-org/darktable"),
+                    _("DarkTableNext could not load `%s', switching to lighttable now.\n\n"
+                      "please check that the camera model and file format are supported by this build.\n"
+                      "if you believe they should work, please report the file details at " PACKAGE_BUGREPORT),
                     dev->image_storage.filename);
                 break;
             }

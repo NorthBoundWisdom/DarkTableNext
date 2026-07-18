@@ -30,15 +30,15 @@ dt_resolve_freecm_source_root(RAWSPEED_PATH RAWSPEED_SOURCE_ROOT RAWSPEED_SOURCE
 set(OPENCL_PATH "${OPENCL_PATH}" PARENT_SCOPE)
 
 # Homebrew C++ packages are built with libc++, whereas Homebrew GCC uses
-# libstdc++. Build the C++ libraries with GCC when it is selected so the ABI
-# remains consistent all the way to lib_darktable.
+# libstdc++. The pinned source-root build keeps the GCC ABI boundary coherent
+# until FreeCM provides compiler-neutral C++ package artifacts.
 if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   dt_resolve_freecm_source_root(IMATH_PATH IMATH_SOURCE_ROOT IMATH_SOURCE_ROOT Imath CMakeLists.txt)
   dt_resolve_freecm_source_root(OPENEXR_PATH OPENEXR_SOURCE_ROOT OPENEXR_SOURCE_ROOT OpenEXR CMakeLists.txt)
   dt_resolve_freecm_source_root(EXIV2_PATH EXIV2_SOURCE_ROOT EXIV2_SOURCE_ROOT exiv2 CMakeLists.txt)
   dt_resolve_freecm_source_root(INIH_PATH INIH_SOURCE_ROOT INIH_SOURCE_ROOT inih cpp/INIReader.cpp)
 
-  message(STATUS "Building Imath, OpenEXR, and Exiv2 from FreeCM source roots for GCC")
+  message(STATUS "Building Imath, OpenEXR, and Exiv2 from FreeCM source roots for GCC ABI compatibility")
 
   set(IMATH_INSTALL OFF CACHE BOOL "" FORCE)
   add_subdirectory("${IMATH_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/Imath" EXCLUDE_FROM_ALL)
@@ -116,6 +116,11 @@ set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(BUILD_BENCHMARKING OFF CACHE BOOL "" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
 set(WITH_OPENMP ON CACHE BOOL "" FORCE)
+# RawSpeed's own warnings are useful upstream, but they are not part of the
+# application's warning contract. In particular, its GCC-only stack-size
+# probes are intentionally unavailable in Apple Clang.
+set(RAWSPEED_ENABLE_WERROR OFF CACHE BOOL "" FORCE)
+set(RAWSPEED_ENABLE_CLANG_TIDY_WERROR OFF CACHE BOOL "" FORCE)
 
 set(RAWSPEED_BINARY_PREFIX "darktable")
 
@@ -127,19 +132,7 @@ endif()
 
 set(CMAKE_INSTALL_DATAROOTDIR_SAVE "${CMAKE_INSTALL_DATAROOTDIR}")
 
-set(CMAKE_C_FLAGS_SAVE "${CMAKE_C_FLAGS}")
-set(CMAKE_CXX_FLAGS_SAVE "${CMAKE_CXX_FLAGS}")
-
 set(CMAKE_INSTALL_DATAROOTDIR "${CMAKE_INSTALL_DATAROOTDIR}/darktable")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-
-set(CMAKE_CXX_CLANG_TIDY_SAVE "${CMAKE_CXX_CLANG_TIDY}")
-set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE_SAVE "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
-
-unset(CMAKE_CXX_CLANG_TIDY)
-unset(CMAKE_CXX_INCLUDE_WHAT_YOU_USE)
 
 add_subdirectory("${RAWSPEED_PATH}" ${DARKTABLE_LIBDIR}/rawspeed)
 # Copying rawspeed resources to where dt expects them
@@ -151,12 +144,6 @@ add_custom_command(TARGET "deploy" PRE_BUILD
 )
 
 set(CMAKE_INSTALL_DATAROOTDIR "${CMAKE_INSTALL_DATAROOTDIR_SAVE}")
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_SAVE}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_SAVE}")
-
-set(CMAKE_CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY_SAVE}")
-set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${CMAKE_CXX_INCLUDE_WHAT_YOU_USE_SAVE}")
 
 set(BUILD_TESTING "${BUILD_TESTING_SAVE}" CACHE BOOL "" FORCE)
 set(BUILD_BENCHMARKING "${BUILD_BENCHMARKING_SAVE}" CACHE BOOL "" FORCE)

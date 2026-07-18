@@ -37,7 +37,7 @@ void darktable_show_about_dialog()
     g_free(copyright);
     gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog),
                                   _("organize and develop images from digital cameras"));
-    gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog), "https://www.darktable.org/");
+    gtk_about_dialog_set_website(GTK_ABOUT_DIALOG(dialog), PACKAGE_URL);
     gtk_about_dialog_set_website_label(GTK_ABOUT_DIALOG(dialog), "website");
     const dt_logo_season_t season = dt_util_get_logo_season();
     char *icon;

@@ -1,12 +1,10 @@
-cmake_minimum_required(VERSION 3.18)
-
 add_library(darktable_ai STATIC
   backend.h
   backend_common.c
   backend_onnx.c
 )
 
-# Find ONNX Runtime (auto-downloads if not present)
+# AI uses an ONNX Runtime installed by the active toolchain or package manager.
 find_package(ONNXRuntime REQUIRED)
 
 # Find Dependencies (inherited from main build if available, but explicit here for clarity)
@@ -42,14 +40,3 @@ target_link_libraries(darktable_ai PUBLIC
   ${GLIB_LIBRARIES}
   ${JSON_GLIB_LIBRARIES}
 )
-
-# Install the bundled ONNX Runtime shared library alongside darktable_ai
-# (skip when using system package — it's already in the system library path)
-if(NOT ONNXRuntime_SYSTEM_PACKAGE)
-  file(GLOB _ORT_DYLIB "${ONNXRuntime_LIB_DIR}/libonnxruntime.*.dylib")
-  if(_ORT_DYLIB)
-    install(FILES ${_ORT_DYLIB}
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable
-    )
-  endif()
-endif()

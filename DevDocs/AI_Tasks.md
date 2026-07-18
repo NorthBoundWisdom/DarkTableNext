@@ -114,9 +114,8 @@ mask-object-sam21-small/
 
 ### ONNX Export
 
-Conversion scripts are maintained in the
-[darktable-ai](https://github.com/darktable-org/darktable-ai)
-repository. Requirements for the decoder export:
+Model conversion is maintained outside this repository. Requirements for the
+decoder export:
 
 - no `orig_im_size` input
 - `masks` output at fixed 1024x1024 (include `F.interpolate` in graph)

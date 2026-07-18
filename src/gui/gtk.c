@@ -1514,8 +1514,7 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     GtkWidget *help_home = gtk_menu_item_new_with_label(C_("menu", "darktable Homepage"));
     gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), help_home);
     gtk_widget_show(help_home);
-    g_signal_connect(G_OBJECT(help_home), "activate", G_CALLBACK(_open_url),
-                     "https://www.darktable.org");
+    g_signal_connect(G_OBJECT(help_home), "activate", G_CALLBACK(_open_url), PACKAGE_URL);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(help_root_menu), help_menu);
 
@@ -3397,14 +3396,13 @@ void dt_gui_show_help(GtkWidget *widget)
 
         char *last_base_url = dt_conf_get_string("context_help/last_url");
 
-        // if url is https://www.darktable.org/usermanual/,
-        // it is the old deprecated url and we need to update it
+        // A changed local documentation base URL requires fresh consent.
         if (!last_base_url || !*last_base_url || (strcmp(base_url, last_base_url) != 0))
         {
             g_free(last_base_url);
             last_base_url = base_url;
 
-            // ask the user if darktable.org may be accessed
+            // Ask before opening the configured documentation URL.
             if (dt_gui_show_yes_no_dialog(_("access the online user manual?"), "",
                                           _("do you want to access `%s'?"), last_base_url))
             {

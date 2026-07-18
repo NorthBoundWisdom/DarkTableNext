@@ -146,7 +146,7 @@ static int usage(const char *argv0)
 
   printf("darktable %s\n"
          "Copyright (C) 2012-%s Johannes Hanika and other contributors.\n\n"
-         "<https://www.darktable.org>\n"
+         "<" PACKAGE_URL ">\n"
          "darktable is an open source photography workflow application and\n"
          "non-destructive raw developer for photographers.\n"
          "GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>\n"

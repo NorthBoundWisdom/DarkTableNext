@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.26)
 
-cmake_policy(SET CMP0011 NEW)
-cmake_policy(SET CMP0025 NEW)
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0067 NEW)
+# CMake 3.27+ recognizes upper-case <PACKAGENAME>_ROOT hints.  Keep the
+# behavior consistent when configuring with newer CMake releases.
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
@@ -21,6 +22,10 @@ if(DEFINED PROJECT_VERSION)
 else()
   project(darktable VERSION 0.9.0 LANGUAGES CXX C)
 endif()
+
+# Tests are opt-in: application presets must not pull test-only dependencies
+# or assets into a normal configure/build.
+option(BUILD_TESTING "Build DarkTableNext tests" OFF)
 
 if(NOT APPLE)
   message(FATAL_ERROR "DarkTableNext supports macOS only.")
@@ -100,22 +105,16 @@ endif()
 #
 message("-- macOS build")
 find_program(HOMEBREW_EXISTS "brew")
-if(HOMEBREW_EXISTS)
-  execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
-  string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
-  message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
-  list(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX} ${HOMEBREW_PREFIX}/opt/llvm ${HOMEBREW_PREFIX}/opt/icu4c)
-else()
-  message("-- Setting CMAKE_PREFIX_PATH to prefer MacPorts and/or user-installed libraries over system ones")
-  list(APPEND CMAKE_PREFIX_PATH /opt/local /usr/local)
+if(NOT HOMEBREW_EXISTS)
+  message(FATAL_ERROR "DarkTableNext currently requires Homebrew on macOS.")
 endif()
+execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
+string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
+message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
+list(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX} ${HOMEBREW_PREFIX}/opt/llvm ${HOMEBREW_PREFIX}/opt/icu4c)
 set(CMAKE_FIND_FRAMEWORK "LAST")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/usr/lib")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -L/usr/lib")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DARWIN_C_SOURCE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
-add_definitions("-DOS_OBJECT_USE_OBJC=0")
 
 #
 # Set package version
@@ -229,20 +228,8 @@ else(${jsonschema_BIN} STREQUAL "jsonschema_BIN-NOTFOUND")
   set(VALIDATE_JSON 1)
 endif(${jsonschema_BIN} STREQUAL "jsonschema_BIN-NOTFOUND")
 
-# we need an XSLT interpreter to generate preferences_gen.h and darktablerc
-find_program(Xsltproc_BIN xsltproc)
-if(${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
-  message(STATUS "Missing xsltproc")
-  find_program(Saxon_BIN saxon-xslt)
-  if(${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-    message(STATUS "Missing saxon-xslt")
-    message(FATAL_ERROR "No XSLT interpreter found")
-  else(${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-    message(STATUS "Found saxon-xslt")
-  endif(${Saxon_BIN} STREQUAL "Saxon_BIN-NOTFOUND")
-else(${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
-  message(STATUS "Found xsltproc")
-endif(${Xsltproc_BIN} STREQUAL "Xsltproc_BIN-NOTFOUND")
+# xsltproc generates the checked build artifacts from the configuration schema.
+find_program(Xsltproc_BIN xsltproc REQUIRED)
 
 # do we have xmllint?
 if(USE_XMLLINT)
@@ -291,7 +278,6 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME DTApplication)
 include(data/supported_extensions.cmake) # this file needs to be included first as it gets amended in bin/
 add_subdirectory(src "${DARKTABLE_BINDIR}") # directory needs to be there before data directory so that the correct CSS file gets installed
 add_subdirectory(data "${DARKTABLE_DATADIR}")
-add_subdirectory(tools "${DARKTABLE_DATADIR}/tools")
 
 # This contains fixup_bundle
 # And adding a separate subderectory as a last one will make sure

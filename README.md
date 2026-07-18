@@ -19,12 +19,34 @@ python3 configs/source_root_workflow.py --update
 
 `source_roots.lock.jsonc.in` 是受版本控制的依赖基线。`source_roots.lock.jsonc`、依赖工作树和 `CMakePresets.json` 均在本地生成，不应提交。
 
+### FreeCM 依赖契约
+
+锁文件中的每项依赖都必须有明确角色；不要以子模块、复制源码或 CMake 下载替代它。当前角色如下：
+
+| 依赖 | 角色 | 应用包处理 |
+| --- | --- | --- |
+| RawSpeed | 编译期库与相机数据 | 链接库并部署其运行时数据 |
+| OpenCL、libxcf、whereami | 编译期源根（头文件或静态链接） | 不单独部署 |
+| LibRaw | 编译期源根与 RAW 解码库 | 随应用链接 |
+| Imath、OpenEXR、Exiv2、inih | 图像与元数据的编译/运行时库 | 使用活跃 macOS 工具链的库；GCC 为保持 libstdc++ ABI 而从固定源根构建 |
+| lua-scripts | 可选 Lua 的运行时脚本 | 启用 Lua 时部署 |
+
+ONNX Runtime 不属于源根依赖：AI 构建只接受本地包管理器安装的运行时，绝不在配置阶段下载 SDK。基准图像资产亦不属于默认依赖，见下文的按需初始化命令。
+
 ## 构建
 
 ```sh
 cmake --preset mac_clang_debug
 cmake --build --preset mac_clang_debug
 ./build/mac_clang_debug/bin/darktable --version
+```
+
+需要单元测试时，显式启用并运行 CTest：
+
+```sh
+cmake --preset mac_clang_debug -DBUILD_TESTING=ON
+cmake --build --preset mac_clang_debug
+ctest --test-dir build/mac_clang_debug --output-on-failure
 ```
 
 可用的 macOS 预设：

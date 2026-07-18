@@ -399,7 +399,7 @@ static inline float clip_chroma_white_raw(constant const float *const coeffs, co
   // Get chroma that brings one component of target RGB to the given target_rgb value.
   // coeffs are the transformation coeffs to get one components (R, G or B) from input LMS.
   // i.e. it is a row of the LMS -> RGB transformation matrix.
-  // See tools/derive_filmic_v6_gamut_mapping.py for derivation of these equations.
+  // Derived from the filmic gamut-mapping model.
   const float denominator = Y * denominator_Y_coeff - denominator_target_term;
   const float numerator = -0.427506877216495f
                           * (Y * (coeffs[0] + 0.856492345150334f * coeffs[1] + 0.554995960637719f * coeffs[2])
@@ -440,7 +440,7 @@ static inline float clip_chroma_black(constant const float *const coeffs, const 
   // Get chroma that brings one component of target RGB to zero.
   // coeffs are the transformation coeffs to get one components (R, G or B) from input LMS.
   // i.e. it is a row of the LMS -> RGB transformation matrix.
-  // See tools/derive_filmic_v6_gamut_mapping.py for derivation of these equations.
+  // Derived from the filmic gamut-mapping model.
   const float denominator = coeffs[0] * (0.979381443298969f * cos_h + 0.391752577319588f * sin_h)
                             + coeffs[1] * (0.0206185567010309f * cos_h + 0.608247422680412f * sin_h)
                             - coeffs[2] * (cos_h + sin_h);

@@ -20,9 +20,6 @@
 #include <cups/ppd.h>
 #include <glib.h>
 #include <stdio.h>
-#ifdef __APPLE__
-#include <AvailabilityMacros.h>
-#endif
 
 #include "common/file_location.h"
 #include "common/image.h"
@@ -31,20 +28,6 @@
 #include "common/pdf.h"
 #include "control/jobs/control_jobs.h"
 #include "cups_print.h"
-
-// enable weak linking in libcups on macOS
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8 &&                 \
-    ((CUPS_VERSION_MAJOR == 1 && CUPS_VERSION_MINOR >= 6) || CUPS_VERSION_MAJOR > 1)
-extern int cupsEnumDests() __attribute__((weak_import));
-#endif
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_9 &&                 \
-    ((CUPS_VERSION_MAJOR == 1 && CUPS_VERSION_MINOR >= 7) || CUPS_VERSION_MAJOR > 1)
-extern http_t *cupsConnectDest() __attribute__((weak_import));
-extern cups_dinfo_t *cupsCopyDestInfo() __attribute__((weak_import));
-extern int cupsGetDestMediaCount() __attribute__((weak_import));
-extern int cupsGetDestMediaByIndex() __attribute__((weak_import));
-extern void cupsFreeDestInfo() __attribute__((weak_import));
-#endif
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // some platforms are starting to provide CUPS 2.2.9 and there the
@@ -174,28 +157,7 @@ static int _detect_printers_callback(dt_job_t *job)
 {
     dt_prtctl_t *pctl = dt_control_job_get_params(job);
     int res;
-#if ((CUPS_VERSION_MAJOR == 1) && (CUPS_VERSION_MINOR >= 6)) || CUPS_VERSION_MAJOR > 1
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
-    if (&cupsEnumDests != NULL)
-#endif
-        res = cupsEnumDests(CUPS_MEDIA_FLAGS_DEFAULT, 30000, &_cancel, 0, 0, _dest_cb, pctl);
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
-    else
-#endif
-#endif
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8 ||                 \
-    !(((CUPS_VERSION_MAJOR == 1) && (CUPS_VERSION_MINOR >= 6)) || CUPS_VERSION_MAJOR > 1)
-    {
-        cups_dest_t *dests;
-        const int num_dests = cupsGetDests(&dests);
-        for (int k = 0; k < num_dests; k++)
-        {
-            _dest_cb((void *)pctl, 0, &dests[k]);
-        }
-        cupsFreeDests(num_dests, dests);
-        res = 1;
-    }
-#endif
+    res = cupsEnumDests(CUPS_MEDIA_FLAGS_DEFAULT, 30000, &_cancel, 0, 0, _dest_cb, pctl);
     darktable.control->cups_started = TRUE;
     return !res;
 }
@@ -265,11 +227,6 @@ GList *dt_get_papers(const dt_printer_info_t *printer)
     const char *printer_name = printer->name;
     GList *result = NULL;
 
-#if ((CUPS_VERSION_MAJOR == 1) && (CUPS_VERSION_MINOR >= 7)) || CUPS_VERSION_MAJOR > 1
-#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_9
-    if (&cupsConnectDest != NULL && &cupsCopyDestInfo != NULL && &cupsGetDestMediaCount != NULL &&
-        &cupsGetDestMediaByIndex != NULL && &cupsFreeDestInfo != NULL)
-#endif
     {
         cups_dest_t *dests;
         const int num_dests = cupsGetDests(&dests);
@@ -329,7 +286,6 @@ GList *dt_get_papers(const dt_printer_info_t *printer)
 
         cupsFreeDests(num_dests, dests);
     }
-#endif
 
     // check now PPD page sizes
 

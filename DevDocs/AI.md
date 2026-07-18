@@ -38,10 +38,8 @@ config, etc.) and is compiled conditionally with `USE_AI=ON`.
 | Flag | Default | Effect |
 |------|---------|--------|
 | `USE_AI` | OFF | enable AI subsystem |
-| `USE_AI_DOWNLOAD` | ON (if `USE_AI`) | enable model downloading from GitHub |
 
-When `USE_AI=ON`, the preprocessor defines `HAVE_AI`. When download is
-enabled, `HAVE_AI_DOWNLOAD` is also defined.
+When `USE_AI=ON`, the preprocessor defines `HAVE_AI`.
 
 ### Runtime Enable/Disable
 
@@ -221,19 +219,21 @@ read a device_id key. Apply changes by restarting darktable.
 
 ### ONNX Runtime Packages
 
-| Platform | Package Source | Providers Included |
-|----------|---------------|--------------------|
-| macOS | GitHub releases (CPU) | CPU, CoreML (via Apple frameworks) |
-| Linux (x86_64) | GitHub releases (GPU) | CPU, CUDA, TensorRT |
-| Linux (aarch64) | GitHub releases (CPU) | CPU only |
-| Linux | System packages (distro) | CPU only (no GPU providers in Debian/Ubuntu/Fedora packages) |
-| Windows | NuGet (DirectML variant) | CPU, DirectML |
+Install ONNX Runtime through the active platform package manager before
+enabling `USE_AI`. CMake never downloads SDKs. If the package is outside
+the normal search paths, set `ONNXRUNTIME_ROOT` to its installation prefix.
 
-The build system (`cmake/modules/FindONNXRuntime.cmake`) auto-downloads
-the appropriate package if ONNX Runtime is not found on the system. On
-Linux x86_64, the GPU variant is downloaded by default to enable CUDA
-acceleration. System packages (e.g. `libonnxruntime-dev` on
-Debian/Ubuntu) are CPU-only and do not include GPU providers.
+On the current macOS baseline:
+
+```sh
+brew install onnxruntime libarchive
+cmake --preset mac_clang_debug -DUSE_AI=ON \
+  -DONNXRUNTIME_ROOT="$(brew --prefix onnxruntime)"
+cmake --build --preset mac_clang_debug
+```
+
+`libarchive` is only used to import a user-supplied local `.dtmodel` archive;
+it is not a model or SDK downloader.
 
 ---
 
@@ -250,9 +250,8 @@ subdirectories of:
    - Windows: `%APPDATA%\darktable\models\`
    - macOS: `~/.local/share/darktable/models/`
 
-First discovered model ID wins (duplicates are skipped). Model
-downloads (`ai_models.c`) extract to the same path, so downloaded
-models are immediately discoverable.
+First discovered model ID wins (duplicates are skipped). Install a local
+`.dtmodel` archive from the AI preferences to place it in the same path.
 
 ### config.json Format
 
@@ -293,44 +292,20 @@ Examples: `denoise-nind`, `mask-object-sam21-small`, `upscale-bsrgan`,
 
 ---
 
-## Model Repository (darktable-ai)
+## Local Model Packages
 
-Models available for download in darktable are hosted as release assets
-in the [darktable-ai](https://github.com/darktable-org/darktable-ai)
-repository. This repository also contains:
+Model distribution is intentionally outside the application. A `.dtmodel`
+archive contains a top-level model directory with `config.json` and its ONNX
+files. Install it from AI preferences; the registry then discovers it at the
+next refresh. `data/ai_models.json` contains the built-in catalog of supported
+model identifiers and tasks.
 
-- **conversion scripts** -- export PyTorch models to ONNX in the format
-  darktable expects (correct I/O names, dynamic axes, interpolation
-  baked into the graph, etc.)
-- **packaging scripts** -- bundle `config.json` + ONNX files into
-  `.dtmodel` archives (zip) for distribution
-- **model metadata** -- the source `ai_models.json` that lists all
-  available models with their task, description, and asset filename
+### Adding a Model
 
-The download flow:
-1. darktable reads `data/ai_models.json` (bundled with the build) to
-   know which models exist
-2. user clicks "download" in AI preferences
-3. `ai_models.c` fetches the `.dtmodel` asset from the latest
-   darktable-ai release via the GitHub API
-4. the archive is extracted to `~/.local/share/darktable/models/`
-5. the model is immediately discoverable by `dt_ai_env_init()`
-
-The repository is configured in `darktablerc`:
-```
-plugins/ai/repository=darktable-org/darktable-ai
-```
-
-### Adding a New Model to the Repository
-
-1. export the model to ONNX using the conversion scripts (or write a
-   new one following existing examples)
-2. create `config.json` with the correct `id`, `task`, `arch` fields
-3. package into a `.dtmodel` archive
-4. add the model entry to `ai_models.json` in darktable-ai
-5. create a new release with the `.dtmodel` as an asset
-6. update `data/ai_models.json` in the darktable source to include
-   the new model entry
+1. export the model to ONNX;
+2. create `config.json` with the correct `id`, `task`, and `arch` fields;
+3. package the top-level model directory as `.dtmodel`;
+4. add the supported model metadata to `data/ai_models.json` when applicable.
 
 ---
 
