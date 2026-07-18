@@ -827,7 +827,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="61.982769">$(MAKER) $(MODEL)</tspan></text>
+         y="61.982769">$(EXIF.MAKER) $(EXIF.MODEL)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1061)"
@@ -841,7 +841,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="69.435417">$(LENS)</tspan></text>
+         y="69.435417">$(EXIF.LENS)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1065)"
@@ -855,7 +855,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="46.952057">$(FILE_NAME).$(FILE_EXTENSION)</tspan></text>
+         y="46.952057">$(FILE.NAME).$(FILE.EXTENSION)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1069)"
@@ -869,7 +869,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="54.40472">$(EXIF_DAY).$(EXIF_MONTH).$(EXIF_YEAR)</tspan></text>
+         y="54.40472">$(EXIF.DAY).$(EXIF.MONTH).$(EXIF.YEAR)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.322921;filter:url(#filter1073)"
@@ -883,7 +883,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="21.96406"
-         y="11.253872">/$(EXIF_APERTURE)</tspan></text>
+         y="11.253872">/$(EXIF.APERTURE)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.322921;filter:url(#filter1077)"
@@ -897,7 +897,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.541971"
-         y="34.076046">$(EXIF_FOCAL_LENGTH)mm</tspan></text>
+         y="34.076046">$(EXIF.FOCAL.LENGTH)mm</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.322921;filter:url(#filter1081)"
@@ -911,7 +911,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.541971"
-         y="18.861258">$(EXIF_EXPOSURE)sec</tspan></text>
+         y="18.861258">$(EXIF.EXPOSURE)sec</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.322921;filter:url(#filter1085)"
@@ -925,7 +925,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.541971"
-         y="26.468645">ISO: $(EXIF_ISO)</tspan></text>
+         y="26.468645">ISO: $(EXIF.ISO)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1089)"
@@ -939,7 +939,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="76.762672">$(SENSOR_WIDTH) x $(SENSOR_HEIGHT) px</tspan></text>
+         y="76.762672">$(WIDTH.SENSOR) x $(HEIGHT.SENSOR) px</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1093)"
@@ -953,7 +953,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="84.21534">$(EXPORT_WIDTH) x $(EXPORT_HEIGHT) px</tspan></text>
+         y="84.21534">$(WIDTH.EXPORT) x $(HEIGHT.EXPORT) px</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1097)"
@@ -967,7 +967,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="91.853729">$(LONGITUDE), $(LATITUDE), $(ELEVATION) </tspan></text>
+         y="91.853729">$(GPS.LONGITUDE), $(GPS.LATITUDE), $(GPS.ELEVATION) </tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1101)"
@@ -981,7 +981,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="99.171104">$(TAGS) </tspan></text>
+         y="99.171104">$(IMAGE.TAGS) </tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#666666;fill-opacity:1;stroke:none;stroke-width:0.264583;filter:url(#filter1105)"
@@ -995,7 +995,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.002436"
-         y="106.61303">$(CREATOR) </tspan></text>
+         y="106.61303">$(Xmp.dc.creator) </tspan></text>
     <g
        aria-label="f"
        id="text353774"
@@ -1142,7 +1142,7 @@
          fill="$(WATERMARK_COLOR)"
          font-family="'$(WATERMARK_FONT_FAMILY)'"
          font-style="$(WATERMARK_FONT_STYLE)"
-         font-weight="$(WATERMARK_FONT_WEIGHT)">$(MAKER) $(MODEL)</tspan></text>
+         font-weight="$(WATERMARK_FONT_WEIGHT)">$(EXIF.MAKER) $(EXIF.MODEL)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1156,7 +1156,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="69.214371">$(LENS)</tspan></text>
+         y="69.214371">$(EXIF.LENS)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1170,7 +1170,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="46.731007">$(FILE_NAME).$(FILE_EXTENSION)</tspan></text>
+         y="46.731007">$(FILE.NAME).$(FILE.EXTENSION)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1184,7 +1184,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="54.183674">$(EXIF_DAY).$(EXIF_MONTH).$(EXIF_YEAR)</tspan></text>
+         y="54.183674">$(EXIF.DAY).$(EXIF.MONTH).$(EXIF.YEAR)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.322921"
@@ -1198,7 +1198,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="21.84796"
-         y="11.032825">/$(EXIF_APERTURE)</tspan></text>
+         y="11.032825">/$(EXIF.APERTURE)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.322921"
@@ -1212,7 +1212,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.425875"
-         y="33.854996">$(EXIF_FOCAL_LENGTH)mm</tspan></text>
+         y="33.854996">$(EXIF.FOCAL.LENGTH)mm</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.322921"
@@ -1226,7 +1226,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.425875"
-         y="18.640211">$(EXIF_EXPOSURE)sec</tspan></text>
+         y="18.640211">$(EXIF.EXPOSURE)sec</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:3.4445px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.322921"
@@ -1240,7 +1240,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="19.425875"
-         y="26.247597">ISO: $(EXIF_ISO)</tspan></text>
+         y="26.247597">ISO: $(EXIF.ISO)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1254,7 +1254,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="76.541626">$(SENSOR_WIDTH) x $(SENSOR_HEIGHT) px</tspan></text>
+         y="76.541626">$(WIDTH.SENSOR) x $(HEIGHT.SENSOR) px</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1268,7 +1268,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="83.994293">$(EXPORT_WIDTH) x $(EXPORT_HEIGHT) px</tspan></text>
+         y="83.994293">$(WIDTH.EXPORT) x $(HEIGHT.EXPORT) px</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1282,7 +1282,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="91.632675">$(LONGITUDE), $(LATITUDE), $(ELEVATION) </tspan></text>
+         y="91.632675">$(GPS.LONGITUDE), $(GPS.LATITUDE), $(GPS.ELEVATION) </tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1296,7 +1296,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="98.950058">$(TAGS) </tspan></text>
+         y="98.950058">$(IMAGE.TAGS) </tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:300;font-stretch:normal;font-size:2.82222px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Light';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:$(WATERMARK_COLOR);fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -1310,7 +1310,7 @@
          font-style="$(WATERMARK_FONT_STYLE)"
          font-weight="$(WATERMARK_FONT_WEIGHT)"
          x="18.886328"
-         y="106.39198">$(CREATOR) </tspan></text>
+         y="106.39198">$(Xmp.dc.creator) </tspan></text>
     <g
        aria-label="f"
        id="g188"

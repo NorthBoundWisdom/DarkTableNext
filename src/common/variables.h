@@ -26,13 +26,13 @@ G_BEGIN_DECLS
 
 typedef struct dt_variables_params_t
 {
-    /** used for expanding variables that uses filename $(FILE_FOLDER) $(FILE_NAME) and $(FILE_EXTENSION). */
+    /** used for expanding variables that uses filename $(FILE.FOLDER) $(FILE.NAME) and $(FILE.EXTENSION). */
     const gchar *filename;
 
     /** used for expanding variable $(JOBCODE) */
     const gchar *jobcode;
 
-    /** used for expanding variables such as $(IMAGE_WIDTH) $(IMAGE_HEIGHT). */
+    /** used for expanding image-scoped variables. */
     dt_imgid_t imgid;
 
     /** used as thread-safe sequence number. only used if >= 0. */

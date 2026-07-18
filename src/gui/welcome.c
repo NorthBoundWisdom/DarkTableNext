@@ -170,7 +170,7 @@ static void _on_browse_dir_clicked(GtkWidget *btn, gpointer data)
         _("select directory"), GTK_WINDOW(topwindow), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
         _("_open"), _("_cancel"));
 
-    // Strip pattern variables (e.g. "$(PICTURES_FOLDER)/...") before
+    // Strip pattern variables (e.g. "$(FOLDER.PICTURES)/...") before
     // passing the path to the chooser.
     gchar *old = g_strdup(gtk_entry_get_text(entry));
     char *dollar = g_strstr_len(old, -1, "$");

@@ -98,6 +98,7 @@
   - 已完成混合、遮罩、样式与预置的参数合同：逐版本转换函数、旧版内置预置及废弃的 blend enum 均已删除；包括仅为旧历史保留的 difference、subtract inverse、divide inverse 与 Lab L-channel。历史版本或大小不匹配的参数直接拒绝，未知混合模式回退到 normal。
   - 已完成插件参数合同：IOP、格式、存储及 lib 插件 ABI 不再暴露 `legacy_params`；所有残留的逐版本实现与仅供它们使用的辅助代码已删除。lib/export 预置仅保留当前精确版本与大小的参数块。
   - 已完成 IOP 顺序合同：只保留 0.9 RAW/JPEG 内置顺序与 custom 顺序；legacy/v3 表、迁移代码、预置和回退分支均已删除，未知顺序版本回退至当前默认值。
+  - 已完成变量模板合同：只接受点号命名的 0.9 变量；内置水印、默认设置、CLI、测试和自动补全均已迁移，旧下划线、短名和旧参数语法不再自动改写。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。

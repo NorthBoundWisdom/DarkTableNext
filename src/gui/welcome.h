@@ -46,7 +46,7 @@ void dt_welcome_screen_page_add_paragraph(dt_welcome_screen_t *ws, int page_idx,
 // Add a directory-chooser row to a page.
 // Reads and writes a string conf key holding the directory path.
 // Use this for string keys that hold path patterns (e.g. containing
-// $(PICTURES_FOLDER)) which cannot be typed as 'dir' in the XML.
+// $(FOLDER.PICTURES)) which cannot be typed as 'dir' in the XML.
 // description is optional (NULL = none).
 void dt_welcome_screen_page_add_dirchooser(dt_welcome_screen_t *ws, int page_idx, const char *label,
                                            const char *description, const char *conf_key);

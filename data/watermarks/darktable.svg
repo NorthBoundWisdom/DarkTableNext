@@ -992,7 +992,7 @@
          x="77.26445"
          y="1038.9618"
          id="tspan3689-7"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13px;line-height:125%;font-family:AlMateen;-inkscape-font-specification:'AlMateen Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Timestamp: $(EXIF.DATE)</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13px;line-height:125%;font-family:AlMateen;-inkscape-font-specification:'AlMateen Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">Timestamp: $(EXIF.YEAR)-$(EXIF.MONTH)-$(EXIF.DAY) $(EXIF.HOUR):$(EXIF.MINUTE):$(EXIF.SECOND)</tspan></text>
     <g
        style="display:inline"
        id="g7363"

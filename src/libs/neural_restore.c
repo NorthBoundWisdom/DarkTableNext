@@ -121,7 +121,7 @@
 // 3. output parameters (collapsible section)
 //    common (all three tabs):
 //      - add to catalog: auto-import output into darktable library
-//      - output directory: supports darktable variables (e.g. $(FILE_FOLDER))
+//      - output directory: supports darktable variables (e.g. $(FILE.FOLDER))
 //    RGB tabs only (denoise / upscale — raw denoise writes DNG):
 //      - bit depth: 8/16/32-bit TIFF (default 16-bit)
 //      - output ICC profile: pick any installed profile, or keep
@@ -1367,8 +1367,8 @@ static int32_t _process_job_run(dt_job_t *job)
         if (dot)
             *dot = '\0';
 
-        // expand output directory variables (e.g. $(FILE_FOLDER))
-        char *dir_pattern = (j->output_dir && j->output_dir[0]) ? j->output_dir : "$(FILE_FOLDER)";
+        // expand output directory variables (e.g. $(FILE.FOLDER))
+        char *dir_pattern = (j->output_dir && j->output_dir[0]) ? j->output_dir : "$(FILE.FOLDER)";
         dt_variables_params_t *vp = NULL;
         dt_variables_params_init(&vp);
         vp->filename = srcpath;
@@ -4156,11 +4156,11 @@ void gui_init(dt_lib_module_t *self)
     d->output_dir_entry = gtk_entry_new();
     char *saved_dir = dt_conf_get_string(CONF_OUTPUT_DIR);
     gtk_entry_set_text(GTK_ENTRY(d->output_dir_entry),
-                       (saved_dir && saved_dir[0]) ? saved_dir : "$(FILE_FOLDER)");
+                       (saved_dir && saved_dir[0]) ? saved_dir : "$(FILE.FOLDER)");
     g_free(saved_dir);
     gtk_widget_set_tooltip_text(d->output_dir_entry,
                                 _("output folder — supports darktable variables\n"
-                                  "$(FILE_FOLDER) = source image folder"));
+                                  "$(FILE.FOLDER) = source image folder"));
     gtk_widget_set_hexpand(d->output_dir_entry, TRUE);
     g_signal_connect(d->output_dir_entry, "changed", G_CALLBACK(_output_dir_changed), self);
 

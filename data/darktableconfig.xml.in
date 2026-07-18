@@ -1518,14 +1518,14 @@
   <dtconfig prefs="lighttable" section="thumbs">
     <name>plugins/lighttable/extended_pattern</name>
     <type>longstring</type>
-    <default>$(FILE_NAME).$(FILE_EXTENSION)$(NL)&lt;b&gt;$(EXIF.EXPOSURE)&lt;/b&gt; • &lt;b&gt;f/$(EXIF.APERTURE)&lt;/b&gt; • &lt;b&gt;$(EXIF.FOCAL.LENGTH)&lt;/b&gt;mm • ISO &lt;b&gt;$(EXIF.ISO)&lt;/b&gt; $(GPS.LOCATION.ICON) $(EXIF.FLASH.ICON) $(SIDECAR_TXT)</default>
+    <default>$(FILE.NAME).$(FILE.EXTENSION)$(NL)&lt;b&gt;$(EXIF.EXPOSURE)&lt;/b&gt; • &lt;b&gt;f/$(EXIF.APERTURE)&lt;/b&gt; • &lt;b&gt;$(EXIF.FOCAL.LENGTH)&lt;/b&gt;mm • ISO &lt;b&gt;$(EXIF.ISO)&lt;/b&gt; $(GPS.LOCATION.ICON) $(EXIF.FLASH.ICON) $(SIDECAR_TXT)</default>
     <shortdescription>pattern for the thumbnail extended overlay text</shortdescription>
     <longdescription>see manual to know all the tags you can use.</longdescription>
   </dtconfig>
   <dtconfig prefs="lighttable" section="thumbs">
     <name>plugins/lighttable/thumbnail_tooltip_pattern</name>
     <type>longstring</type>
-    <default>&lt;b&gt;$(FILE_NAME).$(FILE_EXTENSION)&lt;/b&gt;$(NL)$(EXIF.DATE.REGIONAL) $(EXIF.TIME.REGIONAL) $(GPS.LOCATION.ICON) $(EXIF.FLASH.ICON)$(NL)&lt;b&gt;$(EXIF.EXPOSURE)&lt;/b&gt; • &lt;b&gt;f/$(EXIF.APERTURE)&lt;/b&gt; • &lt;b&gt;$(EXIF.FOCAL.LENGTH)&lt;/b&gt;mm • ISO &lt;b&gt;$(EXIF.ISO)&lt;/b&gt;</default>
+    <default>&lt;b&gt;$(FILE.NAME).$(FILE.EXTENSION)&lt;/b&gt;$(NL)$(EXIF.DATE.REGIONAL) $(EXIF.TIME.REGIONAL) $(GPS.LOCATION.ICON) $(EXIF.FLASH.ICON)$(NL)&lt;b&gt;$(EXIF.EXPOSURE)&lt;/b&gt; • &lt;b&gt;f/$(EXIF.APERTURE)&lt;/b&gt; • &lt;b&gt;$(EXIF.FOCAL.LENGTH)&lt;/b&gt;mm • ISO &lt;b&gt;$(EXIF.ISO)&lt;/b&gt;</default>
     <shortdescription>pattern for the thumbnail tooltip (empty to disable)</shortdescription>
     <longdescription>see manual to know all the tags you can use.</longdescription>
   </dtconfig>
@@ -1651,9 +1651,9 @@
   <dtconfig prefs="import" section="session">
     <name>session/base_directory_pattern</name>
     <type>string</type>
-    <default>$(PICTURES_FOLDER)/Darktable</default>
+    <default>$(FOLDER.PICTURES)/Darktable</default>
     <shortdescription>base filmroll's directory</shortdescription>
-    <longdescription><![CDATA[directory where newly imported filmrolls are stored; the default uses <b>$(PICTURES_FOLDER)</b>, which expands to your system's pictures folder: <i>~/Pictures</i> on macOS and Linux, <i>C:/Users/username/Pictures</i> on Windows]]></longdescription>
+    <longdescription><![CDATA[directory where newly imported filmrolls are stored; the default uses <b>$(FOLDER.PICTURES)</b>, which expands to your system's pictures folder: <i>~/Pictures</i> on macOS and Linux, <i>C:/Users/username/Pictures</i> on Windows]]></longdescription>
     <welcomescreen pagenum="2" questionnum="1" dirchooser="yes"/>
   </dtconfig>
 
@@ -1676,7 +1676,7 @@
   <dtconfig prefs="import" section="session">
     <name>session/filename_pattern</name>
     <type>string</type>
-    <default>$(YEAR)$(MONTH)$(DAY)_$(SEQUENCE).$(FILE_EXTENSION)</default>
+    <default>$(YEAR)$(MONTH)$(DAY)_$(SEQUENCE).$(FILE.EXTENSION)</default>
     <shortdescription>file naming pattern</shortdescription>
     <longdescription>file naming pattern used for a import session</longdescription>
   </dtconfig>
@@ -2725,7 +2725,7 @@
   <dtconfig>
     <name>plugins/imageio/storage/disk/file_directory</name>
     <type>string</type>
-    <default>$(FILE_FOLDER)/darktable_exported/$(FILE_NAME)</default>
+    <default>$(FILE.FOLDER)/darktable_exported/$(FILE.NAME)</default>
     <shortdescription/>
     <longdescription/>
   </dtconfig>

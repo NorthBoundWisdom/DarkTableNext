@@ -551,14 +551,14 @@ int main(int argc, char *arg[])
         }
         fprintf(
             stderr,
-            _("notice: output location is a directory. assuming '%s/$(FILE_NAME).%s' output pattern"),
+            _("notice: output location is a directory. assuming '%s/$(FILE.NAME).%s' output pattern"),
             output_filename, output_ext);
         fprintf(stderr, "\n");
         gchar *temp_of = g_strdup(output_filename);
         g_free(output_filename);
         if (g_str_has_suffix(temp_of, "/"))
             temp_of[strlen(temp_of) - 1] = '\0';
-        output_filename = g_strconcat(temp_of, "/$(FILE_NAME)", NULL);
+        output_filename = g_strconcat(temp_of, "/$(FILE.NAME)", NULL);
         g_free(temp_of);
     }
 

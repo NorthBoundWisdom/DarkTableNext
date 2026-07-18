@@ -250,7 +250,7 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata,
             g_strlcpy(filename, result_filename, sizeof(filename));
             g_free(result_filename);
 
-            // if filenamepattern is a directory just add ${FILE_NAME} as
+            // if filenamepattern is a directory just add ${FILE.NAME} as
             // default..  this can happen if the filename component of the
             // pattern is an empty variable
             const char last_char = *(filename + strlen(filename) - 1);
@@ -258,7 +258,7 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata,
             {
                 // add to the end of the original pattern without caring about a
                 // potentially added "_$(SEQUENCE)"
-                if (snprintf(pattern, sizeof(pattern), "%s" G_DIR_SEPARATOR_S "$(FILE_NAME)",
+                if (snprintf(pattern, sizeof(pattern), "%s" G_DIR_SEPARATOR_S "$(FILE.NAME)",
                              d->filename) < sizeof(pattern))
                     goto try_again;
             }
