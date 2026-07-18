@@ -600,28 +600,6 @@ colormapping_mapping (read_only image2d_t in, read_only image2d_t tmp, write_onl
 #undef MAXN
 
 
-/* kernel for the colorbalance module */
-kernel void
-colorbalance (read_only image2d_t in, write_only image2d_t out, const int width, const int height,
-              const float4 lift, const float4 gain, const float4 gamma_inv, const float saturation, const float contrast, const float grey)
-{
-  const int x = get_global_id(0);
-  const int y = get_global_id(1);
-
-  if(x >= width || y >= height) return;
-
-  float4 Lab = read_imagef(in, sampleri, (int2)(x, y));
-  float4 sRGB = XYZ_to_sRGB(Lab_to_XYZ(Lab));
-
-  // Lift gamma gain
-  sRGB = (sRGB <= (float4)0.0031308f) ? 12.92f * sRGB : (1.0f + 0.055f) * dtcl_pow(sRGB, (float4)1.0f/2.4f) - (float4)0.055f;
-  sRGB = dtcl_pow(fmax(((sRGB - (float4)1.0f) * lift + (float4)1.0f) * gain, (float4)0.0f), gamma_inv);
-  sRGB = (sRGB <= (float4)0.04045f) ? sRGB / 12.92f : dtcl_pow((sRGB + (float4)0.055f) / (1.0f + 0.055f), (float4)2.4f);
-  Lab.xyz = XYZ_to_Lab(sRGB_to_XYZ(sRGB)).xyz;
-
-  write_imagef (out, (int2)(x, y), Lab);
-}
-
 kernel void
 colorbalance_lgg (read_only image2d_t in, write_only image2d_t out, const int width, const int height,
               const float4 lift, const float4 gain, const float4 gamma_inv, const float saturation, const float contrast, const float grey, const float saturation_out)

@@ -46,7 +46,7 @@ http://www.youtube.com/watch?v=JVoUgR6bhBc
 // negative values to the wheels :(
 //#define SHOW_COLOR_WHEELS
 
-DT_MODULE_INTROSPECTION(3, dt_iop_colorbalance_params_t)
+DT_MODULE_INTROSPECTION(4, dt_iop_colorbalance_params_t)
 
 /*
 
@@ -58,9 +58,8 @@ DT_MODULE_INTROSPECTION(3, dt_iop_colorbalance_params_t)
 
 typedef enum dt_iop_colorbalance_mode_t
 {
-    LIFT_GAMMA_GAIN = 0,    // $DESCRIPTION: "lift, gamma, gain (ProPhoto RGB)"
-    SLOPE_OFFSET_POWER = 1, // $DESCRIPTION: "slope, offset, power (ProPhoto RGB)"
-    LEGACY = 2              // $DESCRIPTION: "lift, gamma, gain (sRGB)"
+    LIFT_GAMMA_GAIN = 0,   // $DESCRIPTION: "lift, gamma, gain (ProPhoto RGB)"
+    SLOPE_OFFSET_POWER = 1 // $DESCRIPTION: "slope, offset, power (ProPhoto RGB)"
 } dt_iop_colorbalance_mode_t;
 
 typedef enum _colorbalance_channel_t
@@ -139,7 +138,6 @@ typedef struct dt_iop_colorbalance_data_t
 
 typedef struct dt_iop_colorbalance_global_data_t
 {
-    int kernel_colorbalance;
     int kernel_colorbalance_cdl;
     int kernel_colorbalance_lgg;
 } dt_iop_colorbalance_global_data_t;
@@ -206,42 +204,6 @@ static inline void _apply_fulcrum_contrast(dt_aligned_pixel_t rgb, const dt_alig
     for_each_channel(c) rgb[c] /= grey[c];
     dt_vector_powf(rgb, contrast_power, rgb);
     for_each_channel(c) rgb[c] *= grey[c];
-}
-
-static void _process_legacy(const dt_aligned_pixel_t in, dt_aligned_pixel_t out,
-                            const size_t npixels, const dt_aligned_pixel_t lift,
-                            const dt_aligned_pixel_t gamma_inv, const dt_aligned_pixel_t gain)
-{
-    for (size_t k = 0; k < npixels; k++)
-    {
-        // transform the pixel to sRGB:
-        // Lab -> XYZ
-        dt_aligned_pixel_t XYZ = {0.0f};
-        dt_Lab_to_XYZ(in + 4 * k, XYZ);
-
-        // XYZ -> sRGB
-        dt_aligned_pixel_t rgb = {0.0f};
-        dt_XYZ_to_sRGB(XYZ, rgb);
-
-        // do the calculation in RGB space
-        for_each_channel(c)
-        {
-            // lift gamma gain - apply lift and gain
-            rgb[c] = (((rgb[c] - one[c]) * lift[c]) + one[c]) * gain[c];
-        }
-        dt_vector_max(rgb, rgb, zero); // clip away negatives
-        // lift gamma gain - apply gamma
-        dt_vector_powf(rgb, gamma_inv, rgb);
-
-        // transform the result back to Lab
-        // sRGB -> XYZ
-        dt_sRGB_to_XYZ(rgb, XYZ);
-
-        // XYZ -> Lab
-        dt_aligned_pixel_t res;
-        dt_XYZ_to_Lab(XYZ, res);
-        copy_pixel_nontemporal(out + 4 * k, res);
-    }
 }
 
 #ifndef __SSE2__
@@ -537,10 +499,6 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
         (2.0f - d->gamma[CHANNEL_RED]) * (2.0f - d->gamma[CHANNEL_FACTOR]),
         (2.0f - d->gamma[CHANNEL_GREEN]) * (2.0f - d->gamma[CHANNEL_FACTOR]),
         (2.0f - d->gamma[CHANNEL_BLUE]) * (2.0f - d->gamma[CHANNEL_FACTOR]), 1.0f};
-    const dt_aligned_pixel_t gamma_inv_legacy = {(gamma[0] != 0.0f) ? 1.0f / gamma[0] : 1000000.0f,
-                                                 (gamma[1] != 0.0f) ? 1.0f / gamma[1] : 1000000.0f,
-                                                 (gamma[2] != 0.0f) ? 1.0f / gamma[2] : 1000000.0f,
-                                                 1.0f};
     const dt_aligned_pixel_t gamma_inv_lgg = {
         2.2f * ((gamma[0] != 0.0f) ? 1.0f / gamma[0] : 1000000.0f),
         2.2f * ((gamma[1] != 0.0f) ? 1.0f / gamma[1] : 1000000.0f),
@@ -560,10 +518,6 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
         size_t end = MIN(chunkstart + chunksize, npixels);
         switch (mode)
         {
-        case LEGACY:
-            _process_legacy(in + 4 * chunkstart, out + 4 * chunkstart, end - chunkstart, lift,
-                            gamma_inv_legacy, gain);
-            break;
         case LIFT_GAMMA_GAIN:
             _process_lgg(in + 4 * chunkstart, out + 4 * chunkstart, end - chunkstart, lift,
                          gamma_inv_lgg, gain, grey, saturation, saturation_out, contrast_power);
@@ -592,33 +546,6 @@ int process_cl(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem dev_
 
     switch (d->mode)
     {
-    case LEGACY:
-    {
-        const float lift[4] = {2.0f - (d->lift[CHANNEL_RED] * d->lift[CHANNEL_FACTOR]),
-                               2.0f - (d->lift[CHANNEL_GREEN] * d->lift[CHANNEL_FACTOR]),
-                               2.0f - (d->lift[CHANNEL_BLUE] * d->lift[CHANNEL_FACTOR]), 0.0f},
-                    gamma[4] = {d->gamma[CHANNEL_RED] * d->gamma[CHANNEL_FACTOR],
-                                d->gamma[CHANNEL_GREEN] * d->gamma[CHANNEL_FACTOR],
-                                d->gamma[CHANNEL_BLUE] * d->gamma[CHANNEL_FACTOR], 0.0f},
-                    gamma_inv[4] = {(gamma[0] != 0.0f) ? 1.0f / gamma[0] : 1000000.0f,
-                                    (gamma[1] != 0.0f) ? 1.0f / gamma[1] : 1000000.0f,
-                                    (gamma[2] != 0.0f) ? 1.0f / gamma[2] : 1000000.0f, 0.0f},
-                    gain[4] = {d->gain[CHANNEL_RED] * d->gain[CHANNEL_FACTOR],
-                               d->gain[CHANNEL_GREEN] * d->gain[CHANNEL_FACTOR],
-                               d->gain[CHANNEL_BLUE] * d->gain[CHANNEL_FACTOR], 0.0f},
-                    contrast = (d->contrast != 0.0f) ? 1.0f / d->contrast : 1000000.0f,
-                    grey = d->grey / 100.0f, saturation = d->saturation;
-
-        err = dt_opencl_enqueue_kernel_2d_args(
-            devid, gd->kernel_colorbalance, width, height, CLARG(dev_in), CLARG(dev_out),
-            CLARG(width), CLARG(height), CLARG(lift), CLARG(gain), CLARG(gamma_inv),
-            CLARG(saturation), CLARG(contrast), CLARG(grey));
-        if (err != CL_SUCCESS)
-            goto error;
-        return CL_SUCCESS;
-
-        break;
-    }
     case LIFT_GAMMA_GAIN:
     {
         const float lift[4] = {2.0f - (d->lift[CHANNEL_RED] * d->lift[CHANNEL_FACTOR]),
@@ -1227,7 +1154,6 @@ void init_global(dt_iop_module_so_t *self)
     const int program = 8; // extended.cl, from programs.conf
     dt_iop_colorbalance_global_data_t *gd = malloc(sizeof(dt_iop_colorbalance_global_data_t));
     self->data = gd;
-    gd->kernel_colorbalance = dt_opencl_create_kernel(program, "colorbalance");
     gd->kernel_colorbalance_lgg = dt_opencl_create_kernel(program, "colorbalance_lgg");
     gd->kernel_colorbalance_cdl = dt_opencl_create_kernel(program, "colorbalance_cdl");
 }
@@ -1235,7 +1161,6 @@ void init_global(dt_iop_module_so_t *self)
 void cleanup_global(dt_iop_module_so_t *self)
 {
     dt_iop_colorbalance_global_data_t *gd = self->data;
-    dt_opencl_free_kernel(gd->kernel_colorbalance);
     dt_opencl_free_kernel(gd->kernel_colorbalance_lgg);
     dt_opencl_free_kernel(gd->kernel_colorbalance_cdl);
     free(self->data);
@@ -1281,19 +1206,6 @@ void commit_params(dt_iop_module_t *self, dt_iop_params_t *p1, dt_dev_pixelpipe_
         d->gain[CHANNEL_RED] = (p->gain[CHANNEL_RED] - XYZ[1]) + 1.f;
         d->gain[CHANNEL_GREEN] = (p->gain[CHANNEL_GREEN] - XYZ[1]) + 1.f;
         d->gain[CHANNEL_BLUE] = (p->gain[CHANNEL_BLUE] - XYZ[1]) + 1.f;
-
-        break;
-    }
-
-    case LEGACY:
-    {
-        // Luminance is not corrected in lift/gamma/gain for compatibility
-        for (int i = 0; i < CHANNEL_SIZE; i++)
-        {
-            d->lift[i] = p->lift[i];
-            d->gamma[i] = p->gamma[i];
-            d->gain[i] = p->gain[i];
-        }
 
         break;
     }
@@ -1347,7 +1259,7 @@ void set_visible_widgets(dt_iop_colorbalance_gui_data_t *g)
     const int mode = dt_bauhaus_combobox_get(g->mode);
     const int control_mode = dt_bauhaus_combobox_get(g->controls);
 
-    gtk_widget_set_visible(g->master_box, mode != LEGACY);
+    gtk_widget_set_visible(g->master_box, TRUE);
 
     dt_conf_set_string("plugins/darkroom/colorbalance/controls", control_mode == RGBL ? "RGBL" :
                                                                  control_mode == BOTH ? "BOTH" :

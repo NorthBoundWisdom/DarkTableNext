@@ -104,6 +104,7 @@
   - 已将 colorzones 固定为 v3 平滑处理和 v2 spline：移除无 UI 入口的 v1 参数/曲线编辑/CPU 与 OpenCL 路径，以及旧的 “strong” 算法选项。
   - 已将 basecurve 的 per-channel 历史 LUT 下线：移除 CPU/OpenCL 分支和内核，并从该模块的色彩保持选项中移除会触发旧算法的 `none`。
   - 已清理通用层的残留兼容入口：移除旧缩略图缓存命名查找、空的导入会话迁移钩子、地点 API 拼写回退，并将 IOP 顺序的应用操作去除迁移命名。
+  - 已移除 colorbalance 的 sRGB legacy 模式及其 CPU/OpenCL 实现；仅保留 ProPhoto RGB 的 lift/gamma/gain 与 slope/offset/power 模式。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
