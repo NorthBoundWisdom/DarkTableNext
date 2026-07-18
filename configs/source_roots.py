@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Manage FreeCM source roots used by darktable's in-tree dependencies."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+FREECM_ROOT = REPO_ROOT / "FreeCM"
+for path in (REPO_ROOT, FREECM_ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from freecm.dependency_roots import (  # noqa: E402
+    DependencyRootConfig,
+    DependencyRootSpec,
+    bind_dependency_root_workflow,
+)
+
+
+DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
+    DependencyRootSpec(
+        dependency_name="rawspeed",
+        repo_name="rawspeed",
+        env_key="RAWSPEED_SOURCE_ROOT",
+        required_relative_paths=("CMakeLists.txt", "data/cameras.xml"),
+    ),
+    DependencyRootSpec(
+        dependency_name="OpenCL",
+        repo_name="OpenCL",
+        env_key="OPENCL_HEADERS_SOURCE_ROOT",
+        required_relative_paths=("CL/opencl.h",),
+    ),
+    DependencyRootSpec(
+        dependency_name="libxcf",
+        repo_name="libxcf",
+        env_key="LIBXCF_SOURCE_ROOT",
+        required_relative_paths=("CMakeLists.txt", "xcf.c", "xcf.h"),
+    ),
+    DependencyRootSpec(
+        dependency_name="whereami",
+        repo_name="whereami",
+        env_key="WHEREAMI_SOURCE_ROOT",
+        required_relative_paths=("src/whereami.c", "src/whereami.h"),
+    ),
+)
+
+
+workflow = bind_dependency_root_workflow(
+    globals(),
+    DependencyRootConfig(
+        repo_root=REPO_ROOT,
+        dependency_root_specs=DEPENDENCY_ROOT_SPECS,
+        repo_display_name="DarkTableNext",
+    ),
+)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

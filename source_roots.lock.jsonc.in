@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 5,
+  "cmakeEnvironment": {},
+  "cmakeCacheVariables": {},
+  "depsMode": "pinned",
+  "depsManualPath": {
+    "rawspeed": "",
+    "OpenCL": "",
+    "libxcf": "",
+    "whereami": ""
+  },
+  "dependencies": {
+    "rawspeed": {
+      "repoName": "rawspeed",
+      "remote": "https://github.com/darktable-org/rawspeed.git",
+      "commit": "d77571487ab94fc17a1a5005d1057343a4170cb9"
+    },
+    "OpenCL": {
+      "repoName": "OpenCL",
+      "remote": "https://github.com/KhronosGroup/OpenCL-Headers.git",
+      "commit": "a98488062f50c77c3e2edaf9c4f8dca7c41781ec"
+    },
+    "libxcf": {
+      "repoName": "libxcf",
+      "remote": "https://github.com/houz/libxcf.git",
+      "commit": "64efecf63ddd952ccf654e479714aaae6f8c5986"
+    },
+    "whereami": {
+      "repoName": "whereami",
+      "remote": "https://github.com/gpakosz/whereami.git",
+      "commit": "dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e"
+    }
+  }
+}
