@@ -2080,9 +2080,9 @@ static gboolean _dev_auto_apply_presets(dt_develop_t *dev)
             {
                 dt_print(
                     DT_DEBUG_PARAMS,
-                    "[dev_auto_apply_presets] no iop-order preset, use DT_IOP_ORDER_LEGACY on %d",
+                    "[dev_auto_apply_presets] no iop-order preset, use the default order on %d",
                     imgid);
-                iop_list = dt_ioppr_get_iop_order_list_version(DT_IOP_ORDER_LEGACY);
+                iop_list = dt_ioppr_get_iop_order_list_version(DT_DEFAULT_IOP_ORDER_RAW);
             }
         }
 

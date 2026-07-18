@@ -229,9 +229,6 @@ GList *dt_styles_module_order_list(const char *name)
         const char *iop_list_txt = (char *)sqlite3_column_text(stmt, 0);
         iop_list = dt_ioppr_deserialize_text_iop_order_list(iop_list_txt);
 
-        // we need to migrate legacy iop order list that may not contains all
-        // modules of the style.
-        dt_ioppr_migrate_legacy_iop_order_list(iop_list);
     }
     sqlite3_finalize(stmt);
     return iop_list;

@@ -3691,7 +3691,7 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
                 return TRUE;
             }
         }
-        else if (iop_order_version == DT_IOP_ORDER_V50 || iop_order_version == DT_IOP_ORDER_V50_JPG)
+        else if (iop_order_version == DT_IOP_ORDER_RAW || iop_order_version == DT_IOP_ORDER_JPG)
         {
             if (!iop_order_list)
                 iop_order_list = dt_ioppr_get_iop_order_list_version(iop_order_version);
