@@ -47,7 +47,7 @@
 #define DT_IOP_TONECURVE_RES 256
 #define MAXNODES 20
 
-DT_MODULE_INTROSPECTION(6, dt_iop_basecurve_params_t)
+DT_MODULE_INTROSPECTION(7, dt_iop_basecurve_params_t)
 
 typedef struct dt_iop_basecurve_node_t
 {
@@ -184,7 +184,6 @@ typedef struct dt_iop_basecurve_global_data_t
 {
     int kernel_basecurve_lut;
     int kernel_basecurve_zero;
-    int kernel_basecurve_legacy_lut;
     int kernel_basecurve_compute_features;
     int kernel_basecurve_blur_h;
     int kernel_basecurve_blur_v;
@@ -568,17 +567,11 @@ static int process_cl_fusion(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piec
             const float mul =
                 exposure_increment(d->exposure_stops, e, d->exposure_fusion, d->exposure_bias);
 
-            if (d->preserve_colors == DT_RGB_NORM_NONE)
-                err = dt_opencl_enqueue_kernel_2d_args(devid, gd->kernel_basecurve_legacy_lut,
-                                                       width, height, CLARG(dev_in),
-                                                       CLARG(dev_tmp1), CLARG(width), CLARG(height),
-                                                       CLARG(mul), CLARG(dev_m), CLARG(dev_coeffs));
-            else
-                err = dt_opencl_enqueue_kernel_2d_args(
-                    devid, gd->kernel_basecurve_lut, width, height, CLARG(dev_in), CLARG(dev_tmp1),
-                    CLARG(width), CLARG(height), CLARG(mul), CLARG(dev_m), CLARG(dev_coeffs),
-                    CLARG(preserve_colors), CLARG(dev_profile_info), CLARG(dev_profile_lut),
-                    CLARG(use_work_profile));
+            err = dt_opencl_enqueue_kernel_2d_args(
+                devid, gd->kernel_basecurve_lut, width, height, CLARG(dev_in), CLARG(dev_tmp1),
+                CLARG(width), CLARG(height), CLARG(mul), CLARG(dev_m), CLARG(dev_coeffs),
+                CLARG(preserve_colors), CLARG(dev_profile_info), CLARG(dev_profile_lut),
+                CLARG(use_work_profile));
             if (err != CL_SUCCESS)
                 goto error;
 
@@ -768,18 +761,10 @@ static int process_cl_lut(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, 
     if (err != CL_SUCCESS)
         goto error;
 
-    // read data/kernels/basecurve.cl for a description of "legacy" vs current
-    // Conditional is moved outside of the OpenCL operations for performance.
-    if (d->preserve_colors == DT_RGB_NORM_NONE)
-        err = dt_opencl_enqueue_kernel_2d_args(
-            devid, gd->kernel_basecurve_legacy_lut, width, height, CLARG(dev_in), CLARG(dev_out),
-            CLARG(width), CLARG(height), CLARGFLOAT(1.0f), CLARG(dev_m), CLARG(dev_coeffs));
-    else
-        err = dt_opencl_enqueue_kernel_2d_args(
-            devid, gd->kernel_basecurve_lut, width, height, CLARG(dev_in), CLARG(dev_out),
-            CLARG(width), CLARG(height), CLARGFLOAT(1.0f), CLARG(dev_m), CLARG(dev_coeffs),
-            CLARG(preserve_colors), CLARG(dev_profile_info), CLARG(dev_profile_lut),
-            CLARG(use_work_profile));
+    err = dt_opencl_enqueue_kernel_2d_args(
+        devid, gd->kernel_basecurve_lut, width, height, CLARG(dev_in), CLARG(dev_out), CLARG(width),
+        CLARG(height), CLARGFLOAT(1.0f), CLARG(dev_m), CLARG(dev_coeffs), CLARG(preserve_colors),
+        CLARG(dev_profile_info), CLARG(dev_profile_lut), CLARG(use_work_profile));
 
 error:
     dt_opencl_release_mem_object(dev_m);
@@ -825,29 +810,6 @@ void tiling_callback(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
     }
 }
 
-// See comments of opencl version in data/kernels/basecurve.cl for description of the meaning of "legacy"
-static inline void apply_legacy_curve(const float *const in, float *const out, const int width,
-                                      const int height, const float mul, const float *const table,
-                                      const float *const unbounded_coeffs)
-{
-    const size_t npixels = (size_t)width * height;
-    DT_OMP_FOR()
-    for (size_t k = 0; k < 4 * npixels; k += 4)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            const float f = in[k + i] * mul;
-            // use base curve for values < 1, else use extrapolation.
-            if (f < 1.0f)
-                out[k + i] = fmaxf(table[CLAMP((int)(f * 0x10000ul), 0, 0xffff)], 0.f);
-            else
-                out[k + i] = fmaxf(dt_iop_eval_exp(unbounded_coeffs, f), 0.f);
-        }
-        out[k + 3] = in[k + 3];
-    }
-}
-
-// See description of the equivalent OpenCL function in data/kernels/basecurve.cl
 static inline void apply_curve(const float *const in, float *const out, const int width,
                                const int height, const int preserve_colors, const float mul,
                                const float *const table, const float *const unbounded_coeffs,
@@ -858,8 +820,6 @@ static inline void apply_curve(const float *const in, float *const out, const in
     for (size_t k = 0; k < 4 * npixels; k += 4)
     {
         float ratio = 1.f;
-        // FIXME: Determine if we can get rid of the conditionals within this function in some way to improve performance.
-        // However, solving this one is much harder than the conditional for legacy vs. current
         const float lum = mul * dt_rgb_norm(in + k, preserve_colors, work_profile);
         if (lum > 0.f)
         {
@@ -1043,18 +1003,10 @@ void process_fusion(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const 
 
     for (int e = 0; e < d->exposure_fusion + 1; e++)
     {
-        // for every exposure fusion image:
-        // push by some ev, apply base curve:
-        if (d->preserve_colors == DT_RGB_NORM_NONE)
-            apply_legacy_curve(
-                in, col[0], wd, ht,
-                exposure_increment(d->exposure_stops, e, d->exposure_fusion, d->exposure_bias),
-                d->table, d->unbounded_coeffs);
-        else
-            apply_curve(
-                in, col[0], wd, ht, d->preserve_colors,
-                exposure_increment(d->exposure_stops, e, d->exposure_fusion, d->exposure_bias),
-                d->table, d->unbounded_coeffs, work_profile);
+        // for every exposure fusion image: push by some ev, then apply the base curve.
+        apply_curve(in, col[0], wd, ht, d->preserve_colors,
+                    exposure_increment(d->exposure_stops, e, d->exposure_fusion, d->exposure_bias),
+                    d->table, d->unbounded_coeffs, work_profile);
 
         // compute features
         compute_features(col[0], wd, ht);
@@ -1192,13 +1144,8 @@ void process_lut(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const voi
 
     const int wd = roi_in->width, ht = roi_in->height;
 
-    // Compared to previous implementation, we've at least moved this conditional outside of the image processing loops
-    // so that it is evaluated only once.  See FIXME comments in apply_curve for more potential performance improvements
-    if (d->preserve_colors == DT_RGB_NORM_NONE)
-        apply_legacy_curve(in, out, wd, ht, 1.0, d->table, d->unbounded_coeffs);
-    else
-        apply_curve(in, out, wd, ht, d->preserve_colors, 1.0, d->table, d->unbounded_coeffs,
-                    work_profile);
+    apply_curve(in, out, wd, ht, d->preserve_colors, 1.0, d->table, d->unbounded_coeffs,
+                work_profile);
 }
 
 void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *const ivoid,
@@ -1307,7 +1254,6 @@ void init_global(dt_iop_module_so_t *self)
     self->data = gd;
     gd->kernel_basecurve_lut = dt_opencl_create_kernel(program, "basecurve_lut");
     gd->kernel_basecurve_zero = dt_opencl_create_kernel(program, "basecurve_zero");
-    gd->kernel_basecurve_legacy_lut = dt_opencl_create_kernel(program, "basecurve_legacy_lut");
     gd->kernel_basecurve_compute_features =
         dt_opencl_create_kernel(program, "basecurve_compute_features");
     gd->kernel_basecurve_blur_h = dt_opencl_create_kernel(program, "basecurve_blur_h");
@@ -1331,7 +1277,6 @@ void cleanup_global(dt_iop_module_so_t *self)
     dt_iop_basecurve_global_data_t *gd = self->data;
     dt_opencl_free_kernel(gd->kernel_basecurve_lut);
     dt_opencl_free_kernel(gd->kernel_basecurve_zero);
-    dt_opencl_free_kernel(gd->kernel_basecurve_legacy_lut);
     dt_opencl_free_kernel(gd->kernel_basecurve_compute_features);
     dt_opencl_free_kernel(gd->kernel_basecurve_blur_h);
     dt_opencl_free_kernel(gd->kernel_basecurve_blur_v);
@@ -1923,6 +1868,9 @@ void gui_init(dt_iop_module_t *self)
     self->widget = dt_gui_vbox(g->area);
 
     g->cmb_preserve_colors = dt_bauhaus_combobox_from_params(self, "preserve_colors");
+    const int none_position =
+        dt_bauhaus_combobox_get_from_value(g->cmb_preserve_colors, DT_RGB_NORM_NONE);
+    dt_bauhaus_combobox_remove_at(g->cmb_preserve_colors, none_position);
     gtk_widget_set_tooltip_text(g->cmb_preserve_colors,
                                 _("method to preserve colors when applying contrast"));
 

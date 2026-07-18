@@ -23,7 +23,7 @@
   Primary LUT lookup.  Measures the luminance of a given pixel using a selectable function, looks up that
   luminance in the configured basecurve, and then scales each channel by the result.
 
-  Doing it this way avoids the color shifts documented as being possible in the legacy basecurve approach.
+  Applying the curve to the selected luminance measure avoids color shifts.
 
   Also applies a multiplier prior to lookup in order to support fusion.  The idea of doing this here is to
   emulate the original use case of enfuse, which was to fuse multiple JPEGs from a camera that was set up
@@ -65,32 +65,6 @@ basecurve_zero(write_only image2d_t out, const int width, const int height)
   if(x >= width || y >= height) return;
 
   write_imagef (out, (int2)(x, y), (float4)0.0f);
-}
-
-/*
-  Original basecurve implementation.  Applies a LUT on a per-channel basis which can cause color shifts.
-
-  These can be undesirable (skin tone shifts), or sometimes may be desired (fiery sunset).  Continue to allow
-  the "old" method but don't make it the default, both for backwards compatibility and for those who are willing
-  to take the risks of "artistic" impacts on their image.
-*/
-kernel void
-basecurve_legacy_lut(read_only image2d_t in, write_only image2d_t out, const int width, const int height,
-                   const float mul, read_only image2d_t table, constant float *a)
-{
-  const int x = get_global_id(0);
-  const int y = get_global_id(1);
-
-  if(x >= width || y >= height) return;
-
-  float4 pixel = read_imagef(in, sampleri, (int2)(x, y));
-
-  // apply ev multiplier and use lut or extrapolation:
-  pixel.x = lookup_unbounded(table, mul * pixel.x, a);
-  pixel.y = lookup_unbounded(table, mul * pixel.y, a);
-  pixel.z = lookup_unbounded(table, mul * pixel.z, a);
-  pixel = fmax(pixel, 0.f);
-  write_imagef (out, (int2)(x, y), pixel);
 }
 
 kernel void
