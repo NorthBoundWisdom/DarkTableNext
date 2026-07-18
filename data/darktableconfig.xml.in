@@ -2730,20 +2730,6 @@
     <longdescription/>
   </dtconfig>
   <dtconfig>
-    <name>plugins/imageio/storage/gallery/file_directory</name>
-    <type>string</type>
-    <default>$(HOME)/darktable_gallery/img_$(SEQUENCE)</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/imageio/storage/gallery/title</name>
-    <type>string</type>
-    <default>darktable gallery</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
     <name>context_help/use_default_url</name>
     <type>boolean</type>
     <default>true</default>

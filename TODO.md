@@ -90,7 +90,7 @@
 
 ## P2 — 数据、功能和 UI 重写前的取舍
 
-- [ ] 设定 0.9 数据兼容边界，然后分阶段删除数据库、XMP 和模块参数的历史迁移。
+- [x] 设定 0.9 数据兼容边界，然后分阶段删除数据库、XMP 和模块参数的历史迁移。
   - 核心位置：`src/common/database.c`、`src/common/iop_order.c`、`src/develop/imageop.c`、`src/develop/blend.c`、`src/develop/masks/masks.c`、`src/develop/lightroom.c`。
   - 已确定：主程序不导入旧 darktable 数据库、XMP 或 Lightroom sidecar；没有内置迁移工具。用户须在原应用中完成导出，再创建新的 0.9 资料库。
   - 已完成数据库合同：新建库直接创建最终 schema，`library.db`/`data.db` 均为版本 `1`；任何已有版本均明确拒绝。旧数据库升级、XDG 路径迁移和旧 mipmap 清理已删除。
@@ -107,6 +107,7 @@
 
 - [ ] 以新 UI 的功能清单驱动数据资产清理，而不是盲删运行时资源。
   - 可候选移除：旧主题、图标、样式、快捷键、预置水印、图库导出 (`data/pswp/` + `imageio/storage/gallery.c`)、LaTeX 图书导出 (`data/latex/` + `imageio/storage/latex.c`)。
+  - 已移除图库与 LaTeX 导出：对应存储插件、PhotoSwipe、旧 gallery 样式资源、LaTeX 模板、安装规则及 gallery 配置项均已删除。
   - 当前仍被运行时代码加载、暂不应直接删除：`data/wb_presets.json`（约 4.3 MiB）、`data/noiseprofiles.json`（约 1.7 MiB）、watermarks、shortcuts、OpenCL kernels、RawSpeed 相机数据。
 
 - [x] 确定国际化范围：0.9 只提供英语源码文本。
