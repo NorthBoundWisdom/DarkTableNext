@@ -190,8 +190,27 @@ static const test_t test_real_paths = {
 
 int main(int argc, char *argv[])
 {
-    char *argv_override[] = {"darktable-test-variables",  "--library", ":memory:", "--conf",
-                             "write_sidecar_files=never", NULL};
+    const char *datadir = g_getenv("DARKTABLE_TEST_DATADIR");
+    const char *moduledir = g_getenv("DARKTABLE_TEST_MODULEDIR");
+    const char *configdir = g_getenv("DARKTABLE_TEST_CONFIGDIR");
+    if (!datadir || !moduledir || !configdir)
+    {
+        fprintf(stderr, "darktable-test-variables must run through CTest\n");
+        return 1;
+    }
+
+    char *argv_override[] = {"darktable-test-variables",
+                             "--library",
+                             ":memory:",
+                             "--datadir",
+                             (char *)datadir,
+                             "--moduledir",
+                             (char *)moduledir,
+                             "--configdir",
+                             (char *)configdir,
+                             "--conf",
+                             "write_sidecar_files=never",
+                             NULL};
     int argc_override = sizeof(argv_override) / sizeof(*argv_override) - 1;
 
     // init dt without gui and without data.db:

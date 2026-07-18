@@ -18,10 +18,9 @@
   - 保留：项目定位、0.9 支持范围、FreeCM 初始化/更新、CMake 预设、Clang/GCC + ccache、开发文档链接。
   - 删除：上游徽章和站点、5.6.0 下载链接、Linux/Windows 安装说明、已删除 `build.sh`/`packaging/` 引用、旧社区和贡献入口。
 
-- [x] 把 `darktable-tests` 从默认 FreeCM 物化集合改为显式测试配置。
-  - 涉及：`source_roots.lock.jsonc.in`、`configs/source_roots.py`、`src/tests/benchmark/`。
-  - 目标：普通 `--init`/`--update` 和应用构建不下载测试资产；需要集成/基准测试时使用单独 profile 或明确命令。
-  - 前置验证：为基准和集成测试补一个可重复的 CTest/脚本入口，避免把测试资产变成无人使用的锁定依赖。
+- [x] 删除无调用者的 `darktable-tests` 测试资产依赖。
+  - 普通 FreeCM 初始化和应用构建从不物化该仓库；旧基准脚本依赖的 3.x/4.x XMP 又已被 0.9 明确拒绝。
+  - 已删除独立 benchmark 源根、脚本、sidecar、README 入口及其 FreeCM 管理脚本；新的集成/基准测试应基于 0.9 数据合同重新设计。
 
 - [x] 删除 Linux 桌面集成与 AppStream 产物。
   - 涉及：`data/org.darktable.darktable.desktop.in`、`data/org.darktable.darktable.appdata.xml.in`、`data/CMakeLists.txt` 的 desktop/appdata 分支，以及根 `CMakeLists.txt` 中的 `intltool-merge`、`desktop-file-validate`、`appstream-util` 探测。
@@ -131,19 +130,18 @@
 
 ## P3 — 测试与工程卫生
 
-- [ ] 让测试依赖和测试目标对应起来。
-  - 当前 `src/tests/` 只直接注册变量测试和 CMocka 单测；基准、集成资产和 FreeCM `darktable-tests` 的关系不透明。
-  - 建立 `ctest` 标签（unit / integration / benchmark / requires-assets），并让每个标签按需物化相应源根。
+- [x] 让测试依赖和测试目标对应起来。
+  - 当前 0.9 只保留无需资产的 CTest 单测；变量、样例和 AI 测试均带有 `unit` 标签，并以 `core`、`ai` 子标签区分。
+  - 已删除只支持 ELF `--wrap` 链接器、无法在 macOS 构建的旧 filmicrgb mock 测试和其专用图像辅助代码。
+  - 已删除没有可执行 CMake 目标、且依赖历史 sidecar 的 benchmark/`darktable-tests` 链；新的 integration、benchmark、`requires-assets` 标签仅在其 0.9 测试方案和资产合同落地时添加，避免登记空目标。
 
-- [ ] 清理历史格式与编辑器遗留的后续残项。
-  - modeline 已移除；继续审查 `.clang-format` 中 Windows 头文件排序例外、过时 IDE 配置和未使用的分析工具配置。
-  - 格式化、静态分析与构建验证应由 CMake 预设或新的开发脚本承载，而不是散落的工具说明。
+- [x] 清理历史格式与编辑器遗留的后续残项。
+  - modeline、旧 `.clang-format` 的 Qt/Windows/旧项目头文件分类均已移除；保留 `SortIncludes: Never` 以确保格式化不会重排现有源码的 include。
+  - 已删除绕过 CMake 的 `src/tests/Makefile`/`cache.c`；构建与测试入口统一为 CMake 预设与 CTest。
 
-- [ ] 每次删除后执行最小回归集合。
-  - `python3 configs/source_root_workflow.py --update`
-  - `cmake --preset mac_clang_debug`
-  - `cmake --build --preset mac_clang_debug`
-  - 对受影响功能补充 CTest 或可执行冒烟测试；对数据兼容破坏增加明确的迁移/拒绝行为测试。
+- [x] 每次删除后执行最小回归集合。
+  - 每个阶段均执行 `cmake --preset mac_clang_debug`、`cmake --build --preset mac_clang_debug` 与 `git diff --check`；涉及测试的本阶段会额外执行 CTest。
+  - FreeCM 依赖变动阶段已执行 `python3 configs/source_root_workflow.py --update`；数据兼容删除以拒绝旧数据库、XMP、参数和顺序版本为明确行为。
 
 ## 现阶段应保留
 

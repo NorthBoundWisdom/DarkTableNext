@@ -71,6 +71,7 @@ function(ADD_CMOCKA_TEST _TARGET_NAME)
         COMPILE_OPTIONS
         LINK_LIBRARIES
         LINK_OPTIONS
+        LABELS
     )
 
     cmake_parse_arguments(_add_cmocka_test
@@ -107,6 +108,10 @@ function(ADD_CMOCKA_TEST _TARGET_NAME)
 
     add_test(NAME ${_TARGET_NAME}
              COMMAND ${TARGET_SYSTEM_EMULATOR} ${_TARGET_NAME})
+
+    if(DEFINED _add_cmocka_test_LABELS)
+        set_tests_properties(${_TARGET_NAME} PROPERTIES LABELS "${_add_cmocka_test_LABELS}")
+    endif()
 
 endfunction (ADD_CMOCKA_TEST)
 

@@ -47,7 +47,7 @@ cmake --build --preset mac_clang_debug
 ```sh
 cmake --preset mac_clang_debug -DBUILD_TESTING=ON
 cmake --build --preset mac_clang_debug
-ctest --test-dir build/mac_clang_debug --output-on-failure
+ctest --test-dir build/mac_clang_debug --output-on-failure -L unit
 ```
 
 可用的 macOS 预设：
@@ -58,17 +58,9 @@ ctest --test-dir build/mac_clang_debug --output-on-failure
 
 构建环境应提供 CMake、Ninja、Homebrew 依赖和 `ccache`。若缺少运行库，先安装对应 Homebrew 包，再重新配置预设。
 
-## 测试与基准
+## 测试
 
-启用 `-DBUILD_TESTING=ON` 后，单元测试由 CTest 管理。基准测试不再默认下载图像资产；如需上游标准图像，显式初始化其独立源根：
-
-```sh
-python3 configs/benchmark_source_roots.py init-seeds
-python3 configs/benchmark_source_roots.py materialize
-src/tests/benchmark/darktable-bench
-```
-
-也可以向 `darktable-bench` 传递自己的 RAW 图像：`--image /path/to/image.raw`。
+启用 `-DBUILD_TESTING=ON` 后，当前受支持的测试全部是无需外部资产的 CTest `unit` 测试。旧版基准脚本及其 3.x/4.x sidecar 已随 0.9 数据兼容边界删除；新的集成与基准方案将在新架构确定后重新引入。
 
 ## 开发资料
 
