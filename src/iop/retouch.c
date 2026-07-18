@@ -38,7 +38,7 @@
 
 // this is the version of the modules parameters,
 // and includes version information about compile-time dt
-DT_MODULE_INTROSPECTION(3, dt_iop_retouch_params_t)
+DT_MODULE_INTROSPECTION(4, dt_iop_retouch_params_t)
 
 #define RETOUCH_NO_FORMS 300
 #define RETOUCH_MAX_SCALES 15
@@ -86,7 +86,6 @@ typedef struct dt_iop_retouch_form_data_t
     dt_iop_retouch_fill_modes_t fill_mode; // mode for fill algorithm, erase or fill with color
     float fill_color[3];                   // color for fill algorithm
     float fill_brightness;                 // value to be added to the color
-    int distort_mode; // module v1 => 1, otherwise 2. mode 1 as issues if there's distortion before this module
 } dt_iop_retouch_form_data_t;
 
 typedef struct retouch_user_data_t
@@ -632,8 +631,6 @@ static void rt_resynch_params(dt_iop_module_t *self)
                         forms_d[new_form_index].formid = formid;
                         forms_d[new_form_index].scale = p->curr_scale;
                         forms_d[new_form_index].algorithm = p->algorithm;
-                        forms_d[new_form_index].distort_mode = 2;
-
                         switch (forms_d[new_form_index].algorithm)
                         {
                         case DT_IOP_RETOUCH_BLUR:
@@ -681,57 +678,20 @@ static gboolean rt_masks_form_is_in_roi(dt_iop_module_t *self, dt_dev_pixelpipe_
     return TRUE;
 }
 
-static void rt_masks_point_denormalize(dt_dev_pixelpipe_iop_t *piece, const dt_iop_roi_t *roi,
-                                       const float *points, size_t points_count, float *new)
-{
-    const float scalex = piece->pipe->iwidth * roi->scale;
-    const float scaley = piece->pipe->iheight * roi->scale;
-
-    for (size_t i = 0; i < points_count * 2; i += 2)
-    {
-        new[i] = points[i] * scalex;
-        new[i + 1] = points[i + 1] * scaley;
-    }
-}
-
 static int rt_masks_point_calc_delta(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
                                      const dt_iop_roi_t *roi, const float *target,
-                                     const float *source, float *dx, float *dy,
-                                     const int distort_mode)
+                                     const float *source, float *dx, float *dy)
 {
-    // if distort_mode==1 we don't scale at the right place, hence false
-    // positions if there's distortion before this module. we keep it
-    // for backward compatibility only. all new forms have
-    // distort_mode==2
-    dt_boundingbox_t points;
-    if (distort_mode == 1)
-    {
-        rt_masks_point_denormalize(piece, roi, target, 1, points);
-        rt_masks_point_denormalize(piece, roi, source, 1, points + 2);
-    }
-    else
-    {
-        points[0] = target[0] * piece->pipe->iwidth;
-        points[1] = target[1] * piece->pipe->iheight;
-        points[2] = source[0] * piece->pipe->iwidth;
-        points[3] = source[1] * piece->pipe->iheight;
-    }
+    dt_boundingbox_t points = {target[0] * piece->pipe->iwidth, target[1] * piece->pipe->iheight,
+                               source[0] * piece->pipe->iwidth, source[1] * piece->pipe->iheight};
 
     const int res = dt_dev_distort_transform_plus(self->dev, piece->pipe, self->iop_order,
                                                   DT_DEV_TRANSFORM_DIR_BACK_INCL, points, 2);
     if (!res)
         return res;
 
-    if (distort_mode == 1)
-    {
-        *dx = points[0] - points[2];
-        *dy = points[1] - points[3];
-    }
-    else
-    {
-        *dx = (points[0] - points[2]) * roi->scale;
-        *dy = (points[1] - points[3]) * roi->scale;
-    }
+    *dx = (points[0] - points[2]) * roi->scale;
+    *dy = (points[1] - points[3]) * roi->scale;
 
     return res;
 }
@@ -739,7 +699,7 @@ static int rt_masks_point_calc_delta(dt_iop_module_t *self, dt_dev_pixelpipe_iop
 /* returns (dx dy) to get from the source to the destination */
 static int rt_masks_get_delta_to_destination(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
                                              const dt_iop_roi_t *roi, dt_masks_form_t *form,
-                                             float *dx, float *dy, const int distort_mode)
+                                             float *dx, float *dy)
 {
     int res = 0;
 
@@ -747,29 +707,25 @@ static int rt_masks_get_delta_to_destination(dt_iop_module_t *self, dt_dev_pixel
     {
         const dt_masks_point_path_t *pt = form->points->data;
 
-        res = rt_masks_point_calc_delta(self, piece, roi, pt->corner, form->source, dx, dy,
-                                        distort_mode);
+        res = rt_masks_point_calc_delta(self, piece, roi, pt->corner, form->source, dx, dy);
     }
     else if (form->type & DT_MASKS_CIRCLE)
     {
         const dt_masks_point_circle_t *pt = form->points->data;
 
-        res = rt_masks_point_calc_delta(self, piece, roi, pt->center, form->source, dx, dy,
-                                        distort_mode);
+        res = rt_masks_point_calc_delta(self, piece, roi, pt->center, form->source, dx, dy);
     }
     else if (form->type & DT_MASKS_ELLIPSE)
     {
         const dt_masks_point_ellipse_t *pt = form->points->data;
 
-        res = rt_masks_point_calc_delta(self, piece, roi, pt->center, form->source, dx, dy,
-                                        distort_mode);
+        res = rt_masks_point_calc_delta(self, piece, roi, pt->center, form->source, dx, dy);
     }
     else if (form->type & DT_MASKS_BRUSH)
     {
         const dt_masks_point_brush_t *pt = form->points->data;
 
-        res = rt_masks_point_calc_delta(self, piece, roi, pt->corner, form->source, dx, dy,
-                                        distort_mode);
+        res = rt_masks_point_calc_delta(self, piece, roi, pt->corner, form->source, dx, dy);
     }
 
     return res;
@@ -2518,8 +2474,7 @@ static void rt_compute_roi_in(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *pie
                         p->rt_forms[index].algorithm == DT_IOP_RETOUCH_CLONE)
                     {
                         float dx = 0.f, dy = 0.f;
-                        if (rt_masks_get_delta_to_destination(self, piece, roi_in, form, &dx, &dy,
-                                                              p->rt_forms[index].distort_mode))
+                        if (rt_masks_get_delta_to_destination(self, piece, roi_in, form, &dx, &dy))
                         {
                             roiy = fminf(ft - dy, roiy);
                             roix = fminf(fl - dx, roix);
@@ -2598,8 +2553,7 @@ static void rt_extend_roi_in_from_source_clones(dt_iop_module_t *self,
                     // get the destination area
                     int fl_dest, ft_dest;
                     float dx = 0.f, dy = 0.f;
-                    if (!rt_masks_get_delta_to_destination(self, piece, roi_in, form, &dx, &dy,
-                                                           p->rt_forms[index].distort_mode))
+                    if (!rt_masks_get_delta_to_destination(self, piece, roi_in, form, &dx, &dy))
                     {
                         continue;
                     }
@@ -3297,8 +3251,7 @@ static void rt_process_forms(float *layer, dwt_params_t *const wt_p, const int s
 
                 if (algo != DT_IOP_RETOUCH_BLUR && algo != DT_IOP_RETOUCH_FILL)
                 {
-                    if (!rt_masks_get_delta_to_destination(self, piece, roi_layer, form, &dx, &dy,
-                                                           p->rt_forms[index].distort_mode))
+                    if (!rt_masks_get_delta_to_destination(self, piece, roi_layer, form, &dx, &dy))
                     {
                         dt_free_align(mask);
                         continue;
@@ -4006,8 +3959,7 @@ static cl_int rt_process_forms_cl(cl_mem dev_layer, dwt_params_cl_t *const wt_p,
                 const dt_iop_retouch_algo_type_t algo = p->rt_forms[index].algorithm;
                 if (algo != DT_IOP_RETOUCH_BLUR && algo != DT_IOP_RETOUCH_FILL)
                 {
-                    if (!rt_masks_get_delta_to_destination(self, piece, roi_layer, form, &dx, &dy,
-                                                           p->rt_forms[index].distort_mode))
+                    if (!rt_masks_get_delta_to_destination(self, piece, roi_layer, form, &dx, &dy))
                     {
                         dt_free_align(mask);
                         continue;

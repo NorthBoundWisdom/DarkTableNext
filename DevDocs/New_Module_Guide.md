@@ -1,6 +1,6 @@
 # Guide to Creating a New IOP Module
 
-This guide walks you through the process of creating a new Image Operation (IOP) module in darktable.
+This guide walks you through the process of creating a new Image Operation (IOP) module in DarkTableNext.
 
 ## 1. Files to Create
 
@@ -18,7 +18,7 @@ add_iop(mymodule "mymodule.c")
 ```
 
 ### `src/common/iop_order.c`
-Add your module to **all** relevant pipeline order lists (e.g., `legacy_order`, `v30_order`, `v50_order`, `v30_jpg_order`, `v50_jpg_order`).
+Add your module to the 0.9 `raw_order` and `jpg_order` pipeline lists as appropriate.
 You must decide where your processing should happen (before or after which other operations).
 ```c
 // Example: placing it after exposure
@@ -26,15 +26,8 @@ You must decide where your processing should happen (before or after which other
 { { 13.0f }, "mymodule", 0 },
 ```
 
-You must also inject your module into `dt_ioppr_get_iop_order_list()`, which runs dynamically when upgrading or falling back. Find the `_insert_before` section and add your module:
-```c
-_insert_before(iop_order_list, "module_it_should_run_before", "mymodule");
-```
-
 **Troubleshooting "missing iop_order for module" Fatal Error:**
-If darktable crashes on startup with `[dt_init] ERROR: iop order looks bad, aborting.` and logs `missing iop_order for module mymodule`, it means your module was registered in `CMakeLists.txt` but the iop string name does not perfectly match its placement in `iop_order.c`. Make sure:
-1. You have correctly defined the string identifier (e.g., `"mymodule"`) in every `iop_order` table array.
-2. You added an `_insert_before()` rule in `dt_ioppr_get_iop_order_list()`.
+If DarkTableNext logs `missing iop_order for module mymodule`, the module name in `CMakeLists.txt` does not exactly match its entry in the applicable 0.9 order table. Add the same identifier to `raw_order` and/or `jpg_order`.
 
 ## 3. Implementing the Module (`mymodule.c`)
 

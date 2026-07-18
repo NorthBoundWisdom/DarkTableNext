@@ -1,6 +1,6 @@
 # IOP Module API Reference
 
-This guide documents the functions that darktable Image Operation (IOP) modules can implement. The API is defined in `src/iop/iop_api.h` and used via `src/develop/imageop.h`. See `src/iop/useless.c` for a fully documented example module.
+This guide documents the functions that DarkTableNext Image Operation (IOP) modules can implement. The API is defined in `src/iop/iop_api.h` and used via `src/develop/imageop.h`. See `src/iop/useless.c` for a fully documented example module.
 
 See also:
 - [Pixelpipe Architecture](pixelpipe_architecture.md) for pipeline data flow and caching.
@@ -49,7 +49,8 @@ typedef struct dt_iop_mymodule_params_t
 
 **Rules:**
 - Use `gboolean` not `bool` (4-byte alignment)
-- Changes require version bump and `legacy_params()` migration
+- Changes require a version bump. DarkTableNext 0.9 accepts only the exact
+  current parameter block; it does not provide parameter migrations.
 - Values are serialized to database - no pointers
 
 **Introspection tags** (parsed from comments at compile time, used by `dt_bauhaus_*_from_params()`):
@@ -292,7 +293,7 @@ dt_iop_refresh_all(module);      // invalidate all pipes
 
 These functions provide metadata for the module. See `src/iop/iop_api.h` for signatures.
 
-Common flags: `IOP_FLAGS_INCLUDE_IN_STYLES`, `IOP_FLAGS_SUPPORTS_BLENDING`, `IOP_FLAGS_ALLOW_TILING`, `IOP_FLAGS_HIDDEN`, `IOP_FLAGS_DEPRECATED`, `IOP_FLAGS_ONE_INSTANCE`.
+Common flags: `IOP_FLAGS_INCLUDE_IN_STYLES`, `IOP_FLAGS_SUPPORTS_BLENDING`, `IOP_FLAGS_ALLOW_TILING`, `IOP_FLAGS_HIDDEN`, `IOP_FLAGS_ONE_INSTANCE`.
 
 ### GUI Functions
 
@@ -427,33 +428,13 @@ void commit_params(dt_iop_module_t *self, dt_iop_params_t *p1,
 
 ---
 
-## Version Migration
+## Parameter Contract
 
-### `legacy_params()` - Upgrade Old Parameters
-
-```c
-int legacy_params(dt_iop_module_t *self,
-                  const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-  if(old_version == 1)
-  {
-    typedef struct { float exposure; } v1_params_t;
-    const v1_params_t *o = old_params;
-    dt_iop_mymodule_params_t *n = malloc(sizeof(dt_iop_mymodule_params_t));
-
-    n->exposure = o->exposure;
-    n->gamma = 1.0f;          // default for new field
-    n->method = METHOD_AUTO;
-
-    *new_params = n;
-    *new_params_size = sizeof(dt_iop_mymodule_params_t);
-    *new_version = 2;
-    return 0;
-  }
-  return 1;  // Unknown version
-}
-```
+0.9 deliberately has no `legacy_params()` callback. A module may change its
+parameter layout only together with a version bump; history, styles, presets,
+and sidecars that carry another version or size are rejected. New modules must
+therefore publish a complete current parameter block rather than retaining
+conversion code for earlier layouts.
 
 ---
 

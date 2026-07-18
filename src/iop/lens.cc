@@ -66,7 +66,7 @@ G_BEGIN_DECLS
 #error Lensfun 0.3.95 and later development snapshots are not supported.
 #endif
 
-DT_MODULE_INTROSPECTION(10, dt_iop_lens_params_t)
+DT_MODULE_INTROSPECTION(11, dt_iop_lens_params_t)
 
 typedef enum dt_iop_lens_method_t
 {
@@ -121,12 +121,6 @@ typedef enum dt_iop_lens_mode_t
     DT_IOP_LENS_MODE_DISTORT = 1, // $DESCRIPTION: "distort"
 } dt_iop_lens_mode_t;
 
-typedef enum dt_iop_lens_embedded_metadata_version
-{
-    DT_IOP_LENS_EMBEDDED_METADATA_VERSION_1 = 0,
-    DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2 = 1
-} dt_iop_lens_embedded_metadata_version;
-
 typedef struct dt_iop_lens_params_t
 {
     dt_iop_lens_method_t
@@ -161,9 +155,6 @@ typedef struct dt_iop_lens_params_t
     float cor_ca_b_ft; // $DEFAULT: 1 $MIN: 0 $MAX: 2 $DESCRIPTION: "TCA blue"
     // TODO should be possible to also add TCA fine tune modifications
 
-    // scale_md_v1 is used by embedded metadata algorithm v1. Kept for backward compatibility
-    float scale_md_v1; // $DEFAULT: 1 $MIN: 0.9 $MAX: 1.1 $DESCRIPTION: "scale fine-tune"
-    dt_iop_lens_embedded_metadata_version md_version;
     // scale_md is the image scaling. Doesn't affect the spline.
     float scale_md; // $DEFAULT: 1 $MIN: 0.1 $MAX: 2.0 $DESCRIPTION: "image scale"
     // whether the params have already been computed
@@ -193,7 +184,6 @@ typedef struct dt_iop_lens_gui_data_t
     GtkWidget *find_lens_button;
     GtkWidget *find_camera_button;
     GtkWidget *cor_dist_ft, *cor_vig_ft, *cor_ca_r_ft, *cor_ca_b_ft, *scale_md;
-    GtkWidget *use_latest_md_algo;
     GtkWidget *v_strength, *v_radius, *v_steepness;
     dt_gui_collapsible_section_t fine_tune, vignette;
     GtkLabel *message;
@@ -238,12 +228,8 @@ typedef struct dt_iop_lens_data_t
     /* embedded metadata data */
     float cor_dist_ft;
     float cor_vig_ft;
-    // scale_md_v1 is used by embedded metadata algorithm v1. Kept for
-    // backward compatibility
-    float scale_md_v1;
     // scale of the image.
     float scale_md;
-    dt_iop_lens_embedded_metadata_version md_version;
     int nc;
     float knots_dist[MAXKNOTS];
     float knots_vig[MAXKNOTS];
@@ -1345,157 +1331,9 @@ static inline float _interpolate_linear_spline(const float *xi, const float *yi,
     return yi[ni - 1];
 }
 
-static int _init_coeffs_md_v1(const dt_image_t *img, const dt_iop_lens_params_t *p,
-                              const float scale, float knots_dist[MAXKNOTS],
-                              float knots_vig[MAXKNOTS], float cor_rgb[3][MAXKNOTS],
-                              float vig[MAXKNOTS])
-{
-    const dt_image_correction_data_t *cd = &img->exif_correction_data;
-
-    if (img->exif_correction_type == CORRECTION_TYPE_SONY)
-    {
-        int nc = cd->sony.nc;
-        for (int i = 0; i < nc; i++)
-        {
-            knots_dist[i] = knots_vig[i] = (float)(i + 0.5) / (nc - 1);
-
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
-            {
-                cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] =
-                    (p->cor_dist_ft * cd->sony.distortion[i] * powf(2, -14) + 1) * scale;
-            }
-            else if (cor_rgb)
-            {
-                cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = scale;
-            }
-
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_TCA)
-            {
-                cor_rgb[0][i] *= cd->sony.ca_r[i] * powf(2, -21) + 1;
-                cor_rgb[2][i] *= cd->sony.ca_b[i] * powf(2, -21) + 1;
-            }
-
-            if (vig && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING)
-            {
-                vig[i] = powf(
-                    2, 0.5f - powf(2, p->cor_vig_ft * cd->sony.vignetting[i] * powf(2, -13) - 1));
-                // use the square of the correction factor
-                vig[i] *= vig[i];
-            }
-            else if (vig)
-                vig[i] = 1;
-        }
-
-        return nc;
-    }
-    else if (img->exif_correction_type == CORRECTION_TYPE_FUJI)
-    {
-        const int nc = cd->fuji.nc;
-        for (int i = 0; i < nc; i++)
-        {
-            knots_dist[i] = knots_vig[i] = cd->fuji.cropf * cd->fuji.knots[i];
-
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
-            {
-                cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] =
-                    (p->cor_dist_ft * cd->fuji.distortion[i] / 100 + 1) * scale;
-            }
-            else if (cor_rgb)
-            {
-                cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = scale;
-            }
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_TCA)
-            {
-                cor_rgb[0][i] *= cd->fuji.ca_r[i] + 1;
-                cor_rgb[2][i] *= cd->fuji.ca_b[i] + 1;
-            }
-
-            if (vig && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING)
-            {
-                vig[i] = 1 - p->cor_vig_ft * (1 - cd->fuji.vignetting[i] / 100);
-                // use the square of the correction factor
-                vig[i] *= vig[i];
-            }
-            else if (vig)
-                vig[i] = 1;
-        }
-
-        return nc;
-    }
-    else if (img->exif_correction_type == CORRECTION_TYPE_DNG)
-    {
-        const int nc = MAXKNOTS;
-
-        for (int i = 0; i < nc; i++)
-        {
-            const float r = (float)i / (float)(nc - 1);
-            knots_dist[i] = knots_vig[i] = r;
-            if (cor_rgb)
-                cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = 1.0f;
-            if (vig)
-                vig[i] = 1.0f;
-
-            const float pw2 = powf(r, 2.0f), pw4 = powf(r, 4.0f), pw6 = powf(r, 6.0f);
-            if (cor_rgb && cd->dng.has_warp &&
-                p->modify_flags &
-                    (DT_IOP_LENS_MODIFY_FLAG_DISTORTION | DT_IOP_LENS_MODIFY_FLAG_TCA))
-            {
-                // Convert the polynomial to a spline by evaluating it at each knot
-                for (int c = 0; c < cd->dng.planes; c++)
-                {
-                    const float r_cor = cd->dng.cwarp[c][0] + cd->dng.cwarp[c][1] * pw2 +
-                                        cd->dng.cwarp[c][2] * pw4 + cd->dng.cwarp[c][3] * pw6;
-                    cor_rgb[c][i] = (p->cor_dist_ft * (r_cor - 1.0f) + 1.0f) * scale;
-                }
-
-                if (cd->dng.planes == 1)
-                    cor_rgb[2][i] = cor_rgb[1][i] = cor_rgb[0][i];
-            }
-
-            if (vig && cd->dng.has_vignette &&
-                (p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING))
-            {
-                const float dvig = cd->dng.cvig[0] * pw2 + cd->dng.cvig[1] * pw4 +
-                                   cd->dng.cvig[2] * pw6 + cd->dng.cvig[3] * powf(r, 8.0f) +
-                                   cd->dng.cvig[4] * powf(r, 10.0f);
-                // Pixel value is to be divided by (1 + dvig) to correct vignetting
-                // Scale dvig according to fine-tune: 0 for no correction, 1 for
-                // correction specified by metadata, and 2 to double the correction.
-                vig[i] = 1.0f / (1.0f + p->cor_vig_ft * dvig);
-            }
-        }
-        return nc;
-    }
-
-    return 0;
-}
-
-static float _get_autoscale_md_v1(dt_iop_module_t *self, dt_iop_lens_params_t *p)
-{
-    const dt_image_t *img = &(self->dev->image_storage);
-    if (img->exif_correction_type == CORRECTION_TYPE_DNG)
-        return 1.0f;
-
-    const float tested = 200.0f;
-
-    float knots_dist[MAXKNOTS], knots_vig[MAXKNOTS], cor_rgb[3][MAXKNOTS];
-    // Default the scale to one for the benefit of init_coeffs
-
-    const int nc = _init_coeffs_md_v1(img, p, 1.0f, knots_dist, knots_vig, cor_rgb, NULL);
-    // Compute the new scale
-    float scale = 0.0f;
-    for (float i = 0.0f; i < tested; i++)
-    {
-        for (int j = 0; j < 3; j++)
-            scale = MAX(scale, _interpolate_linear_spline(knots_dist, cor_rgb[j], nc,
-                                                          0.5f + 0.5f * i / (tested - 1.0f)));
-    }
-    return scale;
-}
-
-static int _init_coeffs_md_v2(const dt_image_t *img, const dt_iop_lens_params_t *p,
-                              float knots_dist[MAXKNOTS], float knots_vig[MAXKNOTS],
-                              float cor_rgb[3][MAXKNOTS], float vig[MAXKNOTS])
+static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
+                           float knots_dist[MAXKNOTS], float knots_vig[MAXKNOTS],
+                           float cor_rgb[3][MAXKNOTS], float vig[MAXKNOTS])
 {
     const dt_image_correction_data_t *cd = &img->exif_correction_data;
 
@@ -1767,18 +1605,6 @@ static int _init_coeffs_md_v2(const dt_image_t *img, const dt_iop_lens_params_t 
     return nc;
 }
 
-static void _use_latest_md_algo_callback(GtkWidget *button, dt_iop_module_t *self)
-{
-    DT_GUARD_GUI_UPDATE();
-    dt_iop_lens_params_t *p = (dt_iop_lens_params_t *)self->params;
-
-    p->md_version = DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2;
-    p->scale_md_v1 = 0.0f;
-
-    gui_changed(self, NULL, NULL);
-    dt_dev_add_history_item(darktable.develop, self, TRUE);
-}
-
 static void _autoscale_pressed_md(GtkWidget *button, dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE();
@@ -1834,22 +1660,7 @@ static void _commit_params_md(dt_iop_module_t *self, dt_iop_lens_params_t *p,
     d->cor_dist_ft = p->cor_dist_ft;
     d->cor_vig_ft = p->cor_vig_ft;
 
-    d->md_version = p->md_version;
-
-    if (d->md_version == DT_IOP_LENS_EMBEDDED_METADATA_VERSION_1)
-    {
-        d->scale_md_v1 = p->scale_md_v1;
-        if ((d->scale_md_v1 < 0.9f) ||
-            (d->scale_md_v1 > 1.1f)) // enforce an autoscale if unproper data
-            d->scale_md_v1 = _get_autoscale_md_v1(self, p);
-
-        d->nc = _init_coeffs_md_v1(img, p, 1.0f / d->scale_md_v1, d->knots_dist, d->knots_vig,
-                                   d->cor_rgb, d->vig);
-    }
-    else if (d->md_version == DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2)
-    {
-        d->nc = _init_coeffs_md_v2(img, p, d->knots_dist, d->knots_vig, d->cor_rgb, d->vig);
-    }
+    d->nc = _init_coeffs_md(img, p, d->knots_dist, d->knots_vig, d->cor_rgb, d->vig);
 
     d->scale_md = p->scale_md;
     if ((d->scale_md < 0.1f) || (d->scale_md > 2.0f)) // reset image scale if unproper data
@@ -2761,8 +2572,6 @@ void reload_defaults(dt_iop_module_t *self)
     {
         // prefer embedded metadata if available
         d->method = DT_IOP_LENS_METHOD_EMBEDDED_METADATA;
-        // use new metadata algorithm
-        d->md_version = DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2;
         d->scale_md = 1.0f;
     }
 
@@ -3482,12 +3291,7 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
 
         // DNG cannot provide CA fine tuning since the CA correction is embedded in
         // the warp correction.
-        const gboolean has_ca = img->exif_correction_type != CORRECTION_TYPE_DNG &&
-                                p->md_version >= DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2;
-
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g->use_latest_md_algo), FALSE);
-        gtk_widget_set_visible(g->use_latest_md_algo,
-                               p->md_version != DT_IOP_LENS_EMBEDDED_METADATA_VERSION_2);
+        const gboolean has_ca = img->exif_correction_type != CORRECTION_TYPE_DNG;
 
         gtk_widget_set_visible(g->cor_dist_ft, has_warp);
         gtk_widget_set_visible(g->cor_vig_ft, has_vign);
@@ -3659,14 +3463,7 @@ void gui_init(dt_iop_module_t *self)
     GtkWidget *only_vig = dt_gui_vbox();
 
     /* embedded metadata widgets */
-    g->use_latest_md_algo = gtk_check_button_new_with_label(_("use latest algorithm"));
-    gtk_widget_set_tooltip_text(g->use_latest_md_algo,
-                                _("you're using an old version of the algorithm.\n"
-                                  "once enabled, you won't be able to\n"
-                                  "return back to old algorithm."));
-    GtkWidget *box_md = dt_gui_vbox(g->use_latest_md_algo);
-    g_signal_connect(G_OBJECT(g->use_latest_md_algo), "toggled",
-                     G_CALLBACK(_use_latest_md_algo_callback), self);
+    GtkWidget *box_md = dt_gui_vbox();
 
     // we put fine-tuning values under an expander
     dt_gui_new_collapsible_section(&g->fine_tune, "plugins/darkroom/lens/expand_fine_tune",

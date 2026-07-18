@@ -45,8 +45,8 @@
 // variables. The ones given here are just examples; rename them.
 //
 // To have your module compile and appear in darkroom, add it to
-//  CMakeLists.txt, with add_iop(useless "useless.c") and to
-//  iop_order.c, in the initialisation of legacy_order & v30_order
+//  CMakeLists.txt, with add_iop(useless "useless.c"), and to the
+//  applicable 0.9 RAW/JPEG order tables in iop_order.c
 //  with: { {XX.0f }, "useless", 0},
 
 // This is the version of the module's parameters,
@@ -75,10 +75,9 @@ typedef struct dt_iop_useless_params_t
     // sure everything is in here does not depend on temporary memory
     // (pointers etc).  This struct defines the layout of self->params
     // and self->default_params.  You should keep changes to this struct
-    // to a minimum.  If you have to change this struct, it will break
-    // user data bases, and you have to increment the version of
-    // DT_MODULE_INTROSPECTION(VERSION) above and provide a
-    // legacy_params upgrade path!
+    // to a minimum. If you change this struct, increment the version of
+    // DT_MODULE_INTROSPECTION(VERSION). 0.9 rejects previous parameter
+    // blocks rather than carrying a migration path.
     //
     // Tags in the comments get picked up by the introspection framework
     // and are used in gui_init to set range and labels (for widgets and

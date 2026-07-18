@@ -56,16 +56,15 @@
 // implement the module api
 //----------------------------------------------------------------------
 
-DT_MODULE_INTROSPECTION(3, dt_iop_hazeremoval_params_t)
+DT_MODULE_INTROSPECTION(4, dt_iop_hazeremoval_params_t)
 
 typedef dt_aligned_pixel_t rgb_pixel;
 
 typedef struct dt_iop_hazeremoval_params_t
 {
-    float strength;              // $MIN: -1.0 $MAX: 1.0 $DEFAULT: 0.2
-    float distance;              // $MIN:  0.0 $MAX: 1.0 $DEFAULT: 0.2
-    gboolean compatibility_mode; // $DEFAULT: FALSE
-    gboolean adaptive;           // $DEFAULT: TRUE
+    float strength;    // $MIN: -1.0 $MAX: 1.0 $DEFAULT: 0.2
+    float distance;    // $MIN:  0.0 $MAX: 1.0 $DEFAULT: 0.2
+    gboolean adaptive; // $DEFAULT: TRUE
 } dt_iop_hazeremoval_params_t;
 
 // types  dt_iop_hazeremoval_params_t and dt_iop_hazeremoval_data_t are
@@ -180,7 +179,6 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
     dt_iop_hazeremoval_params_t *p = self->params;
     if (w)
     {
-        p->compatibility_mode = FALSE;
         p->adaptive = TRUE;
     }
 }
@@ -273,28 +271,8 @@ static void _transition_map(const const_rgb_image img1, const gray_image img2, c
 // reorder the elements in the range [first, last) in such a way that
 // all elements that are less than the pivot precede the elements
 // which are larger or equal the pivot
-static float *_partition(float *first, float *last, const float val,
-                         const gboolean compatibility_mode)
+static float *_partition(float *first, float *last, const float val)
 {
-    if (compatibility_mode)
-    {
-        for (; first != last; ++first)
-        {
-            if (!((*first) < val))
-                break;
-        }
-        if (first == last)
-            return first;
-        for (float *i = first + 1; i != last; ++i)
-        {
-            if ((*i) < val)
-            {
-                _pointer_swap_f(i, first);
-                ++first;
-            }
-        }
-        return first;
-    }
     last++;
     while (TRUE)
     {
@@ -321,7 +299,7 @@ static float *_partition(float *first, float *last, const float val,
 // be in that position if the entire range [first, last) had been
 // sorted, additionally, none of the elements in the range [nth, last)
 // is less than any of the elements in the range [first, nth)
-void _quick_select(float *first, float *nth, float *last, const gboolean compatibility_mode)
+void _quick_select(float *first, float *nth, float *last)
 {
     if (first == last)
         return;
@@ -329,7 +307,7 @@ void _quick_select(float *first, float *nth, float *last, const gboolean compati
     {
         // select pivot by median of three heuristic for better performance
         float *p1 = first;
-        float *p3 = compatibility_mode ? first + (last - first) / 2 : nth;
+        float *p3 = nth;
         float *pivot = last - 1; // put median in last to avoid additional swap
 
         if (!(*p1 < *pivot))
@@ -339,11 +317,8 @@ void _quick_select(float *first, float *nth, float *last, const gboolean compati
         if (!(*pivot < *p3))
             _pointer_swap_f(pivot, p3);
 
-        float *new_pivot = _partition(first, last - 1, last[-1], compatibility_mode);
-        if (compatibility_mode)
-            pivot = p3; // old code simply assumed pivot would end up in middle
-        else
-            pivot = new_pivot;
+        float *new_pivot = _partition(first, last - 1, last[-1]);
+        pivot = new_pivot;
 
         _pointer_swap_f(last - 1, pivot); // move pivot to its final place
         if (nth == pivot)
@@ -359,8 +334,7 @@ void _quick_select(float *first, float *nth, float *last, const gboolean compati
 // depth is estimated by the local amount of haze and given in units of the
 // characteristic haze depth, i.e., the distance over which object light is
 // reduced by the factor exp(-1)
-static float _ambient_light(const const_rgb_image img, const int w1, rgb_pixel *pA0,
-                            const gboolean compatibility_mode)
+static float _ambient_light(const const_rgb_image img, const int w1, rgb_pixel *pA0)
 {
     const float dark_channel_quantil = 0.95f; // quantil for determining the most hazy pixels
     const float bright_quantil = 0.95f;       // quantil for determining the
@@ -378,7 +352,7 @@ static float _ambient_light(const const_rgb_image img, const int w1, rgb_pixel *
     copy_gray_image(dark_ch, bright_hazy);
     float *const restrict hazy_data = bright_hazy.data;
     size_t p = (size_t)(size * dark_channel_quantil);
-    _quick_select(hazy_data, hazy_data + p, hazy_data + size, compatibility_mode);
+    _quick_select(hazy_data, hazy_data + p, hazy_data + size);
     const float crit_haze_level = hazy_data[p];
     const float *const restrict img_data = img.data;
     const float *const restrict dark_data = dark_ch.data;
@@ -405,26 +379,9 @@ static float _ambient_light(const const_rgb_image img, const int w1, rgb_pixel *
                 hazy_data[N_most_hazy_end++] = pixel_in[0] + pixel_in[1] + pixel_in[2];
             }
     }
-    if (compatibility_mode)
-    {
-        // for backwards compatibility with the original broken
-        // quick_select, we need to put all of the items in hazy_data in
-        // the order in which they appear in the original image.  Our
-        // first loop above put them in reverse order, so un-reverse.
-        const size_t start = N_most_hazy_start;
-        const size_t end = size / 2;
-        const size_t midpoint = start + (end - start) / 2;
-        for (size_t i = start; i < midpoint; i++)
-        {
-            const float tmp = hazy_data[i];
-            hazy_data[i] = hazy_data[(end - 1) - (i - start)];
-            hazy_data[(end - 1) - (i - start)] = tmp;
-        }
-    }
     size_t N_most_hazy = N_most_hazy_end - N_most_hazy_start;
     p = (size_t)(N_most_hazy * bright_quantil) + N_most_hazy_start;
-    _quick_select(hazy_data + N_most_hazy_start, hazy_data + p, hazy_data + N_most_hazy_end,
-                  compatibility_mode);
+    _quick_select(hazy_data + N_most_hazy_start, hazy_data + p, hazy_data + N_most_hazy_end);
     const float crit_brightness = hazy_data[p];
     free_gray_image(&bright_hazy);
     // average over the brightest pixels among the most hazy pixels to
@@ -488,7 +445,6 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     const float strength = d->strength; // strength of haze removal
     const float distance = d->distance; // maximal distance from camera to remove haze
     const float eps = sqrtf(0.025f);    // regularization parameter for guided filter
-    const gboolean compatibility_mode = d->compatibility_mode;
     const gboolean gui = self->dev->gui_attached && g;
     const gboolean fullpipes = dt_pipe_is_canvas(piece->pipe);
     const gboolean hq = darktable.develop->late_scaling.enabled;
@@ -544,7 +500,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
 
     // In all other cases we calculate distance_max and A0 here.
     if (dt_isnan(distance_max))
-        distance_max = _ambient_light(img_in, w1, &A0, compatibility_mode);
+        distance_max = _ambient_light(img_in, w1, &A0);
 
     if (storing)
     {
@@ -605,7 +561,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
 // some parts of the calculation are not suitable for a parallel implementation,
 // thus we copy data to host memory fall back to a cpu routine
 static float _ambient_light_cl(dt_iop_module_t *self, const int devid, cl_mem img, const int w1,
-                               rgb_pixel *pA0, const gboolean compatibility_mode)
+                               rgb_pixel *pA0)
 {
     const int width = dt_opencl_get_image_width(img);
     const int height = dt_opencl_get_image_height(img);
@@ -617,7 +573,7 @@ static float _ambient_light_cl(dt_iop_module_t *self, const int devid, cl_mem im
 
     const const_rgb_image img_in =
         (const_rgb_image){in, width, height, element_size / sizeof(float)};
-    const float max_depth = _ambient_light(img_in, w1, pA0, compatibility_mode);
+    const float max_depth = _ambient_light(img_in, w1, pA0);
     dt_free_align(in);
     return max_depth;
 error:
@@ -741,7 +697,6 @@ int process_cl(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem img_
     const float strength = d->strength; // strength of haze removal
     const float distance = d->distance; // maximal distance from camera to remove haze
     const float eps = sqrtf(0.025f);    // regularization parameter for guided filter
-    const gboolean compatibility_mode = d->compatibility_mode;
     const gboolean gui = self->dev->gui_attached && g;
     const gboolean fullpipes = dt_pipe_is_canvas(piece->pipe);
     const gboolean hq = darktable.develop->late_scaling.enabled;
@@ -791,7 +746,7 @@ int process_cl(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem img_
 
     // In all other cases we calculate distance_max and A0 here.
     if (dt_isnan(distance_max))
-        distance_max = _ambient_light_cl(self, devid, img_in, w1, &A0, compatibility_mode);
+        distance_max = _ambient_light_cl(self, devid, img_in, w1, &A0);
 
     if (storing)
     {

@@ -1,12 +1,12 @@
 # Introspection System
 
-The **introspection system** in darktable is a powerful mechanism that allows the application to understand and manipulate the internal structure of C structs at runtime. It is primarily used for **Image Operation (IOP) modules** to define their parameters.
+The **introspection system** in DarkTableNext allows the application to understand and manipulate the internal structure of C structs at runtime. It is primarily used for **Image Operation (IOP) modules** to define their parameters.
 
 ## Purpose
 
 Introspection serves three main purposes:
 
-1.  **Database Storage**: It allows module parameters (which are just C structs) to be serialized to and deserialized from the database as binary blobs, while handling versioning and upgrades (`legacy_params`).
+1.  **Database Storage**: It allows module parameters (which are just C structs) to be serialized to and deserialized from the database as binary blobs with an explicit version and size.
 2.  **GUI Generation**: The GUI logic (`DT_BAUHAUS_WIDGET` macros and functions) uses introspection data to automatically create sliders, comboboxes, and toggle buttons with the correct ranges, defaults, and labels.
 3.  **Lua API**: It allows the Lua scripting interface to access and modify module parameters dynamically without writing explicit binding code for every field.
 
@@ -84,4 +84,4 @@ When you change the layout of a `params` struct, you **must** increment the intr
 DT_MODULE_INTROSPECTION(2, dt_iop_exposure_params_t)
 ```
 
-You must then implement the `legacy_params` function in your module to migrate data from the old version (1) to the new version (2). This ensures that edits made with older versions of darktable are preserved.
+DarkTableNext 0.9 does not migrate parameter blocks. A version or size mismatch is rejected, so a module change must ship a complete current block and a version bump rather than a conversion callback.
