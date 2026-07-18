@@ -101,6 +101,7 @@
   - 已完成变量模板合同：只接受点号命名的 0.9 变量；内置水印、默认设置、CLI、测试和自动补全均已迁移，旧下划线、短名和旧参数语法不再自动改写。
   - 已删除仍留在活动模块中的旧算法参数路径：retouch v1 坐标、haze removal compatibility mode，以及 lens embedded metadata v1 的参数、系数算法和“升级到最新版”UI；这三个模块只保存和执行当前 0.9 算法。
   - 已将 denoiseprofile 收敛为当前 variance-stabilizing transform：移除历史开关、CPU/OpenCL 的旧预处理和回变换分支，以及不再调用的旧 kernel。
+  - 已将 colorzones 固定为 v3 平滑处理和 v2 spline：移除无 UI 入口的 v1 参数/曲线编辑/CPU 与 OpenCL 路径，以及旧的 “strong” 算法选项。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
