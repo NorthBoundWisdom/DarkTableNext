@@ -18,7 +18,6 @@
 
 #include <glib.h>    // for g_mkdir_with_parents, _
 #include <gtk/gtk.h> // for gtk_init_check
-#include <libintl.h> // for bind_textdomain_codeset, etc
 #include <limits.h>  // for PATH_MAX
 #include <sqlite3.h> // for sqlite3_column_int, etc
 #include <stddef.h>  // for size_t
@@ -145,14 +144,7 @@ int main(int argc, char *arg[])
 {
     dt_osx_prepare_environment();
 
-    // get valid locale dir
-    dt_loc_init(NULL, NULL, NULL, NULL, NULL, NULL);
-    char localedir[PATH_MAX] = {0};
-    dt_loc_get_localedir(localedir, sizeof(localedir));
-    bindtextdomain(GETTEXT_PACKAGE, localedir);
-
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    textdomain(GETTEXT_PACKAGE);
+    dt_loc_init(NULL, NULL, NULL, NULL, NULL);
 
     gtk_init_check(&argc, &arg);
 

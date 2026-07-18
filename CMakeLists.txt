@@ -53,13 +53,11 @@ get_filename_component(CMAKE_INSTALL_BINDIR_ABS "${CMAKE_INSTALL_FULL_BINDIR}" R
 # get relative paths specific to the system
 file(RELATIVE_PATH REL_BIN_TO_LIBDIR    ${CMAKE_INSTALL_FULL_BINDIR} "${CMAKE_INSTALL_FULL_LIBDIR}/darktable")
 file(RELATIVE_PATH REL_BIN_TO_SHAREDIR  ${CMAKE_INSTALL_FULL_BINDIR} "${CMAKE_INSTALL_FULL_DATADIR}")
-file(RELATIVE_PATH REL_BIN_TO_LOCALEDIR ${CMAKE_INSTALL_FULL_BINDIR} "${CMAKE_INSTALL_FULL_LOCALEDIR}")
 set(REL_BIN_TO_DATADIR  "${REL_BIN_TO_SHAREDIR}/darktable")
 set(DARKTABLE_BINDIR    "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(DARKTABLE_LIBDIR    "${DARKTABLE_BINDIR}/${REL_BIN_TO_LIBDIR}")
 set(DARKTABLE_SHAREDIR  "${DARKTABLE_BINDIR}/${REL_BIN_TO_SHAREDIR}")
 set(DARKTABLE_DATADIR   "${DARKTABLE_BINDIR}/${REL_BIN_TO_DATADIR}") # DATAROOTDIR == DATADIR # darktablerc, themes, icons, ... Cannot use ${CMAKE_BINDIR}/data because not everything resides there. Like icons (pixmaps)
-set(DARKTABLE_LOCALEDIR "${DARKTABLE_BINDIR}/${REL_BIN_TO_LOCALEDIR}")
 
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -244,14 +242,6 @@ endif(USE_XMLLINT)
 
 # done with looking for programs
 message(STATUS "All external programs found")
-
-# The path can be modified by setting CMAKE_INSTALL_LOCALEDIR
-find_package(Gettext REQUIRED)
-if(GETTEXT_MSGFMT_EXECUTABLE)
-    add_subdirectory(po)
-else()
-    message(FATAL_ERROR "ERROR: Cannot find msgfmt to convert .po file")
-endif()
 
 # needed to generate file "preferences_gen.h" accordingly
 if(USE_OPENCL)

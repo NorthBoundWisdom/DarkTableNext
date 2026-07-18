@@ -60,7 +60,6 @@ FILE(GLOB SOURCE_FILES
   "common/iop_group.c"
   "common/iop_order.c"
   "common/iop_profile.c"
-  "common/l10n.c"
   "common/locallaplacian.c"
   "common/locallaplaciancl.c"
   "common/map_locations.c"
@@ -483,13 +482,6 @@ if(USE_OPENJPEG)
     set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} j2c j2k jp2 jpc jpf jpx CACHE INTERNAL "")
   endif(OpenJPEG_FOUND)
 endif(USE_OPENJPEG)
-
-find_package(IsoCodes 3.66)
-if(IsoCodes_FOUND)
-  add_definitions("-DHAVE_ISO_CODES")
-else(IsoCodes_FOUND)
-  message(STATUS "no suitable iso-codes, there will be no language names in the preferences")
-endif(IsoCodes_FOUND)
 
 #
 # Detect compile of optional pwstorage backends

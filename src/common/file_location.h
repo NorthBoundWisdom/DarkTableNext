@@ -31,17 +31,14 @@ G_BEGIN_DECLS
 gchar *dt_loc_get_home_dir(const gchar *user);
 
 // Init all dirs
-uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *localedir,
-                    const char *configdir, const char *cachedir, const char *tmpdir);
+uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *configdir,
+                    const char *cachedir, const char *tmpdir);
 
 // Init systemwide data dir
 void dt_loc_init_datadir(const char *application_directory, const char *datadir);
 
 // Init the plugin dir
 void dt_loc_init_plugindir(const char *application_directory, const char *plugindir);
-
-// Init the locale dir
-void dt_loc_init_localedir(const char *application_directory, const char *localedir);
 
 // Init share dir
 void dt_loc_init_sharedir(const char *application_directory);
@@ -68,7 +65,6 @@ void dt_loc_get_datadir(char *datadir, size_t bufsize);
 void dt_loc_get_sharedir(char *sharedir, size_t bufsize);
 void dt_loc_get_kerneldir(char *kerneldir, size_t bufsize);
 void dt_loc_get_plugindir(char *plugindir, size_t bufsize);
-void dt_loc_get_localedir(char *localedir, size_t bufsize);
 void dt_loc_get_tmp_dir(char *tmpdir, size_t bufsize);
 void dt_loc_get_user_config_dir(char *configdir, size_t bufsize);
 void dt_loc_get_user_cache_dir(char *cachedir, size_t bufsize);

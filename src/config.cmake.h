@@ -18,9 +18,6 @@ extern const char darktable_last_commit_year[];
 
 static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUPPORTED_EXTENSIONS_STRING@", NULL};
 
-#define GETTEXT_PACKAGE "darktable"
-
-#cmakedefine DARKTABLE_LOCALEDIR "@REL_BIN_TO_LOCALEDIR@"
 #cmakedefine DARKTABLE_LIBDIR    "@REL_BIN_TO_LIBDIR@"
 #cmakedefine DARKTABLE_DATADIR   "@REL_BIN_TO_DATADIR@"
 #cmakedefine DARKTABLE_SHAREDIR  "@REL_BIN_TO_SHAREDIR@"
@@ -30,9 +27,6 @@ static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUP
 
 #define WANTED_STACK_SIZE (@WANTED_STACK_SIZE@)
 #define WANTED_THREADS_STACK_SIZE (@WANTED_THREADS_STACK_SIZE@)
-
-#define ISO_CODES_LOCATION "@IsoCodes_LOCATION@"
-#define ISO_CODES_LOCALEDIR "@IsoCodes_LOCALEDIR@"
 
 // clang-format on
 

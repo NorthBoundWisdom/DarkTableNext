@@ -23,7 +23,6 @@
 #include "common/collection.h"
 #include "common/colorspaces.h"
 #include "common/file_location.h"
-#include "common/l10n.h"
 #include "common/image.h"
 #include "common/gimp.h"
 #include "gui/guides.h"

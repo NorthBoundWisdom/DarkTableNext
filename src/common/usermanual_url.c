@@ -18,7 +18,6 @@
 
 #include "common/usermanual_url.h"
 #include "common/darktable.h"
-#include "common/l10n.h"
 #include "common/utility.h"
 #include "control/conf.h"
 #include <glib.h>
@@ -255,62 +254,7 @@ char *dt_get_manual_base_url()
 char *dt_get_manual_url(const char *topic)
 {
     char *base_url = dt_get_manual_base_url();
-
-    const char *lang = "en";
-
-    // array of languages the usermanual supports.
-    // NULL MUST remain the last element of the array
-    static const char *supported_languages[] = {"en", "fr", "de", "eo",    "es", "gl",
-                                                "it", "nl", "pl", "pt-br", "uk", NULL};
-    int lang_index = 0;
-    gboolean is_language_supported = FALSE;
-
-    if (darktable.l10n != NULL)
-    {
-        const dt_l10n_language_t *language = NULL;
-        if (darktable.l10n->selected != -1)
-            language = (dt_l10n_language_t *)g_list_nth(darktable.l10n->languages,
-                                                        darktable.l10n->selected)
-                           ->data;
-        if (language != NULL)
-            lang = language->code;
-
-        while (supported_languages[lang_index])
-        {
-            gchar *nlang = g_strdup(lang);
-
-            // try lang as-is
-            if (!g_ascii_strcasecmp(nlang, supported_languages[lang_index]))
-            {
-                is_language_supported = TRUE;
-            }
-
-            if (!is_language_supported)
-            {
-                // keep only first part up to _
-                for (gchar *p = nlang; *p; p++)
-                    if (*p == '_')
-                        *p = '\0';
-
-                if (!g_ascii_strcasecmp(nlang, supported_languages[lang_index]))
-                {
-                    is_language_supported = TRUE;
-                }
-            }
-
-            g_free(nlang);
-            if (is_language_supported)
-                break;
-
-            lang_index++;
-        }
-    }
-
-    // language not found, default to EN
-    if (!is_language_supported)
-        lang_index = 0;
-
-    char *url = g_build_path("/", base_url, supported_languages[lang_index], topic, NULL);
+    char *url = g_build_path("/", base_url, "en", topic, NULL);
     g_free(base_url);
     return url;
 }

@@ -44,7 +44,6 @@
 #include "common/image.h"
 #include "common/image_cache.h"
 #include "common/iop_order.h"
-#include "common/l10n.h"
 #include "common/mipmap_cache.h"
 #include "common/noiseprofiles.h"
 #include "common/opencl.h"
@@ -194,12 +193,6 @@ static int usage(const char *argv0)
          "\n"
          "    :memory: -> Use this option as FILE to keep the database in system memory,\n"
          "    discarding changes on darktable termination.\n"
-         "\n"
-         "--localedir DIR\n"
-         "    Define where darktable can find its language-specific text\n"
-         "    strings. The default location depends on your installation.\n"
-         "    Typical locations are /opt/darktable/share/locale/\n"
-         "    and /usr/share/locale/\n"
          "\n"
 #ifdef USE_LUA
          "--luacmd COMMAND\n"
@@ -986,7 +979,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     char *noiseprofiles_from_command = NULL;
     char *datadir_from_command = NULL;
     char *moduledir_from_command = NULL;
-    char *localedir_from_command = NULL;
     char *tmpdir_from_command = NULL;
     char *configdir_from_command = NULL;
     char *cachedir_from_command = NULL;
@@ -1104,12 +1096,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
             else if (!strcmp(argv[k], "--dumpdir") && argc > k + 1)
             {
                 darktable.tmp_directory = g_strdup(argv[++k]);
-                argv[k - 1] = NULL;
-                argv[k] = NULL;
-            }
-            else if (!strcmp(argv[k], "--localedir") && argc > k + 1)
-            {
-                localedir_from_command = argv[++k];
                 argv[k - 1] = NULL;
                 argv[k] = NULL;
             }
@@ -1453,9 +1439,9 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     // Set directories as requested or default.
     // Set a result flag so if we can't create certain directories, we can
     // later, after initializing the GUI, show the user a message and exit.
-    const uint8_t user_dir_failed =
-        dt_loc_init(datadir_from_command, moduledir_from_command, localedir_from_command,
-                    configdir_from_command, cachedir_from_command, tmpdir_from_command);
+    const uint8_t user_dir_failed = dt_loc_init(datadir_from_command, moduledir_from_command,
+                                                configdir_from_command, cachedir_from_command,
+                                                tmpdir_from_command);
 
     dt_print_mem_usage("at startup");
 
@@ -1518,12 +1504,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     g_set_prgname("org.darktable.darktable");
 
     setlocale(LC_ALL, "");
-    char localedir[PATH_MAX] = {0};
-    dt_loc_get_localedir(localedir, sizeof(localedir));
-    bindtextdomain(GETTEXT_PACKAGE, localedir);
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    textdomain(GETTEXT_PACKAGE);
-
     if (init_gui)
     {
         // I doubt that connecting to dbus for darktable-cli makes sense
@@ -1563,16 +1543,12 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     // Read common configuration, needs confgen above for sanitizing
     // values. This first step read only the darktablerc-common
     // settings. The settings in this file are those needed to
-    // initialize the GUI (UI language / default fonts, tooltips state)
-    // and l10n.
+    // initialize the GUI (default fonts and tooltip state).
     //
     // This files contains all preferences with the attribute common="true" in
     // darktableconfig.xml.in.
     dt_conf_init(darktable.conf, darktablerc_common, TRUE, config_override);
     g_free(darktablerc_common);
-
-    // set the interface language and prepare selection for prefs & confgen
-    darktable.l10n = dt_l10n_init(init_gui);
 
     gboolean has_workspace = FALSE;
 

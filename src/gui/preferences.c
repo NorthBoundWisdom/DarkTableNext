@@ -23,7 +23,6 @@
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/file_location.h"
-#include "common/l10n.h"
 #include "common/presets.h"
 #include "control/control.h"
 #include "develop/imageop.h"
@@ -242,35 +241,6 @@ static void usercss_dialog_callback(GtkDialog *dialog, gint response_id, gpointe
     save_usercss(buffer);
 }
 
-///////////// gui language and theme selection
-
-static void language_callback(GtkWidget *widget, gpointer user_data)
-{
-    const int selected = dt_bauhaus_combobox_get(widget);
-    const dt_l10n_language_t *language = g_list_nth_data(darktable.l10n->languages, selected);
-    if (darktable.l10n->sys_default == selected)
-    {
-        dt_conf_set_string("ui_last/gui_language", "");
-        darktable.l10n->selected = darktable.l10n->sys_default;
-    }
-    else
-    {
-        dt_conf_set_string("ui_last/gui_language", language->code);
-        darktable.l10n->selected = selected;
-    }
-    restart_required = TRUE;
-}
-
-static gboolean reset_language_widget(GtkWidget *label, GdkEventButton *event, GtkWidget *widget)
-{
-    if (event->type == GDK_2BUTTON_PRESS)
-    {
-        dt_bauhaus_combobox_set(widget, darktable.l10n->sys_default);
-        return TRUE;
-    }
-    return FALSE;
-}
-
 static gboolean _remove_panel_config(gpointer key, gpointer value, gpointer user_data)
 {
     return (!strcmp(key, "ui/hide_tooltips") ||
@@ -312,45 +282,16 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
 
     gtk_stack_add_titled(GTK_STACK(stack), container, _("general"), _("general"));
 
-    // language
-
-    GtkWidget *label = gtk_label_new(_("interface language"));
-    gtk_widget_set_halign(label, GTK_ALIGN_START);
-    GtkWidget *labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
-    GtkWidget *widget = dt_bauhaus_combobox_new(NULL);
-    dt_bauhaus_combobox_set_selected_text_align(widget, DT_BAUHAUS_COMBOBOX_ALIGN_LEFT);
-
-    for (GList *iter = darktable.l10n->languages; iter; iter = g_list_next(iter))
-    {
-        const char *name = dt_l10n_get_name(iter->data);
-        dt_bauhaus_combobox_add_aligned(widget, name, DT_BAUHAUS_COMBOBOX_ALIGN_LEFT);
-    }
-
-    dt_bauhaus_combobox_set(widget, darktable.l10n->selected);
-    dt_bauhaus_combobox_set_default(widget, darktable.l10n->sys_default);
-    g_signal_connect(G_OBJECT(widget), "value-changed", G_CALLBACK(language_callback), 0);
-    gtk_widget_set_tooltip_text(labelev, _("double-click to reset to the system language"));
-    gtk_event_box_set_visible_window(GTK_EVENT_BOX(labelev), FALSE);
-    gtk_widget_set_tooltip_text(widget, _("set the language of the user interface."
-                                          " the system default is marked with an * \n"
-                                          "(restart required)"));
-    gtk_grid_attach(GTK_GRID(grid), labelev, 0, line++, 1, 1);
-    gtk_grid_attach_next_to(GTK_GRID(grid), widget, labelev, GTK_POS_RIGHT, 1, 1);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event", G_CALLBACK(reset_language_widget),
-                     (gpointer)widget);
-
     // theme
 
     load_themes();
 
-    label = gtk_label_new(_("theme"));
+    GtkWidget *label = gtk_label_new(_("theme"));
     gtk_widget_set_halign(label, GTK_ALIGN_START);
-    widget = dt_bauhaus_combobox_new(NULL);
+    GtkWidget *widget = dt_bauhaus_combobox_new(NULL);
     dt_bauhaus_combobox_set_selected_text_align(widget, DT_BAUHAUS_COMBOBOX_ALIGN_LEFT);
 
-    labelev = gtk_event_box_new();
+    GtkWidget *labelev = gtk_event_box_new();
     gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
     gtk_container_add(GTK_CONTAINER(labelev), label);
     gtk_grid_attach(GTK_GRID(grid), labelev, 0, line++, 1, 1);

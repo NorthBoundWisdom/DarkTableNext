@@ -35,8 +35,8 @@
 #include "file_location.h"
 #include "whereami.h"
 
-uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *localedir,
-                    const char *configdir, const char *cachedir, const char *tmpdir)
+uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *configdir,
+                    const char *cachedir, const char *tmpdir)
 {
     // Assemble pathes
     char *application_directory = NULL;
@@ -57,7 +57,6 @@ uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *loca
     // set up absolute pathes based on their relative value
     dt_loc_init_datadir(application_directory, datadir);
     dt_loc_init_plugindir(application_directory, moduledir);
-    dt_loc_init_localedir(application_directory, localedir);
     dt_loc_init_sharedir(application_directory);
 
     free(application_directory);
@@ -255,13 +254,6 @@ gboolean dt_check_opendir(const char *context, const char *directory)
     return TRUE;
 }
 
-void dt_loc_init_localedir(const char *application_directory, const char *localedir)
-{
-    darktable.localedir =
-        dt_loc_init_generic(localedir, application_directory, DARKTABLE_LOCALEDIR);
-    dt_check_opendir("darktable.localedir", darktable.localedir);
-}
-
 void dt_loc_init_datadir(const char *application_directory, const char *datadir)
 {
     darktable.datadir = dt_loc_init_generic(datadir, application_directory, DARKTABLE_DATADIR);
@@ -284,11 +276,6 @@ void dt_loc_get_kerneldir(char *kerneldir, size_t bufsize)
 void dt_loc_get_plugindir(char *plugindir, size_t bufsize)
 {
     g_strlcpy(plugindir, darktable.plugindir, bufsize);
-}
-
-void dt_loc_get_localedir(char *localedir, size_t bufsize)
-{
-    g_strlcpy(localedir, darktable.localedir, bufsize);
 }
 
 void dt_loc_get_user_config_dir(char *configdir, size_t bufsize)

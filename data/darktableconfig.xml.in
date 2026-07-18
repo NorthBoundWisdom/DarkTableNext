@@ -842,12 +842,6 @@
     <shortdescription>sort film rolls by</shortdescription>
     <longdescription>sets the collections-list order for film rolls</longdescription>
   </dtconfig>
-  <dtconfig common="yes">
-    <name>ui_last/gui_language</name>
-    <type>string</type>
-    <default></default>
-    <shortdescription>language for the GUI</shortdescription>
-  </dtconfig>
   <dtconfig>
     <name>ui_last/colorpicker_model</name>
     <type>

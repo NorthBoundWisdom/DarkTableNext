@@ -42,7 +42,6 @@
 #include "imageio/imageio_module.h"
 
 #include <inttypes.h>
-#include <libintl.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -215,11 +214,7 @@ int main(int argc, char *arg[])
 {
     dt_osx_prepare_environment();
 
-    // get valid locale dir
-    dt_loc_init(NULL, NULL, NULL, NULL, NULL, NULL);
-    char localedir[PATH_MAX] = {0};
-    dt_loc_get_localedir(localedir, sizeof(localedir));
-    bindtextdomain(GETTEXT_PACKAGE, localedir);
+    dt_loc_init(NULL, NULL, NULL, NULL, NULL);
 
     if (!gtk_parse_args(&argc, &arg))
         exit(1);

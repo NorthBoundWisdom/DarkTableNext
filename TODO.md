@@ -73,7 +73,7 @@
 
 - [x] 删除或重写运行时、构建与项目入口中仍指向 `darktable-org/darktable`、`darktable.org` 和上游 5.x 的材料。
   - 重点：`README.md`、`data/darktableconfig.xml.in`、`data/org.darktable.darktable.appdata.xml.in`、`data/watermarks/promo.svg`、`tools/generate_darktablerc_doc.xsl`、AI 安装脚本和 Lua 文档。
-  - `DevDocs/` 已标记为源码导读；逐篇重写随新 UI 进行。历史翻译中的旧链接不在此项修改范围，见 P2 的国际化决策。
+  - `DevDocs/` 已标记为源码导读；逐篇重写随新 UI 进行。
 
 - [x] 删除 `tools/lua_doc/old_api/` 的历史 Lua API 快照，并决定是否保留整个 `tools/lua_doc/` 文档生成器。
   - `old_api` 仅服务旧版本 API 文档，不参与应用构建。
@@ -103,9 +103,10 @@
   - 可候选移除：旧主题、图标、样式、快捷键、预置水印、图库导出 (`data/pswp/` + `imageio/storage/gallery.c`)、LaTeX 图书导出 (`data/latex/` + `imageio/storage/latex.c`)。
   - 当前仍被运行时代码加载、暂不应直接删除：`data/wb_presets.json`（约 4.3 MiB）、`data/noiseprofiles.json`（约 1.7 MiB）、watermarks、shortcuts、OpenCL kernels、RawSpeed 相机数据。
 
-- [ ] 确定国际化范围。
-  - `po/` 含 23 个应用翻译、约 22 MiB，并参与当前 `.desktop`/AppStream 生成和应用消息编译。
-  - 选择“英文优先、暂时只保留 en”“维持现有翻译”“迁移到外部翻译仓库”之一；若缩减为英文，先移除对应 Gettext、`intltool` 和安装规则。
+- [x] 确定国际化范围：0.9 只提供英语源码文本。
+  - 已删除 `po/` 的 23 个翻译、Gettext CMake/安装规则、IsoCodes finder、`--localedir`、运行时语言选择和语言化手册 URL。
+  - Lua 保留 `gettext` API 作为无状态英语回退，避免在脚本 API 中引入新的兼容分支。
+  - 验证：`cmake --preset mac_clang_debug && cmake --build --preset mac_clang_debug`。
 
 - [ ] 清点传统 GTK UI 与新的 UI 边界。
   - `src/gui/`、`src/libs/`、`src/dtgtk/`、`src/views/` 和各 IOP 的 GUI 部分仍是上游 GTK 结构。

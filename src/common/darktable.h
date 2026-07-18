@@ -294,7 +294,6 @@ struct dt_imageio_t;
 struct dt_bauhaus_t;
 struct dt_undo_t;
 struct dt_colorspaces_t;
-struct dt_l10n_t;
 #ifdef HAVE_AI
 struct dt_ai_registry_t;
 struct dt_ai_environment_t;
@@ -424,7 +423,6 @@ typedef struct darktable_t
     struct dt_dbus_t *dbus;
     struct dt_undo_t *undo;
     struct dt_colorspaces_t *color_profiles;
-    struct dt_l10n_t *l10n;
     dt_pthread_mutex_t db_image[DT_IMAGE_DBLOCKS];
     dt_pthread_mutex_t dev_threadsafe;
     dt_pthread_mutex_t plugin_threadsafe;
@@ -436,7 +434,6 @@ typedef struct darktable_t
     char *datadir;
     char *sharedir;
     char *plugindir;
-    char *localedir;
     char *tmpdir;
     char *configdir;
     char *cachedir;
