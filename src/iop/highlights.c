@@ -1121,7 +1121,7 @@ void reload_defaults(dt_iop_module_t *self)
     dt_iop_highlights_gui_data_t *g = self->gui_data;
     if (g)
     {
-        // rebuild the complete menu depending on sensor type and possibly active but obsolete mode
+        // Rebuild the menu for the active sensor and supported reconstruction modes.
         dt_bauhaus_combobox_clear(g->mode);
 
         dt_introspection_type_enum_tuple_t *values = self->so->get_f("mode")->Enum.values;

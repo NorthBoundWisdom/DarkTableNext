@@ -357,12 +357,10 @@ static void _metadata_get_flags(const dt_image_t *const img, char *const text, c
 #define FALSE_FIELD '.'
 #define TRUE_FIELD '!'
 
-#define FLAG_NB 15
+#define FLAG_NB 12
 
     char *flags_tooltip = NULL;
-    char *flag_descriptions[] = {N_("unused"),
-                                 N_("unused/deprecated"),
-                                 N_("LDR"),
+    char *flag_descriptions[] = {N_("LDR"),
                                  N_("raw"),
                                  N_("HDR"),
                                  N_("marked for deletion"),
@@ -390,74 +388,66 @@ static void _metadata_get_flags(const dt_image_t *const img, char *const text, c
             g_strdup_printf(ngettext("image has %d star", "image has %d stars", stars), stars);
     }
 
-    if (img->flags & DT_IMAGE_THUMBNAIL_DEPRECATED)
-    {
-        value[2] = TRUE_FIELD;
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[1]);
-    }
-    else
-        value[2] = FALSE_FIELD;
-
     if (img->flags & DT_IMAGE_LDR)
     {
-        value[3] = 'l';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[2]);
+        value[1] = 'l';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[0]);
     }
 
     if (img->flags & DT_IMAGE_RAW)
     {
-        value[4] = 'r';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[3]);
+        value[2] = 'r';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[1]);
     }
 
     if (img->flags & DT_IMAGE_HDR)
     {
-        value[5] = 'h';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[4]);
+        value[3] = 'h';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[2]);
     }
 
     if (img->flags & DT_IMAGE_REMOVE)
     {
-        value[6] = 'd';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[5]);
+        value[4] = 'd';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[3]);
     }
 
     if (img->flags & DT_IMAGE_AUTO_PRESETS_APPLIED)
     {
-        value[7] = 'a';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[6]);
+        value[5] = 'a';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[4]);
     }
 
     if (img->flags & DT_IMAGE_LOCAL_COPY)
     {
-        value[8] = 'c';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[7]);
+        value[6] = 'c';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[5]);
     }
 
     if (img->flags & DT_IMAGE_HAS_TXT)
     {
-        value[9] = 't';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[8]);
+        value[7] = 't';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[6]);
     }
 
     if (img->flags & DT_IMAGE_HAS_WAV)
     {
-        value[10] = 'w';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[9]);
+        value[8] = 'w';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[7]);
     }
 
     if (dt_image_monochrome_flags(img))
     {
-        value[11] = 'm';
-        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[10]);
+        value[9] = 'm';
+        tooltip_parts[next_tooltip_part++] = _(flag_descriptions[8]);
     }
 
     const int loader = (unsigned int)img->loader < LOADER_COUNT ? img->loader : 0;
-    value[12] = loaders_info[loader].flag;
+    value[10] = loaders_info[loader].flag;
     char *loader_tooltip = g_strdup_printf(_("loader: %s"), _(loaders_info[loader].tooltip));
     tooltip_parts[next_tooltip_part++] = loader_tooltip;
 
-    value[13] = '\0';
+    value[11] = '\0';
 
     flags_tooltip = g_strjoinv("\n", tooltip_parts);
     g_free(loader_tooltip);

@@ -108,7 +108,7 @@ typedef struct dt_iop_colorbalancergb_params_t
     dt_iop_colorbalancrgb_saturation_t
         saturation_formula; // $DEFAULT: 1 $DESCRIPTION: "saturation formula"
 
-    /* add future params after this so the legacy params import can use a blind memcpy */
+    /* Append future parameters to preserve the current preset layout. */
 } dt_iop_colorbalancergb_params_t;
 
 typedef enum dt_iop_colorbalancergb_mask_data_t

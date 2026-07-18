@@ -110,7 +110,7 @@ typedef struct dt_iop_channelmixer_rgb_params_t
     dt_iop_channelmixer_rgb_version_t
         version; // $DEFAULT: CHANNELMIXERRGB_V_3 $DESCRIPTION: "saturation algorithm"
 
-    /* always add new params after this so we can import legacy params with memcpy on the common part of the struct */
+    /* Append future parameters to preserve the current preset layout. */
 
 } dt_iop_channelmixer_rgb_params_t;
 

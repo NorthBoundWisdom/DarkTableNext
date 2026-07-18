@@ -100,7 +100,7 @@ Why that? Just because it's a developer choice and most classes use underscore i
   - dt_monospace:
       - set monospace font for some specific items (on some tooltips, history number or colorpicker values...)
   - dt_warning:
-      - set all warnings messages inside panels, like deprecated modules messages or warning we could see when having white balance applied twice with color calibration and white balance modules
+      - set warning messages inside panels
   - dt_bauhaus:
       - use it to set same settings on all bauhaus (sliders and combobox)
   - dt_bauhaus_alignment:
@@ -119,11 +119,11 @@ Why that? Just because it's a developer choice and most classes use underscore i
   --------------------------------------*/
 
 /* General */
-@define-color selected_bg_color @grey_35;       /* legacy stuff */
+@define-color selected_bg_color @grey_35;       /* GTK selection color */
 @define-color border_color @grey_10;            /* border, when used */
 @define-color bg_color @grey_15;                /* general background */
 @define-color fg_color @grey_75;                /* general text */
-@define-color base_color @fg_color;             /* legacy stuff */
+@define-color base_color @fg_color;             /* GTK base color */
 @define-color text_color @grey_05;              /* same */
 @define-color placeholder_text_color @grey_50;  /* placeholder text color (text on search background fields) */
 @define-color disabled_fg_color @grey_45;       /* disabled controls */
@@ -1622,7 +1622,7 @@ progressbar progress
     min-height: 1.2em;
 }
 
-/* Set messages: first those on bottom middle of the UI, for example "loading image..." or "working on..." ; then deprecated and warning messages */
+/* Set messages: first those on bottom middle of the UI, then warnings. */
 .dt_messages
 {
   color: @log_fg_color;

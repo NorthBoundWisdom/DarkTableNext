@@ -1129,7 +1129,7 @@ void gui_init(dt_iop_module_t *self)
     dt_bauhaus_slider_set_soft_max(g->scale, 100.0);
     dt_bauhaus_slider_set_format(g->scale, "%");
 
-    // legacy scale on drop-down
+    // scale basis selector
     g->scale_base = dt_bauhaus_combobox_from_params(self, "scale_base");
     gtk_widget_set_tooltip_text(
         g->scale_base,

@@ -228,7 +228,6 @@ GList *dt_styles_module_order_list(const char *name)
     {
         const char *iop_list_txt = (char *)sqlite3_column_text(stmt, 0);
         iop_list = dt_ioppr_deserialize_text_iop_order_list(iop_list_txt);
-
     }
     sqlite3_finalize(stmt);
     return iop_list;
@@ -695,17 +694,17 @@ void dt_styles_apply_style_item(dt_develop_t *dev, dt_style_item_t *style_item,
             }
             else
             {
-                dt_print(DT_DEBUG_ALWAYS,
-                         "[dt_styles_apply_style_item] module `%s' has unsupported blend parameters",
-                         module->op);
+                dt_print(
+                    DT_DEBUG_ALWAYS,
+                    "[dt_styles_apply_style_item] module `%s' has unsupported blend parameters",
+                    module->op);
                 do_merge = FALSE;
             }
 
             gboolean autoinit = style_item->params_size == 0;
-            if (style_item->params_size != 0 &&
-                (module->version() != style_item->module_version ||
-                 module->params_size != style_item->params_size ||
-                 strcmp(style_item->operation, module->op)))
+            if (style_item->params_size != 0 && (module->version() != style_item->module_version ||
+                                                 module->params_size != style_item->params_size ||
+                                                 strcmp(style_item->operation, module->op)))
             {
                 dt_print(DT_DEBUG_ALWAYS,
                          "[dt_styles_apply_style_item] module `%s' has unsupported parameters",
@@ -907,7 +906,7 @@ void _styles_apply_to_image_ext(const char *name, const gboolean duplicate,
             dt_dev_modulegroups_set(darktable.develop, dt_dev_modulegroups_get(darktable.develop));
         }
 
-        /* remove old obsolete thumbnails */
+        /* invalidate cached thumbnails */
         dt_mipmap_cache_remove(newimgid);
         dt_image_update_final_size(newimgid);
 

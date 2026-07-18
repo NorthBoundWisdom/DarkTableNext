@@ -114,11 +114,7 @@ static int _action_cb(lua_State *L)
 
     int instance = 0;
 
-    // support legacy order: action, instance, element, effect, size
-    if (lua_type(L, arg) == LUA_TNUMBER && lua_type(L, arg + 1) == LUA_TSTRING)
-        instance = luaL_checkinteger(L, arg++);
-
-    // new order: instance optionally at end; element, effect and size also optional
+    // Instance is optionally specified at the end; element, effect and size are also optional.
     const gchar *element = lua_type(L, arg) == LUA_TSTRING ? luaL_checkstring(L, arg++) : NULL;
     const gchar *effect = lua_type(L, arg) == LUA_TSTRING ? luaL_checkstring(L, arg++) : NULL;
 

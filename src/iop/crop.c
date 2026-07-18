@@ -193,7 +193,7 @@ static void _commit_box(dt_iop_module_t *self, dt_iop_crop_gui_data_t *g, dt_iop
     const float eps = 1e-6f; // threshold to avoid rounding errors
     if (!self->enabled)
     {
-        // first time crop, if any data is stored in p, it's obsolete:
+        // Reset stale crop bounds when enabling the module for the first time.
         p->cx = p->cy = 0.0f;
         p->cw = p->ch = 1.0f;
     }

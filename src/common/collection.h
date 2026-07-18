@@ -72,7 +72,7 @@ typedef enum dt_collection_sort_t
 
 #define DT_COLLECTION_ORDER_FLAG 0x8000
 
-/* NOTE: any reordeing in this module require a legacy_preset entry in src/libs/collect.c */
+/* Collection property values are persisted in filtering rules; append new values. */
 typedef enum dt_collection_properties_t
 {
     DT_COLLECTION_PROP_FILMROLL = 0,
@@ -99,9 +99,7 @@ typedef enum dt_collection_properties_t
     DT_COLLECTION_PROP_COLORLABEL,
     DT_COLLECTION_PROP_METADATA,
 
-    //  keep DT_COLLECTION_PROP_GROUPING to avoid breaking all presets based on
-    //  filters defined after GROUPING here.
-    DT_COLLECTION_PROP_GROUPING = DT_COLLECTION_PROP_METADATA + DT_METADATA_LEGACY_NUMBER,
+    DT_COLLECTION_PROP_GROUPING = DT_COLLECTION_PROP_METADATA + DT_METADATA_RESERVED_FIELD_COUNT,
     DT_COLLECTION_PROP_LOCAL_COPY,
 
     DT_COLLECTION_PROP_HISTORY,

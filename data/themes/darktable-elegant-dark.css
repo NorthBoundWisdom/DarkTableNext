@@ -22,7 +22,7 @@
 /* This has been tested with GTK 3.24 on Gnome */
 
 /* General */
-@define-color selected_bg_color @grey_50;       /* legacy stuff */
+@define-color selected_bg_color @grey_50;       /* GTK selection color */
 @define-color border_color @grey_25;            /* border, when used */
 @define-color bg_color @grey_30;                /* general background */
 @define-color fg_color @grey_80;                /* general text */

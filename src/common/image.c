@@ -327,16 +327,6 @@ dt_imageio_write_xmp_t dt_image_get_xmp_mode()
             res = DT_WRITE_XMP_LAZY;
         else if (!strcmp(config, "on import"))
             res = DT_WRITE_XMP_ALWAYS;
-        else if (!strcmp(config, "TRUE"))
-        {
-            // migration path from boolean settings in <= 3.6, lazy mode was
-            // introduced in 3.8 as scripts or tools might use FALSE we can
-            // only update TRUE in a safe way.  This leaves others like
-            // "false" or "FALSE" as DT_WRITE_XMP_NEVER without conf string
-            // update
-            dt_conf_set_string("write_sidecar_files", "on import");
-            res = DT_WRITE_XMP_ALWAYS;
-        }
     }
     else
     {

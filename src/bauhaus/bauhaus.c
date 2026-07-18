@@ -1782,16 +1782,6 @@ gboolean dt_bauhaus_combobox_set_from_value(GtkWidget *widget, const int value)
     if (pos != -1)
         return TRUE;
 
-    // this might be a legacy option that was hidden; try to re-add from
-    // introspection
-    dt_introspection_type_enum_tuple_t *values =
-        g_hash_table_lookup(darktable.bauhaus->combo_introspection, dt_action_widget(widget));
-    if (values && dt_bauhaus_combobox_add_introspection(widget, NULL, values, value, value))
-    {
-        dt_bauhaus_combobox_set(widget, dt_bauhaus_combobox_length(widget) - 1);
-        return TRUE;
-    }
-
     return FALSE;
 }
 

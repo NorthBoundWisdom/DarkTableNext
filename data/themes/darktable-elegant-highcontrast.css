@@ -20,7 +20,7 @@
 @import url("chunk-fonts.css");
 
 @define-color fg_color @grey_95; /* general text */
-@define-color base_color @fg_color; /* legacy stuff */
+@define-color base_color @fg_color; /* GTK base color */
 @define-color disabled_fg_color @grey_45; /* disabled controls */
 
 /* Modules box (plugins) */

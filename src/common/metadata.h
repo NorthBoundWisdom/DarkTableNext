@@ -33,9 +33,8 @@ typedef struct dt_metadata_t
     uint32_t display_order;
 } dt_metadata_t;
 
-// for compatibility we need to keep the number of metadata fields we had
-// before PR #18036
-#define DT_METADATA_LEGACY_NUMBER 9
+// Collection property IDs reserve this many slots for metadata fields.
+#define DT_METADATA_RESERVED_FIELD_COUNT 9
 
 typedef enum dt_metadata_signal_t
 {

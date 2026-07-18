@@ -143,7 +143,6 @@ typedef struct dt_iop_borders_gui_data_t
     GtkWidget *frame_picker; // the 2nd button
 } dt_iop_borders_gui_data_t;
 
-// ******* Check and update legacy params...(esp. ver 4)
 typedef struct dt_iop_borders_global_data_t
 {
     int kernel_borders_fill;
@@ -282,7 +281,7 @@ void modify_roi_out(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, dt_iop
     dt_iop_basis_t basis = d->basis;
     if (basis == DT_IOP_BORDERS_BASIS_AUTO)
     {
-        // automatic/legacy/default behaviour:
+        // automatic default behaviour:
         // for a constant border be sure to base the computation on the
         // larger border, failing that the border will have a different
         // size depending on the orientation.
