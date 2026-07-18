@@ -24,43 +24,32 @@
 
 static int message(lua_State *L)
 {
-  const char *sender = luaL_checkstring(L, 1);
-  const char *receiver = luaL_checkstring(L, 2);
-  const char *message = luaL_checkstring(L, 3);
+    const char *sender = luaL_checkstring(L, 1);
+    const char *receiver = luaL_checkstring(L, 2);
+    const char *message = luaL_checkstring(L, 3);
 
-  dt_lua_async_call_alien(dt_lua_event_trigger_wrapper,
-      0, NULL, NULL,
-      LUA_ASYNC_TYPENAME, "const char*", "inter-script-communication",
-      LUA_ASYNC_TYPENAME, "const char*", sender,
-      LUA_ASYNC_TYPENAME, "const char*", receiver,
-      LUA_ASYNC_TYPENAME, "const char*", message,
-      LUA_ASYNC_DONE);
+    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
+                            "const char*", "inter-script-communication", LUA_ASYNC_TYPENAME,
+                            "const char*", sender, LUA_ASYNC_TYPENAME, "const char*", receiver,
+                            LUA_ASYNC_TYPENAME, "const char*", message, LUA_ASYNC_DONE);
 
-  return 0;
+    return 0;
 }
-
 
 int dt_lua_init_util(lua_State *L)
 {
-  dt_lua_push_darktable_lib(L);
-  dt_lua_goto_subtable(L, "util");
+    dt_lua_push_darktable_lib(L);
+    dt_lua_goto_subtable(L, "util");
 
-  lua_pushcfunction(L, message);
-  lua_setfield(L, -2, "message");
+    lua_pushcfunction(L, message);
+    lua_setfield(L, -2, "message");
 
-  lua_pop(L, 1);
+    lua_pop(L, 1);
 
+    lua_pushcfunction(L, dt_lua_event_multiinstance_register);
+    lua_pushcfunction(L, dt_lua_event_multiinstance_destroy);
+    lua_pushcfunction(L, dt_lua_event_multiinstance_trigger);
+    dt_lua_event_add(L, "inter-script-communication");
 
-  lua_pushcfunction(L, dt_lua_event_multiinstance_register);
-  lua_pushcfunction(L, dt_lua_event_multiinstance_destroy);
-  lua_pushcfunction(L, dt_lua_event_multiinstance_trigger);
-  dt_lua_event_add(L, "inter-script-communication");
-
-  return 0;
+    return 0;
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -35,17 +35,7 @@ static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUP
 
 // clang-format on
 
-#ifndef __GNUC_PREREQ
-// on OSX, gcc-4.6 and clang chokes if this is not here.
-#if defined __GNUC__ && defined __GNUC_MINOR__
-#define __GNUC_PREREQ(maj, min) ((__GNUC__ << 16) + __GNUC_MINOR__ >= ((maj) << 16) + (min))
-#else
-#define __GNUC_PREREQ(maj, min) 0
-#endif
-#endif
-
-#if defined(_OPENMP) && __GNUC_PREREQ(4, 9)
-#define OPENMP_SIMD_
+#if defined(_OPENMP)
 #define SIMD() simd
 #else
 #define SIMD()
@@ -70,8 +60,6 @@ static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUP
 #cmakedefine HAVE_CPUID_H 1
 #cmakedefine HAVE___GET_CPUID 1
 
-#cmakedefine HAVE_OMP_FIRSTPRIVATE_WITH_CONST 1
-
 #cmakedefine HAVE_THREAD_RWLOCK_ARCH_T_READERS 1
 
 #cmakedefine HAVE_THREAD_RWLOCK_ARCH_T_NR_READERS 1
@@ -81,12 +69,7 @@ static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUP
  * OpenCL 1.2 is the version supported by Apple, otherwise we use 3.0
  *****************************************************************************/
 #ifdef HAVE_APPLE_KEYCHAIN
- #define CL_TARGET_OPENCL_VERSION 120
+#define CL_TARGET_OPENCL_VERSION 120
 #else
- #define CL_TARGET_OPENCL_VERSION 300
+#define CL_TARGET_OPENCL_VERSION 300
 #endif
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

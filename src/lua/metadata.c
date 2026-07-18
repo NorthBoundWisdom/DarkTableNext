@@ -23,35 +23,29 @@
 
 static int exists(lua_State *L)
 {
-  gboolean result = false;
-  dt_metadata_t *md;
+    gboolean result = false;
+    dt_metadata_t *md;
 
-  const char *tagname = luaL_checkstring(L, 1);
+    const char *tagname = luaL_checkstring(L, 1);
 
-  md = dt_metadata_get_metadata_by_tagname(tagname);
+    md = dt_metadata_get_metadata_by_tagname(tagname);
 
-  if(md)
-    result = true;
+    if (md)
+        result = true;
 
-  lua_pushboolean(L, result);
-  return 1;
+    lua_pushboolean(L, result);
+    return 1;
 }
 
 int dt_lua_init_metadata(lua_State *L)
 {
-  dt_lua_push_darktable_lib(L);
-  dt_lua_goto_subtable(L, "metadata");
+    dt_lua_push_darktable_lib(L);
+    dt_lua_goto_subtable(L, "metadata");
 
-  lua_pushcfunction(L, exists);
-  lua_setfield(L, -2, "exists");
+    lua_pushcfunction(L, exists);
+    lua_setfield(L, -2, "exists");
 
-  lua_pop(L, 1);
+    lua_pop(L, 1);
 
-  return 0;
+    return 0;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

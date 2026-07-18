@@ -22,12 +22,12 @@
 
 typedef struct dt_bilateral_t
 {
-  size_t size_x, size_y, size_z;
-  int width, height;
-  int numslices, sliceheight, slicerows; //height--in input image, rows--in grid
-  float sigma_s, sigma_r;
-  float sigma_s_inv, sigma_r_inv;  // reciprocals of sigma_s and sigma_r to avoid divisions
-  float *buf __attribute__((aligned(64)));
+    size_t size_x, size_y, size_z;
+    int width, height;
+    int numslices, sliceheight, slicerows; //height--in input image, rows--in grid
+    float sigma_s, sigma_r;
+    float sigma_s_inv, sigma_r_inv; // reciprocals of sigma_s and sigma_r to avoid divisions
+    float *buf __attribute__((aligned(64)));
 } __attribute__((packed)) dt_bilateral_t;
 
 size_t dt_bilateral_memory_use(const int width,      // width of input image
@@ -50,8 +50,8 @@ size_t dt_bilateral_singlebuffer_size2(const int width,      // width of input i
                                        const float sigma_s,  // spatial sigma (blur pixel coords)
                                        const float sigma_r); // range sigma (blur luma values)
 
-void dt_bilateral_grid_size(dt_bilateral_t *b, const int width, const int height, const float L_range,
-                            float sigma_s, const float sigma_r);
+void dt_bilateral_grid_size(dt_bilateral_t *b, const int width, const int height,
+                            const float L_range, float sigma_s, const float sigma_r);
 
 dt_bilateral_t *dt_bilateral_init(const int width,      // width of input image
                                   const int height,     // height of input image
@@ -62,16 +62,10 @@ void dt_bilateral_splat(const dt_bilateral_t *b, const float *const in);
 
 void dt_bilateral_blur(const dt_bilateral_t *b);
 
-void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out, const float detail);
+void dt_bilateral_slice(const dt_bilateral_t *const b, const float *const in, float *out,
+                        const float detail);
 
 void dt_bilateral_slice_to_output(const dt_bilateral_t *const b, const float *const in, float *out,
                                   const float detail);
 
 void dt_bilateral_free(dt_bilateral_t *b);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

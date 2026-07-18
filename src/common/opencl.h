@@ -66,7 +66,7 @@ G_BEGIN_DECLS
 // All functions in opencl.c make sure to pass a correct size_t struct
 #define CLIMG_ORIGIN NULL
 
-#define ROUNDUP(a, n) ((a) % (n) == 0 ? (a) : ((a) / (n)+1) * (n))
+#define ROUNDUP(a, n) ((a) % (n) == 0 ? (a) : ((a) / (n) + 1) * (n))
 
 // use per device roundups here
 #define ROUNDUPDWD(a, b) dt_opencl_dev_roundup_width(a, b)
@@ -81,15 +81,15 @@ G_BEGIN_DECLS
 
 typedef enum dt_opencl_memory_t
 {
-  OPENCL_MEMORY_ADD,
-  OPENCL_MEMORY_SUB
+    OPENCL_MEMORY_ADD,
+    OPENCL_MEMORY_SUB
 } dt_opencl_memory_t;
 
 typedef enum dt_opencl_scheduling_profile_t
 {
-  OPENCL_PROFILE_DEFAULT,
-  OPENCL_PROFILE_MULTIPLE_GPUS,
-  OPENCL_PROFILE_VERYFAST_GPU
+    OPENCL_PROFILE_DEFAULT,
+    OPENCL_PROFILE_MULTIPLE_GPUS,
+    OPENCL_PROFILE_VERYFAST_GPU
 } dt_opencl_scheduling_profile_t;
 
 /**
@@ -97,16 +97,16 @@ typedef enum dt_opencl_scheduling_profile_t
  */
 typedef struct dt_opencl_eventtag_t
 {
-  cl_int retval;
-  cl_ulong timelapsed;
-  char tag[DT_OPENCL_EVENTNAMELENGTH];
+    cl_int retval;
+    cl_ulong timelapsed;
+    char tag[DT_OPENCL_EVENTNAMELENGTH];
 } dt_opencl_eventtag_t;
 
 typedef enum dt_opencl_atomics_t
 {
-  DT_OPENCL_ATOMIC_NONE = 0,
-  DT_OPENCL_ATOMIC_INT32 = 1,
-  DT_OPENCL_ATOMIC_FLOAT32 = 2,
+    DT_OPENCL_ATOMIC_NONE = 0,
+    DT_OPENCL_ATOMIC_INT32 = 1,
+    DT_OPENCL_ATOMIC_FLOAT32 = 2,
 } dt_opencl_atomics_t;
 
 /**
@@ -115,110 +115,110 @@ typedef enum dt_opencl_atomics_t
  */
 typedef struct dt_opencl_device_t
 {
-  dt_pthread_mutex_t lock;
-  cl_device_id devid;
-  cl_context context;
-  cl_command_queue cmd_queue;
-  size_t max_image_width;
-  size_t max_image_height;
-  cl_ulong max_mem_alloc;
-  cl_ulong max_global_mem;
-  cl_ulong used_global_mem;
-  cl_ulong max_mem_constant;
-  cl_uint alignsize; 
-  cl_uint compute_units;
-  size_t workgroup_size; 
-  size_t workgroup_size_rec;
-  size_t local_size;
-  cl_program program[DT_OPENCL_MAX_PROGRAMS];
-  cl_kernel kernel[DT_OPENCL_MAX_KERNELS];
-  gboolean program_used[DT_OPENCL_MAX_PROGRAMS];
-  gboolean kernel_used[DT_OPENCL_MAX_KERNELS];
-  cl_event *eventlist;
-  dt_opencl_eventtag_t *eventtags;
-  int numevents;
-  int eventsconsolidated;
-  int maxevents;
-  int lostevents;
-  int totalevents;
-  int totalsuccess;
-  int totallost;
-  int maxeventslot;
-  gboolean cuda;
-  const char *fullname;
-  const char *platform;
-  const char *device_version;
-  const char *cname;
-  const char *options;
-  const char *cflags;
-  cl_int summary;
-  size_t memory_in_use;
-  size_t peak_memory;
-  size_t used_available;
-  // flags if we want headroom mode
-  gboolean tunehead;
-  // we checked for atomic support; tested by avoid_atomics functions
-  dt_opencl_atomics_t atomic_support;
-  // pause OpenCL processing for this number of microseconds from time
-  // to time
-  int micro_nap;
+    dt_pthread_mutex_t lock;
+    cl_device_id devid;
+    cl_context context;
+    cl_command_queue cmd_queue;
+    size_t max_image_width;
+    size_t max_image_height;
+    cl_ulong max_mem_alloc;
+    cl_ulong max_global_mem;
+    cl_ulong used_global_mem;
+    cl_ulong max_mem_constant;
+    cl_uint alignsize;
+    cl_uint compute_units;
+    size_t workgroup_size;
+    size_t workgroup_size_rec;
+    size_t local_size;
+    cl_program program[DT_OPENCL_MAX_PROGRAMS];
+    cl_kernel kernel[DT_OPENCL_MAX_KERNELS];
+    gboolean program_used[DT_OPENCL_MAX_PROGRAMS];
+    gboolean kernel_used[DT_OPENCL_MAX_KERNELS];
+    cl_event *eventlist;
+    dt_opencl_eventtag_t *eventtags;
+    int numevents;
+    int eventsconsolidated;
+    int maxevents;
+    int lostevents;
+    int totalevents;
+    int totalsuccess;
+    int totallost;
+    int maxeventslot;
+    gboolean cuda;
+    const char *fullname;
+    const char *platform;
+    const char *device_version;
+    const char *cname;
+    const char *options;
+    const char *cflags;
+    cl_int summary;
+    size_t memory_in_use;
+    size_t peak_memory;
+    size_t used_available;
+    // flags if we want headroom mode
+    gboolean tunehead;
+    // we checked for atomic support; tested by avoid_atomics functions
+    dt_opencl_atomics_t atomic_support;
+    // pause OpenCL processing for this number of microseconds from time
+    // to time
+    int micro_nap;
 
-  // During tiling huge amounts of memory need to be transferred
-  // between host and device.  For some OpenCL implementations direct
-  // memory transfers give a drastic performance penalty, this can
-  // often be avoided by using indirect transfers via pinned memory,
-  // other devices have more efficient direct memory transfer
-  // implementations.  We can't predict on solid grounds if a device
-  // belongs to the first or second group, also pinned mem transfer
-  // requires slightly more video ram plus system memory.  If TRUE in
-  // the device-specific conf pinned transfer is enabled
-  gboolean pinned_memory;
+    // During tiling huge amounts of memory need to be transferred
+    // between host and device.  For some OpenCL implementations direct
+    // memory transfers give a drastic performance penalty, this can
+    // often be avoided by using indirect transfers via pinned memory,
+    // other devices have more efficient direct memory transfer
+    // implementations.  We can't predict on solid grounds if a device
+    // belongs to the first or second group, also pinned mem transfer
+    // requires slightly more video ram plus system memory.  If TRUE in
+    // the device-specific conf pinned transfer is enabled
+    gboolean pinned_memory;
 
-  // keep track of devices using unified memory so we can adopt
-  // runtime code
-  gboolean unified_memory;
-  // fraction of system memory allowed for a device in percent
-  float unified_fraction;
+    // keep track of devices using unified memory so we can adopt
+    // runtime code
+    gboolean unified_memory;
+    // fraction of system memory allowed for a device in percent
+    float unified_fraction;
 
-  // flags reporting cl runtime error conditions
-  gboolean pinned_error;
-  gboolean clmem_error;
+    // flags reporting cl runtime error conditions
+    gboolean pinned_error;
+    gboolean clmem_error;
 
-  // in OpenCL processing round width/height of global work groups to
-  // a multiple of these values.  reasonable values are powers of
-  // 2. this parameter can have high impact on OpenCL performance.
-  int clroundup_wd;
-  int clroundup_ht;
+    // in OpenCL processing round width/height of global work groups to
+    // a multiple of these values.  reasonable values are powers of
+    // 2. this parameter can have high impact on OpenCL performance.
+    int clroundup_wd;
+    int clroundup_ht;
 
-  // opencl_events enabled for the device
-  gboolean use_events;
+    // opencl_events enabled for the device
+    gboolean use_events;
 
-  // async pixelpipe mode for device if set to TRUE OpenCL pixelpipe
-  // will not be synchronized on a per-module basis. this can improve
-  // pixelpipe latency.  however, potential OpenCL errors would be
-  // detected late; in such a case the complete pixelpipe needs to be
-  // reprocessed instead of only a single module. export pixelpipe
-  // will always be run synchronously.
-  gboolean asyncmode;
+    // async pixelpipe mode for device if set to TRUE OpenCL pixelpipe
+    // will not be synchronized on a per-module basis. this can improve
+    // pixelpipe latency.  however, potential OpenCL errors would be
+    // detected late; in such a case the complete pixelpipe needs to be
+    // reprocessed instead of only a single module. export pixelpipe
+    // will always be run synchronously.
+    gboolean asyncmode;
 
-  // a device might be turned off by force by setting this value to 1
-  // also used for blacklisted drivers
-  gboolean disabled;
+    // a device might be turned off by force by setting this value to 1
+    // also used for blacklisted drivers
+    gboolean disabled;
 
-  // Some devices are known to be unused by other apps so they can use
-  // all memory.
-  int headroom;
+    // Some devices are known to be unused by other apps so they can use
+    // all memory.
+    int headroom;
 
-  // lets keep the vendor for runtime checks
-  int vendor_id;
+    // lets keep the vendor for runtime checks
+    int vendor_id;
 
-  float advantage;
+    float advantage;
 } dt_opencl_device_t;
 
 struct dt_bilateral_cl_global_t;
 struct dt_local_laplacian_cl_global_t;
-struct dt_dwt_cl_global_t; // wavelet decompose
-struct dt_heal_cl_global_t; // healing
+struct dt_dwt_cl_global_t;         // wavelet decompose
+struct dt_heal_cl_global_t;        // healing
 struct dt_colorspaces_cl_global_t; // colorspaces transform
 struct dt_guided_filter_cl_global_t;
 
@@ -228,57 +228,57 @@ struct dt_guided_filter_cl_global_t;
  */
 typedef struct dt_opencl_t
 {
-  dt_pthread_mutex_t lock;
-  gboolean inited;
-  gboolean print_statistics;
-  gboolean enabled;
-  gboolean stopped;
-  gboolean fastcl;  // for fast runtime checks instead of reading the conf
-  int num_devs;
-  int error_count;
-  int opencl_synchronization_timeout;
-  gboolean api30;
-  dt_opencl_scheduling_profile_t scheduling_profile;
-  uint32_t crc;
-  gboolean mandatory[5];
-  int *dev_priority_image;
-  int *dev_priority_preview;
-  int *dev_priority_preview2;
-  int *dev_priority_export;
-  int *dev_priority_thumbnail;
-  dt_opencl_device_t *dev;
-  dt_dlopencl_t *dlocl;
+    dt_pthread_mutex_t lock;
+    gboolean inited;
+    gboolean print_statistics;
+    gboolean enabled;
+    gboolean stopped;
+    gboolean fastcl; // for fast runtime checks instead of reading the conf
+    int num_devs;
+    int error_count;
+    int opencl_synchronization_timeout;
+    gboolean api30;
+    dt_opencl_scheduling_profile_t scheduling_profile;
+    uint32_t crc;
+    gboolean mandatory[5];
+    int *dev_priority_image;
+    int *dev_priority_preview;
+    int *dev_priority_preview2;
+    int *dev_priority_export;
+    int *dev_priority_thumbnail;
+    dt_opencl_device_t *dev;
+    dt_dlopencl_t *dlocl;
 
-  // global kernels for blending operations.
-  struct dt_blendop_cl_global_t *blendop;
+    // global kernels for blending operations.
+    struct dt_blendop_cl_global_t *blendop;
 
-  // global kernels for bilateral filtering, to be reused by a few plugins.
-  struct dt_bilateral_cl_global_t *bilateral;
+    // global kernels for bilateral filtering, to be reused by a few plugins.
+    struct dt_bilateral_cl_global_t *bilateral;
 
-  // global kernels for gaussian filtering, to be reused by a few plugins.
-  struct dt_gaussian_cl_global_t *gaussian;
+    // global kernels for gaussian filtering, to be reused by a few plugins.
+    struct dt_gaussian_cl_global_t *gaussian;
 
-  // global kernels for interpolation resampling.
-  struct dt_interpolation_cl_global_t *interpolation;
+    // global kernels for interpolation resampling.
+    struct dt_interpolation_cl_global_t *interpolation;
 
-  // global kernels for local laplacian filter.
-  struct dt_local_laplacian_cl_global_t *local_laplacian;
+    // global kernels for local laplacian filter.
+    struct dt_local_laplacian_cl_global_t *local_laplacian;
 
-  // global kernels for dwt filter.
-  struct dt_dwt_cl_global_t *dwt;
+    // global kernels for dwt filter.
+    struct dt_dwt_cl_global_t *dwt;
 
-  // global kernels for heal filter.
-  struct dt_heal_cl_global_t *heal;
+    // global kernels for heal filter.
+    struct dt_heal_cl_global_t *heal;
 
-  // global kernels for colorspaces filter.
-  struct dt_colorspaces_cl_global_t *colorspaces;
+    // global kernels for colorspaces filter.
+    struct dt_colorspaces_cl_global_t *colorspaces;
 
-  // global kernels for guided filter.
-  struct dt_guided_filter_cl_global_t *guided_filter;
+    // global kernels for guided filter.
+    struct dt_guided_filter_cl_global_t *guided_filter;
 
-  // saved kernel info for deferred initialisation
-  int program_saved[DT_OPENCL_MAX_KERNELS];
-  const char *name_saved[DT_OPENCL_MAX_KERNELS];
+    // saved kernel info for deferred initialisation
+    int program_saved[DT_OPENCL_MAX_KERNELS];
+    const char *name_saved[DT_OPENCL_MAX_KERNELS];
 } dt_opencl_t;
 
 /** description of memory requirements of local buffer
@@ -286,28 +286,24 @@ typedef struct dt_opencl_t
   * (xoffset + xfactor * x) * (yoffset + yfactor * y) * cellsize + overhead; */
 typedef struct dt_opencl_local_buffer_t
 {
-  const int xoffset;
-  const int xfactor;
-  const int yoffset;
-  const int yfactor;
-  const size_t cellsize;
-  const size_t overhead;
-  int sizex;  // initial value and final values after optimization
-  int sizey;  // initial value and final values after optimization
+    const int xoffset;
+    const int xfactor;
+    const int yoffset;
+    const int yfactor;
+    const size_t cellsize;
+    const size_t overhead;
+    int sizex; // initial value and final values after optimization
+    int sizey; // initial value and final values after optimization
 } dt_opencl_local_buffer_t;
 
 /** internally calls dt_clGetDeviceInfo, and takes care of memory
  * allocation afterwards, *param_value will point to memory block of
  * size at least *param_value which needs to be free()'d manually */
-int dt_opencl_get_device_info(dt_opencl_t *cl,
-                              cl_device_id device,
-                              cl_device_info param_name,
-                              void **param_value,
-                              size_t *param_value_size);
+int dt_opencl_get_device_info(dt_opencl_t *cl, cl_device_id device, cl_device_info param_name,
+                              void **param_value, size_t *param_value_size);
 
 /** inits the opencl subsystem. */
-void dt_opencl_init(dt_opencl_t *cl,
-                    const gboolean exclude_opencl,
+void dt_opencl_init(dt_opencl_t *cl, const gboolean exclude_opencl,
                     const gboolean print_statistics);
 
 /** cleans up the opencl subsystem. */
@@ -320,8 +316,7 @@ const char *cl_errstr(cl_int error);
 gboolean dt_opencl_finish(const int devid);
 /** cleans up command queue if in synchron mode or while exporting,
  * returns TRUE in case of success */
-gboolean dt_opencl_finish_sync_pipe(const int devid,
-                                    const int pipetype);
+gboolean dt_opencl_finish_sync_pipe(const int devid, const int pipetype);
 
 /** locks a device for your thread's exclusive use and returns it's id */
 int dt_opencl_lock_device(const int pipetype);
@@ -330,25 +325,20 @@ int dt_opencl_lock_device(const int pipetype);
 void dt_opencl_unlock_device(const int dev);
 
 /** inits a kernel. returns the index or -1 if fail. */
-int dt_opencl_create_kernel(const int program,
-                            const char *name);
+int dt_opencl_create_kernel(const int program, const char *name);
 
 /** releases kernel resources again. */
 void dt_opencl_free_kernel(const int kernel);
 
 /** return max size in sizes[3]. */
-int dt_opencl_get_max_work_item_sizes(const int dev,
-                                      size_t *sizes);
+int dt_opencl_get_max_work_item_sizes(const int dev, size_t *sizes);
 
 /** return max size per dimension in sizes[3] and max total size in workgroupsize */
-int dt_opencl_get_work_group_limits(const int dev,
-                                    size_t *sizes,
-                                    size_t *workgroupsize,
+int dt_opencl_get_work_group_limits(const int dev, size_t *sizes, size_t *workgroupsize,
                                     unsigned long *localmemsize);
 
 /** return max workgroup size for a specific kernel */
-int dt_opencl_get_kernel_work_group_size(const int dev,
-                                         const int kernel,
+int dt_opencl_get_kernel_work_group_size(const int dev, const int kernel,
                                          size_t *kernelworkgroupsize);
 
 /** wrap opencl arguments */
@@ -374,53 +364,39 @@ int dt_opencl_get_kernel_work_group_size(const int dev,
 #define CLLOCAL(arg) CLWRAP(arg, NULL)
 
 /** attach args. */
-#define dt_opencl_set_kernel_args(dev, kernel, num, ...) \
+#define dt_opencl_set_kernel_args(dev, kernel, num, ...)                                           \
     dt_opencl_set_kernel_args_internal(dev, kernel, num, __VA_ARGS__, CLWRAP(SIZE_MAX, NULL))
-int dt_opencl_set_kernel_args_internal(const int dev,
-                                       const int kernel,
-                                       int num, ...);
+int dt_opencl_set_kernel_args_internal(const int dev, const int kernel, int num, ...);
 
 /** launch kernel! */
-int dt_opencl_enqueue_kernel_2d(const int dev,
-                                const int kernel,
-                                const size_t *sizes);
+int dt_opencl_enqueue_kernel_2d(const int dev, const int kernel, const size_t *sizes);
 
 /** launch kernel with defined local size! */
-int dt_opencl_enqueue_kernel_2d_with_local(const int dev,
-                                           const int kernel,
-                                           const size_t *sizes,
+int dt_opencl_enqueue_kernel_2d_with_local(const int dev, const int kernel, const size_t *sizes,
                                            const size_t *local);
 
 /** call kernel with arguments! */
-#define dt_opencl_enqueue_kernel_2d_args(dev, kernel, w, h, ...) \
-    dt_opencl_enqueue_kernel_2d_args_internal(dev, kernel, w, h, __VA_ARGS__, CLWRAP(SIZE_MAX, NULL))
+#define dt_opencl_enqueue_kernel_2d_args(dev, kernel, w, h, ...)                                   \
+    dt_opencl_enqueue_kernel_2d_args_internal(dev, kernel, w, h, __VA_ARGS__,                      \
+                                              CLWRAP(SIZE_MAX, NULL))
 
 /** call kernel with arguments, sizes and local! */
-#define dt_opencl_enqueue_kernel_2d_local_args(dev, kernel, sizes, local, ...) \
-    dt_opencl_enqueue_kernel_2d_local_args_internal(dev, kernel, sizes, local, __VA_ARGS__, CLWRAP(SIZE_MAX, NULL))
+#define dt_opencl_enqueue_kernel_2d_local_args(dev, kernel, sizes, local, ...)                     \
+    dt_opencl_enqueue_kernel_2d_local_args_internal(dev, kernel, sizes, local, __VA_ARGS__,        \
+                                                    CLWRAP(SIZE_MAX, NULL))
 
-
-#define dt_opencl_enqueue_kernel_1d_args(dev, kernel, x, ...) \
+#define dt_opencl_enqueue_kernel_1d_args(dev, kernel, x, ...)                                      \
     dt_opencl_enqueue_kernel_1d_args_internal(dev, kernel, x, __VA_ARGS__, CLWRAP(SIZE_MAX, NULL))
 
-int dt_opencl_enqueue_kernel_2d_args_internal(const int dev,
-                                              const int kernel,
-                                              const size_t w,
+int dt_opencl_enqueue_kernel_2d_args_internal(const int dev, const int kernel, const size_t w,
                                               const size_t h, ...);
-int dt_opencl_enqueue_kernel_2d_local_args_internal(const int dev,
-                                                    const int kernel,
-                                                    const size_t *sizes,
-                                                    const size_t *local, ...);
-int dt_opencl_enqueue_kernel_1d_args_internal(const int dev,
-                                              const int kernel,
-                                              const size_t x, ...);
+int dt_opencl_enqueue_kernel_2d_local_args_internal(const int dev, const int kernel,
+                                                    const size_t *sizes, const size_t *local, ...);
+int dt_opencl_enqueue_kernel_1d_args_internal(const int dev, const int kernel, const size_t x, ...);
 
 /** launch kernel with specified dimension and defined local size! */
-int dt_opencl_enqueue_kernel_ndim_with_local(const int dev,
-                                             const int kernel,
-                                             const size_t *sizes,
-                                             const size_t *local,
-                                             const int dimensions);
+int dt_opencl_enqueue_kernel_ndim_with_local(const int dev, const int kernel, const size_t *sizes,
+                                             const size_t *local, const int dimensions);
 
 /** check if opencl is enabled */
 gboolean dt_opencl_is_enabled(void);
@@ -435,112 +411,61 @@ gboolean dt_opencl_running_fast(void);
 void dt_opencl_update_settings(void);
 
 /** HAVE_OPENCL mode only: copy and alloc buffers. */
-int dt_opencl_copy_image_to_host(const int devid,
-                                  void *host,
-                                  cl_mem image,
-                                  const int width,
-                                  const int height,
-                                  const int bpp);
+int dt_opencl_copy_image_to_host(const int devid, void *host, cl_mem image, const int width,
+                                 const int height, const int bpp);
 
-int dt_opencl_read_host_from_image_raw(const int devid,
-                                        void *host,
-                                        cl_mem image,
-                                        const size_t *origin,
-                                        const size_t *region,
-                                        const int rowpitch,
-                                        const gboolean blocking);
+int dt_opencl_read_host_from_image_raw(const int devid, void *host, cl_mem image,
+                                       const size_t *origin, const size_t *region,
+                                       const int rowpitch, const gboolean blocking);
 
-int dt_opencl_write_host_to_image(const int devid,
-                                   const void *host,
-                                   cl_mem image,
-                                   const int width,
-                                   const int height,
+int dt_opencl_write_host_to_image(const int devid, const void *host, cl_mem image, const int width,
+                                  const int height, const int bpp);
+
+int dt_opencl_write_host_to_image_raw(const int devid, const void *host, cl_mem image,
+                                      const size_t *origin, const size_t *region,
+                                      const int rowpitch, const gboolean blocking);
+
+void *dt_opencl_copy_host_to_image(const int devid, void *host, const int width, const int height,
                                    const int bpp);
 
-int dt_opencl_write_host_to_image_raw(const int devid,
-                                       const void *host,
-                                       cl_mem image,
-                                       const size_t *origin,
-                                       const size_t *region,
-                                       const int rowpitch,
-                                       const gboolean blocking);
+void *dt_opencl_copy_host_to_device_constant(const int devid, const size_t size, void *host);
 
-void *dt_opencl_copy_host_to_image(const int devid,
-                                    void *host,
-                                    const int width,
-                                    const int height,
-                                    const int bpp);
-
-void *dt_opencl_copy_host_to_device_constant(const int devid,
-                                             const size_t size,
-                                             void *host);
-
-int dt_opencl_enqueue_copy_image(const int devid,
-                                 const cl_mem src,
-                                 cl_mem dst,
-                                 const size_t *orig_src,
-                                 const size_t *orig_dst,
+int dt_opencl_enqueue_copy_image(const int devid, const cl_mem src, cl_mem dst,
+                                 const size_t *orig_src, const size_t *orig_dst,
                                  const size_t *region);
 
-void *dt_opencl_alloc_device(const int devid,
-                             const int width,
-                             const int height,
-                             const int bpp);
+void *dt_opencl_alloc_device(const int devid, const int width, const int height, const int bpp);
 
-int dt_opencl_enqueue_copy_image_to_buffer(const int devid,
-                                           const cl_mem src_image,
-                                           cl_mem dst_buffer,
-                                           const size_t *origin,
-                                           const size_t *region,
-                                           const size_t offset);
+int dt_opencl_enqueue_copy_image_to_buffer(const int devid, const cl_mem src_image,
+                                           cl_mem dst_buffer, const size_t *origin,
+                                           const size_t *region, const size_t offset);
 
-int dt_opencl_enqueue_copy_buffer_to_image(const int devid,
-                                           const cl_mem src_buffer,
-                                           cl_mem dst_image,
-                                           const size_t offset,
-                                           const size_t *origin,
-                                           const size_t *region);
+int dt_opencl_enqueue_copy_buffer_to_image(const int devid, const cl_mem src_buffer,
+                                           cl_mem dst_image, const size_t offset,
+                                           const size_t *origin, const size_t *region);
 
-int dt_opencl_enqueue_copy_buffer_to_buffer(const int devid,
-                                            const cl_mem src_buffer,
-                                            cl_mem dst_buffer,
-                                            const size_t srcoffset,
-                                            const size_t dstoffset,
-                                            const size_t size);
+int dt_opencl_enqueue_copy_buffer_to_buffer(const int devid, const cl_mem src_buffer,
+                                            cl_mem dst_buffer, const size_t srcoffset,
+                                            const size_t dstoffset, const size_t size);
 
-int dt_opencl_read_buffer_from_device(const int devid,
-                                      void *host,
-                                      cl_mem buffer,
-                                      const size_t offset,
-                                      const size_t size,
+int dt_opencl_read_buffer_from_device(const int devid, void *host, cl_mem buffer,
+                                      const size_t offset, const size_t size,
                                       const gboolean blocking);
 
-int dt_opencl_write_buffer_to_device(const int devid,
-                                     void *host,
-                                     cl_mem buffer,
-                                     const size_t offset,
-                                     const size_t size,
+int dt_opencl_write_buffer_to_device(const int devid, void *host, cl_mem buffer,
+                                     const size_t offset, const size_t size,
                                      const gboolean blocking);
 
-void *dt_opencl_alloc_device_buffer(const int devid,
-                                    const size_t size);
+void *dt_opencl_alloc_device_buffer(const int devid, const size_t size);
 
-void *dt_opencl_alloc_device_buffer_with_flags(const int devid,
-                                               const size_t size,
-                                               const int flags);
+void *dt_opencl_alloc_device_buffer_with_flags(const int devid, const size_t size, const int flags);
 
 void dt_opencl_release_mem_object(cl_mem mem);
 
-void *dt_opencl_map_buffer(const int devid,
-                           cl_mem buffer,
-                           const gboolean blocking,
-                           const int flags,
-                           const size_t offset,
-                           const size_t size);
+void *dt_opencl_map_buffer(const int devid, cl_mem buffer, const gboolean blocking, const int flags,
+                           const size_t offset, const size_t size);
 
-int dt_opencl_unmap_mem_object(const int devid,
-                               cl_mem mem_object,
-                               void *mapped_ptr);
+int dt_opencl_unmap_mem_object(const int devid, cl_mem mem_object, void *mapped_ptr);
 
 size_t dt_opencl_get_mem_object_size(const cl_mem mem);
 
@@ -552,23 +477,14 @@ int dt_opencl_get_image_element_size(const cl_mem mem);
 
 void *dt_opencl_duplicate_image(const int devid, const cl_mem src);
 
-void dt_opencl_dump_pipe_pfm(const char* mod,
-                             const int devid,
-                             const cl_mem img,
-                             const gboolean input,
-                             const char *pipe);
+void dt_opencl_dump_pipe_pfm(const char *mod, const int devid, const cl_mem img,
+                             const gboolean input, const char *pipe);
 
-void dt_opencl_memory_statistics(int devid,
-                                 const cl_mem mem,
-                                 dt_opencl_memory_t action);
+void dt_opencl_memory_statistics(int devid, const cl_mem mem, dt_opencl_memory_t action);
 
 /** check if image size fit into limits given by OpenCL runtime */
-gboolean dt_opencl_image_fits_device(const int devid,
-                                     const size_t width,
-                                     const size_t height,
-                                     const uint32_t bpp,
-                                     const float factor,
-                                     const size_t overhead);
+gboolean dt_opencl_image_fits_device(const int devid, const size_t width, const size_t height,
+                                     const uint32_t bpp, const float factor, const size_t overhead);
 /** get available memory for the device */
 cl_ulong dt_opencl_get_device_available(const int devid);
 
@@ -580,10 +496,8 @@ cl_ulong dt_opencl_get_device_memalloc(const int devid);
 
 /** round size to a multiple of the value given in the device specifig
  * config parameter for opencl_size_roundup */
-int dt_opencl_dev_roundup_width(const int size,
-                                const int devid);
-int dt_opencl_dev_roundup_height(const int size,
-                                 const int devid);
+int dt_opencl_dev_roundup_width(const int size, const int devid);
+int dt_opencl_dev_roundup_height(const int size, const int devid);
 
 /** reset eventlist to empty state */
 void dt_opencl_events_reset(const int devid);
@@ -591,14 +505,12 @@ void dt_opencl_events_reset(const int devid);
 /** Wait for events in eventlist to terminate, check for return status
     of events and report summary success info (CL_COMPLETE or last
     error code) */
-cl_int dt_opencl_events_flush(const int devid,
-                              const gboolean reset);
+cl_int dt_opencl_events_flush(const int devid, const gboolean reset);
 
 /** utility function to calculate optimal work group dimensions for a
     given kernel, returns an error code
 */
-cl_int dt_opencl_local_buffer_opt(const int devid,
-                                  const int kernel,
+cl_int dt_opencl_local_buffer_opt(const int devid, const int kernel,
                                   dt_opencl_local_buffer_t *factors);
 
 /** utility functions handling device specific properties */
@@ -621,114 +533,101 @@ G_BEGIN_DECLS
 
 typedef struct dt_opencl_t
 {
-  gboolean inited;
-  gboolean enabled;
-  gboolean stopped;
-  int error_count;
+    gboolean inited;
+    gboolean enabled;
+    gboolean stopped;
+    int error_count;
 } dt_opencl_t;
 
-static inline void dt_opencl_init(dt_opencl_t *cl,
-                                  const gboolean exclude_opencl,
+static inline void dt_opencl_init(dt_opencl_t *cl, const gboolean exclude_opencl,
                                   const gboolean print_statistics)
 {
-  cl->inited = FALSE;
-  cl->enabled = FALSE;
-  cl->stopped = FALSE;
-  cl->error_count = 0;
-  dt_conf_set_bool("opencl", FALSE);
-  dt_print(DT_DEBUG_OPENCL,
-           "[opencl_init] this version of darktable was built without opencl support");
+    cl->inited = FALSE;
+    cl->enabled = FALSE;
+    cl->stopped = FALSE;
+    cl->error_count = 0;
+    dt_conf_set_bool("opencl", FALSE);
+    dt_print(DT_DEBUG_OPENCL,
+             "[opencl_init] this version of darktable was built without opencl support");
 }
 static inline void dt_opencl_cleanup(dt_opencl_t *cl)
 {
 }
 static inline gboolean dt_opencl_finish(const int devid)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
-static inline gboolean dt_opencl_finish_sync_pipe(const int devid,
-                                                  const int pipetype)
+static inline gboolean dt_opencl_finish_sync_pipe(const int devid, const int pipetype)
 {
-  return FALSE;
+    return FALSE;
 }
 static inline int dt_opencl_lock_device(const int pipetype)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
 static inline void dt_opencl_unlock_device(const int dev)
 {
 }
-static inline int dt_opencl_create_kernel(const int program,
-                                          const char *name)
+static inline int dt_opencl_create_kernel(const int program, const char *name)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
 static inline void dt_opencl_free_kernel(const int kernel)
 {
 }
-static inline int dt_opencl_get_max_work_item_sizes(const int dev,
-                                                    size_t *sizes)
+static inline int dt_opencl_get_max_work_item_sizes(const int dev, size_t *sizes)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
-static inline int dt_opencl_get_work_group_limits(const int dev,
-                                                  size_t *sizes,
+static inline int dt_opencl_get_work_group_limits(const int dev, size_t *sizes,
                                                   size_t *workgroupsize,
                                                   unsigned long *localmemsize)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
-static inline int dt_opencl_get_kernel_work_group_size(const int dev,
-                                                       const int kernel,
+static inline int dt_opencl_get_kernel_work_group_size(const int dev, const int kernel,
                                                        size_t *kernelworkgroupsize)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
-static inline int dt_opencl_enqueue_kernel_2d(const int dev,
-                                              const int kernel,
-                                              const size_t *sizes)
+static inline int dt_opencl_enqueue_kernel_2d(const int dev, const int kernel, const size_t *sizes)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
-static inline int dt_opencl_enqueue_kernel_2d_with_local(const int dev,
-                                                         const int kernel,
-                                                         const size_t *sizes,
-                                                         const size_t *local)
+static inline int dt_opencl_enqueue_kernel_2d_with_local(const int dev, const int kernel,
+                                                         const size_t *sizes, const size_t *local)
 {
-  return DT_OPENCL_DEFAULT_ERROR;
+    return DT_OPENCL_DEFAULT_ERROR;
 }
 static inline gboolean dt_opencl_is_enabled(void)
 {
-  return FALSE;
+    return FALSE;
 }
 static inline gboolean dt_opencl_running(void)
 {
-  return FALSE;
+    return FALSE;
 }
 static inline gboolean dt_opencl_running_fast(void)
 {
-  return FALSE;
+    return FALSE;
 }
 static inline void dt_opencl_update_settings(void)
 {
-  return ;
+    return;
 }
-static inline gboolean dt_opencl_image_fits_device(const int devid,
-                                                   const size_t width,
-                                                   const size_t height,
-                                                   const unsigned bpp,
-                                                   const float factor,
-                                                   const size_t overhead)
+static inline gboolean dt_opencl_image_fits_device(const int devid, const size_t width,
+                                                   const size_t height, const unsigned bpp,
+                                                   const float factor, const size_t overhead)
 {
-  return FALSE;
+    return FALSE;
 }
 static inline size_t dt_opencl_get_device_available(const int devid)
 {
-  return 0;
+    return 0;
 }
 static inline size_t dt_opencl_get_device_memalloc(const int devid)
 {
-  return 0;
+    return 0;
 }
 static inline void dt_opencl_release_mem_object(void *mem)
 {
@@ -736,18 +635,11 @@ static inline void dt_opencl_release_mem_object(void *mem)
 static inline void dt_opencl_events_reset(const int devid)
 {
 }
-static inline int dt_opencl_events_flush(const int devid,
-                                         const gboolean reset)
+static inline int dt_opencl_events_flush(const int devid, const gboolean reset)
 {
-  return CL_SUCCESS;
+    return CL_SUCCESS;
 }
 
 G_END_DECLS
 
 #endif
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

@@ -36,61 +36,19 @@ target_link_directories(darktable_ai PUBLIC
   ${JSON_GLIB_LIBRARY_DIRS}
 )
 
-if(UNIX AND NOT APPLE)
-  # Always lazy-load ORT on Linux via g_module_open to avoid loading
-  # libonnxruntime.so (and its GPU provider libs) at process startup.
-  # Without this, MIGraphX/ROCm initialization can abort() the process
-  # before darktable has a chance to check the AI-enabled preference.
-  # Also suppresses harmless "already registered" ONNX schema warnings
-  # from system packages that link against libonnx.
-  # Use just the filename (not the full build-tree path) so g_module_open
-  # resolves it via LD_LIBRARY_PATH / system linker search. This is required
-  # for AppImage where the build-tree path does not exist at runtime.
-  get_filename_component(_ORT_LIB_NAME "${ONNXRuntime_LIBRARIES}" NAME)
-  target_compile_definitions(darktable_ai PRIVATE
-    ORT_LAZY_LOAD=1
-    ORT_LIBRARY_PATH="${_ORT_LIB_NAME}")
-  target_include_directories(darktable_ai PRIVATE ${ONNXRuntime_INCLUDE_DIRS})
-else()
-  target_link_libraries(darktable_ai PUBLIC onnxruntime::onnxruntime)
-endif()
+target_link_libraries(darktable_ai PUBLIC onnxruntime::onnxruntime)
 
 target_link_libraries(darktable_ai PUBLIC
   ${GLIB_LIBRARIES}
   ${JSON_GLIB_LIBRARIES}
 )
 
-# DirectML adapter selection: DXGI (IDXGIFactory6, Win10 1803+) + D3D12
-# (D3D12CreateDevice); dxguid provides GUID constants. DirectML.dll itself
-# is loaded at runtime via LoadLibrary so no dml import lib is needed.
-if(WIN32)
-  target_link_libraries(darktable_ai PUBLIC dxgi dxguid d3d12)
-endif()
-
 # Install the bundled ONNX Runtime shared library alongside darktable_ai
 # (skip when using system package — it's already in the system library path)
-if(ONNXRuntime_SYSTEM_PACKAGE)
-  # Nothing to install
-elseif(APPLE)
+if(NOT ONNXRuntime_SYSTEM_PACKAGE)
   file(GLOB _ORT_DYLIB "${ONNXRuntime_LIB_DIR}/libonnxruntime.*.dylib")
   if(_ORT_DYLIB)
     install(FILES ${_ORT_DYLIB}
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable
-    )
-  endif()
-elseif(WIN32)
-  # Install all ORT DLLs (onnxruntime.dll, onnxruntime_providers_shared.dll, etc.)
-  # DirectML.dll is a system component on Windows 10 1903+ and does not need bundling.
-  file(GLOB _ORT_DLL "${ONNXRuntime_LIB_DIR}/onnxruntime*.dll")
-  if(_ORT_DLL)
-    install(FILES ${_ORT_DLL}
-      DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-  endif()
-elseif(UNIX)
-  file(GLOB _ORT_SO "${ONNXRuntime_LIB_DIR}/libonnxruntime.so*")
-  if(_ORT_SO)
-    install(FILES ${_ORT_SO}
       DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable
     )
   endif()

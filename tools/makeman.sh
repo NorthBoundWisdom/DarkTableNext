@@ -3,8 +3,7 @@
 set -e;
 
 input="$1"
-authors="$2"
-output="$3"
+output="$2"
 
 r=$(sed -n 's,.*\$Release: \(.*\)\$$,\1,p' "$input")
 d=$(sed -n 's,/,-,g;s,.*\$Date: \(..........\).*,\1,p' "$input")
@@ -14,5 +13,4 @@ if [ -n "$d" ]; then
 fi
 
 pod2man --utf8 --release="darktable $r" --center="darktable" "$D" "$input" \
-  | sed -e '/.*DREGGNAUTHORS.*/r '"$authors" | sed -e '/.*DREGGNAUTHORS.*/d' \
-  > "$output" || rm "$output"
+  | sed -e '/.*DREGGNAUTHORS.*/d' > "$output" || rm "$output"

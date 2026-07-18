@@ -50,8 +50,7 @@ GList *dt_overlay_get_imgs(const dt_imgid_t imgid);
   If except_self is TRUE do not return the self image references
   (where imgid == overlay_id).
 */
-GList *dt_overlay_get_used_in_imgs(const dt_imgid_t overlay_id,
-                                   const gboolean except_self);
+GList *dt_overlay_get_used_in_imgs(const dt_imgid_t overlay_id, const gboolean except_self);
 
 /* Return TRUE if overlay_id appears in the overlay tree of (is used by) imgid */
 gboolean dt_overlay_used_by(const dt_imgid_t imgid, const dt_imgid_t overlay_id);
@@ -60,12 +59,5 @@ gboolean dt_overlay_used_by(const dt_imgid_t imgid, const dt_imgid_t overlay_id)
 void dt_overlay_add_from_history(const dt_imgid_t imgid);
 
 /* Remove overlay reference from history above a specific point in history */
-void dt_overlay_remove_from_history(const dt_imgid_t imgid,
-                                    const int num);
+void dt_overlay_remove_from_history(const dt_imgid_t imgid, const int num);
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

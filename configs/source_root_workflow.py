@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Initialize and update the FreeCM-managed dependency source roots."""
+"""Manage FreeCM source roots and generated CMake presets."""
 
 from __future__ import annotations
 
-import argparse
 import sys
 from pathlib import Path
 
@@ -15,58 +14,47 @@ for path in (REPO_ROOT, FREECM_ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from configs.source_roots import workflow
+from configs.source_roots import *  # noqa: F401,F403,E402
+from repomgrcpp.cmake_workflow import (  # noqa: E402
+    CMakeDependencyBuildSpec,
+    bind_cmake_workflow_script,
+)
+from repomgrcpp.preset_templates import resolve_preset_models as resolve_freecm_preset_models  # noqa: E402
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Manage DarkTableNext FreeCM source-root state."
-    )
-    action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument(
-        "--init",
-        action="store_true",
-        help="Create the active lock file and clone or refresh dependency seed repositories.",
-    )
-    action.add_argument(
-        "--update",
-        action="store_true",
-        help="Materialize the pinned source roots using only local seed repositories.",
-    )
-    parser.add_argument("--quiet", action="store_true", help="Suppress git command output.")
-    return parser
+def resolve_preset_models(*args: object, **kwargs: object):
+    """Keep the generated macOS compiler presets tied to their toolchains."""
+    resolved = resolve_freecm_preset_models(*args, **kwargs)
+    if resolved.os_group != "mac":
+        return resolved
+
+    for model in (resolved.resolved_model, resolved.generated_model):
+        for preset in model["configurePresets"]:
+            cache = preset["cacheVariables"]
+            name = preset["name"]
+            if name.startswith("mac_clang_"):
+                cache["CMAKE_C_COMPILER"] = "clang"
+                cache["CMAKE_CXX_COMPILER"] = "clang++"
+            elif name.startswith("mac_gcc_"):
+                cache["CMAKE_C_COMPILER"] = "gcc-16"
+                cache["CMAKE_CXX_COMPILER"] = "g++-16"
+                preset["environment"] = {
+                    "PATH": "/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm/bin:$penv{PATH}"
+                }
+    return resolved
 
 
-def _print_progress(action: str, message: str, _: str) -> None:
-    print(f"[freecm] {action}: {message}")
+# The application consumes these source roots with add_subdirectory(), so no
+# standalone dependency SDKs need to be built before configuring DarkTableNext.
+DEPENDENCY_BUILD_ORDER: tuple[CMakeDependencyBuildSpec, ...] = ()
 
-
-def main() -> int:
-    args = _parser().parse_args()
-    if args.init:
-        lock_path, created = workflow.ensure_active_lock_file(REPO_ROOT)
-        print(
-            f"[freecm] init: {'created' if created else 'using'} active lock: {lock_path}"
-        )
-        closure = workflow.prepare_seed_repository_closure(
-            REPO_ROOT,
-            progress=_print_progress,
-            quiet=args.quiet,
-        )
-        print(f"[freecm] init: prepared {len(closure.topo_order)} dependency seed repositories")
-        return 0
-
-    source_roots = workflow.materialize_dependency_roots(
-        REPO_ROOT,
-        allow_network=False,
-        quiet=args.quiet,
-    )
-    problems = workflow.validate_dependency_roots(source_roots)
-    if problems:
-        raise FileNotFoundError("Source roots are not ready:\n- " + "\n- ".join(problems))
-    print(f"[freecm] update: materialized {len(source_roots.closure_order)} dependency source roots")
-    return 0
+WORKFLOW_SCRIPT = bind_cmake_workflow_script(
+    globals(),
+    repo_root=REPO_ROOT,
+    repo_display_name="DarkTableNext",
+    dependency_build_order=DEPENDENCY_BUILD_ORDER,
+)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(WORKFLOW_SCRIPT.main())

@@ -256,15 +256,17 @@ typedef struct dt_introspection_t
  * @return the pointer into the params blob to the requested element, or %NULL if not found
  **/
 static inline void *dt_introspection_access_array(dt_introspection_field_t *self, void *start,
-                                                  unsigned int element, dt_introspection_field_t **child)
+                                                  unsigned int element,
+                                                  dt_introspection_field_t **child)
 {
-  if(!(start && self && self->header.type == DT_INTROSPECTION_TYPE_ARRAY && element < self->Array.count))
-    return NULL;
+    if (!(start && self && self->header.type == DT_INTROSPECTION_TYPE_ARRAY &&
+          element < self->Array.count))
+        return NULL;
 
-  if(child) *child = self->Array.field;
-  return (void *)((char *)start + element * self->Array.field->header.size);
+    if (child)
+        *child = self->Array.field;
+    return (void *)((char *)start + element * self->Array.field->header.size);
 }
-
 
 /** helper function to access elements in a struct -- make sure to cast the result correctly!
  *
@@ -274,33 +276,35 @@ static inline void *dt_introspection_access_array(dt_introspection_field_t *self
  * @param child if non-%NULL, it returns the field description of the child element
  * @return the pointer into the params blob to the requested element, or %NULL if not found
  **/
-static inline void *dt_introspection_get_child(dt_introspection_field_t *self, void *start, const char *name,
-                                               dt_introspection_field_t **child)
+static inline void *dt_introspection_get_child(dt_introspection_field_t *self, void *start,
+                                               const char *name, dt_introspection_field_t **child)
 {
-  if(!(start && self && name && *name)) return NULL;
+    if (!(start && self && name && *name))
+        return NULL;
 
-  dt_introspection_field_t **iter;
+    dt_introspection_field_t **iter;
 
-  if(self->header.type == DT_INTROSPECTION_TYPE_STRUCT)
-    iter = self->Struct.fields;
-  else if(self->header.type == DT_INTROSPECTION_TYPE_UNION)
-    iter = self->Union.fields;
-  else
-    return NULL;
+    if (self->header.type == DT_INTROSPECTION_TYPE_STRUCT)
+        iter = self->Struct.fields;
+    else if (self->header.type == DT_INTROSPECTION_TYPE_UNION)
+        iter = self->Union.fields;
+    else
+        return NULL;
 
-  while(*iter)
-  {
-    if(!g_strcmp0((*iter)->header.field_name, name))
+    while (*iter)
     {
-      size_t parent_offset = self->header.offset;
-      size_t child_offset = (*iter)->header.offset;
-      size_t relative_offset = child_offset - parent_offset;
-      if(child) *child = *iter;
-      return (void *)((char *)start + relative_offset);
+        if (!g_strcmp0((*iter)->header.field_name, name))
+        {
+            size_t parent_offset = self->header.offset;
+            size_t child_offset = (*iter)->header.offset;
+            size_t relative_offset = child_offset - parent_offset;
+            if (child)
+                *child = *iter;
+            return (void *)((char *)start + relative_offset);
+        }
+        iter++;
     }
-    iter++;
-  }
-  return NULL;
+    return NULL;
 }
 
 /** helper function to get the symbolic name of an enum value
@@ -311,13 +315,14 @@ static inline void *dt_introspection_get_child(dt_introspection_field_t *self, v
  **/
 static inline const char *dt_introspection_get_enum_name(dt_introspection_field_t *self, int value)
 {
-  if(!(self && self->header.type == DT_INTROSPECTION_TYPE_ENUM)) return NULL;
+    if (!(self && self->header.type == DT_INTROSPECTION_TYPE_ENUM))
+        return NULL;
 
-  for(dt_introspection_type_enum_tuple_t *iter = self->Enum.values; iter->name; iter++)
-    if(iter->value == value)
-      return iter->name;
+    for (dt_introspection_type_enum_tuple_t *iter = self->Enum.values; iter->name; iter++)
+        if (iter->value == value)
+            return iter->name;
 
-  return NULL;
+    return NULL;
 }
 
 /** helper function to get the enum value of a symbolic name
@@ -327,23 +332,18 @@ static inline const char *dt_introspection_get_enum_name(dt_introspection_field_
  * @param value the value that was found
  * @return TRUE if the name was found, or FALSE otherwise
  **/
-static inline gboolean dt_introspection_get_enum_value(dt_introspection_field_t *self, const char *name, int *value)
+static inline gboolean dt_introspection_get_enum_value(dt_introspection_field_t *self,
+                                                       const char *name, int *value)
 {
-  if(!(self && self->header.type == DT_INTROSPECTION_TYPE_ENUM)) return FALSE;
+    if (!(self && self->header.type == DT_INTROSPECTION_TYPE_ENUM))
+        return FALSE;
 
-  for(dt_introspection_type_enum_tuple_t *iter = self->Enum.values; iter->name; iter++)
-    if(!g_strcmp0(iter->name, name))
-    {
-      *value = iter->value;
-      return TRUE;
-    }
+    for (dt_introspection_type_enum_tuple_t *iter = self->Enum.values; iter->name; iter++)
+        if (!g_strcmp0(iter->name, name))
+        {
+            *value = iter->value;
+            return TRUE;
+        }
 
-  return FALSE;
+    return FALSE;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

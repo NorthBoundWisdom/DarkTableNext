@@ -31,165 +31,167 @@ static GList *_metadata_list = NULL;
 
 GList *dt_metadata_get_list()
 {
-  return _metadata_list;
+    return _metadata_list;
 }
 
 static gint _compare_display_order(gconstpointer a, gconstpointer b)
 {
-  return ((dt_metadata_t *) a)->display_order - ((dt_metadata_t *) b)->display_order;
+    return ((dt_metadata_t *)a)->display_order - ((dt_metadata_t *)b)->display_order;
 }
 
 void dt_metadata_sort()
 {
-  _metadata_list = g_list_sort(_metadata_list, _compare_display_order);
+    _metadata_list = g_list_sort(_metadata_list, _compare_display_order);
 }
 
 static void _set_default_import_flag(dt_metadata_t *metadata)
 {
     const char *metadata_name = dt_metadata_get_tag_subkey(metadata->tagname);
     char *setting = g_strdup_printf("plugins/lighttable/metadata/%s_flag", metadata_name);
-    if(!dt_conf_key_exists(setting))
+    if (!dt_conf_key_exists(setting))
     {
-      // per default should be imported - ignored if "write_sidecar_files" set
-      uint32_t flag = DT_METADATA_FLAG_IMPORTED;
-      dt_conf_set_int(setting, flag);
+        // per default should be imported - ignored if "write_sidecar_files" set
+        uint32_t flag = DT_METADATA_FLAG_IMPORTED;
+        dt_conf_set_int(setting, flag);
     }
     g_free(setting);
 }
 
 gboolean dt_metadata_add_metadata(dt_metadata_t *metadata)
 {
-  gboolean success = FALSE;
+    gboolean success = FALSE;
 
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "INSERT INTO data.meta_data "
-                              " (key, tagname, name, internal, visible, private, display_order)"
-                              " VALUES(NULL, ?1, ?2, ?3, ?4, ?5, ?6)",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, metadata->tagname, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, metadata->name, -1, SQLITE_TRANSIENT);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, metadata->internal);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 4, metadata->visible);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 5, metadata->priv);
-  DT_DEBUG_SQLITE3_BIND_INT(stmt, 6, metadata->display_order);
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
+    sqlite3_stmt *stmt;
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "INSERT INTO data.meta_data "
+                                " (key, tagname, name, internal, visible, private, display_order)"
+                                " VALUES(NULL, ?1, ?2, ?3, ?4, ?5, ?6)",
+                                -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, metadata->tagname, -1, SQLITE_TRANSIENT);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 2, metadata->name, -1, SQLITE_TRANSIENT);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, metadata->internal);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 4, metadata->visible);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 5, metadata->priv);
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 6, metadata->display_order);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 
-  // get the new key
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT key FROM data.meta_data WHERE tagname = ?1", -1,
-                              &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, metadata->tagname, -1, SQLITE_TRANSIENT);
-  success = sqlite3_step(stmt) == SQLITE_ROW;
-  if(success)
-  {
-    metadata->key = sqlite3_column_int(stmt, 0);
-    _metadata_list = g_list_prepend(_metadata_list, metadata);
-    _set_default_import_flag(metadata);
-  }
-  sqlite3_step(stmt);
-  sqlite3_finalize(stmt);
-  return success;
+    // get the new key
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "SELECT key FROM data.meta_data WHERE tagname = ?1", -1, &stmt,
+                                NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, metadata->tagname, -1, SQLITE_TRANSIENT);
+    success = sqlite3_step(stmt) == SQLITE_ROW;
+    if (success)
+    {
+        metadata->key = sqlite3_column_int(stmt, 0);
+        _metadata_list = g_list_prepend(_metadata_list, metadata);
+        _set_default_import_flag(metadata);
+    }
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    return success;
 }
 
 dt_metadata_t *dt_metadata_get_metadata_by_keyid(const uint32_t keyid)
 {
-  for(GList *iter = _metadata_list; iter; iter = iter->next)
-  {
-    dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
-    if(metadata->key == keyid)
-      return metadata;
-  }
-  return NULL;
+    for (GList *iter = _metadata_list; iter; iter = iter->next)
+    {
+        dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+        if (metadata->key == keyid)
+            return metadata;
+    }
+    return NULL;
 }
 
 dt_metadata_t *dt_metadata_get_metadata_by_tagname(const char *tagname)
 {
-  for(GList *iter = _metadata_list; iter; iter = iter->next)
-  {
-    dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
-    if(!g_strcmp0(metadata->tagname, tagname))
-      return metadata;
-  }
-  return NULL;
+    for (GList *iter = _metadata_list; iter; iter = iter->next)
+    {
+        dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+        if (!g_strcmp0(metadata->tagname, tagname))
+            return metadata;
+    }
+    return NULL;
 }
 
-uint32_t dt_metadata_get_keyid(const char* key)
+uint32_t dt_metadata_get_keyid(const char *key)
 {
-  uint32_t result = -1;
+    uint32_t result = -1;
 
-  if(!key) return -1;
-  for(GList *iter = _metadata_list; iter; iter = iter->next)
-  {
-    dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
-    if(strncmp(key, metadata->tagname, strlen(metadata->tagname)) == 0)
+    if (!key)
+        return -1;
+    for (GList *iter = _metadata_list; iter; iter = iter->next)
     {
-      result = metadata->key;
-      break;
+        dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+        if (strncmp(key, metadata->tagname, strlen(metadata->tagname)) == 0)
+        {
+            result = metadata->key;
+            break;
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 const char *dt_metadata_get_key(const uint32_t keyid)
 {
-  const char *result = NULL;
+    const char *result = NULL;
 
-  for(GList *iter = _metadata_list; iter; iter = iter->next)
-  {
-    dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
-    if(metadata->key == keyid)
+    for (GList *iter = _metadata_list; iter; iter = iter->next)
     {
-      result = metadata->tagname;
-      break;
+        dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+        if (metadata->key == keyid)
+        {
+            result = metadata->tagname;
+            break;
+        }
     }
-  }
-  return result;
+    return result;
 }
 
 const char *dt_metadata_get_key_by_subkey(const char *subkey)
 {
-  const char *result = NULL;
+    const char *result = NULL;
 
-  dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
-  if(subkey)
-  {
-    for(GList *iter = _metadata_list; iter; iter = iter->next)
+    dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
+    if (subkey)
     {
-      dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
-      char *t = g_strrstr(metadata->tagname, ".");
-      if(t && !g_strcmp0(t + 1, subkey))
-      {
-        result = metadata->tagname;
-        break;
-      }
+        for (GList *iter = _metadata_list; iter; iter = iter->next)
+        {
+            dt_metadata_t *metadata = (dt_metadata_t *)iter->data;
+            char *t = g_strrstr(metadata->tagname, ".");
+            if (t && !g_strcmp0(t + 1, subkey))
+            {
+                result = metadata->tagname;
+                break;
+            }
+        }
     }
-  }
-  dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
+    dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
 
-  return result;
+    return result;
 }
 
 const char *dt_metadata_get_tag_subkey(const char *tagname)
 {
-  const char *t = g_strrstr(tagname, ".");
-  if(t) return t + 1;
-  return NULL;
+    const char *t = g_strrstr(tagname, ".");
+    if (t)
+        return t + 1;
+    return NULL;
 }
 
 static void _free_metadata_entry(dt_metadata_t *metadata, gpointer user_data)
 {
-  g_free(metadata->tagname);
-  metadata->tagname = NULL;
-  g_free(metadata->name);
-  metadata->name = NULL;
+    g_free(metadata->tagname);
+    metadata->tagname = NULL;
+    g_free(metadata->name);
+    metadata->name = NULL;
 }
 
 void dt_metadata_init()
 {
-  sqlite3_stmt *stmt;
-  // clang-format off
+    sqlite3_stmt *stmt;
+    // clang-format off
   DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                           "SELECT key, tagname, name, internal, visible, private, display_order"
                           " FROM data.meta_data"
@@ -448,417 +450,416 @@ GList *dt_metadata_get(const dt_imgid_t imgid,
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), "SELECT flags FROM main.images WHERE id IN "
                                                                    "(SELECT imgid FROM main.selected_images)",
                                     -1, &stmt, NULL);
-        // clang-format on
-      }
-      else // single image under mouse cursor
-      {
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), "SELECT flags FROM main.images WHERE id = ?1",
-                                    -1, &stmt, NULL);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-      }
-      while(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        local_count++;
-        int stars = sqlite3_column_int(stmt, 0);
-        stars = (stars & 0x7) - 1;
-        result = g_list_prepend(result, GINT_TO_POINTER(stars));
-      }
-      sqlite3_finalize(stmt);
-    }
-    else if(strncmp(key, "Xmp.dc.subject", 14) == 0)
-    {
-      if(!dt_is_valid_imgid(imgid))
-      {
-        // clang-format off
+                // clang-format on
+            }
+            else // single image under mouse cursor
+            {
+                DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                            "SELECT flags FROM main.images WHERE id = ?1", -1,
+                                            &stmt, NULL);
+                DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+            }
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                local_count++;
+                int stars = sqlite3_column_int(stmt, 0);
+                stars = (stars & 0x7) - 1;
+                result = g_list_prepend(result, GINT_TO_POINTER(stars));
+            }
+            sqlite3_finalize(stmt);
+        }
+        else if (strncmp(key, "Xmp.dc.subject", 14) == 0)
+        {
+            if (!dt_is_valid_imgid(imgid))
+            {
+                // clang-format off
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                     "SELECT name FROM data.tags t JOIN main.tagged_images i ON "
                                     "i.tagid = t.id WHERE imgid IN "
                                     "(SELECT imgid FROM main.selected_images)",
                                     -1, &stmt, NULL);
-        // clang-format on
-      }
-      else // single image under mouse cursor
-      {
-        // clang-format off
+                // clang-format on
+            }
+            else // single image under mouse cursor
+            {
+                // clang-format off
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                     "SELECT name FROM data.tags t JOIN main.tagged_images i ON "
                                     "i.tagid = t.id WHERE imgid = ?1",
                                     -1, &stmt, NULL);
-        // clang-format on
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-      }
-      while(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        local_count++;
-        result = g_list_prepend(result, g_strdup((char *)sqlite3_column_text(stmt, 0)));
-      }
-      sqlite3_finalize(stmt);
-    }
-    else if(strncmp(key, "Xmp.darktable.colorlabels", 25) == 0)
-    {
-      if(!dt_is_valid_imgid(imgid))
-      {
-        // clang-format off
+                // clang-format on
+                DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+            }
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                local_count++;
+                result = g_list_prepend(result, g_strdup((char *)sqlite3_column_text(stmt, 0)));
+            }
+            sqlite3_finalize(stmt);
+        }
+        else if (strncmp(key, "Xmp.darktable.colorlabels", 25) == 0)
+        {
+            if (!dt_is_valid_imgid(imgid))
+            {
+                // clang-format off
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                     "SELECT color FROM main.color_labels WHERE imgid IN "
                                     "(SELECT imgid FROM main.selected_images)",
                                     -1, &stmt, NULL);
-        // clang-format on
-      }
-      else // single image under mouse cursor
-      {
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                    "SELECT color FROM main.color_labels WHERE imgid=?1 ORDER BY color",
-                                    -1, &stmt, NULL);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-      }
-      while(sqlite3_step(stmt) == SQLITE_ROW)
-      {
-        local_count++;
-        result = g_list_prepend(result, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
-      }
-      sqlite3_finalize(stmt);
+                // clang-format on
+            }
+            else // single image under mouse cursor
+            {
+                DT_DEBUG_SQLITE3_PREPARE_V2(
+                    dt_database_get(darktable.db),
+                    "SELECT color FROM main.color_labels WHERE imgid=?1 ORDER BY color", -1, &stmt,
+                    NULL);
+                DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+            }
+            while (sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                local_count++;
+                result = g_list_prepend(result, GINT_TO_POINTER(sqlite3_column_int(stmt, 0)));
+            }
+            sqlite3_finalize(stmt);
+        }
+        if (count != NULL)
+            *count = local_count;
+        return g_list_reverse(result);
     }
-    if(count != NULL) *count = local_count;
-    return g_list_reverse(result);
-  }
 
-  // So we got this far -- it has to be a generic key-value entry from meta_data
-  if(!dt_is_valid_imgid(imgid))
-  {
-    // clang-format off
+    // So we got this far -- it has to be a generic key-value entry from meta_data
+    if (!dt_is_valid_imgid(imgid))
+    {
+        // clang-format off
     DT_DEBUG_SQLITE3_PREPARE_V2
       (dt_database_get(darktable.db),
        "SELECT value FROM main.meta_data WHERE id IN "
        "(SELECT imgid FROM main.selected_images) AND key = ?1 ORDER BY value",
        -1, &stmt, NULL);
-    // clang-format on
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, keyid);
-  }
-  else // single image under mouse cursor
-  {
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "SELECT value FROM main.meta_data WHERE id = ?1 AND key = ?2", -1,
-       &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, keyid);
-  }
-  while(sqlite3_step(stmt) == SQLITE_ROW)
-  {
-    local_count++;
-    char *value = (char *)sqlite3_column_text(stmt, 0);
-    result = g_list_prepend(result, g_strdup(value ? value : "")); // to avoid NULL value
-  }
-  sqlite3_finalize(stmt);
-  if(count != NULL) *count = local_count;
-  return g_list_reverse(result);  // list was built in reverse order, so un-reverse it
+        // clang-format on
+        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, keyid);
+    }
+    else // single image under mouse cursor
+    {
+        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                    "SELECT value FROM main.meta_data WHERE id = ?1 AND key = ?2",
+                                    -1, &stmt, NULL);
+        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
+        DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, keyid);
+    }
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        local_count++;
+        char *value = (char *)sqlite3_column_text(stmt, 0);
+        result = g_list_prepend(result, g_strdup(value ? value : "")); // to avoid NULL value
+    }
+    sqlite3_finalize(stmt);
+    if (count != NULL)
+        *count = local_count;
+    return g_list_reverse(result); // list was built in reverse order, so un-reverse it
 }
 
-static void _metadata_add_metadata_to_list(GList **list,
-                                           const GList *metadata)
+static void _metadata_add_metadata_to_list(GList **list, const GList *metadata)
 {
-  const GList *m = metadata;
-  while(m)
-  {
-    GList *m2 = g_list_next(m);
-    GList *same_key = _list_find_custom(*list, m->data);
-    GList *same2 = g_list_next(same_key);
-    gboolean different_value = FALSE;
-    if(same_key) different_value = g_strcmp0(same2->data, m2->data);
-    if(same_key && different_value)
+    const GList *m = metadata;
+    while (m)
     {
-      // same key but different value - replace the old value by the new one
-      g_free(same2->data);
-      same2->data = g_strdup(m2->data);
+        GList *m2 = g_list_next(m);
+        GList *same_key = _list_find_custom(*list, m->data);
+        GList *same2 = g_list_next(same_key);
+        gboolean different_value = FALSE;
+        if (same_key)
+            different_value = g_strcmp0(same2->data, m2->data);
+        if (same_key && different_value)
+        {
+            // same key but different value - replace the old value by the new one
+            g_free(same2->data);
+            same2->data = g_strdup(m2->data);
+        }
+        else if (!same_key)
+        {
+            // new key for that image - append the new metadata item
+            *list = g_list_append(*list, g_strdup(m->data));
+            *list = g_list_append(*list, g_strdup(m2->data));
+        }
+        m = g_list_next(m);
+        m = g_list_next(m);
     }
-    else if(!same_key)
-    {
-      // new key for that image - append the new metadata item
-      *list = g_list_append(*list, g_strdup(m->data));
-      *list = g_list_append(*list, g_strdup(m2->data));
-    }
-    m = g_list_next(m);
-    m = g_list_next(m);
-  }
 }
 
-static void _metadata_remove_metadata_from_list(GList **list,
-                                                const GList *metadata)
+static void _metadata_remove_metadata_from_list(GList **list, const GList *metadata)
 {
-  // caution: metadata is a simple list here
-  for(const GList *m = metadata; m; m = g_list_next(m))
-  {
-    GList *same_key = _list_find_custom(*list, m->data);
-    if(same_key)
+    // caution: metadata is a simple list here
+    for (const GList *m = metadata; m; m = g_list_next(m))
     {
-      // same key for that image - remove metadata item
-      GList *same2 = g_list_next(same_key);
-      *list = g_list_remove_link(*list, same_key);
-      g_free(same_key->data);
-      g_list_free(same_key);
-      *list = g_list_remove_link(*list, same2);
-      g_free(same2->data);
-      g_list_free(same2);
+        GList *same_key = _list_find_custom(*list, m->data);
+        if (same_key)
+        {
+            // same key for that image - remove metadata item
+            GList *same2 = g_list_next(same_key);
+            *list = g_list_remove_link(*list, same_key);
+            g_free(same_key->data);
+            g_list_free(same_key);
+            *list = g_list_remove_link(*list, same2);
+            g_free(same2->data);
+            g_list_free(same2);
+        }
     }
-  }
 }
 
 typedef enum dt_tag_actions_t
 {
-  DT_MA_SET = 0,
-  DT_MA_ADD,
-  DT_MA_REMOVE
+    DT_MA_SET = 0,
+    DT_MA_ADD,
+    DT_MA_REMOVE
 } dt_tag_actions_t;
 
-static void _metadata_execute(const GList *imgs,
-                              const GList *metadata,
-                              GList **undo,
-                              const gboolean undo_on,
-                              const gint action)
+static void _metadata_execute(const GList *imgs, const GList *metadata, GList **undo,
+                              const gboolean undo_on, const gint action)
 {
-  for(const GList *images = imgs; images; images = g_list_next(images))
-  {
-    const dt_imgid_t imgid = GPOINTER_TO_INT(images->data);
-
-    dt_undo_metadata_t *undometadata = malloc(sizeof(dt_undo_metadata_t));
-    undometadata->imgid = imgid;
-    undometadata->before = dt_metadata_get_list_id(imgid);
-    switch(action)
+    for (const GList *images = imgs; images; images = g_list_next(images))
     {
-      case DT_MA_SET:
-        undometadata->after = metadata ? g_list_copy_deep((GList *)metadata, (GCopyFunc)g_strdup, NULL) : NULL;
-        break;
-      case DT_MA_ADD:
-        undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
-        _metadata_add_metadata_to_list(&undometadata->after, metadata);
-        break;
-      case DT_MA_REMOVE:
-        undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
-        _metadata_remove_metadata_from_list(&undometadata->after, metadata);
-        break;
-      default:
-        undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
-        break;
+        const dt_imgid_t imgid = GPOINTER_TO_INT(images->data);
+
+        dt_undo_metadata_t *undometadata = malloc(sizeof(dt_undo_metadata_t));
+        undometadata->imgid = imgid;
+        undometadata->before = dt_metadata_get_list_id(imgid);
+        switch (action)
+        {
+        case DT_MA_SET:
+            undometadata->after =
+                metadata ? g_list_copy_deep((GList *)metadata, (GCopyFunc)g_strdup, NULL) : NULL;
+            break;
+        case DT_MA_ADD:
+            undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
+            _metadata_add_metadata_to_list(&undometadata->after, metadata);
+            break;
+        case DT_MA_REMOVE:
+            undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
+            _metadata_remove_metadata_from_list(&undometadata->after, metadata);
+            break;
+        default:
+            undometadata->after = g_list_copy_deep(undometadata->before, (GCopyFunc)g_strdup, NULL);
+            break;
+        }
+
+        _pop_undo_execute(imgid, undometadata->before, undometadata->after);
+
+        if (undo_on)
+            *undo = g_list_append(*undo, undometadata);
+        else
+            _undo_metadata_free(undometadata);
     }
-
-    _pop_undo_execute(imgid, undometadata->before, undometadata->after);
-
-    if(undo_on)
-      *undo = g_list_append(*undo, undometadata);
-    else
-      _undo_metadata_free(undometadata);
-  }
 }
 
-void dt_metadata_set(const dt_imgid_t imgid,
-                     const char *key,
-                     const char *value,
+void dt_metadata_set(const dt_imgid_t imgid, const char *key, const char *value,
                      const gboolean undo_on)
 {
-  if(!key) return;
+    if (!key)
+        return;
 
-  int keyid = dt_metadata_get_keyid(key);
-  if(keyid != -1) // known key
-  {
-    GList *imgs = NULL;
-    if(!dt_is_valid_imgid(imgid))
-      imgs = dt_act_on_get_images(TRUE, TRUE, FALSE);
-    else
-      imgs = g_list_prepend(imgs, GINT_TO_POINTER(imgid));
-    if(!g_list_is_empty(imgs))
+    int keyid = dt_metadata_get_keyid(key);
+    if (keyid != -1) // known key
     {
-      GList *undo = NULL;
-      if(undo_on) dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
+        GList *imgs = NULL;
+        if (!dt_is_valid_imgid(imgid))
+            imgs = dt_act_on_get_images(TRUE, TRUE, FALSE);
+        else
+            imgs = g_list_prepend(imgs, GINT_TO_POINTER(imgid));
+        if (!g_list_is_empty(imgs))
+        {
+            GList *undo = NULL;
+            if (undo_on)
+                dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
 
-      const gchar *ckey = g_strdup_printf("%d", keyid);
-      const gchar *cvalue = _cleanup_metadata_value(value);
-      GList *metadata = NULL;
-      metadata = g_list_append(metadata, (gpointer)ckey);
-      metadata = g_list_append(metadata, (gpointer)cvalue);
+            const gchar *ckey = g_strdup_printf("%d", keyid);
+            const gchar *cvalue = _cleanup_metadata_value(value);
+            GList *metadata = NULL;
+            metadata = g_list_append(metadata, (gpointer)ckey);
+            metadata = g_list_append(metadata, (gpointer)cvalue);
 
-      _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_ADD);
+            _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_ADD);
 
-      g_list_free_full(metadata, g_free);
-      g_list_free(imgs);
-      if(undo_on)
-      {
-        dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo, _metadata_undo_data_free);
-        dt_undo_end_group(darktable.undo);
-      }
+            g_list_free_full(metadata, g_free);
+            g_list_free(imgs);
+            if (undo_on)
+            {
+                dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo,
+                               _metadata_undo_data_free);
+                dt_undo_end_group(darktable.undo);
+            }
+        }
     }
-  }
 }
 
 void dt_metadata_set_import_lock(const dt_imgid_t imgid, const char *key, const char *value)
 {
-  dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
-  dt_metadata_set_import(imgid, key, value);
-  dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
+    dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
+    dt_metadata_set_import(imgid, key, value);
+    dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
 }
 
 void dt_metadata_set_import(const dt_imgid_t imgid, const char *key, const char *value)
 {
-  if(!key || !dt_is_valid_imgid(imgid)) return;
+    if (!key || !dt_is_valid_imgid(imgid))
+        return;
 
-  const dt_metadata_t *md = dt_metadata_get_metadata_by_tagname(key);
+    const dt_metadata_t *md = dt_metadata_get_metadata_by_tagname(key);
 
-  if(md) // known key
-  {
-    gboolean imported = (dt_image_get_xmp_mode() != DT_WRITE_XMP_NEVER);
-    if(!imported && !md->internal)
+    if (md) // known key
     {
-      const gchar *name = dt_metadata_get_tag_subkey(md->tagname);
-      char *setting = g_strdup_printf("plugins/lighttable/metadata/%s_flag", name);
-      imported = dt_conf_get_int(setting) & DT_METADATA_FLAG_IMPORTED;
-      g_free(setting);
+        gboolean imported = (dt_image_get_xmp_mode() != DT_WRITE_XMP_NEVER);
+        if (!imported && !md->internal)
+        {
+            const gchar *name = dt_metadata_get_tag_subkey(md->tagname);
+            char *setting = g_strdup_printf("plugins/lighttable/metadata/%s_flag", name);
+            imported = dt_conf_get_int(setting) & DT_METADATA_FLAG_IMPORTED;
+            g_free(setting);
+        }
+        if (imported)
+        {
+            GList *imgs = NULL;
+            imgs = g_list_prepend(imgs, GINT_TO_POINTER(imgid));
+            if (!g_list_is_empty(imgs))
+            {
+                GList *undo = NULL;
+
+                const gchar *ckey = g_strdup_printf("%d", md->key);
+                const gchar *cvalue = _cleanup_metadata_value(value);
+                GList *metadata = NULL;
+                metadata = g_list_append(metadata, (gpointer)ckey);
+                metadata = g_list_append(metadata, (gpointer)cvalue);
+
+                _metadata_execute(imgs, metadata, &undo, FALSE, DT_MA_ADD);
+
+                g_list_free_full(metadata, g_free);
+                g_list_free(imgs);
+            }
+        }
     }
-    if(imported)
-    {
-      GList *imgs = NULL;
-      imgs = g_list_prepend(imgs, GINT_TO_POINTER(imgid));
-      if(!g_list_is_empty(imgs))
-      {
-        GList *undo = NULL;
-
-        const gchar *ckey = g_strdup_printf("%d", md->key);
-        const gchar *cvalue = _cleanup_metadata_value(value);
-        GList *metadata = NULL;
-        metadata = g_list_append(metadata, (gpointer)ckey);
-        metadata = g_list_append(metadata, (gpointer)cvalue);
-
-        _metadata_execute(imgs, metadata, &undo, FALSE, DT_MA_ADD);
-
-        g_list_free_full(metadata, g_free);
-        g_list_free(imgs);
-      }
-    }
-  }
 }
 
 void dt_metadata_set_list(const GList *imgs, GList *key_value, const gboolean undo_on)
 {
-  GList *metadata = NULL;
-  GList *kv = key_value;
+    GList *metadata = NULL;
+    GList *kv = key_value;
 
-  dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
-  while(kv)
-  {
-    const gchar *key = (const gchar *)kv->data;
-    const int keyid = dt_metadata_get_keyid(key);
-    if(keyid != -1) // known key
+    dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
+    while (kv)
     {
-      const gchar *ckey = g_strdup_printf("%d", keyid);
-      kv = g_list_next(kv);
-      const gchar *value = (const gchar *)kv->data;
-      kv = g_list_next(kv);
-      if(value)
-      {
-        metadata = g_list_append(metadata, (gchar *)ckey);
-        metadata = g_list_append(metadata, _cleanup_metadata_value(value));
-      }
+        const gchar *key = (const gchar *)kv->data;
+        const int keyid = dt_metadata_get_keyid(key);
+        if (keyid != -1) // known key
+        {
+            const gchar *ckey = g_strdup_printf("%d", keyid);
+            kv = g_list_next(kv);
+            const gchar *value = (const gchar *)kv->data;
+            kv = g_list_next(kv);
+            if (value)
+            {
+                metadata = g_list_append(metadata, (gchar *)ckey);
+                metadata = g_list_append(metadata, _cleanup_metadata_value(value));
+            }
+        }
+        else
+        {
+            kv = g_list_next(kv);
+            kv = g_list_next(kv);
+        }
     }
-    else
+    dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
+
+    if (metadata && imgs)
     {
-      kv = g_list_next(kv);
-      kv = g_list_next(kv);
+        GList *undo = NULL;
+        if (undo_on)
+            dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
+
+        _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_ADD);
+
+        if (undo_on)
+        {
+            dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo,
+                           _metadata_undo_data_free);
+            dt_undo_end_group(darktable.undo);
+        }
+
+        g_list_free_full(metadata, g_free);
     }
-  }
-  dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
-
-  if(metadata && imgs)
-  {
-    GList *undo = NULL;
-    if(undo_on) dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
-
-    _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_ADD);
-
-    if(undo_on)
-    {
-      dt_undo_record(darktable.undo, NULL,
-                     DT_UNDO_METADATA, undo, _pop_undo, _metadata_undo_data_free);
-      dt_undo_end_group(darktable.undo);
-    }
-
-    g_list_free_full(metadata, g_free);
-  }
 }
 
 void dt_metadata_clear(const GList *imgs, const gboolean undo_on)
 {
-  // do not clear internal or hidden metadata
-  GList *metadata = NULL;
-  for(GList *iter = dt_metadata_get_list(); iter; iter = iter->next)
-  {
-    const dt_metadata_t *md = (dt_metadata_t *)iter->data;
-    if(!md->internal)
+    // do not clear internal or hidden metadata
+    GList *metadata = NULL;
+    for (GList *iter = dt_metadata_get_list(); iter; iter = iter->next)
     {
-      if(md->visible)
-      {
-        // caution: metadata is a simple list here
-        metadata = g_list_prepend(metadata, g_strdup_printf("%u", md->key));
-      }
-    }
-  }
-
-  if(metadata)
-  {
-    metadata = g_list_reverse(metadata);  // list was built in reverse order, so un-reverse it
-    GList *undo = NULL;
-    if(undo_on) dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
-
-    _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_REMOVE);
-
-    if(undo_on)
-    {
-      dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo, _metadata_undo_data_free);
-      dt_undo_end_group(darktable.undo);
+        const dt_metadata_t *md = (dt_metadata_t *)iter->data;
+        if (!md->internal)
+        {
+            if (md->visible)
+            {
+                // caution: metadata is a simple list here
+                metadata = g_list_prepend(metadata, g_strdup_printf("%u", md->key));
+            }
+        }
     }
 
-    g_list_free_full(metadata, g_free);
-  }
+    if (metadata)
+    {
+        metadata = g_list_reverse(metadata); // list was built in reverse order, so un-reverse it
+        GList *undo = NULL;
+        if (undo_on)
+            dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
+
+        _metadata_execute(imgs, metadata, &undo, undo_on, DT_MA_REMOVE);
+
+        if (undo_on)
+        {
+            dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo,
+                           _metadata_undo_data_free);
+            dt_undo_end_group(darktable.undo);
+        }
+
+        g_list_free_full(metadata, g_free);
+    }
 }
 
-void dt_metadata_set_list_id(const GList *img,
-                             const GList *metadata,
-                             const gboolean clear_on,
+void dt_metadata_set_list_id(const GList *img, const GList *metadata, const gboolean clear_on,
                              const gboolean undo_on)
 {
-  if(!g_list_is_empty(img))
-  {
-    GList *undo = NULL;
-    if(undo_on) dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
-
-    _metadata_execute(img, metadata, &undo, undo_on, clear_on ? DT_MA_SET : DT_MA_ADD);
-
-    if(undo_on)
+    if (!g_list_is_empty(img))
     {
-      dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo, _metadata_undo_data_free);
-      dt_undo_end_group(darktable.undo);
+        GList *undo = NULL;
+        if (undo_on)
+            dt_undo_start_group(darktable.undo, DT_UNDO_METADATA);
+
+        _metadata_execute(img, metadata, &undo, undo_on, clear_on ? DT_MA_SET : DT_MA_ADD);
+
+        if (undo_on)
+        {
+            dt_undo_record(darktable.undo, NULL, DT_UNDO_METADATA, undo, _pop_undo,
+                           _metadata_undo_data_free);
+            dt_undo_end_group(darktable.undo);
+        }
     }
-  }
 }
 
 gboolean dt_metadata_already_imported(const char *filename, const char *datetime)
 {
-  if(!filename || !datetime)
-    return FALSE;
-  char *id = g_strconcat(filename, "-", datetime, NULL);
-  sqlite3_stmt *stmt;
-  DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                              "SELECT COUNT(*) FROM main.meta_data WHERE value=?1",
-                              -1, &stmt, NULL);
-  DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, id, -1, SQLITE_TRANSIENT);
-  gboolean res = FALSE;
-  if(sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_int(stmt, 0) != 0)
-    res = TRUE;
-  sqlite3_finalize(stmt);
-  g_free(id);
-  return res;
+    if (!filename || !datetime)
+        return FALSE;
+    char *id = g_strconcat(filename, "-", datetime, NULL);
+    sqlite3_stmt *stmt;
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "SELECT COUNT(*) FROM main.meta_data WHERE value=?1", -1, &stmt,
+                                NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, id, -1, SQLITE_TRANSIENT);
+    gboolean res = FALSE;
+    if (sqlite3_step(stmt) == SQLITE_ROW && sqlite3_column_int(stmt, 0) != 0)
+        res = TRUE;
+    sqlite3_finalize(stmt);
+    g_free(id);
+    return res;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

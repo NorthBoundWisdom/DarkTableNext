@@ -50,42 +50,43 @@ REQUIRED(void, gui_reset, struct dt_imageio_module_storage_t *self);
 /* allow the module to initialize itself */
 REQUIRED(void, init, struct dt_imageio_module_storage_t *self);
 /* try and see if this format is supported? */
-DEFAULT(gboolean, supported, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_format_t *format);
+DEFAULT(gboolean, supported, struct dt_imageio_module_storage_t *self,
+        struct dt_imageio_module_format_t *format);
 /* get storage max supported image dimension, return 0 if no dimension restrictions exists. */
-OPTIONAL(int, dimension, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *data,
-              uint32_t *width, uint32_t *height);
+OPTIONAL(int, dimension, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *data, uint32_t *width, uint32_t *height);
 /* get storage recommended image dimension, return 0 if no recommendation exists. */
-OPTIONAL(int, recommended_dimension, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *data,
-                                     uint32_t *width, uint32_t *height);
+OPTIONAL(int, recommended_dimension, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *data, uint32_t *width, uint32_t *height);
 
 /* called once at the beginning (before exporting image), if implemented
    * can change the list of exported images (including a NULL list)
  */
-OPTIONAL(int, initialize_store, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *data,
-                                struct dt_imageio_module_format_t **format, struct dt_imageio_module_data_t **fdata,
-                                GList **images, const gboolean high_quality, const gboolean upscale);
+OPTIONAL(int, initialize_store, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *data, struct dt_imageio_module_format_t **format,
+         struct dt_imageio_module_data_t **fdata, GList **images, const gboolean high_quality,
+         const gboolean upscale);
 /* this actually does the work */
-REQUIRED(int, store, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *self_data, const dt_imgid_t imgid,
-                     struct dt_imageio_module_format_t *format, struct dt_imageio_module_data_t *fdata, const int num,
-                     const int total, const gboolean high_quality, const gboolean upscale,
-                     const gboolean is_scaling, const double scale_factor,
-                     const gboolean export_masks,
-                     const enum dt_colorspaces_color_profile_type_t icc_type, const gchar *icc_filename,
-                     enum dt_iop_color_intent_t icc_intent, struct dt_export_metadata_t *metadata);
+REQUIRED(int, store, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *self_data, const dt_imgid_t imgid,
+         struct dt_imageio_module_format_t *format, struct dt_imageio_module_data_t *fdata,
+         const int num, const int total, const gboolean high_quality, const gboolean upscale,
+         const gboolean is_scaling, const double scale_factor, const gboolean export_masks,
+         const enum dt_colorspaces_color_profile_type_t icc_type, const gchar *icc_filename,
+         enum dt_iop_color_intent_t icc_intent, struct dt_export_metadata_t *metadata);
 /* called once at the end (after exporting all images), if implemented. */
-OPTIONAL(void, finalize_store, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *data);
+OPTIONAL(void, finalize_store, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *data);
 
-OPTIONAL(void *, legacy_params,
-         struct dt_imageio_module_storage_t *self,
-         const void *const old_params,
-         const size_t old_params_size,
-         const int old_version,
-         int *new_version,
-         size_t *new_size);
+OPTIONAL(void *, legacy_params, struct dt_imageio_module_storage_t *self,
+         const void *const old_params, const size_t old_params_size, const int old_version,
+         int *new_version, size_t *new_size);
 REQUIRED(size_t, params_size, struct dt_imageio_module_storage_t *self);
 REQUIRED(void *, get_params, struct dt_imageio_module_storage_t *self);
-REQUIRED(void, free_params, struct dt_imageio_module_storage_t *self, struct dt_imageio_module_data_t *data);
-REQUIRED(int, set_params, struct dt_imageio_module_storage_t *self, const void *params, const int size);
+REQUIRED(void, free_params, struct dt_imageio_module_storage_t *self,
+         struct dt_imageio_module_data_t *data);
+REQUIRED(int, set_params, struct dt_imageio_module_storage_t *self, const void *params,
+         const int size);
 
 OPTIONAL(void, export_dispatched, struct dt_imageio_module_storage_t *self);
 
@@ -104,9 +105,3 @@ OPTIONAL(gboolean, storage_login, struct dt_imageio_module_storage_t *self);
 G_END_DECLS
 
 #endif // FULL_API_H
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

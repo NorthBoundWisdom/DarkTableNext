@@ -26,8 +26,7 @@ G_BEGIN_DECLS
 struct dt_database_t;
 
 /** allocates and initializes database */
-struct dt_database_t *dt_database_init(const char *alternative,
-                                       const gboolean load_data,
+struct dt_database_t *dt_database_init(const char *alternative, const gboolean load_data,
                                        const gboolean has_gui);
 /** closes down database and frees memory */
 void dt_database_destroy(const struct dt_database_t *);
@@ -54,7 +53,7 @@ gboolean dt_database_maybe_snapshot(const struct dt_database_t *db);
 /** get list of snapshot files to remove after successful snapshot */
 char **dt_database_snaps_to_remove(const struct dt_database_t *db);
 /** get possibly the freshest snapshot to restore */
-gchar *dt_database_get_most_recent_snap(const char* db_filename);
+gchar *dt_database_get_most_recent_snap(const char *db_filename);
 
 int32_t dt_database_last_insert_rowid(const struct dt_database_t *);
 // nested transactions support
@@ -66,9 +65,3 @@ void dt_database_rollback_transaction(const struct dt_database_t *db);
 void dt_upgrade_maker_model(const struct dt_database_t *db);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

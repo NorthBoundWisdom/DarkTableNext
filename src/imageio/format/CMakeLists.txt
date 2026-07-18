@@ -59,12 +59,8 @@ endif()
 
 foreach(module ${MODULES})
     target_link_libraries(${module} PUBLIC lib_darktable)
-    if (WIN32)
-        _detach_debuginfo (${module} ${CMAKE_INSTALL_LIBDIR}/darktable/plugins/imageio/format)
-    else()
-        set_target_properties(${module}
-                              PROPERTIES
-                              INSTALL_RPATH ${RPATH_ORIGIN}/../../..)
-    endif(WIN32)
+    set_target_properties(${module}
+                          PROPERTIES
+                          INSTALL_RPATH ${RPATH_ORIGIN}/../../..)
     install(TARGETS ${module} DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable/plugins/imageio/format COMPONENT DTApplication)
 endforeach(module)

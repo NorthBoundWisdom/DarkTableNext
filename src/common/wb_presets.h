@@ -20,11 +20,11 @@
 
 typedef struct
 {
-  const char *make;
-  const char *model;
-  const char *name;
-  int tuning;
-  double channels[4];
+    const char *make;
+    const char *model;
+    const char *name;
+    int tuning;
+    double channels[4];
 } dt_wb_data;
 
 /** the number of white balance presets */
@@ -37,13 +37,6 @@ dt_wb_data *dt_wb_preset(const int k);
 void dt_wb_presets_init(const char *alternative);
 
 /** interpolate two given wb data, place result in out */
-void dt_wb_preset_interpolate
-(const dt_wb_data *const p1, // the smaller tuning
- const dt_wb_data *const p2, // the larger tuning (can't be == p1)
- dt_wb_data *out);           // has tuning initialized
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+void dt_wb_preset_interpolate(const dt_wb_data *const p1, // the smaller tuning
+                              const dt_wb_data *const p2, // the larger tuning (can't be == p1)
+                              dt_wb_data *out);           // has tuning initialized

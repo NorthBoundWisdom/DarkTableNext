@@ -33,48 +33,46 @@
 
 typedef enum _iop_color_picker_flags_t
 {
-  // at least one of point or area must be used
-  DT_COLOR_PICKER_POINT = 1 << 0,
-  DT_COLOR_PICKER_AREA = 1 << 1,
-  DT_COLOR_PICKER_POINT_AREA = DT_COLOR_PICKER_POINT | DT_COLOR_PICKER_AREA,
-  // only works with 4-channel images
-  DT_COLOR_PICKER_DENOISE = 1 << 2,
-  // all pickers sample input, only ones with this flag set sample output
-  DT_COLOR_PICKER_IO = 1 << 3
+    // at least one of point or area must be used
+    DT_COLOR_PICKER_POINT = 1 << 0,
+    DT_COLOR_PICKER_AREA = 1 << 1,
+    DT_COLOR_PICKER_POINT_AREA = DT_COLOR_PICKER_POINT | DT_COLOR_PICKER_AREA,
+    // only works with 4-channel images
+    DT_COLOR_PICKER_DENOISE = 1 << 2,
+    // all pickers sample input, only ones with this flag set sample output
+    DT_COLOR_PICKER_IO = 1 << 3
 } dt_iop_color_picker_flags_t;
 
 typedef struct dt_iop_color_picker_t
 {
-  // iop which contains this picker, or NULL if primary colorpicker
-  dt_iop_module_t *module;
-  dt_iop_color_picker_flags_t flags;
-  /** requested colorspace for the color picker, valid options are:
+    // iop which contains this picker, or NULL if primary colorpicker
+    dt_iop_module_t *module;
+    dt_iop_color_picker_flags_t flags;
+    /** requested colorspace for the color picker, valid options are:
    * IOP_CS_NONE: module colorspace
    * IOP_CS_LCH: for Lab modules
    * IOP_CS_HSL: for RGB modules
    */
-  dt_iop_colorspace_type_t picker_cst;
-  /* if we define via dt_color_picker_new_with_cst() we don't want the picker callbacks
+    dt_iop_colorspace_type_t picker_cst;
+    /* if we define via dt_color_picker_new_with_cst() we don't want the picker callbacks
      to modify it's picker_cst
   */
-  gboolean fixed_cst;
-  /** used to avoid recursion when a parameter is modified in the apply() */
-  GtkWidget *colorpick;
-  // positions are associated with the current picker widget: will set
-  // the picker request for the primary picker when this picker is
-  // activated, and will remember the most recent picker position
-  dt_pickerpoint_t pick_pos;
-  dt_pickerbox_t pick_box;
-  gboolean initialized;
-  gboolean changed;
+    gboolean fixed_cst;
+    /** used to avoid recursion when a parameter is modified in the apply() */
+    GtkWidget *colorpick;
+    // positions are associated with the current picker widget: will set
+    // the picker request for the primary picker when this picker is
+    // activated, and will remember the most recent picker position
+    dt_pickerpoint_t pick_pos;
+    dt_pickerbox_t pick_box;
+    gboolean initialized;
+    gboolean changed;
 } dt_iop_color_picker_t;
-
 
 gboolean dt_iop_color_picker_is_visible(const dt_develop_t *dev);
 
 //* reset current color picker if not keep-active or not keep */
-void dt_iop_color_picker_reset(dt_iop_module_t *module,
-                               const gboolean keep);
+void dt_iop_color_picker_reset(dt_iop_module_t *module, const gboolean keep);
 
 /* sets the picker colorspace */
 void dt_iop_color_picker_set_cst(dt_iop_module_t *module,
@@ -90,16 +88,10 @@ void dt_iop_color_picker_init();
 void dt_iop_color_picker_cleanup();
 
 /* link color picker to widget */
-GtkWidget *dt_color_picker_new(dt_iop_module_t *module, dt_iop_color_picker_flags_t flags, GtkWidget *w);
+GtkWidget *dt_color_picker_new(dt_iop_module_t *module, dt_iop_color_picker_flags_t flags,
+                               GtkWidget *w);
 
 /* link color picker to widget and initialize color picker color space with given value */
 GtkWidget *dt_color_picker_new_with_cst(dt_iop_module_t *module,
-                                        const dt_iop_color_picker_flags_t flags,
-                                        GtkWidget *w,
+                                        const dt_iop_color_picker_flags_t flags, GtkWidget *w,
                                         const dt_iop_colorspace_type_t cst);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

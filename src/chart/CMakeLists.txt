@@ -23,13 +23,8 @@ target_link_libraries(darktable-chart
                         ${GTK3_LIBRARIES}
                         lib_darktable
                         m)
-if (WIN32)
-  set_target_properties(darktable-chart PROPERTIES LINK_FLAGS "-mwindows -Wl,-subsystem,windows")
-  _detach_debuginfo (darktable-chart bin)
-else()
-    set_target_properties(darktable-chart
-                          PROPERTIES
-                          INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
-endif(WIN32)
+set_target_properties(darktable-chart
+                      PROPERTIES
+                      INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
 
 install(TARGETS darktable-chart DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)

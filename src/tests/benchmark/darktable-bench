@@ -102,28 +102,21 @@ def locate_image(image):
          return loc+image
       if VERBOSE:
          print(f'  did not find {image} in {loc}')
-      # third: script is in source dir, so look in integration tests
+      # third: script is in source dir, so look in the FreeCM test source root
       if 'src/tests/benchmark' in loc:
-         integ, _, __ = loc.partition('benchmark')
-         integ += 'integration/images/'
+         repo, _, __ = loc.partition('src/tests/benchmark')
+         integ = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', repo + 'build/dependency_source_roots/darktable-tests') + '/images/'
          if os.path.exists(integ+image):
             return integ+image
          if VERBOSE:
             print(f'  did not find {image} in {integ}')
-      # fourth: we are in integration-test dir and script is in source dir, so look in integration tests
-      if 'integration/../benchmark' in loc:
-         integ, _, __ = loc.partition('/../benchmark')
-         integ += '/images/'
-         if os.path.exists(integ+image):
-            return integ+image
-         if VERBOSE:
-            print(f'  did not find {image} in {integ}')
-      # fifth: script is not in source dir, but current dir is top of source tree
-      img = os.getcwd() + '/src/tests/integration/images/mire1.cr2'
+      # fourth: script is not in source dir, but current dir is top of source tree
+      test_root = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', os.getcwd() + '/build/dependency_source_roots/darktable-tests')
+      img = test_root + '/images/mire1.cr2'
       if os.path.exists(img):
          return img
-      # sixth: we are in a sibling of the darktable source tree
-      candidate = os.getcwd() + '/../darktable/src/tests/integration/images/mire1.cr2'
+      # fifth: we are in a sibling of the source tree
+      candidate = os.getcwd() + '/../darktable/build/dependency_source_roots/darktable-tests/images/mire1.cr2'
       if os.path.exists(candidate):
          return candidate
    # finally: give up

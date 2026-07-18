@@ -25,10 +25,3 @@ void dt_lua_init(lua_State *L, const char *lua_init_file);
 void dt_lua_init_early(lua_State *L);
 void dt_lua_finalize_early();
 void dt_lua_finalize();
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

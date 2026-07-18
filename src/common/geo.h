@@ -20,29 +20,22 @@
 
 typedef enum dt_geo_map_display_t
 {
-  MAP_DISPLAY_NONE,
-  MAP_DISPLAY_POINT,
-  MAP_DISPLAY_TRACK,
-  MAP_DISPLAY_POLYGON,
-  MAP_DISPLAY_THUMB
+    MAP_DISPLAY_NONE,
+    MAP_DISPLAY_POINT,
+    MAP_DISPLAY_TRACK,
+    MAP_DISPLAY_POLYGON,
+    MAP_DISPLAY_THUMB
 } dt_geo_map_display_t;
 
 typedef struct dt_geo_map_display_point_t
 {
-  float lat, lon;
+    float lat, lon;
 } dt_geo_map_display_point_t;
 
 typedef struct dt_map_box_t
 {
-  float lon1;
-  float lat1;
-  float lon2;
-  float lat2;
+    float lon1;
+    float lat1;
+    float lon2;
+    float lat2;
 } dt_map_box_t;
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

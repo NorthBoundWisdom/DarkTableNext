@@ -25,8 +25,8 @@ static gboolean _icon_draw(GtkWidget *widget, cairo_t *cr);
 
 static void dtgtk_icon_class_init(GtkDarktableIconClass *klass)
 {
-  GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
-  widget_class->draw = _icon_draw;
+    GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
+    widget_class->draw = _icon_draw;
 }
 
 static void dtgtk_icon_init(GtkDarktableIcon *icon)
@@ -35,54 +35,48 @@ static void dtgtk_icon_init(GtkDarktableIcon *icon)
 
 static gboolean _icon_draw(GtkWidget *widget, cairo_t *cr)
 {
-  g_return_val_if_fail(widget != NULL, FALSE);
-  g_return_val_if_fail(DTGTK_IS_ICON(widget), FALSE);
+    g_return_val_if_fail(widget != NULL, FALSE);
+    g_return_val_if_fail(DTGTK_IS_ICON(widget), FALSE);
 
-  /* begin cairo drawing */
-  GtkAllocation allocation;
-  gtk_widget_get_allocation(widget, &allocation);
+    /* begin cairo drawing */
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
 
-  GtkStateFlags state = gtk_widget_get_state_flags(widget);
+    GtkStateFlags state = gtk_widget_get_state_flags(widget);
 
-  GdkRGBA fg_color;
-  GtkStyleContext *context = gtk_widget_get_style_context(widget);
-  gtk_style_context_get_color(context, state, &fg_color);
+    GdkRGBA fg_color;
+    GtkStyleContext *context = gtk_widget_get_style_context(widget);
+    gtk_style_context_get_color(context, state, &fg_color);
 
-  gdk_cairo_set_source_rgba(cr, &fg_color);
+    gdk_cairo_set_source_rgba(cr, &fg_color);
 
-  /* draw icon */
-  if(DTGTK_ICON(widget)->icon)
-    DTGTK_ICON(widget)->icon(cr, 0, 0, allocation.width, allocation.height, DTGTK_ICON(widget)->icon_flags,
-                             DTGTK_ICON(widget)->icon_data);
+    /* draw icon */
+    if (DTGTK_ICON(widget)->icon)
+        DTGTK_ICON(widget)->icon(cr, 0, 0, allocation.width, allocation.height,
+                                 DTGTK_ICON(widget)->icon_flags, DTGTK_ICON(widget)->icon_data);
 
-  return FALSE;
+    return FALSE;
 }
 
 // Public functions
 GtkWidget *dtgtk_icon_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata)
 {
-  GtkDarktableIcon *icon;
-  icon = g_object_new(dtgtk_icon_get_type(), NULL);
-  gtk_event_box_set_visible_window(GTK_EVENT_BOX(icon), FALSE);
-  icon->icon = paint;
-  icon->icon_flags = paintflags;
-  icon->icon_data = paintdata;
-  gtk_widget_set_name(GTK_WIDGET(icon), "dt-icon");
-  return (GtkWidget *)icon;
+    GtkDarktableIcon *icon;
+    icon = g_object_new(dtgtk_icon_get_type(), NULL);
+    gtk_event_box_set_visible_window(GTK_EVENT_BOX(icon), FALSE);
+    icon->icon = paint;
+    icon->icon_flags = paintflags;
+    icon->icon_data = paintdata;
+    gtk_widget_set_name(GTK_WIDGET(icon), "dt-icon");
+    return (GtkWidget *)icon;
 }
 
-void dtgtk_icon_set_paint(GtkWidget *icon, DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata)
+void dtgtk_icon_set_paint(GtkWidget *icon, DTGTKCairoPaintIconFunc paint, gint paintflags,
+                          void *paintdata)
 {
-  g_return_if_fail(icon != NULL);
-  DTGTK_ICON(icon)->icon = paint;
-  DTGTK_ICON(icon)->icon_flags = paintflags;
-  DTGTK_ICON(icon)->icon_data = paintdata;
-  gtk_widget_queue_draw(icon);
+    g_return_if_fail(icon != NULL);
+    DTGTK_ICON(icon)->icon = paint;
+    DTGTK_ICON(icon)->icon_flags = paintflags;
+    DTGTK_ICON(icon)->icon_data = paintdata;
+    gtk_widget_queue_draw(icon);
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

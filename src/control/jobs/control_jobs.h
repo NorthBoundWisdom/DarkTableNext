@@ -28,7 +28,8 @@
 
 G_BEGIN_DECLS
 
-void dt_control_gpx_apply(const gchar *filename, const int32_t filmid, const gchar *tz, GList *imgs);
+void dt_control_gpx_apply(const gchar *filename, const int32_t filmid, const gchar *tz,
+                          GList *imgs);
 
 void dt_control_datetime(const GTimeSpan offset, const char *datetime, GList *imgs);
 
@@ -48,31 +49,16 @@ void dt_control_paste_parts_history(GList *imgs);
 void dt_control_apply_styles(GList *imgs, GList *styles, const gboolean duplicate);
 void dt_control_set_local_copy_images(void);
 void dt_control_reset_local_copy_images(void);
-void dt_control_export(GList *imgid_list,
-                       const int max_width,
-                       const int max_height,
-                       const int format_index,
-                       const int storage_index,
-                       const gboolean high_quality,
-                       const gboolean upscale,
-                       const gboolean dimensions_scale,
-                       const gboolean is_scaling,
-                       const double scale_factor,
-                       const gboolean export_masks,
-                       char *style,
-                       const gboolean style_append,
+void dt_control_export(GList *imgid_list, const int max_width, const int max_height,
+                       const int format_index, const int storage_index, const gboolean high_quality,
+                       const gboolean upscale, const gboolean dimensions_scale,
+                       const gboolean is_scaling, const double scale_factor,
+                       const gboolean export_masks, char *style, const gboolean style_append,
                        const dt_colorspaces_color_profile_type_t icc_type,
-                       const gchar *icc_filename,
-                       const dt_iop_color_intent_t icc_intent,
+                       const gchar *icc_filename, const dt_iop_color_intent_t icc_intent,
                        const gchar *metadata_export);
 void dt_control_merge_hdr(void);
 void dt_control_import(GList *imgs, const char *datetime_override, const gboolean inplace);
 void dt_control_refresh_exif(void);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

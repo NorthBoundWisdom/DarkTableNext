@@ -25,25 +25,26 @@
 G_BEGIN_DECLS
 
 // sizes stored in the mipmap cache, set to fixed values in mipmap_cache.c
-typedef enum dt_mipmap_size_t {
-  // 8 bit, downscaled, for lighttable thumbnails
-  DT_MIPMAP_0 = 0,
-  DT_MIPMAP_1,
-  DT_MIPMAP_2,
-  DT_MIPMAP_3,
-  DT_MIPMAP_4,
-  DT_MIPMAP_5,
-  DT_MIPMAP_6,
-  DT_MIPMAP_7,
-  DT_MIPMAP_8,
-  DT_MIPMAP_9,
-  // 8 bit, full resolution, for zoomed in thumbnail
-  DT_MIPMAP_10,
-  // float, downscaled, for preview pixelpipe
-  DT_MIPMAP_F,
-  // float, full resolution, for full/export pixelpipe
-  DT_MIPMAP_FULL,
-  DT_MIPMAP_NONE
+typedef enum dt_mipmap_size_t
+{
+    // 8 bit, downscaled, for lighttable thumbnails
+    DT_MIPMAP_0 = 0,
+    DT_MIPMAP_1,
+    DT_MIPMAP_2,
+    DT_MIPMAP_3,
+    DT_MIPMAP_4,
+    DT_MIPMAP_5,
+    DT_MIPMAP_6,
+    DT_MIPMAP_7,
+    DT_MIPMAP_8,
+    DT_MIPMAP_9,
+    // 8 bit, full resolution, for zoomed in thumbnail
+    DT_MIPMAP_10,
+    // float, downscaled, for preview pixelpipe
+    DT_MIPMAP_F,
+    // float, full resolution, for full/export pixelpipe
+    DT_MIPMAP_FULL,
+    DT_MIPMAP_NONE
 } dt_mipmap_size_t;
 
 static const dt_mipmap_size_t DT_MIPMAP_LDR_MAX = DT_MIPMAP_10;
@@ -51,65 +52,65 @@ static const dt_mipmap_size_t DT_MIPMAP_LDR_MAX = DT_MIPMAP_10;
 // type to be passed to getter functions
 typedef enum dt_mipmap_get_flags_t
 {
-  // gives you what you requested or a smaller mip,
-  // or NULL if none could be found
-  // also NULL is the fallback for _F and _FULL buffers.
-  DT_MIPMAP_BEST_EFFORT = 0,
-  // actually don't lock and return a buffer, but only
-  // start a bg job to load it, if it's not in cache already.
-  DT_MIPMAP_PREFETCH = 1,
-  // similar to prefetching, but only prefetch in case
-  // we hit the disk cache (don't run the more expensive pipeline)
-  DT_MIPMAP_PREFETCH_DISK = 2,
-  // only return when the requested buffer is loaded.
-  // blocks until that happens.
-  DT_MIPMAP_BLOCKING = 3,
-  // don't actually acquire the lock if it is not
-  // in cache (i.e. would have to be loaded first)
-  DT_MIPMAP_TESTLOCK = 4
+    // gives you what you requested or a smaller mip,
+    // or NULL if none could be found
+    // also NULL is the fallback for _F and _FULL buffers.
+    DT_MIPMAP_BEST_EFFORT = 0,
+    // actually don't lock and return a buffer, but only
+    // start a bg job to load it, if it's not in cache already.
+    DT_MIPMAP_PREFETCH = 1,
+    // similar to prefetching, but only prefetch in case
+    // we hit the disk cache (don't run the more expensive pipeline)
+    DT_MIPMAP_PREFETCH_DISK = 2,
+    // only return when the requested buffer is loaded.
+    // blocks until that happens.
+    DT_MIPMAP_BLOCKING = 3,
+    // don't actually acquire the lock if it is not
+    // in cache (i.e. would have to be loaded first)
+    DT_MIPMAP_TESTLOCK = 4
 } dt_mipmap_get_flags_t;
 
 // struct to be alloc'ed by the client, filled by dt_mipmap_cache_get()
 typedef struct dt_mipmap_buffer_t
 {
-  dt_mipmap_size_t size;
-  dt_imgid_t imgid;
-  int32_t width, height;
-  float iscale;
-  uint8_t *buf;
-  dt_colorspaces_color_profile_type_t color_space;
-  dt_imageio_retval_t loader_status;
-  dt_cache_entry_t *cache_entry;
+    dt_mipmap_size_t size;
+    dt_imgid_t imgid;
+    int32_t width, height;
+    float iscale;
+    uint8_t *buf;
+    dt_colorspaces_color_profile_type_t color_space;
+    dt_imageio_retval_t loader_status;
+    dt_cache_entry_t *cache_entry;
 } dt_mipmap_buffer_t;
 
 typedef struct dt_mipmap_cache_one_t
 {
-  // one cache per mipmap scale!
-  dt_cache_t cache;
+    // one cache per mipmap scale!
+    dt_cache_t cache;
 
-  // a few stats on usage in this run.
-  // long int to give 32-bits on old archs, so __sync* calls will work.
-  long int stats_requests;   // number of total requests
-  long int stats_near_match; // served with smaller mip res
-  long int stats_misses;     // nothing returned at all.
-  long int stats_fetches;    // texture was fetched (either as a stand-in or as per request)
-  long int stats_standin;    // texture used as stand-in
+    // a few stats on usage in this run.
+    // long int to give 32-bits on old archs, so __sync* calls will work.
+    long int stats_requests;   // number of total requests
+    long int stats_near_match; // served with smaller mip res
+    long int stats_misses;     // nothing returned at all.
+    long int stats_fetches;    // texture was fetched (either as a stand-in or as per request)
+    long int stats_standin;    // texture used as stand-in
 } dt_mipmap_cache_one_t;
 
 typedef struct dt_mipmap_cache_t
 {
-  // real width and height are stored per element
-  // (could be smaller than the max for this mip level,
-  // due to aspect ratio)
-  uint32_t max_width[DT_MIPMAP_NONE], max_height[DT_MIPMAP_NONE];
-  // size of an element inside buf
-  size_t buffer_size[DT_MIPMAP_NONE];
+    // real width and height are stored per element
+    // (could be smaller than the max for this mip level,
+    // due to aspect ratio)
+    uint32_t max_width[DT_MIPMAP_NONE], max_height[DT_MIPMAP_NONE];
+    // size of an element inside buf
+    size_t buffer_size[DT_MIPMAP_NONE];
 
-  // one cache per mipmap level
-  dt_mipmap_cache_one_t mip_thumbs;
-  dt_mipmap_cache_one_t mip_f;
-  dt_mipmap_cache_one_t mip_full;
-  char cachedir[PATH_MAX]; // cached sha1sum filename for faster access
+    // one cache per mipmap level
+    dt_mipmap_cache_one_t mip_thumbs;
+    dt_mipmap_cache_one_t mip_f;
+    dt_mipmap_cache_one_t mip_full;
+    char cachedir[PATH_MAX]; // cached sha1sum filename for faster access
 } dt_mipmap_cache_t;
 
 // dynamic memory allocation interface for imageio backend: a write locked
@@ -124,18 +125,14 @@ void dt_mipmap_cache_print(void);
 // get a buffer and lock according to mode ('r' or 'w').
 // see dt_mipmap_get_flags_t for explanation of the exact
 // behaviour. pass 0 as flags for the default (best effort)
-#define dt_mipmap_cache_get(B,C,D,E,F) dt_mipmap_cache_get_with_caller(B,C,D,E,F,__FILE__,__LINE__)
-void dt_mipmap_cache_get_with_caller(
-    dt_mipmap_buffer_t *buf,
-    const dt_imgid_t imgid,
-    const dt_mipmap_size_t mip,
-    const dt_mipmap_get_flags_t flags,
-    const char mode,
-    const char *file,
-    int line);
+#define dt_mipmap_cache_get(B, C, D, E, F)                                                         \
+    dt_mipmap_cache_get_with_caller(B, C, D, E, F, __FILE__, __LINE__)
+void dt_mipmap_cache_get_with_caller(dt_mipmap_buffer_t *buf, const dt_imgid_t imgid,
+                                     const dt_mipmap_size_t mip, const dt_mipmap_get_flags_t flags,
+                                     const char mode, const char *file, int line);
 
 // drop a lock
-#define dt_mipmap_cache_release(A ) dt_mipmap_cache_release_with_caller(A, __FILE__, __LINE__)
+#define dt_mipmap_cache_release(A) dt_mipmap_cache_release_with_caller(A, __FILE__, __LINE__)
 void dt_mipmap_cache_release_with_caller(dt_mipmap_buffer_t *buf, const char *file, int line);
 
 // remove thumbnails, so they will be regenerated:
@@ -165,10 +162,3 @@ void dt_mipmap_cache_copy_thumbnails(const dt_imgid_t dst_imgid, const dt_imgid_
 dt_mipmap_size_t dt_mipmap_cache_get_min_mip_from_pref(const char *value);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

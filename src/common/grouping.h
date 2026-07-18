@@ -24,8 +24,7 @@
 #include "common/darktable.h"
 
 /** add an image to a group */
-void dt_grouping_add_to_group(const dt_imgid_t group_id,
-                              const dt_imgid_t image_id);
+void dt_grouping_add_to_group(const dt_imgid_t group_id, const dt_imgid_t image_id);
 
 /** remove an image from a group. returns the new group_id of the other images. */
 dt_imgid_t dt_grouping_remove_from_group(const dt_imgid_t image_id);
@@ -38,9 +37,3 @@ GList *dt_grouping_get_group_images(const dt_imgid_t imgid);
 
 /** add grouped images to images list */
 void dt_grouping_add_grouped_images(GList **images);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

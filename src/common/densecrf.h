@@ -31,10 +31,11 @@
 #pragma once
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-/**
+    /**
  * @brief Refine a binary segmentation mask using Dense CRF.
  *
  * Takes unary probabilities (e.g. from sigmoid of SAM logits) and
@@ -52,14 +53,9 @@ extern "C" {
  * @param w_bilateral    Weight of the bilateral (appearance) kernel.
  * @param n_iterations   Number of mean-field iterations (typically 5-10).
  */
-void dt_dense_crf_binary(float *probabilities,
-                         const unsigned char *rgb,
-                         int width, int height,
-                         float sigma_spatial,
-                         float sigma_rgb,
-                         float w_spatial,
-                         float w_bilateral,
-                         int n_iterations);
+    void dt_dense_crf_binary(float *probabilities, const unsigned char *rgb, int width, int height,
+                             float sigma_spatial, float sigma_rgb, float w_spatial,
+                             float w_bilateral, int n_iterations);
 
 #ifdef __cplusplus
 }

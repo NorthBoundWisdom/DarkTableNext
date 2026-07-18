@@ -119,7 +119,6 @@ function M.get_doc()
   end
   return result..[==[return API
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 ]==]
 
 end
@@ -133,4 +132,3 @@ end
 
 return M;
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

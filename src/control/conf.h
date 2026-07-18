@@ -28,53 +28,53 @@ G_BEGIN_DECLS
 
 typedef enum dt_confgen_type_t
 {
-  DT_INT,
-  DT_INT64,
-  DT_FLOAT,
-  DT_BOOL,
-  DT_PATH,
-  DT_STRING,
-  DT_ENUM
+    DT_INT,
+    DT_INT64,
+    DT_FLOAT,
+    DT_BOOL,
+    DT_PATH,
+    DT_STRING,
+    DT_ENUM
 } dt_confgen_type_t;
 
 typedef struct dt_confgen_value_t
 {
-  dt_confgen_type_t type;
-  char *def;
-  char *min;
-  char *max;
-  char *enum_values;
-  char *shortdesc;
-  char *longdesc;
-  gboolean is_common;
-  int    welcome_pagenum;      // 0 = not on welcome screen; >0 = page number
-  int    welcome_questionnum;  // sort order within page
-  gboolean welcome_dirchooser; // TRUE to use a directory chooser widget
-  char **welcome_options;      // curated option list 
+    dt_confgen_type_t type;
+    char *def;
+    char *min;
+    char *max;
+    char *enum_values;
+    char *shortdesc;
+    char *longdesc;
+    gboolean is_common;
+    int welcome_pagenum;         // 0 = not on welcome screen; >0 = page number
+    int welcome_questionnum;     // sort order within page
+    gboolean welcome_dirchooser; // TRUE to use a directory chooser widget
+    char **welcome_options;      // curated option list
 } dt_confgen_value_t;
 
 typedef struct dt_conf_t
 {
-  dt_pthread_mutex_t mutex;
-  char filename[PATH_MAX];
-  char filename_common[PATH_MAX];
-  GHashTable *table;
-  GHashTable *x_confgen;
-  GHashTable *override_entries;
+    dt_pthread_mutex_t mutex;
+    char filename[PATH_MAX];
+    char filename_common[PATH_MAX];
+    GHashTable *table;
+    GHashTable *x_confgen;
+    GHashTable *override_entries;
 } dt_conf_t;
 
 typedef struct dt_conf_string_entry_t
 {
-  char *key;
-  char *value;
+    char *key;
+    char *value;
 } dt_conf_string_entry_t;
 
 typedef enum dt_confgen_value_kind_t
 {
-  DT_DEFAULT,
-  DT_MIN,
-  DT_MAX,
-  DT_VALUES
+    DT_DEFAULT,
+    DT_MIN,
+    DT_MAX,
+    DT_VALUES
 } dt_confgen_value_kind_t;
 
 void dt_conf_set_int(const char *name, const int val);
@@ -87,12 +87,8 @@ void dt_conf_set_folder_from_file_chooser(const char *name, GtkFileChooser *choo
 int dt_conf_get_int(const char *name);
 int64_t dt_conf_get_int64(const char *name);
 float dt_conf_get_float(const char *name);
-int dt_conf_get_and_sanitize_int(const char *name,
-                                 const int min,
-                                 const int max);
-int64_t dt_conf_get_and_sanitize_int64(const char *name,
-                                       const int64_t min,
-                                       const int64_t max);
+int dt_conf_get_and_sanitize_int(const char *name, const int min, const int max);
+int64_t dt_conf_get_and_sanitize_int64(const char *name, const int64_t min, const int64_t max);
 float dt_conf_get_and_sanitize_float(const char *name, float min, float max);
 gboolean dt_conf_get_bool(const char *name);
 // get the configuration string without duplicating it; the returned
@@ -105,9 +101,7 @@ gchar *dt_conf_get_string(const char *name);
 gchar *dt_conf_get_path(const char *name);
 gboolean dt_conf_get_folder_to_file_chooser(const char *name, GtkFileChooser *chooser);
 gboolean dt_conf_is_equal(const char *name, const char *value);
-void dt_conf_init(dt_conf_t *cf,
-                  const char *filename,
-                  const gboolean is_common,
+void dt_conf_init(dt_conf_t *cf, const char *filename, const gboolean is_common,
                   GSList *override_entries);
 void dt_conf_cleanup(dt_conf_t *cf);
 gboolean dt_conf_key_exists(const char *key);
@@ -116,9 +110,11 @@ gboolean dt_conf_key_not_empty(const char *key);
 GSList *dt_conf_all_string_entries(const char *dir);
 void dt_conf_string_entry_free(gpointer data);
 
-#define DT_CONF_SET_SANITIZED_INT(name, val, min, max) dt_conf_set_int(name, CLAMPS(val, min,max));
-#define DT_CONF_SET_SANITIZED_INT6464(name, val, min, max) dt_conf_set_int(name, CLAMPS(val, min,max));
-#define DT_CONF_SET_SANITIZED_FLOAT(name, val, min, max) dt_conf_set_float(name, CLAMPS(val, min,max));
+#define DT_CONF_SET_SANITIZED_INT(name, val, min, max) dt_conf_set_int(name, CLAMPS(val, min, max));
+#define DT_CONF_SET_SANITIZED_INT6464(name, val, min, max)                                         \
+    dt_conf_set_int(name, CLAMPS(val, min, max));
+#define DT_CONF_SET_SANITIZED_FLOAT(name, val, min, max)                                           \
+    dt_conf_set_float(name, CLAMPS(val, min, max));
 
 // conf generated from darktable config XML
 
@@ -126,48 +122,35 @@ gboolean dt_confgen_exists(const char *name);
 gboolean dt_confgen_is_common(const char *name);
 dt_confgen_type_t dt_confgen_type(const char *name);
 
-gboolean dt_confgen_value_exists(const char *name,
-                                 const dt_confgen_value_kind_t kind);
+gboolean dt_confgen_value_exists(const char *name, const dt_confgen_value_kind_t kind);
 
-int dt_confgen_get_int(const char *name,
-                       const dt_confgen_value_kind_t kind);
-int64_t dt_confgen_get_int64(const char *name,
-                             const dt_confgen_value_kind_t kind);
-gboolean dt_confgen_get_bool(const char *name,
-                             const dt_confgen_value_kind_t kind);
-float dt_confgen_get_float(const char *name,
-                           const dt_confgen_value_kind_t kind);
-const char *dt_confgen_get(const char *name,
-                           const dt_confgen_value_kind_t kind);
+int dt_confgen_get_int(const char *name, const dt_confgen_value_kind_t kind);
+int64_t dt_confgen_get_int64(const char *name, const dt_confgen_value_kind_t kind);
+gboolean dt_confgen_get_bool(const char *name, const dt_confgen_value_kind_t kind);
+float dt_confgen_get_float(const char *name, const dt_confgen_value_kind_t kind);
+const char *dt_confgen_get(const char *name, const dt_confgen_value_kind_t kind);
 
 const char *dt_confgen_get_label(const char *name);
 const char *dt_confgen_get_tooltip(const char *name);
 
 // welcome-screen metadata
-int         dt_confgen_get_welcome_pagenum(const char *name);
-gboolean    dt_confgen_get_welcome_dirchooser(const char *name);
+int dt_confgen_get_welcome_pagenum(const char *name);
+gboolean dt_confgen_get_welcome_dirchooser(const char *name);
 // NULL-terminated array of curated options for the welcome-screen combobox,
 // or NULL when the key has no welcome options. Owned by the confgen entry —
 // do not free
 const char *const *dt_confgen_get_welcome_options(const char *name);
 // Returns a newly-allocated GList of g_strdup'd conf keys with welcome_pagenum > 0,
 // sorted by (pagenum, questionnum).
-GList      *dt_confgen_get_welcome_keys(void);
+GList *dt_confgen_get_welcome_keys(void);
 
 gboolean dt_conf_is_default(const char *name);
-gchar* dt_conf_expand_default_dir(const char *dir);
+gchar *dt_conf_expand_default_dir(const char *dir);
 
 /** read filename and call callback() for every key/value pair. if callback() returns non
     NULL, the value is returned by dt_conf_read_values. This may be used to look for a
     a specific value in filename */
 gchar *dt_conf_read_values(const char *filename,
-                           gchar* (*callback)(const gchar *key,
-                                              const gchar *value));
+                           gchar *(*callback)(const gchar *key, const gchar *value));
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

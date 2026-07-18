@@ -17,29 +17,29 @@ char darktable[8192] __attribute__((aligned(16)));
 /* Enable all debug output: set unmuted to 0xFFFFFFFF.
    darktable_t layout: dt_codepath_t (4 bytes), int32_t num_openmp_threads (4 bytes),
    int32_t unmuted (offset 8). */
-__attribute__((constructor))
-static void _init_darktable_stub(void)
+__attribute__((constructor)) static void _init_darktable_stub(void)
 {
-  /* Set unmuted field at offset 8 to all-bits-on */
-  int32_t *unmuted = (int32_t *)(darktable + 8);
-  *unmuted = 0x7FFFFFFF;
+    /* Set unmuted field at offset 8 to all-bits-on */
+    int32_t *unmuted = (int32_t *)(darktable + 8);
+    *unmuted = 0x7FFFFFFF;
 }
 
 void dt_print_ext(const char *msg, ...)
 {
-  va_list ap;
-  va_start(ap, msg);
-  vfprintf(stderr, msg, ap);
-  va_end(ap);
-  fputc('\n', stderr);
+    va_list ap;
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
+    va_end(ap);
+    fputc('\n', stderr);
 }
 
 gchar *dt_conf_get_string(const char *name)
 {
-  return g_strdup("cpu");
+    return g_strdup("cpu");
 }
 
 void dt_loc_get_user_config_dir(char *configdir, size_t bufsize)
 {
-  if(configdir && bufsize > 0) configdir[0] = '\0';
+    if (configdir && bufsize > 0)
+        configdir[0] = '\0';
 }

@@ -10237,7 +10237,6 @@ msgstr ""
 "%s\n"
 "Ctrl + 单击 %s"
 
-#. clang-format off
 #. smoother cubic spline curve
 #: ../src/develop/imageop_gui.c:326 ../src/iop/basecurve.c:304
 msgid "cubic spline"
@@ -11139,11 +11138,6 @@ msgstr "选择胶卷"
 msgid "select untouched"
 msgstr "选择未改动的"
 
-#. clang-format off
-#. modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-#. clang-format on
 #. allow time for the error to display before script_manager writes it's error message
 #. allow time for the error to display before script_manager writes it's error message
 #.
@@ -11205,8 +11199,6 @@ msgstr "选择未改动的"
 #.
 #.
 #. The actual content of the module
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #. local function to run a test command on windows and return a true if it succeeds
 #. instead of returning true if it runs
@@ -12521,8 +12513,6 @@ msgstr "enfuse：完成，已将结果图像“%s”导入，ID 为 %d"
 msgid "could not find enfuse executable, not loading enfuse exporter..."
 msgstr "找不到 enfuse 可执行文件，不加载 enfuse 导出器……"
 
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
-#. kate: hl Lua;
 #.
 #.
 #. extract_burst_roll_images.lua - extract burst images from a burst roll file
@@ -12826,8 +12816,6 @@ msgstr "txt 附属文件的命令可能有问题。最好检查一下首选项"
 #. we are confident now that it's safe to write the file
 #. compose the command to run
 #. finally, run it
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #.
 #. group_persistence.lua - preserve groups between darktable instances
@@ -13032,7 +13020,6 @@ msgid "selected images path"
 msgstr "所选图像路径"
 
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #. This file is part of darktable,
 #. copyright (c) 2015 Tobias Ellinghaus
@@ -13095,8 +13082,6 @@ msgstr "导入对话框完成后应用导入过滤器"
 #. this is just a wrapper which calls the active import filter
 #. add a new global function to register import filters
 #. noting to destroy
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #. This file is part of darktable,
 #. copyright (c) 2015-2016 Tobias Ellinghaus & Christian Mandel
@@ -13148,8 +13133,6 @@ msgstr "导入过滤"
 #. the dummy but that may break in the future), table.remove(images) does not
 #. work reliable because it can fail for sparse tables
 #. nothing to destroy
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #.
 #. recent_bookmarks.lua - add recently edited and exported images to system recent bookmarks
@@ -13454,7 +13437,6 @@ msgid "switch selection with temporary buffer"
 msgstr "用临时缓冲区切换选择"
 
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #.
 #. scheduler.lua - provide scheduler services for multitasking
@@ -14170,7 +14152,6 @@ msgstr "运行 PDF 阅览器时出现问题"
 #. this one is probably usefull to the user
 #. finally do some clean-up
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #.
 #. use_paired_jpg_as_mipmap.lua - Use the JPG from the RAW JPG pair as the full size mipmap
@@ -16820,7 +16801,6 @@ msgstr "确定要删除预设配置“%s”？"
 #. add new preset
 #. create a shortcut for the new entry
 #. then show edit dialog
-#. clang-format on
 #. create a shortcut for the new entry
 #. then show edit dialog
 #: ../src/gui/presets.c:208 ../src/gui/presets.c:1035 ../src/gui/presets.c:1038

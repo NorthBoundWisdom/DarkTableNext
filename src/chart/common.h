@@ -22,38 +22,31 @@
 
 enum
 {
-  TOP_LEFT = 0,
-  TOP_RIGHT = 1,
-  BOTTOM_RIGHT = 2,
-  BOTTOM_LEFT = 3
+    TOP_LEFT = 0,
+    TOP_RIGHT = 1,
+    BOTTOM_RIGHT = 2,
+    BOTTOM_LEFT = 3
 };
 
 typedef struct image_t
 {
-  GtkWidget *drawing_area;
+    GtkWidget *drawing_area;
 
-  cairo_surface_t *surface;
-  cairo_pattern_t *image;
-  int width, height;
-  float *xyz;
-  float scale;
-  int offset_x, offset_y;
-  float shrink;
+    cairo_surface_t *surface;
+    cairo_pattern_t *image;
+    int width, height;
+    float *xyz;
+    float scale;
+    int offset_x, offset_y;
+    float shrink;
 
-  point_t bb[4];
+    point_t bb[4];
 
-  chart_t **chart;
-  gboolean draw_colored;
+    chart_t **chart;
+    gboolean draw_colored;
 } image_t;
 
 int get_homography(const point_t *source, const point_t *target, float *h);
 point_t apply_homography(point_t p, const float *h);
 // Gives a factor of scaling areas at point p
 float apply_homography_scaling(point_t p, const float *h);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

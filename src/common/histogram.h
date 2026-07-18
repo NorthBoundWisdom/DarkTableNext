@@ -33,7 +33,7 @@
  */
 typedef struct dt_histogram_roi_t
 {
-  int width, height, crop_x, crop_y, crop_right, crop_bottom;
+    int width, height, crop_x, crop_y, crop_right, crop_bottom;
 } dt_histogram_roi_t;
 
 // allocates an aligned histogram buffer if needed, callers
@@ -41,15 +41,7 @@ typedef struct dt_histogram_roi_t
 // buffer via dt_free_align()
 void dt_histogram_helper(dt_dev_histogram_collection_params_t *histogram_params,
                          dt_dev_histogram_stats_t *histogram_stats,
-                         const dt_iop_colorspace_type_t cst,
-                         const dt_iop_colorspace_type_t cst_to,
-                         const void *pixel,
-                         uint32_t **histogram, uint32_t *histogram_max,
+                         const dt_iop_colorspace_type_t cst, const dt_iop_colorspace_type_t cst_to,
+                         const void *pixel, uint32_t **histogram, uint32_t *histogram_max,
                          const gboolean compensate_middle_grey,
                          const dt_iop_order_iccprofile_info_t *const profile_info);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

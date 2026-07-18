@@ -28,84 +28,75 @@
 
 DT_MODULE(1)
 
-
 typedef struct dt_lib_hinter_t
 {
-  GtkWidget *label;
+    GtkWidget *label;
 } dt_lib_hinter_t;
-
 
 static void _lib_hinter_set_message(dt_lib_module_t *self, const char *message);
 
 const char *name(dt_lib_module_t *self)
 {
-  return _("hinter");
+    return _("hinter");
 }
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-  return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM | DT_VIEW_MAP | DT_VIEW_TETHERING;
+    return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM | DT_VIEW_MAP | DT_VIEW_TETHERING;
 }
 
 uint32_t container(dt_lib_module_t *self)
 {
-  return DT_UI_CONTAINER_PANEL_TOP_CENTER;
+    return DT_UI_CONTAINER_PANEL_TOP_CENTER;
 }
 
 gboolean expandable(dt_lib_module_t *self)
 {
-  return FALSE;
+    return FALSE;
 }
 
 int position(const dt_lib_module_t *self)
 {
-  return 1;
+    return 1;
 }
-
 
 void gui_init(dt_lib_module_t *self)
 {
-  /* initialize ui widgets */
-  dt_lib_hinter_t *d = g_malloc0(sizeof(dt_lib_hinter_t));
-  self->data = (void *)d;
+    /* initialize ui widgets */
+    dt_lib_hinter_t *d = g_malloc0(sizeof(dt_lib_hinter_t));
+    self->data = (void *)d;
 
-  self->widget = gtk_event_box_new();
-  d->label = gtk_label_new("");
-  gtk_label_set_ellipsize(GTK_LABEL(d->label), PANGO_ELLIPSIZE_END);
-  gtk_container_add(GTK_CONTAINER(self->widget), d->label);
+    self->widget = gtk_event_box_new();
+    d->label = gtk_label_new("");
+    gtk_label_set_ellipsize(GTK_LABEL(d->label), PANGO_ELLIPSIZE_END);
+    gtk_container_add(GTK_CONTAINER(self->widget), d->label);
 
-  darktable.control->proxy.hinter.module = self;
-  darktable.control->proxy.hinter.set_message = _lib_hinter_set_message;
+    darktable.control->proxy.hinter.module = self;
+    darktable.control->proxy.hinter.set_message = _lib_hinter_set_message;
 }
 
 void gui_cleanup(dt_lib_module_t *self)
 {
-  darktable.control->proxy.hinter.module = NULL;
-  g_free(self->data);
-  self->data = NULL;
+    darktable.control->proxy.hinter.module = NULL;
+    g_free(self->data);
+    self->data = NULL;
 }
-
 
 void _lib_hinter_set_message(dt_lib_module_t *self, const char *message)
 {
-  dt_lib_hinter_t *d = self->data;
+    dt_lib_hinter_t *d = self->data;
 
-  if(message && !*message && !dt_ui_panel_visible(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP))
-  {
-    GtkWidget *count = dt_view_filter_get_count(darktable.view_manager);
-    if(count)
+    if (message && !*message && !dt_ui_panel_visible(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP))
     {
-      gchar *count_message = g_strdup_printf(_("%s in current collection"),
-                                            gtk_label_get_text(GTK_LABEL(count)));
-      gtk_label_set_markup(GTK_LABEL(d->label), count_message);
-      g_free(count_message);
+        GtkWidget *count = dt_view_filter_get_count(darktable.view_manager);
+        if (count)
+        {
+            gchar *count_message = g_strdup_printf(_("%s in current collection"),
+                                                   gtk_label_get_text(GTK_LABEL(count)));
+            gtk_label_set_markup(GTK_LABEL(d->label), count_message);
+            g_free(count_message);
+        }
     }
-  }
-  else
-    gtk_label_set_markup(GTK_LABEL(d->label), message);
+    else
+        gtk_label_set_markup(GTK_LABEL(d->label), message);
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

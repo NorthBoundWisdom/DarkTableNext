@@ -17,7 +17,7 @@
 */
 
 #include "common/darktable.h"
-#include "develop/imageop.h"         // for IOP_CS_RGB
+#include "develop/imageop.h" // for IOP_CS_RGB
 #include "imageio/imageio_pfm.h"
 #include "common/pfm.h"
 #include "common/imagebuf.h"
@@ -33,46 +33,39 @@
 #include <time.h>
 #include <unistd.h>
 
-dt_imageio_retval_t dt_imageio_open_pfm(dt_image_t *img,
-                                        const char *filename,
+dt_imageio_retval_t dt_imageio_open_pfm(dt_image_t *img, const char *filename,
                                         dt_mipmap_buffer_t *mbuf)
 {
-  int wd, ht, ch, error = 0;
-  float *readbuf = dt_read_pfm(filename, &error, &wd, &ht, &ch, 4);
+    int wd, ht, ch, error = 0;
+    float *readbuf = dt_read_pfm(filename, &error, &wd, &ht, &ch, 4);
 
-  if(error == DT_IMAGEIO_FILE_NOT_FOUND)
-    return DT_IMAGEIO_FILE_NOT_FOUND;
-  else if(error == DT_IMAGEIO_FILE_CORRUPTED)
-    return DT_IMAGEIO_FILE_CORRUPTED;
-  else if(error != DT_IMAGEIO_OK || !readbuf)
-    return DT_IMAGEIO_IOERROR;
+    if (error == DT_IMAGEIO_FILE_NOT_FOUND)
+        return DT_IMAGEIO_FILE_NOT_FOUND;
+    else if (error == DT_IMAGEIO_FILE_CORRUPTED)
+        return DT_IMAGEIO_FILE_CORRUPTED;
+    else if (error != DT_IMAGEIO_OK || !readbuf)
+        return DT_IMAGEIO_IOERROR;
 
-  img->width = wd;
-  img->height = ht;
-  img->buf_dsc.channels = 4;
-  img->buf_dsc.datatype = TYPE_FLOAT;
-  float *buf = (float *)dt_mipmap_cache_alloc(mbuf, img);
-  if(!buf)
-  {
+    img->width = wd;
+    img->height = ht;
+    img->buf_dsc.channels = 4;
+    img->buf_dsc.datatype = TYPE_FLOAT;
+    float *buf = (float *)dt_mipmap_cache_alloc(mbuf, img);
+    if (!buf)
+    {
+        dt_free_align(readbuf);
+        return DT_IMAGEIO_CACHE_FULL;
+    }
+
+    dt_iop_image_copy(buf, readbuf, (size_t)img->width * img->height * 4);
     dt_free_align(readbuf);
-    return DT_IMAGEIO_CACHE_FULL;
-  }
 
-  dt_iop_image_copy(buf, readbuf, (size_t)img->width * img->height * 4);
-  dt_free_align(readbuf);
-
-  img->buf_dsc.cst = IOP_CS_RGB;
-  img->buf_dsc.filters = 0u;
-  img->flags &= ~DT_IMAGE_LDR;
-  img->flags &= ~DT_IMAGE_RAW;
-  img->flags &= ~DT_IMAGE_S_RAW;
-  img->flags |= DT_IMAGE_HDR;
-  img->loader = LOADER_PFM;
-  return DT_IMAGEIO_OK;
+    img->buf_dsc.cst = IOP_CS_RGB;
+    img->buf_dsc.filters = 0u;
+    img->flags &= ~DT_IMAGE_LDR;
+    img->flags &= ~DT_IMAGE_RAW;
+    img->flags &= ~DT_IMAGE_S_RAW;
+    img->flags |= DT_IMAGE_HDR;
+    img->loader = LOADER_PFM;
+    return DT_IMAGEIO_OK;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

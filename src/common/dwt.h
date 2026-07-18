@@ -22,15 +22,15 @@
 /* structure returned by dt_dwt_init() to be used when calling dwt_decompose() */
 typedef struct dwt_params_t
 {
-  float *image;
-  int ch;
-  int width;
-  int height;
-  int scales;
-  int return_layer;
-  int merge_from_scale;
-  void *user_data;
-  float preview_scale;
+    float *image;
+    int ch;
+    int width;
+    int height;
+    int scales;
+    int return_layer;
+    int merge_from_scale;
+    void *user_data;
+    float preview_scale;
 } dwt_params_t;
 
 /* function prototype for the layer_func on dwt_decompose() call */
@@ -46,9 +46,9 @@ typedef void(_dwt_layer_func)(float *layer, dwt_params_t *const p, const int sca
  * user_data: user-supplied data to be passed to layer_func on each call
  * preview_scale: image scale (zoom factor)
  */
-dwt_params_t *dt_dwt_init(float *image, const int width, const int height, const int ch, const int scales,
-                          const int return_layer, const int merge_from_scale, void *user_data,
-                          const float preview_scale);
+dwt_params_t *dt_dwt_init(float *image, const int width, const int height, const int ch,
+                          const int scales, const int return_layer, const int merge_from_scale,
+                          void *user_data, const float preview_scale);
 
 /* free resources used by dwt_decompose() */
 void dt_dwt_free(dwt_params_t *p);
@@ -73,7 +73,8 @@ void dwt_decompose(dwt_params_t *p, _dwt_layer_func layer_func);
  * bands: number of wavelet scales to generate
  * noise: array of thresholds, on per band
  */
-void dwt_denoise(float *const img, const int width, const int height, const int bands, const float *const noise);
+void dwt_denoise(float *const img, const int width, const int height, const int bands,
+                 const float *const noise);
 
 // to make the DWT algorithm (and others which operate on a column of spaced-out pixels for each pixel of a
 // row) as cache-friendly as possible, we want to interleave the actual processing of rows such that the next
@@ -86,42 +87,40 @@ void dwt_denoise(float *const img, const int width, const int height, const int 
  */
 static inline int dwt_interleave_rows(const int rowid, const int height, const int stride)
 {
-  if (height <= stride)
-    return rowid;
-  const int per_pass = ((height + stride - 1) / stride);
-  const int long_passes = height % stride;
-  // adjust for the fact that we have some passes with one fewer iteration when height is not a multiple of stride
-  if (long_passes == 0 || rowid < long_passes * per_pass)
-    return (rowid / per_pass) + stride * (rowid % per_pass);
-  const int rowid2 = rowid - long_passes * per_pass;
-  return long_passes + (rowid2 / (per_pass-1)) + stride * (rowid2 % (per_pass-1));
+    if (height <= stride)
+        return rowid;
+    const int per_pass = ((height + stride - 1) / stride);
+    const int long_passes = height % stride;
+    // adjust for the fact that we have some passes with one fewer iteration when height is not a multiple of stride
+    if (long_passes == 0 || rowid < long_passes * per_pass)
+        return (rowid / per_pass) + stride * (rowid % per_pass);
+    const int rowid2 = rowid - long_passes * per_pass;
+    return long_passes + (rowid2 / (per_pass - 1)) + stride * (rowid2 % (per_pass - 1));
 }
-
-
 
 #ifdef HAVE_OPENCL
 typedef struct dt_dwt_cl_global_t
 {
-  int kernel_dwt_add_img_to_layer;
-  int kernel_dwt_subtract_layer;
-  int kernel_dwt_hat_transform_col;
-  int kernel_dwt_hat_transform_row;
-  int kernel_dwt_init_buffer;
+    int kernel_dwt_add_img_to_layer;
+    int kernel_dwt_subtract_layer;
+    int kernel_dwt_hat_transform_col;
+    int kernel_dwt_hat_transform_row;
+    int kernel_dwt_init_buffer;
 } dt_dwt_cl_global_t;
 
 typedef struct dwt_params_cl_t
 {
-  dt_dwt_cl_global_t *global;
-  int devid;
-  cl_mem image;
-  int width;
-  int height;
-  int ch;
-  int scales;
-  int return_layer;
-  int merge_from_scale;
-  void *user_data;
-  float preview_scale;
+    dt_dwt_cl_global_t *global;
+    int devid;
+    cl_mem image;
+    int width;
+    int height;
+    int ch;
+    int scales;
+    int return_layer;
+    int merge_from_scale;
+    void *user_data;
+    float preview_scale;
 } dwt_params_cl_t;
 
 typedef cl_int(_dwt_layer_func_cl)(cl_mem layer, dwt_params_cl_t *const p, const int scale);
@@ -129,8 +128,9 @@ typedef cl_int(_dwt_layer_func_cl)(cl_mem layer, dwt_params_cl_t *const p, const
 dt_dwt_cl_global_t *dt_dwt_init_cl_global(void);
 void dt_dwt_free_cl_global(dt_dwt_cl_global_t *g);
 
-dwt_params_cl_t *dt_dwt_init_cl(const int devid, cl_mem image, const int width, const int height, const int scales,
-                                const int return_layer, const int merge_from_scale, void *user_data,
+dwt_params_cl_t *dt_dwt_init_cl(const int devid, cl_mem image, const int width, const int height,
+                                const int scales, const int return_layer,
+                                const int merge_from_scale, void *user_data,
                                 const float preview_scale);
 void dt_dwt_free_cl(dwt_params_cl_t *p);
 
@@ -143,9 +143,3 @@ cl_int dwt_decompose_cl(dwt_params_cl_t *p, _dwt_layer_func_cl layer_func);
 #endif
 
 #endif
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

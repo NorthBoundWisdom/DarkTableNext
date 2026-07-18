@@ -23,15 +23,8 @@
 */
 typedef enum dt_lib_modulegroup_t
 {
-  DT_MODULEGROUP_NONE = -1,
-  DT_MODULEGROUP_ACTIVE_PIPE = 0,
-  DT_MODULEGROUP_BASICS = 9999,
-  DT_MODULEGROUP_INVALID = 10000
+    DT_MODULEGROUP_NONE = -1,
+    DT_MODULEGROUP_ACTIVE_PIPE = 0,
+    DT_MODULEGROUP_BASICS = 9999,
+    DT_MODULEGROUP_INVALID = 10000
 } dt_lib_modulegroup_t;
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -16,7 +16,6 @@
   along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 /* For line detection we are using the LSD code as published below.
  * Changes versus the original code:
  *      do not include "lsd.h" (not needed)
@@ -1070,14 +1069,15 @@ static double *inv = NULL; /* table to keep computed inverse values */
 
 __attribute__((constructor)) static void invConstructor()
 {
-  if(inv) return;
-  inv = malloc(sizeof(double) * TABSIZE);
+    if (inv)
+        return;
+    inv = malloc(sizeof(double) * TABSIZE);
 }
 
 __attribute__((destructor)) static void invDestructor()
 {
-  free(inv);
-  inv = NULL;
+    free(inv);
+    inv = NULL;
 }
 
 // clang-format off
@@ -2274,10 +2274,3 @@ double * LineSegmentDetection( int * n_out,
 #undef USED
 #undef RELATIVE_ERROR_FACTOR
 #undef TABSIZE
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

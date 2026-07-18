@@ -41,26 +41,6 @@ if(GMIC_LIBRARY AND GMIC_INCLUDE_DIR)
   if(NOT GMIC_VERSION_OK)
     message(STATUS "Found GMIC but version < ${GMIC_VERSION_NEEDED}. Compressed lut will not be available")
   else()
-    if(WIN32)
-      find_library(FFTW_LIBRARY NAMES fftw3)
-      if(NOT FFTW_LIBRARY)
-        message(STATUS "missing GMIC dependency fftw3")
-      else()
-        list(APPEND GMIC_LIBRARY ${FFTW_LIBRARY})
-      endif(NOT FFTW_LIBRARY)
-      # workaround for msys2 gmic 2.9.0-3. Should be reviewed when gmic 2.9.3 is available
-      find_library(OPENCV_CORE_LIBRARY NAMES opencv_core)
-      find_library(OPENCV_VIDEOIO_LIBRARY NAMES opencv_videoio)
-      if(NOT OPENCV_CORE_LIBRARY OR NOT OPENCV_VIDEOIO_LIBRARY)
-        message(STATUS "missing GMIC dependencies OpenCV")
-        set(GMIC_DEPENDENCIES_FOUND FALSE)
-      else()
-        list(APPEND GMIC_LIBRARY ${OPENCV_CORE_LIBRARY})
-        list(APPEND GMIC_LIBRARY ${OPENCV_VIDEOIO_LIBRARY})
-      endif(NOT OPENCV_CORE_LIBRARY OR NOT OPENCV_VIDEOIO_LIBRARY)
-    endif(WIN32)
-
-    # workaround for msys2 gmic 2.9.0-3. Should be reviewed when gmic 2.9.3 is available
     if(GMIC_DEPENDENCIES_FOUND)
 
       # Set the include dir variables and the libraries and let libfind_process do the rest.

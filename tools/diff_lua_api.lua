@@ -177,5 +177,3 @@ find_parent(oldapi,{})
 find_parent(newapi,{})
 
 compare_any(oldapi,newapi,{})
-
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

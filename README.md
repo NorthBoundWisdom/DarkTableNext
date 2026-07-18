@@ -3,6 +3,8 @@
 
 darktable is an open source photography workflow application and non-destructive raw developer - a virtual lighttable and darkroom for photographers. It manages your digital negatives in a database, lets you view them through a zoomable lighttable and enables you to develop raw images, enhance them and export them to local or remote storage.
 
+> DarkTableNext 当前仅支持 macOS（Apple Silicon 与 Intel）。Linux、Windows、容器和跨平台打包流程已移除；本文中尚未重写的历史说明仅作上游背景参考。
+
 ![screenshot_lighttable](https://user-images.githubusercontent.com/45535283/148689197-e53dd75f-32f1-4297-9a0f-a9547fd4e7c7.jpg)
 
 darktable is **not** a free Adobe® Lightroom® replacement.
@@ -349,12 +351,12 @@ git checkout tags/release-5.6.0
 
 ### Prepare source roots
 
-[FreeCM](https://github.com/NorthBoundWisdom/FreeCM) manages the pinned source roots for [libxcf](https://github.com/houz/libxcf.git), [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers.git), [RawSpeed](https://github.com/darktable-org/rawspeed), and [whereami](https://github.com/gpakosz/whereami). The committed [source_roots.lock.jsonc.in](source_roots.lock.jsonc.in) is the reviewed baseline; FreeCM generates the local, ignored `source_roots.lock.jsonc` and materializes dependencies under `build/dependency_source_roots/`.
+[FreeCM](https://github.com/NorthBoundWisdom/FreeCM) manages the pinned source roots for [libxcf](https://github.com/houz/libxcf.git), [OpenCL Headers](https://github.com/KhronosGroup/OpenCL-Headers.git), [RawSpeed](https://github.com/darktable-org/rawspeed), [whereami](https://github.com/gpakosz/whereami), [LibRaw](https://github.com/LibRaw/LibRaw), Lua scripts, and the integration-test assets. The committed [source_roots.lock.jsonc.in](source_roots.lock.jsonc.in) is the reviewed baseline; FreeCM generates the local, ignored `source_roots.lock.jsonc` and materializes dependencies under `build/dependency_source_roots/`.
 
-After checking out the repository, initialize FreeCM and the remaining build submodules, then seed and materialize the pinned roots:
+After checking out the repository, initialize FreeCM, then seed and materialize the pinned roots:
 
 ```bash
-git submodule update --init --recursive FreeCM src/external/LibRaw src/external/lua-scripts
+git submodule update --init FreeCM
 python3 configs/source_root_workflow.py --init
 python3 configs/source_root_workflow.py --update
 ```

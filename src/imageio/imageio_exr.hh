@@ -37,12 +37,13 @@
 
 // this stores our exif data as a blob.
 
-template <typename T> struct array_deleter
+template <typename T>
+struct array_deleter
 {
-  void operator()(T const *p)
-  {
-    delete[] p;
-  }
+    void operator()(T const *p)
+    {
+        delete[] p;
+    }
 };
 
 namespace IMF_NS
@@ -50,43 +51,42 @@ namespace IMF_NS
 class Blob
 {
 public:
-  Blob() : size(0), data((uint8_t *)NULL)
-  {
-  }
+    Blob()
+        : size(0)
+        , data((uint8_t *)NULL)
+    {
+    }
 
-  Blob(uint32_t _size, uint8_t *_data) : size(_size)
-  {
-    uint8_t *tmp_ptr = new uint8_t[_size];
-    memcpy(tmp_ptr, _data, _size);
-    data.reset(tmp_ptr, array_deleter<uint8_t>());
-  }
+    Blob(uint32_t _size, uint8_t *_data)
+        : size(_size)
+    {
+        uint8_t *tmp_ptr = new uint8_t[_size];
+        memcpy(tmp_ptr, _data, _size);
+        data.reset(tmp_ptr, array_deleter<uint8_t>());
+    }
 
-  uint32_t size;
-  std::shared_ptr<uint8_t> data;
+    uint32_t size;
+    std::shared_ptr<uint8_t> data;
 };
 
-
 typedef IMF_NS::TypedAttribute<IMF_NS::Blob> BlobAttribute;
-template <> const char *BlobAttribute::staticTypeName()
+template <>
+const char *BlobAttribute::staticTypeName()
 {
-  return "blob";
+    return "blob";
 }
-template <> void BlobAttribute::writeValueTo(OStream &os, int version) const
+template <>
+void BlobAttribute::writeValueTo(OStream &os, int version) const
 {
-  Xdr::write<StreamIO>(os, _value.size);
-  Xdr::write<StreamIO>(os, (char *)(_value.data.get()), _value.size);
+    Xdr::write<StreamIO>(os, _value.size);
+    Xdr::write<StreamIO>(os, (char *)(_value.data.get()), _value.size);
 }
 
-template <> void BlobAttribute::readValueFrom(IStream &is, int size, int version)
+template <>
+void BlobAttribute::readValueFrom(IStream &is, int size, int version)
 {
-  Xdr::read<StreamIO>(is, _value.size);
-  _value.data.reset(new uint8_t[_value.size], array_deleter<uint8_t>());
-  Xdr::read<StreamIO>(is, (char *)(_value.data.get()), _value.size);
+    Xdr::read<StreamIO>(is, _value.size);
+    _value.data.reset(new uint8_t[_value.size], array_deleter<uint8_t>());
+    Xdr::read<StreamIO>(is, (char *)(_value.data.get()), _value.size);
 }
-}
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+} // namespace IMF_NS

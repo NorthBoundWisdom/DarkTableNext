@@ -32,24 +32,25 @@
 
 typedef enum dt_job_state_t
 {
-  DT_JOB_STATE_INITIALIZED = 0,
-  DT_JOB_STATE_QUEUED,
-  DT_JOB_STATE_RUNNING,
-  DT_JOB_STATE_FINISHED,
-  DT_JOB_STATE_CANCELLED,
-  DT_JOB_STATE_DISCARDED,
-  DT_JOB_STATE_DISPOSED
+    DT_JOB_STATE_INITIALIZED = 0,
+    DT_JOB_STATE_QUEUED,
+    DT_JOB_STATE_RUNNING,
+    DT_JOB_STATE_FINISHED,
+    DT_JOB_STATE_CANCELLED,
+    DT_JOB_STATE_DISCARDED,
+    DT_JOB_STATE_DISPOSED
 } dt_job_state_t;
 
 typedef enum dt_job_queue_t
 {
-  DT_JOB_QUEUE_USER_FG = 0,     // gui actions, ...
-  DT_JOB_QUEUE_SYSTEM_FG = 1,   // thumbnail creation, ..., may be pushed out of the queue
-  DT_JOB_QUEUE_USER_BG = 2,     // imports, ...
-  DT_JOB_QUEUE_USER_EXPORT = 3, // exports. only one of these jobs will ever be scheduled at a time
-  DT_JOB_QUEUE_SYSTEM_BG = 4,   // some lua stuff that may not be pushed out of the queue, ...
-  DT_JOB_QUEUE_MAX = 5,
-  DT_JOB_QUEUE_SYNCHRONOUS = 1000 // don't queue, run immediately and don't return until done
+    DT_JOB_QUEUE_USER_FG = 0,   // gui actions, ...
+    DT_JOB_QUEUE_SYSTEM_FG = 1, // thumbnail creation, ..., may be pushed out of the queue
+    DT_JOB_QUEUE_USER_BG = 2,   // imports, ...
+    DT_JOB_QUEUE_USER_EXPORT =
+        3,                      // exports. only one of these jobs will ever be scheduled at a time
+    DT_JOB_QUEUE_SYSTEM_BG = 4, // some lua stuff that may not be pushed out of the queue, ...
+    DT_JOB_QUEUE_MAX = 5,
+    DT_JOB_QUEUE_SYNCHRONOUS = 1000 // don't queue, run immediately and don't return until done
 } dt_job_queue_t;
 
 typedef struct _dt_job_t dt_job_t;
@@ -59,7 +60,8 @@ typedef void (*dt_job_state_change_callback)(dt_job_t *, dt_job_state_t state);
 typedef void (*dt_job_destroy_callback)(void *data);
 
 /** create a new initialized job */
-dt_job_t *dt_control_job_create(dt_job_execute_callback execute, const char *msg, ...) __attribute__((format(printf, 2, 3)));
+dt_job_t *dt_control_job_create(dt_job_execute_callback execute, const char *msg, ...)
+    __attribute__((format(printf, 2, 3)));
 /** destroy a job object and free its memory. this does NOT remove it from any job queues! */
 void dt_control_job_dispose(dt_job_t *job);
 /** cancel a job, running or in queue. */
@@ -97,10 +99,3 @@ gboolean dt_control_job_is_synchronous(const dt_job_t *job);
 #include "control/jobs/develop_jobs.h"
 #include "control/jobs/film_jobs.h"
 #include "control/jobs/image_jobs.h"
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

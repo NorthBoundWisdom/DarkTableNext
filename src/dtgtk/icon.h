@@ -28,23 +28,17 @@ G_DECLARE_FINAL_TYPE(GtkDarktableIcon, dtgtk_icon, DTGTK, ICON, GtkEventBox)
 
 struct _GtkDarktableIcon
 {
-  GtkEventBox widget;
-  DTGTKCairoPaintIconFunc icon;
-  gint icon_flags;
-  void *icon_data;
+    GtkEventBox widget;
+    DTGTKCairoPaintIconFunc icon;
+    gint icon_flags;
+    void *icon_data;
 };
 
 /** instantiate a new darktable icon control passing paint function as content */
 GtkWidget *dtgtk_icon_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata);
 
 /** set the paint function for a icon */
-void dtgtk_icon_set_paint(GtkWidget *icon, DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata);
+void dtgtk_icon_set_paint(GtkWidget *icon, DTGTKCairoPaintIconFunc paint, gint paintflags,
+                          void *paintdata);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

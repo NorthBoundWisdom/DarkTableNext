@@ -39,9 +39,3 @@ void dt_control_crawler_show_image_list(GList *images);
 // background thread updating all thumbnails is there is no user activity while being in lightroom
 void dt_update_thumbs_thread(void *ptr);
 void dt_set_backthumb_time(const double offset);
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

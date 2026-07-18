@@ -1,26 +1,17 @@
-# Only build on real *nix system or MSYS2 installation
-if ((NOT WIN32) OR BUILD_MSYS2_INSTALL)
-    if (USE_OPENMP)
-        find_package(OpenMP)
-    else()
-        set(OPENMP_FOUND FALSE)
-    endif()
+# macOS-only build
+find_package(OpenMP REQUIRED)
 
     set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/modules")
     find_library(M_LIBRARY m)
     find_package(Exiv2 REQUIRED)
     include_directories(${Exiv2_INCLUDE_DIR})
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND Exiv2_VERSION VERSION_GREATER_EQUAL "0.28.0")
-        set(CMAKE_CXX_STANDARD 17)
-    endif()
+    set(CMAKE_CXX_STANDARD 17)
 
     add_executable(darktable-curve-tool darktable-curve-tool.c exif-wrapper.cpp)
-    if (OPENMP_FOUND)
-        set_target_properties(darktable-curve-tool PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
-        if(OpenMP_CXX_INCLUDE_DIRS)
-            include_directories(${OpenMP_CXX_INCLUDE_DIRS})
-        endif()
+    set_target_properties(darktable-curve-tool PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
+    if(OpenMP_CXX_INCLUDE_DIRS)
+        include_directories(${OpenMP_CXX_INCLUDE_DIRS})
     endif()
     target_link_libraries(darktable-curve-tool ${Exiv2_LIBRARY} ${OpenMP_CXX_LIBRARIES} m)
 
@@ -47,4 +38,3 @@ if ((NOT WIN32) OR BUILD_MSYS2_INSTALL)
                 README.tools.basecurve.md
             DESTINATION
                 ${CMAKE_INSTALL_DOCDIR}/)
-endif()

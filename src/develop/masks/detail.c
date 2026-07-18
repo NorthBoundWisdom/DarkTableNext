@@ -104,53 +104,50 @@
   hanno@schwalm-bremen.de 21/04/29
 */
 
-float *dt_masks_calc_scharr_mask(dt_dev_pixelpipe_t *pipe,
-                                 float *const restrict src,
-                                 const int width,
-                                 const int height,
-                                 const gboolean rawmode)
+float *dt_masks_calc_scharr_mask(dt_dev_pixelpipe_t *pipe, float *const restrict src,
+                                 const int width, const int height, const gboolean rawmode)
 {
-  float *mask = dt_iop_image_alloc(width, height, 1);
-  float *tmp = dt_iop_image_alloc(width, height, 1);
+    float *mask = dt_iop_image_alloc(width, height, 1);
+    float *tmp = dt_iop_image_alloc(width, height, 1);
 
-  const size_t msize = (size_t)width * height;
-  if(!tmp || !mask)
-  {
-    dt_free_align(tmp);
-    dt_free_align(mask);
-    return NULL;
-  }
-
-  dt_aligned_pixel_t wb = { 1.0f, 1.0f, 1.0f, 1.0f };
-  if(pipe->dsc.temperature.enabled && rawmode)
-    for(int i=0; i < 3; i++)
-      wb[i] /= pipe->dsc.temperature.coeffs[i];
-
-  DT_OMP_FOR_SIMD(aligned(tmp : 64))
-  for(size_t idx =0; idx < msize; idx++)
-  {
-    const float val = fmaxf(0.0f, src[4 * idx] * wb[0])
-                    + fmaxf(0.0f, src[4 * idx + 1] * wb[1])
-                    + fmaxf(0.0f, src[4 * idx + 2] * wb[2]);
-    // add a gamma. sqrtf should make noise variance the same for all image
-    tmp[idx] = sqrtf(val / 3.0f);
-  }
-
-  DT_OMP_FOR()
-  for(size_t row = 0; row < height; row++)
-  {
-    const int irow = CLAMP(row, 1, height -2);
-    for(size_t col = 0; col < width; col++)
+    const size_t msize = (size_t)width * height;
+    if (!tmp || !mask)
     {
-      const int icol = CLAMP(col, 1, width -2);
-      const size_t idx = (size_t)irow * width + icol;
-
-      const float gradient_magnitude = scharr_gradient(&tmp[idx], width);
-      mask[row * width + col] = CLIP(gradient_magnitude / 16.0f);
+        dt_free_align(tmp);
+        dt_free_align(mask);
+        return NULL;
     }
-  }
-  dt_free_align(tmp);
-  return mask;
+
+    dt_aligned_pixel_t wb = {1.0f, 1.0f, 1.0f, 1.0f};
+    if (pipe->dsc.temperature.enabled && rawmode)
+        for (int i = 0; i < 3; i++)
+            wb[i] /= pipe->dsc.temperature.coeffs[i];
+
+    DT_OMP_FOR_SIMD(aligned(tmp : 64))
+    for (size_t idx = 0; idx < msize; idx++)
+    {
+        const float val = fmaxf(0.0f, src[4 * idx] * wb[0]) +
+                          fmaxf(0.0f, src[4 * idx + 1] * wb[1]) +
+                          fmaxf(0.0f, src[4 * idx + 2] * wb[2]);
+        // add a gamma. sqrtf should make noise variance the same for all image
+        tmp[idx] = sqrtf(val / 3.0f);
+    }
+
+    DT_OMP_FOR()
+    for (size_t row = 0; row < height; row++)
+    {
+        const int irow = CLAMP(row, 1, height - 2);
+        for (size_t col = 0; col < width; col++)
+        {
+            const int icol = CLAMP(col, 1, width - 2);
+            const size_t idx = (size_t)irow * width + icol;
+
+            const float gradient_magnitude = scharr_gradient(&tmp[idx], width);
+            mask[row * width + col] = CLIP(gradient_magnitude / 16.0f);
+        }
+    }
+    dt_free_align(tmp);
+    return mask;
 }
 
 static inline float _calcBlendFactor(const float val, const float ithreshold)
@@ -161,52 +158,42 @@ static inline float _calcBlendFactor(const float val, const float ithreshold)
     return 1.0f / (1.0f + dt_fast_expf(16.0f - ithreshold * val));
 }
 
-void dt_masks_calc_detail_blend(float *const restrict src,
-                                float *out,
-                                const size_t msize,
-                                const float threshold,
-                                const gboolean detail)
+void dt_masks_calc_detail_blend(float *const restrict src, float *out, const size_t msize,
+                                const float threshold, const gboolean detail)
 {
-  if(!src || !out) return;
+    if (!src || !out)
+        return;
 
-  const float ithreshold = 16.0f / MAX(1e-7, threshold);
-  DT_OMP_FOR_SIMD(aligned(src, out : 64))
-  for(size_t idx = 0; idx < msize; idx++)
-  {
-    const float blend = CLIP(_calcBlendFactor(src[idx], ithreshold));
-    out[idx] = detail ? blend : 1.0f - blend;
-  }
+    const float ithreshold = 16.0f / MAX(1e-7, threshold);
+    DT_OMP_FOR_SIMD(aligned(src, out : 64))
+    for (size_t idx = 0; idx < msize; idx++)
+    {
+        const float blend = CLIP(_calcBlendFactor(src[idx], ithreshold));
+        out[idx] = detail ? blend : 1.0f - blend;
+    }
 }
 
-float *dt_masks_calc_detail_mask(dt_dev_pixelpipe_iop_t *piece,
-                                 const float threshold,
+float *dt_masks_calc_detail_mask(dt_dev_pixelpipe_iop_t *piece, const float threshold,
                                  const gboolean detail)
 {
-  dt_dev_pixelpipe_t *pipe = piece->pipe;
-  dt_dev_detail_mask_t *details = &pipe->scharr;
+    dt_dev_pixelpipe_t *pipe = piece->pipe;
+    dt_dev_detail_mask_t *details = &pipe->scharr;
 
-  if(!details->data)
-    return NULL;
+    if (!details->data)
+        return NULL;
 
-  const size_t msize = (size_t) details->roi.width * details->roi.height;
-  float *tmp = dt_alloc_align_float(msize);
-  float *mask = dt_alloc_align_float(msize);
-  if(!tmp || !mask)
-  {
+    const size_t msize = (size_t)details->roi.width * details->roi.height;
+    float *tmp = dt_alloc_align_float(msize);
+    float *mask = dt_alloc_align_float(msize);
+    if (!tmp || !mask)
+    {
+        dt_free_align(tmp);
+        dt_free_align(mask);
+        return NULL;
+    }
+
+    dt_masks_calc_detail_blend(details->data, tmp, msize, threshold, detail);
+    dt_gaussian_fast_blur(tmp, mask, details->roi.width, details->roi.height, 2.0f, 0.0f, 1.0f, 1);
     dt_free_align(tmp);
-    dt_free_align(mask);
-    return NULL;
-  }
-
-  dt_masks_calc_detail_blend(details->data, tmp, msize, threshold, detail);
-  dt_gaussian_fast_blur(tmp, mask, details->roi.width, details->roi.height, 2.0f, 0.0f, 1.0f, 1);
-  dt_free_align(tmp);
-  return mask;
+    return mask;
 }
-
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

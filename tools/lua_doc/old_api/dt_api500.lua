@@ -5824,4 +5824,3 @@ API["darktable"]["gui"]["libs"]["print_settings"].__attributes["parent"] = API["
 API["types"]["dt_lua_lib_t"] = API["darktable"]["register_lib"].__attributes["signature"]["7"].__attributes["signature"]["1"].__attributes["reported_type"]
 return API
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

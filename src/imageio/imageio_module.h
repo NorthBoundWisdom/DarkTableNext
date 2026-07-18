@@ -36,13 +36,12 @@
 
 G_BEGIN_DECLS
 
-
 /** Flag for the format modules */
 typedef enum dt_imageio_format_flags_t
 {
-  FORMAT_FLAGS_SUPPORT_XMP = 1,
-  FORMAT_FLAGS_NO_TMPFILE = 2,
-  FORMAT_FLAGS_SUPPORT_LAYERS = 4
+    FORMAT_FLAGS_SUPPORT_XMP = 1,
+    FORMAT_FLAGS_NO_TMPFILE = 2,
+    FORMAT_FLAGS_SUPPORT_LAYERS = 4
 } dt_imageio_format_flags_t;
 
 /**
@@ -60,10 +59,10 @@ typedef enum dt_imageio_format_flags_t
  */
 typedef struct dt_imageio_module_data_t
 {
-  int max_width, max_height;
-  int width, height;
-  char style[128];
-  gboolean style_append;
+    int max_width, max_height;
+    int width, height;
+    char style[128];
+    gboolean style_append;
 } dt_imageio_module_data_t;
 
 struct dt_imageio_module_format_t;
@@ -71,54 +70,52 @@ struct dt_dev_pixelpipe_t;
 /* responsible for image encoding, such as jpg,png,etc */
 typedef struct dt_imageio_module_format_t
 {
-  dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
+    dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
 
 #define INCLUDE_API_FROM_MODULE_H
 #include "imageio/format/imageio_format_api.h"
 
-  // office use only:
-  char plugin_name[128];
-  GModule *module;
+    // office use only:
+    char plugin_name[128];
+    GModule *module;
 
-  // gui stuff:
-  GtkWidget *widget;
+    // gui stuff:
+    GtkWidget *widget;
 
-  // data for you to initialize
-  void *gui_data;
+    // data for you to initialize
+    void *gui_data;
 
-  luaA_Type parameter_lua_type;
+    luaA_Type parameter_lua_type;
 
-  gboolean ready;
+    gboolean ready;
 } dt_imageio_module_format_t;
-
 
 /* responsible for image storage, such as flickr, harddisk, etc */
 typedef struct dt_imageio_module_storage_t
 {
-  dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
+    dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
 
 #define INCLUDE_API_FROM_MODULE_H
 #include "imageio/storage/imageio_storage_api.h"
 
-  // office use only:
-  char plugin_name[128];
-  GModule *module;
+    // office use only:
+    char plugin_name[128];
+    GModule *module;
 
-  // gui stuff:
-  GtkWidget *widget;
+    // gui stuff:
+    GtkWidget *widget;
 
-  // data for you to initialize
-  void *gui_data;
+    // data for you to initialize
+    void *gui_data;
 
-  luaA_Type parameter_lua_type;
+    luaA_Type parameter_lua_type;
 } dt_imageio_module_storage_t;
-
 
 /* main struct */
 typedef struct dt_imageio_t
 {
-  GList *plugins_format;
-  GList *plugins_storage;
+    GList *plugins_format;
+    GList *plugins_storage;
 } dt_imageio_t;
 
 /* load all modules */
@@ -155,9 +152,3 @@ void dt_imageio_remove_storage(dt_imageio_module_storage_t *storage);
 gchar *dt_imageio_resizing_factor_get_and_parsing(double *num, double *denum);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

@@ -32,81 +32,84 @@ DT_MODULE(1)
 // FIXME: we can't rely on darktable to avoid file overwriting -- it doesn't know the filename (extension).
 int write_image(dt_imageio_module_data_t *data, const char *filename, const void *in,
                 dt_colorspaces_color_profile_type_t over_type, const char *over_filename,
-                void *exif, int exif_len, dt_imgid_t imgid, int num, int total, dt_dev_pixelpipe_t *pipe,
-                const gboolean export_masks)
+                void *exif, int exif_len, dt_imgid_t imgid, int num, int total,
+                dt_dev_pixelpipe_t *pipe, const gboolean export_masks)
 {
-  int status = 1;
-  gboolean from_cache = TRUE;
-  char sourcefile[PATH_MAX];
-  char *targetfile = NULL;
-  char *xmpfile = NULL;
+    int status = 1;
+    gboolean from_cache = TRUE;
+    char sourcefile[PATH_MAX];
+    char *targetfile = NULL;
+    char *xmpfile = NULL;
 
-  dt_image_full_path(imgid, sourcefile, sizeof(sourcefile), &from_cache);
+    dt_image_full_path(imgid, sourcefile, sizeof(sourcefile), &from_cache);
 
-  char *extension = g_strrstr(sourcefile, ".");
-  if(extension == NULL) goto END;
-  targetfile = g_strconcat(filename, ++extension, NULL);
+    char *extension = g_strrstr(sourcefile, ".");
+    if (extension == NULL)
+        goto END;
+    targetfile = g_strconcat(filename, ++extension, NULL);
 
-  if(!strcmp(sourcefile, targetfile)) goto END;
+    if (!strcmp(sourcefile, targetfile))
+        goto END;
 
-  dt_copy_file(sourcefile, targetfile);
+    dt_copy_file(sourcefile, targetfile);
 
-  // we got a copy of the file, now write the xmp data
-  xmpfile = g_strconcat(targetfile, ".xmp", NULL);
-  if(dt_exif_xmp_write(imgid, xmpfile, FALSE) != 0)
-  {
-    // something went wrong, unlink the copied image.
-    g_unlink(targetfile);
-    goto END;
-  }
+    // we got a copy of the file, now write the xmp data
+    xmpfile = g_strconcat(targetfile, ".xmp", NULL);
+    if (dt_exif_xmp_write(imgid, xmpfile, FALSE) != 0)
+    {
+        // something went wrong, unlink the copied image.
+        g_unlink(targetfile);
+        goto END;
+    }
 
-  status = 0;
+    status = 0;
 END:
-  g_free(targetfile);
-  g_free(xmpfile);
-  return status;
+    g_free(targetfile);
+    g_free(xmpfile);
+    return status;
 }
 
 size_t params_size(dt_imageio_module_format_t *self)
 {
-  return sizeof(dt_imageio_module_data_t);
+    return sizeof(dt_imageio_module_data_t);
 }
 
 void *get_params(dt_imageio_module_format_t *self)
 {
-  dt_imageio_module_data_t *d = calloc(1, sizeof(dt_imageio_module_data_t));
-  return d;
+    dt_imageio_module_data_t *d = calloc(1, sizeof(dt_imageio_module_data_t));
+    return d;
 }
 
 void free_params(dt_imageio_module_format_t *self, dt_imageio_module_data_t *params)
 {
-  free(params);
+    free(params);
 }
 
 int set_params(dt_imageio_module_format_t *self, const void *params, const int size)
 {
-  if(size != self->params_size(self)) return 1;
-  return 0;
+    if (size != self->params_size(self))
+        return 1;
+    return 0;
 }
 
 int bpp(dt_imageio_module_data_t *p)
 {
-  return 0;
+    return 0;
 }
 
 const char *mime(dt_imageio_module_data_t *data)
 {
-  return "x-copy";
+    return "x-copy";
 }
 
 const char *extension(dt_imageio_module_data_t *data)
 {
-  return "";
+    return "";
 }
 
 const char *name()
 {
-  return _("copy");
+    return _("copy");
 }
 
 void init(dt_imageio_module_format_t *self)
@@ -118,10 +121,12 @@ void cleanup(dt_imageio_module_format_t *self)
 
 void gui_init(dt_imageio_module_format_t *self)
 {
-  self->widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    self->widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-  gtk_container_add(GTK_CONTAINER(self->widget),
-    dt_ui_label_new(_("do a 1:1 copy of the selected files.\nthe global options below do not apply!")));
+    gtk_container_add(
+        GTK_CONTAINER(self->widget),
+        dt_ui_label_new(
+            _("do a 1:1 copy of the selected files.\nthe global options below do not apply!")));
 }
 void gui_cleanup(dt_imageio_module_format_t *self)
 {
@@ -129,10 +134,3 @@ void gui_cleanup(dt_imageio_module_format_t *self)
 void gui_reset(dt_imageio_module_format_t *self)
 {
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

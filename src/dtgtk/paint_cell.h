@@ -24,15 +24,14 @@
 G_BEGIN_DECLS
 
 #define DTGTK_TYPE_PAINT_CELL dtgtk_paint_cell_get_type()
-G_DECLARE_FINAL_TYPE(GtkDarktablePaintCell, dtgtk_paint_cell,
-                     DTGTK, PAINT_CELL, GtkCellRenderer)
+G_DECLARE_FINAL_TYPE(GtkDarktablePaintCell, dtgtk_paint_cell, DTGTK, PAINT_CELL, GtkCellRenderer)
 
 struct _GtkDarktablePaintCell
 {
-  GtkCellRenderer parent;
-  DTGTKCairoPaintIconFunc paint;
-  gint paint_flags;
-  void *paint_data;
+    GtkCellRenderer parent;
+    DTGTKCairoPaintIconFunc paint;
+    gint paint_flags;
+    void *paint_data;
 };
 
 /** Cell renderer that draws a dtgtk cairo paint function directly
@@ -43,14 +42,7 @@ struct _GtkDarktablePaintCell
  *  Visibility is controlled via the standard GtkCellRenderer "visible"
  *  property, typically bound to a model column via
  *  gtk_tree_view_column_new_with_attributes(..., "visible", COL, NULL). */
-GtkCellRenderer *dtgtk_paint_cell_new(DTGTKCairoPaintIconFunc paint,
-                                      gint paint_flags,
+GtkCellRenderer *dtgtk_paint_cell_new(DTGTKCairoPaintIconFunc paint, gint paint_flags,
                                       void *paint_data);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

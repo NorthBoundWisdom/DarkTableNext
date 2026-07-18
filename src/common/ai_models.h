@@ -26,12 +26,12 @@
  */
 typedef enum dt_ai_model_status_t
 {
-  DT_AI_MODEL_NOT_DOWNLOADED = 0,
-  DT_AI_MODEL_DOWNLOADING,
-  DT_AI_MODEL_DOWNLOADED,
-  DT_AI_MODEL_UPDATE_AVAILABLE,
-  DT_AI_MODEL_UPDATE_REQUIRED,
-  DT_AI_MODEL_ERROR,
+    DT_AI_MODEL_NOT_DOWNLOADED = 0,
+    DT_AI_MODEL_DOWNLOADING,
+    DT_AI_MODEL_DOWNLOADED,
+    DT_AI_MODEL_UPDATE_AVAILABLE,
+    DT_AI_MODEL_UPDATE_REQUIRED,
+    DT_AI_MODEL_ERROR,
 } dt_ai_model_status_t;
 
 /**
@@ -39,23 +39,23 @@ typedef enum dt_ai_model_status_t
  */
 typedef struct dt_ai_model_t
 {
-  char *id;              // Unique identifier (e.g. "mask-object-segnext-b2hq")
-  char *name;            // Display name
-  char *description;     // Short description
-  char *task;            // Task type: "denoise", "upscale", etc.
-  char *github_asset;    // Asset filename in GitHub release
-  char *checksum;        // checksum string, format "<algo>:<hex>"
+    char *id;            // Unique identifier (e.g. "mask-object-segnext-b2hq")
+    char *name;          // Display name
+    char *description;   // Short description
+    char *task;          // Task type: "denoise", "upscale", etc.
+    char *github_asset;  // Asset filename in GitHub release
+    char *checksum;      // checksum string, format "<algo>:<hex>"
                          // (today only "sha256:..." is produced by the
                          // GitHub asset digest API; parser tolerates
                          // other algos but only sha256 is verified)
-  char *version;         // actual version from model's config.json
-  char *min_version;     // minimum required version from registry
-  char *spatial_dim_h;   // symbolic name of height dimension (default "height")
-  char *spatial_dim_w;   // symbolic name of width dimension (default "width")
-  gboolean is_default;   // TRUE if model is a default model for its task
-  gboolean enabled;      // User preference (stored in darktablerc)
-  dt_ai_model_status_t status;
-  double download_progress;  // 0.0 to 1.0 during download
+    char *version;       // actual version from model's config.json
+    char *min_version;   // minimum required version from registry
+    char *spatial_dim_h; // symbolic name of height dimension (default "height")
+    char *spatial_dim_w; // symbolic name of width dimension (default "width")
+    gboolean is_default; // TRUE if model is a default model for its task
+    gboolean enabled;    // User preference (stored in darktablerc)
+    dt_ai_model_status_t status;
+    double download_progress; // 0.0 to 1.0 during download
 } dt_ai_model_t;
 
 /**
@@ -64,8 +64,7 @@ typedef struct dt_ai_model_t
  * @param progress Download progress 0.0 to 1.0
  * @param user_data User-provided data
  */
-typedef void (*dt_ai_progress_callback)(const char *model_id,
-                                        const double progress,
+typedef void (*dt_ai_progress_callback)(const char *model_id, const double progress,
                                         gpointer user_data);
 
 // The AI models registry is a per-session singleton owned by
@@ -210,10 +209,8 @@ char *dt_ai_models_install_local(const char *filepath);
  * @param cancel_flag Pointer to boolean checked for cancellation (may be NULL)
  * @return Error message (caller must free) or NULL on success
  */
-char *dt_ai_models_download_sync(const char *model_id,
-                                 dt_ai_progress_callback callback,
-                                 gpointer user_data,
-                                 const gboolean *cancel_flag);
+char *dt_ai_models_download_sync(const char *model_id, dt_ai_progress_callback callback,
+                                 gpointer user_data, const gboolean *cancel_flag);
 
 /**
  * @brief Download a specific model (convenience wrapper)
@@ -222,8 +219,7 @@ char *dt_ai_models_download_sync(const char *model_id,
  * @param user_data Data for callback
  * @return TRUE on success
  */
-gboolean dt_ai_models_download(const char *model_id,
-                               dt_ai_progress_callback callback,
+gboolean dt_ai_models_download(const char *model_id, dt_ai_progress_callback callback,
                                gpointer user_data);
 
 /**
@@ -232,8 +228,7 @@ gboolean dt_ai_models_download(const char *model_id,
  * @param user_data Data for callback
  * @return TRUE if downloads started successfully
  */
-gboolean dt_ai_models_download_default(dt_ai_progress_callback callback,
-                                       gpointer user_data);
+gboolean dt_ai_models_download_default(dt_ai_progress_callback callback, gpointer user_data);
 
 /**
  * @brief Download all models (runs in background)
@@ -241,8 +236,7 @@ gboolean dt_ai_models_download_default(dt_ai_progress_callback callback,
  * @param user_data Data for callback
  * @return TRUE if downloads started successfully
  */
-gboolean dt_ai_models_download_all(dt_ai_progress_callback callback,
-                                   gpointer user_data);
+gboolean dt_ai_models_download_all(dt_ai_progress_callback callback, gpointer user_data);
 #endif /* HAVE_AI_DOWNLOAD */
 
 /**
@@ -318,9 +312,7 @@ char *dt_ai_models_get_path(const char *model_id);
  * @param out_h Output: height dimension name (never NULL; points to static default if unset)
  * @param out_w Output: width dimension name (never NULL; points to static default if unset)
  */
-void dt_ai_models_get_spatial_dims(const char *model_id,
-                                   const char **out_h,
-                                   const char **out_w);
+void dt_ai_models_get_spatial_dims(const char *model_id, const char **out_h, const char **out_w);
 
 /**
  * @brief Model card — provenance and transparency info read
@@ -329,16 +321,16 @@ void dt_ai_models_get_spatial_dims(const char *model_id,
  */
 typedef struct dt_ai_model_card_t
 {
-  char *name;
-  char *long_description;
-  char *scope;
-  char *author;
-  char *source;
-  char *paper;
-  char *license;
-  char *training_data;
-  char *training_data_license;
-  char *notes;
+    char *name;
+    char *long_description;
+    char *scope;
+    char *author;
+    char *source;
+    char *paper;
+    char *license;
+    char *training_data;
+    char *training_data_license;
+    char *notes;
 } dt_ai_model_card_t;
 
 /**

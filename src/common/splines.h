@@ -25,18 +25,13 @@ extern "C"
 
 #include "curve_tools.h"
 
-  float interpolate_val_V2(int n, CurveAnchorPoint Points[], float x, unsigned int type);
-  float interpolate_val_V2_periodic(int n, CurveAnchorPoint Points[], float x, unsigned int type, float period);
+    float interpolate_val_V2(int n, CurveAnchorPoint Points[], float x, unsigned int type);
+    float interpolate_val_V2_periodic(int n, CurveAnchorPoint Points[], float x, unsigned int type,
+                                      float period);
 
-  int CurveDataSampleV2(CurveData *curve, CurveSample *sample);
-  int CurveDataSampleV2Periodic(CurveData *curve, CurveSample *sample);
+    int CurveDataSampleV2(CurveData *curve, CurveSample *sample);
+    int CurveDataSampleV2Periodic(CurveData *curve, CurveSample *sample);
 
 #if defined(__cplusplus)
 }
 #endif
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

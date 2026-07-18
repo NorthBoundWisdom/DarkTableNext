@@ -21,22 +21,11 @@
 #include "common/color_harmony.h"
 #include "scopes.h"
 
-void dt_vec_get_harmony(dt_scopes_mode_t *mode,
-                        dt_color_harmony_guide_t *guide);
-void dt_vec_set_harmony(dt_scopes_mode_t *mode,
-                        const dt_color_harmony_guide_t *guide);
-void dt_vec_set_vectorscope_type(dt_scopes_mode_t *mode,
-                                 const int type);
-void dt_vec_get_sector_angles(const dt_color_harmony_type_t type,
-                              const int rotation,
-                              float *angles,
+void dt_vec_get_harmony(dt_scopes_mode_t *mode, dt_color_harmony_guide_t *guide);
+void dt_vec_set_harmony(dt_scopes_mode_t *mode, const dt_color_harmony_guide_t *guide);
+void dt_vec_set_vectorscope_type(dt_scopes_mode_t *mode, const int type);
+void dt_vec_get_sector_angles(const dt_color_harmony_type_t type, const int rotation, float *angles,
                               int *n);
 void dt_vec_set_harmony_changed_callback(dt_scopes_mode_t *mode,
                                          void (*cb)(const dt_color_harmony_guide_t *, void *),
                                          void *user_data);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

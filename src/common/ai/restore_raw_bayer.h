@@ -38,7 +38,7 @@
 #include <stdint.h>
 
 #include "common/ai/restore.h"
-#include "common/image.h"  // for dt_imgid_t
+#include "common/image.h" // for dt_imgid_t
 
 struct dt_image_t;
 struct _dt_job_t;
@@ -62,14 +62,9 @@ struct _dt_job_t;
 //                 tile postprocess so tile boundaries stay seamless.
 // @param control_job job handle for progress/cancellation (NULL-safe)
 // @return 0 on success
-int dt_restore_raw_bayer(dt_restore_context_t *ctx,
-                         const struct dt_image_t *img,
-                         const float *cfa_in,
-                         int width,
-                         int height,
-                         uint16_t *cfa_out,
-                         float strength,
-                         struct _dt_job_t *control_job);
+int dt_restore_raw_bayer(dt_restore_context_t *ctx, const struct dt_image_t *img,
+                         const float *cfa_in, int width, int height, uint16_t *cfa_out,
+                         float strength, struct _dt_job_t *control_job);
 
 // @brief Bayer preview through darktable's real pixelpipe — "preview = batch".
 //
@@ -112,23 +107,8 @@ int dt_restore_raw_bayer(dt_restore_context_t *ctx,
 //                          buffers share these dims).
 // @param out_h             receives actual rendered height.
 // @return 0 on success; both outputs NULL on failure.
-int dt_restore_raw_bayer_preview_piped(dt_restore_context_t *ctx,
-                                       const struct dt_image_t *img,
-                                       dt_imgid_t imgid,
-                                       const float *cfa_full,
-                                       int width,
-                                       int height,
-                                       int crop_x,
-                                       int crop_y,
-                                       int crop_w,
-                                       int crop_h,
-                                       float **out_before_rgb,
-                                       float **out_denoised_rgb,
-                                       int *out_w,
+int dt_restore_raw_bayer_preview_piped(dt_restore_context_t *ctx, const struct dt_image_t *img,
+                                       dt_imgid_t imgid, const float *cfa_full, int width,
+                                       int height, int crop_x, int crop_y, int crop_w, int crop_h,
+                                       float **out_before_rgb, float **out_denoised_rgb, int *out_w,
                                        int *out_h);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

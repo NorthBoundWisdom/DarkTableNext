@@ -82,7 +82,6 @@ FILE(GLOB SOURCE_FILES
   "common/pdf.c"
   "common/pfm.c"
   "common/presets.c"
-  "common/pwstorage/backend_kwallet.c"
   "common/pwstorage/pwstorage.c"
   "common/ras2vect.c"
   "common/ratings.c"
@@ -177,69 +176,10 @@ FILE(GLOB SOURCE_FILES
 
 FILE(GLOB HEADER_FILES "*.h" "common/*.h" "${OPENCL_PATH}/CL/*.h" "control/*.h" "iop/*.h" "libs/*.h" "views/*.h")
 
-if(APPLE)
-  list(APPEND SOURCE_FILES "osx/osx.mm")
-  list(APPEND HEADER_FILES "osx/osx.h")
-  list(APPEND SOURCE_FILES "common/pwstorage/backend_apple_keychain.c")
-  list(APPEND HEADER_FILES "common/pwstorage/backend_apple_keychain.h")
-  list(APPEND SOURCE_FILES "main.c")
-  include(CheckLanguage)
-  check_language(OBJCXX)
-  if(CMAKE_OBJCXX_COMPILER)
-    enable_language(OBJCXX)
-  else()
-    set_source_files_properties(osx/osx.mm PROPERTIES LANGUAGE CXX)
-  endif()
-endif(APPLE)
-
-if(WIN32)
-  list(APPEND SOURCE_FILES "win/strptime.c")
-  list(APPEND HEADER_FILES "win/strptime.h")
-  list(APPEND SOURCE_FILES "win/statvfs.c")
-  list(APPEND HEADER_FILES "win/statvfs.h")
-
-  list(APPEND SOURCE_FILES "win/getrusage.c")
-  list(APPEND HEADER_FILES "win/getrusage.h")
-
-  list(APPEND SOURCE_FILES "win/rlimit.c")
-  list(APPEND HEADER_FILES "win/rlimit.h")
-
-  list(APPEND SOURCE_FILES "win/getdelim.c")
-  list(APPEND HEADER_FILES "win/getdelim.h")
-
-  list(APPEND SOURCE_FILES "win/dtwin.c")
-  list(APPEND HEADER_FILES "win/dtwin.h")
-
-  list(APPEND SOURCE_FILES "win/filepath.c")
-  list(APPEND HEADER_FILES "win/filepath.h")
-
-  list(APPEND SOURCE_FILES "win/scandir.c")
-  list(APPEND HEADER_FILES "win/scandir.h")
-
-  list(APPEND SOURCE_FILES "common/pwstorage/backend_windows_credentials.c")
-  list(APPEND HEADER_FILES "common/pwstorage/backend_windows_credentials.h")
-
-  # Use mingw's sprintf instead of windows's
-  ADD_DEFINITIONS( -D__USE_MINGW_ANSI_STDIO=1 )
-
-  # add it to have proper time.h functions available
-  ADD_DEFINITIONS(-D_POSIX_THREAD_SAFE_FUNCTIONS)
-
-  # avoid calling legacy ANSI win api functions
-  add_definitions("-DUNICODE -D_UNICODE")
-
-  # add icon, version, ... resources for Windows executable
-  configure_file("${CMAKE_SOURCE_DIR}/data/pixmaps/dt_logo_128x128.ico" "${CMAKE_BINARY_DIR}/data/pixmaps/dt_logo_128x128.ico" COPYONLY)
-  SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-  set(RESOURCE_OBJECT "${CMAKE_CURRENT_BINARY_DIR}/win/darktable.rc")
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/win/darktable.rc.in" "${CMAKE_CURRENT_BINARY_DIR}/win/darktable.rc")
-endif(WIN32)
+list(APPEND SOURCE_FILES "osx/osx.c" "common/pwstorage/backend_apple_keychain.c" "main.c")
+list(APPEND HEADER_FILES "osx/osx.h" "common/pwstorage/backend_apple_keychain.h")
 
 set(SOURCES ${SOURCE_FILES} ${HEADER_FILES})
-
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ppc64le)
-endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/external)
@@ -248,7 +188,7 @@ include_directories(SYSTEM ${OPENCL_PATH})
 # initial compiler flags
 add_definitions("-DHAVE_CONFIG_H")
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
@@ -256,15 +196,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(APPLE AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
         list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_LINK_LIBRARIES stdc++)
         list(APPEND CMAKE_CXX_IMPLICIT_LINK_LIBRARIES c++)
         list(REMOVE_DUPLICATES CMAKE_CXX_IMPLICIT_LINK_LIBRARIES)
-        # Also remove incorrectly parsed -lto_library flag
-        # It wasn't present with Xcode 7.2 and appeared before 8.3 release
-        # cmake 3.7.2 doesn't understand this flag and thinks it's a library
-        list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_LINK_LIBRARIES to_library)
 endif()
 
 # Append thread flags/libraries to LIBS
@@ -273,25 +209,23 @@ list(APPEND LIBS "${CMAKE_THREAD_LIBS_INIT}")
 # Need to explicitly link against math library.
 list(APPEND LIBS "-lm")
 
-if(USE_OPENMP)
-  if(OpenMP_C_FLAGS)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  endif()
+if(OpenMP_C_FLAGS)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+endif()
 
-  if(OpenMP_CXX_FLAGS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-  endif()
+if(OpenMP_CXX_FLAGS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
-  if(OpenMP_C_INCLUDE_DIRS)
-    include_directories(${OpenMP_C_INCLUDE_DIRS})
-  endif()
+if(OpenMP_C_INCLUDE_DIRS)
+  include_directories(${OpenMP_C_INCLUDE_DIRS})
+endif()
 
-  if(OpenMP_CXX_INCLUDE_DIRS)
-    include_directories(${OpenMP_CXX_INCLUDE_DIRS})
-  endif()
+if(OpenMP_CXX_INCLUDE_DIRS)
+  include_directories(${OpenMP_CXX_INCLUDE_DIRS})
+endif()
 
-  list(APPEND LIBS ${OpenMP_C_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
-endif(USE_OPENMP)
+list(APPEND LIBS ${OpenMP_C_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 
 if(USE_DARKTABLE_PROFILING)
 	add_definitions(-DUSE_DARKTABLE_PROFILING)
@@ -342,18 +276,28 @@ endif(USE_CAMERA_SUPPORT)
 
 # Used for 16-bit (half) float TIFF export (and faster import)
 # (IlmBase Half library in 2.5 and earlier and Imath 3.0 did not have C API)
-find_package(Imath 3.1 CONFIG)
-if(TARGET Imath::Imath)
+if(DARKTABLE_MANAGED_CPP_DEPENDENCIES)
   list(APPEND LIBS Imath::Imath)
   add_compile_definitions(HAVE_IMATH)
+else()
+  find_package(Imath 3.1 CONFIG)
+  if(TARGET Imath::Imath)
+    list(APPEND LIBS Imath::Imath)
+    add_compile_definitions(HAVE_IMATH)
+  endif()
 endif()
 
 if(USE_OPENEXR)
-  find_package(OpenEXR 3.0 CONFIG)
-  if(TARGET OpenEXR::OpenEXR)
+  if(DARKTABLE_MANAGED_CPP_DEPENDENCIES)
+    set(OpenEXR_FOUND TRUE)
     set(OpenEXR_LIBRARIES OpenEXR::OpenEXR)
   else()
-    find_package(OpenEXR)
+    find_package(OpenEXR 3.0 CONFIG)
+    if(TARGET OpenEXR::OpenEXR)
+      set(OpenEXR_LIBRARIES OpenEXR::OpenEXR)
+    else()
+      find_package(OpenEXR)
+    endif()
   endif()
   if(OpenEXR_FOUND)
     include_directories(SYSTEM ${OpenEXR_INCLUDE_DIRS})
@@ -423,7 +367,8 @@ if(USE_HEIF)
   endif()
 endif()
 
-# For now we use the LibRaw submodule
+# LibRaw is provided by the pinned FreeCM source root unless a suitable system
+# library is explicitly requested.
 if(USE_LIBRAW)
   if(DONT_USE_INTERNAL_LIBRAW)
     find_package(libraw 0.21.0)
@@ -515,15 +460,20 @@ if(USE_AI)
   endif()
 endif(USE_AI)
 
-# Require exiv2 >= 0.27.2 to make sure everything we need is available
-find_package(Exiv2 0.27.2 REQUIRED)
-include_directories(SYSTEM ${Exiv2_INCLUDE_DIRS})
+# Require Exiv2 0.28 or newer.
+if(DARKTABLE_MANAGED_CPP_DEPENDENCIES)
+  set(Exiv2_VERSION "0.28.8")
+  set(Exiv2_INCLUDE_DIRS "${DARKTABLE_MANAGED_EXIV2_INCLUDE_DIR}")
+  set(Exiv2_LIBRARIES Exiv2::exiv2lib)
+  set(EXIV2_CONFIG_HEADER "${DARKTABLE_MANAGED_EXIV2_CONFIG_HEADER}")
+  include_directories(SYSTEM "${DARKTABLE_MANAGED_EXIV2_INCLUDE_DIR}" "${CMAKE_BINARY_DIR}")
+else()
+  find_package(Exiv2 0.28.0 REQUIRED)
+  set(EXIV2_CONFIG_HEADER "${Exiv2_INCLUDE_DIRS}/exiv2/exv_conf.h")
+  include_directories(SYSTEM ${Exiv2_INCLUDE_DIRS})
+endif()
 list(APPEND LIBS ${Exiv2_LIBRARIES})
 add_definitions(${Exiv2_DEFINITIONS})
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND Exiv2_VERSION VERSION_LESS "0.28.0")
-  add_compile_definitions(_LIBCPP_ENABLE_CXX17_REMOVED_AUTO_PTR)
-endif()
-
 # Optionally enable ISOBMFF support in Exiv2
 if (USE_ISOBMFF)
   if(Exiv2_VERSION VERSION_GREATER_EQUAL "0.27.4")
@@ -531,7 +481,7 @@ if (USE_ISOBMFF)
     # This must be manually enabled during exiv2 build and can be checked with
     # the EXV_ENABLE_BMFF symbol.
     check_symbol_exists(EXV_ENABLE_BMFF
-      "${Exiv2_INCLUDE_DIRS}/exiv2/exv_conf.h"
+      "${EXIV2_CONFIG_HEADER}"
       HAVE_EXV_ENABLE_BMFF)
     if(HAVE_EXV_ENABLE_BMFF)
       set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} cr3 CACHE INTERNAL "")
@@ -570,36 +520,7 @@ endif(IsoCodes_FOUND)
 #
 # Detect compile of optional pwstorage backends
 #
-if(USE_LIBSECRET AND JsonGlib_FOUND)
-  find_package(Libsecret)
-  if(Libsecret_FOUND)
-    if(Libsecret_VERSION VERSION_LESS "0.16")
-      message(STATUS "Found libsecret version ${Libsecret_VERSION}. You need at least libsecret 0.16 or newer.")
-      set(Libsecret_FOUND FALSE)
-    else()
-      if(Libsecret_VERSION VERSION_LESS "0.18")
-        message(STATUS "Found libsecret version ${Libsecret_VERSION}. Enable unstable API. Please upgrade to version 0.18 or newer.")
-        add_definitions("-DSECRET_API_SUBJECT_TO_CHANGE")
-      endif()
-      set(SOURCES ${SOURCES} "common/pwstorage/backend_libsecret.c")
-      include_directories(SYSTEM ${Libsecret_INCLUDE_DIRS})
-      list(APPEND LIBS ${Libsecret_LIBRARIES})
-      add_definitions("-DHAVE_LIBSECRET")
-    endif()
-  endif(Libsecret_FOUND)
-endif(USE_LIBSECRET AND JsonGlib_FOUND)
-
-if(USE_KWALLET)
-  add_definitions("-DHAVE_KWALLET")
-endif(USE_KWALLET)
-
-if(APPLE)
-  add_definitions("-DHAVE_APPLE_KEYCHAIN")
-endif(APPLE)
-
-if(WIN32)
-  add_definitions("-DHAVE_WINDOWS_CREDENTIALS")
-endif(WIN32)
+add_definitions("-DHAVE_APPLE_KEYCHAIN")
 
 if(USE_MAC_INTEGRATION)
   find_package(MacIntegration)
@@ -615,15 +536,6 @@ if(USE_MAC_INTEGRATION)
     endif()
   endif(MacIntegration_FOUND)
 endif(USE_MAC_INTEGRATION)
-
-if(USE_UNITY)
-  find_package(Unity)
-  if(Unity_FOUND)
-    add_definitions(-DHAVE_UNITY)
-    include_directories(SYSTEM ${Unity_INCLUDE_DIRS})
-    list(APPEND LIBS ${Unity_LIBRARIES})
-  endif(Unity_FOUND)
-endif(USE_UNITY)
 
 if(USE_GRAPHICSMAGICK)
   find_package(GraphicsMagick)
@@ -715,35 +627,13 @@ if(NOT CUSTOM_CFLAGS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
-  if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g3 -ggdb3")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fexpensive-optimizations")
-  else()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
-  endif()
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3 -ggdb3")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fexpensive-optimizations")
-  else()
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-  endif()
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 endif(NOT CUSTOM_CFLAGS)
-
-if(WIN32)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-runtime-pseudo-reloc -municode")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--enable-runtime-pseudo-reloc")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--enable-runtime-pseudo-reloc")
-
-  SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "-Wl,--no-undefined -static-libgcc -Wl,-O1 -Wl,--as-needed -Wl,--sort-common")
-  SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "-Wl,--no-undefined -static-libgcc -Wl,-O1 -Wl,--as-needed -Wl,--sort-common")
-
-  list(APPEND LIBS psapi) # Needed for GetProcessMemoryInfo()
-  list(APPEND LIBS exchndl) # Needed for exception handling and backtrace()
-endif(WIN32)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
@@ -834,12 +724,10 @@ if(USE_LUA)
     list(APPEND LIB_DEPS lua) # 2nd half of the ugliness :/
   endif(NOT Lua54_FOUND)
   # liblautoc for lua automated interface generation
-  add_library(lautoc_static STATIC IMPORTED)
-  set_target_properties(lautoc_static PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/LuaAutoC/liblautoc.a POSITION_INDEPENDENT_CODE True)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/LuaAutoC/)
   add_subdirectory(external/LuaAutoC)
   list(APPEND LIB_DEPS lautoc)
-  list(APPEND STATIC_LIBS lautoc_static)
+  list(APPEND STATIC_LIBS lautoc)
 endif(USE_LUA)
 
 find_package(Pugixml 1.5 REQUIRED)
@@ -850,8 +738,9 @@ if(NOT SOURCE_PACKAGE)
   add_definitions(-Werror -Wfatal-errors )
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  # do not error out on "loop not vectorized" clang OpenMP warnings
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-Wno-error=pass-failed" DT_CXX_HAS_NO_ERROR_PASS_FAILED)
+if(DT_CXX_HAS_NO_ERROR_PASS_FAILED)
   add_definitions("-Wno-error=pass-failed")
 endif()
 
@@ -908,7 +797,12 @@ endif(USE_COLORD)
 if(BUILD_PRINT)
   find_package(Cups)
   if(CUPS_FOUND)
-    include_directories(SYSTEM ${CUPS_INCLUDE_DIR})
+    # The macOS SDK is already searched through the compiler sysroot. Adding
+    # its include root explicitly shadows Clang's builtin headers when using
+    # the current Homebrew LLVM toolchain.
+    if(NOT APPLE)
+      include_directories(SYSTEM ${CUPS_INCLUDE_DIR})
+    endif()
     FILE(GLOB SOURCE_FILES_PRINT
       "common/cups_print.h"
       "common/cups_print.c"
@@ -928,12 +822,19 @@ else(BUILD_PRINT)
   message(STATUS "Print mode: disabled")
 endif(BUILD_PRINT)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(HAVE_EXECINFO_H)
-    add_definitions("-DDT_HAVE_SIGNAL_TRACE")
-    message(STATUS "Signal debug: print-trace possible")
-  endif(HAVE_EXECINFO_H)
-endif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# macOS system headers are supplied by the compiler sysroot. Third-party CMake
+# find modules occasionally add the SDK root as an explicit include directory;
+# that puts it ahead of Homebrew LLVM's builtin headers and breaks C++ OpenMP.
+if(APPLE)
+  get_directory_property(DT_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
+  list(FILTER DT_INCLUDE_DIRECTORIES EXCLUDE REGEX "/SDKs/MacOSX[^/]*/usr/include$")
+  set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES "${DT_INCLUDE_DIRECTORIES}")
+endif()
+
+if(HAVE_EXECINFO_H)
+  add_definitions("-DDT_HAVE_SIGNAL_TRACE")
+  message(STATUS "Signal debug: print-trace possible")
+endif()
 
 #
 # set development flags for our code
@@ -1022,20 +923,8 @@ add_dependencies(lib_darktable generate_styles_string)
 add_dependencies(lib_darktable generate_conf)
 add_dependencies(lib_darktable generate_version)
 add_dependencies(lib_darktable generate_preferences)
-add_dependencies(lib_darktable generate_authors_h)
 
-if(APPLE)
-  set_target_properties(lib_darktable PROPERTIES MACOSX_RPATH TRUE)
-endif(APPLE)
-if(NOT WIN32)
-  # lib_darktable and ONNX Runtime are installed to the same directory
-  # (${CMAKE_INSTALL_LIBDIR}/darktable/) — set RPATH so the linker finds it
-  set_target_properties(lib_darktable PROPERTIES INSTALL_RPATH "${RPATH_ORIGIN}")
-endif()
-if(WIN32)
-  # Export all symbols on Windows so modules can access library functions
-  set_target_properties(lib_darktable PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-endif(WIN32)
+set_target_properties(lib_darktable PROPERTIES MACOSX_RPATH TRUE INSTALL_RPATH "${RPATH_ORIGIN}")
 set_target_properties(lib_darktable PROPERTIES OUTPUT_NAME darktable)
 set_target_properties(lib_darktable PROPERTIES LINKER_LANGUAGE C)
 
@@ -1062,12 +951,7 @@ target_link_libraries(lib_darktable PRIVATE lib_darktable_imageio_rawspeed)
 #
 # Install lib_darktable
 #
-if(WIN32)
-  # Windows needs its DLLs in the same directory as the executable to find them.
-  install(TARGETS lib_darktable RUNTIME DESTINATION bin COMPONENT DTApplication)
-else(WIN32)
-  install(TARGETS lib_darktable DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable)
-endif(WIN32)
+install(TARGETS lib_darktable DESTINATION ${CMAKE_INSTALL_LIBDIR}/darktable)
 
 # Compile views modules
 add_subdirectory(views ${DARKTABLE_LIBDIR}/views)
@@ -1108,56 +992,22 @@ endif(BUILD_TESTING)
 #
 # build darktable executable
 #
-add_executable(darktable ${SUBSYSTEM_MACOSX} ${SUBSYSTEM_WIN32} main.c ${RESOURCE_OBJECT})
+add_executable(darktable main.c)
 set_target_properties(darktable PROPERTIES LINKER_LANGUAGE C)
-if(APPLE)
-  set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Carbon -framework AppKit -framework Security")
-endif(APPLE)
+set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Security -framework CoreFoundation")
 target_link_libraries(darktable lib_darktable)
-
-if (WIN32)
-  set_target_properties(darktable PROPERTIES LINK_FLAGS "-mconsole -mwindows -Wl,-subsystem,console")
-  _detach_debuginfo (darktable bin)
-  _detach_debuginfo (lib_darktable bin)
-else()
-    set_target_properties(darktable
-                          PROPERTIES
-                          INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
-endif(WIN32)
+set_target_properties(darktable PROPERTIES INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
 
 install(TARGETS darktable DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
 
-InstallDependencyFiles()
-
-# Tell CPack about the components and group the data components together (CPACK_COMPONENT_${COMPONENT_NAME_ALL_CAPS}_GROUP).
-set(CPACK_COMPONENTS_ALL DTApplication DTDebugSymbols DTDocuments)
 
 if(USE_LIBRAW AND NOT (DONT_USE_INTERNAL_LIBRAW AND libraw_FOUND))
-  set(LIBRAW_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/LibRaw" CACHE STRING "Relative path to libraw directory (default=CMAKE_CURRENT_SOURCE_DIR)")
-  if(NOT USE_OPENMP)
-    set(ENABLE_OPENMP OFF CACHE BOOL "")
-  endif()
+  dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)
+  set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
   set(ENABLE_LCMS OFF CACHE BOOL "")
   set(ENABLE_JASPER OFF CACHE BOOL "")
 
-  # LibRaw sub-module
+  # Build LibRaw from its pinned source root.
   add_subdirectory(external/LibRaw-cmake)
   target_link_libraries(lib_darktable PRIVATE libraw::libraw)
 endif()
-
-#
-# generate the authors file
-#
-add_custom_command(
-  DEPENDS ${CMAKE_SOURCE_DIR}/tools/authors_h.sh ${CMAKE_SOURCE_DIR}/AUTHORS
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tools/darktable_authors.h
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/tools/
-  COMMAND bash ${CMAKE_SOURCE_DIR}/tools/authors_h.sh ${CMAKE_SOURCE_DIR}/AUTHORS ${CMAKE_CURRENT_BINARY_DIR}/tools/darktable_authors.h
-  COMMENT "Generating authors.h for about dialog."
-)
-
-add_custom_target(
-  generate_authors_h ALL
-  DEPENDS ${CMAKE_SOURCE_DIR}/tools/authors_h.sh ${CMAKE_SOURCE_DIR}/AUTHORS ${CMAKE_CURRENT_BINARY_DIR}/tools/darktable_authors.h
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)

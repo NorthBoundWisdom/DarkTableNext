@@ -38,7 +38,8 @@ dt_progress_t *dt_control_progress_create(const gboolean has_progress_bar, const
 void dt_control_progress_destroy(dt_progress_t *progress);
 
 /** set a callback to be executed when the progress is being cancelled. */
-void dt_control_progress_make_cancellable(dt_progress_t *progress, dt_progress_cancel_callback_t cancel, void *data);
+void dt_control_progress_make_cancellable(dt_progress_t *progress,
+                                          dt_progress_cancel_callback_t cancel, void *data);
 /** convenience function to cancel a job when the progress gets cancelled. */
 void dt_control_progress_attach_job(dt_progress_t *progress, struct _dt_job_t *job);
 /** cancel the job linked to with dt_control_progress_attach_job(). don't forget to call
@@ -64,10 +65,3 @@ gboolean dt_control_progress_has_progress_bar(dt_progress_t *progress);
 
 /** has a job been linked to the progress object? */
 gboolean dt_control_progress_cancellable(dt_progress_t *progress);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

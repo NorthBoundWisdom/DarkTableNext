@@ -24,16 +24,17 @@
 G_BEGIN_DECLS
 
 #define DTGTK_TYPE_TOGGLEBUTTON dtgtk_togglebutton_get_type()
-G_DECLARE_FINAL_TYPE(GtkDarktableToggleButton, dtgtk_togglebutton, DTGTK, TOGGLEBUTTON, GtkToggleButton)
+G_DECLARE_FINAL_TYPE(GtkDarktableToggleButton, dtgtk_togglebutton, DTGTK, TOGGLEBUTTON,
+                     GtkToggleButton)
 
 struct _GtkDarktableToggleButton
 {
-  GtkToggleButton widget;
-  DTGTKCairoPaintIconFunc icon;
-  gint icon_flags;
-  void *icon_data;
-  GdkRGBA bg;
-  GtkWidget *canvas;
+    GtkToggleButton widget;
+    DTGTKCairoPaintIconFunc icon;
+    gint icon_flags;
+    void *icon_data;
+    GdkRGBA bg;
+    GtkWidget *canvas;
 };
 
 /** instantiate a new darktable toggle button */
@@ -44,10 +45,3 @@ void dtgtk_togglebutton_set_paint(GtkDarktableToggleButton *button, DTGTKCairoPa
                                   gint paintflags, void *paintdata);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

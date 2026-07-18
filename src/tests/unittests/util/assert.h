@@ -24,15 +24,9 @@
 
 // assert_float_equal() is not available on Ubuntu 18.04 (state 2020-01):
 #ifndef assert_float_equal
-#define assert_float_equal(a, b, epsilon)\
-{\
-  assert_true(a < (b + epsilon));\
-  assert_true(a > (b - epsilon));\
-}
+#define assert_float_equal(a, b, epsilon)                                                          \
+    {                                                                                              \
+        assert_true(a < (b + epsilon));                                                            \
+        assert_true(a > (b - epsilon));                                                            \
+    }
 #endif
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

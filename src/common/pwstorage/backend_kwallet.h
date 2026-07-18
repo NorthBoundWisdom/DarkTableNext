@@ -22,15 +22,15 @@
 /** kwallet backend context */
 typedef struct backend_kwallet_context_t
 {
-  // Connection to the DBus session bus.
-  //   DBusGConnection* connection;
-  GDBusConnection *connection;
+    // Connection to the DBus session bus.
+    //   DBusGConnection* connection;
+    GDBusConnection *connection;
 
-  // Proxy to the kwallet DBus service.
-  GDBusProxy *proxy;
+    // Proxy to the kwallet DBus service.
+    GDBusProxy *proxy;
 
-  // The name of the wallet we've opened. Set during init_kwallet().
-  gchar *wallet_name;
+    // The name of the wallet we've opened. Set during init_kwallet().
+    gchar *wallet_name;
 } backend_kwallet_context_t;
 
 /** Initializes a new kwallet backend context. */
@@ -42,10 +42,3 @@ gboolean dt_pwstorage_kwallet_set(const backend_kwallet_context_t *context, cons
                                   GHashTable *table);
 /** Load (key,value) pairs. */
 GHashTable *dt_pwstorage_kwallet_get(const backend_kwallet_context_t *context, const gchar *slot);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

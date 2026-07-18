@@ -24,25 +24,25 @@
 // will be running in lock-step as the cache line bounces back and forth
 // between them, effectively cutting throughput by a factor equal to the number
 // of threads sharing a cache line (8 with 64-byte cache line and 32-bit ints)
-#define TEA_STATE_SIZE (MAX(DT_CACHELINE_BYTES, 2*sizeof(unsigned int)))
-static inline unsigned int* alloc_tea_states(size_t numthreads)
+#define TEA_STATE_SIZE (MAX(DT_CACHELINE_BYTES, 2 * sizeof(unsigned int)))
+static inline unsigned int *alloc_tea_states(size_t numthreads)
 {
-  unsigned int* states = dt_alloc_aligned(numthreads * TEA_STATE_SIZE);
-  if (states) memset(states, 0, numthreads * TEA_STATE_SIZE);
-  return states;
+    unsigned int *states = dt_alloc_aligned(numthreads * TEA_STATE_SIZE);
+    if (states)
+        memset(states, 0, numthreads * TEA_STATE_SIZE);
+    return states;
 }
 
 // Retrieve the state for the instance in the given thread from the array of
 // states previously allocated with alloc_tea_states()
-static inline unsigned int* get_tea_state(unsigned int* const states,
-                                          int threadnum)
+static inline unsigned int *get_tea_state(unsigned int *const states, int threadnum)
 {
-  return states + threadnum * TEA_STATE_SIZE/sizeof(states[0]);
+    return states + threadnum * TEA_STATE_SIZE / sizeof(states[0]);
 }
 
-static inline void free_tea_states(unsigned int* states)
+static inline void free_tea_states(unsigned int *states)
 {
-  dt_free_align(states);
+    dt_free_align(states);
 }
 
 // How many rounds of the mixing function to run for one encryption
@@ -53,33 +53,24 @@ static inline void free_tea_states(unsigned int* states)
 // then read out the value of arg[0] after each call to this function.
 static inline void encrypt_tea(unsigned int *arg)
 {
-  const unsigned int key[] = { 0xa341316c, 0xc8013ea4, 0xad90777d, 0x7e95761e };
-  unsigned int v0 = arg[0], v1 = arg[1];
-  unsigned int sum = 0;
-  unsigned int delta = 0x9e3779b9;
-  for(int i = 0; i < TEA_ROUNDS; i++)
-  {
-    sum += delta;
-    v0 += ((v1 << 4) + key[0]) ^ (v1 + sum) ^ ((v1 >> 5) + key[1]);
-    v1 += ((v0 << 4) + key[2]) ^ (v0 + sum) ^ ((v0 >> 5) + key[3]);
-  }
-  arg[0] = v0;
-  arg[1] = v1;
+    const unsigned int key[] = {0xa341316c, 0xc8013ea4, 0xad90777d, 0x7e95761e};
+    unsigned int v0 = arg[0], v1 = arg[1];
+    unsigned int sum = 0;
+    unsigned int delta = 0x9e3779b9;
+    for (int i = 0; i < TEA_ROUNDS; i++)
+    {
+        sum += delta;
+        v0 += ((v1 << 4) + key[0]) ^ (v1 + sum) ^ ((v1 >> 5) + key[1]);
+        v1 += ((v0 << 4) + key[2]) ^ (v0 + sum) ^ ((v0 >> 5) + key[3]);
+    }
+    arg[0] = v0;
+    arg[1] = v1;
 }
 
 static inline float tpdf(unsigned int urandom)
 {
-  float frandom = (float)urandom / (float)0xFFFFFFFFu;
+    float frandom = (float)urandom / (float)0xFFFFFFFFu;
 
-  return (frandom < 0.5f
-          ? (sqrtf(2.0f * frandom) - 1.0f)
-          : (1.0f - sqrtf(2.0f * (1.0f - frandom))));
+    return (frandom < 0.5f ? (sqrtf(2.0f * frandom) - 1.0f) :
+                             (1.0f - sqrtf(2.0f * (1.0f - frandom))));
 }
-
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

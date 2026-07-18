@@ -57,7 +57,7 @@ DEFAULT(gboolean, expandable, struct dt_lib_module_t *self);
 OPTIONAL(void, init, struct dt_lib_module_t *self);
 /** callback methods for gui. */
 /** get a description string to be used as tooltip on the module header */
-OPTIONAL(const char*, description, struct dt_lib_module_t *self);
+OPTIONAL(const char *, description, struct dt_lib_module_t *self);
 /** construct widget. */
 REQUIRED(void, gui_init, struct dt_lib_module_t *self);
 /** destroy widget. */
@@ -72,28 +72,32 @@ DEFAULT(void, gui_update, struct dt_lib_module_t *self);
 OPTIONAL(GtkWidget *, gui_tool_box, struct dt_lib_module_t *self);
 
 /** entering a view, only called if lib is displayed on the new view */
-OPTIONAL(void, view_enter, struct dt_lib_module_t *self, struct dt_view_t *old_view, struct dt_view_t *new_view);
+OPTIONAL(void, view_enter, struct dt_lib_module_t *self, struct dt_view_t *old_view,
+         struct dt_view_t *new_view);
 /** entering a view, only called if lib is displayed on the old view */
-OPTIONAL(void, view_leave, struct dt_lib_module_t *self, struct dt_view_t *old_view, struct dt_view_t *new_view);
+OPTIONAL(void, view_leave, struct dt_lib_module_t *self, struct dt_view_t *old_view,
+         struct dt_view_t *new_view);
 
 /** optional event callbacks for big center widget. */
 /** optional method called after lighttable expose. */
-OPTIONAL(void, gui_post_expose, struct dt_lib_module_t *self, cairo_t *cr, int32_t width, int32_t height,
-                     int32_t pointerx, int32_t pointery);
+OPTIONAL(void, gui_post_expose, struct dt_lib_module_t *self, cairo_t *cr, int32_t width,
+         int32_t height, int32_t pointerx, int32_t pointery);
 /** mouse_leave called when mouse is leaving the center canvas */
 OPTIONAL(int, mouse_leave, struct dt_lib_module_t *self);
-OPTIONAL(int, mouse_moved, struct dt_lib_module_t *self, double x, double y, double pressure, int which);
-OPTIONAL(int, button_released, struct dt_lib_module_t *self, double x, double y, int which, uint32_t state);
-OPTIONAL(int, button_pressed, struct dt_lib_module_t *self, double x, double y, double pressure, int which, int type,
-                   uint32_t state);
+OPTIONAL(int, mouse_moved, struct dt_lib_module_t *self, double x, double y, double pressure,
+         int which);
+OPTIONAL(int, button_released, struct dt_lib_module_t *self, double x, double y, int which,
+         uint32_t state);
+OPTIONAL(int, button_pressed, struct dt_lib_module_t *self, double x, double y, double pressure,
+         int which, int type, uint32_t state);
 OPTIONAL(int, scrolled, struct dt_lib_module_t *self, double x, double y, int up);
 OPTIONAL(int, position, const struct dt_lib_module_t *self);
 
 /** implement these three if you want customizable presets to be stored in db. */
 /** legacy_params can run in iterations, just return to what version you updated the preset. */
-OPTIONAL(void *, legacy_params, struct dt_lib_module_t *self, const void *const old_params, const size_t old_params_size,
-                    const int old_version, int *new_version, size_t *new_size);
-OPTIONAL(void *,get_params, struct dt_lib_module_t *self, int *size);
+OPTIONAL(void *, legacy_params, struct dt_lib_module_t *self, const void *const old_params,
+         const size_t old_params_size, const int old_version, int *new_version, size_t *new_size);
+OPTIONAL(void *, get_params, struct dt_lib_module_t *self, int *size);
 OPTIONAL(int, set_params, struct dt_lib_module_t *self, const void *params, int size);
 OPTIONAL(void, init_presets, struct dt_lib_module_t *self);
 OPTIONAL(void, manage_presets, struct dt_lib_module_t *self);
@@ -108,9 +112,3 @@ DEFAULT(gboolean, preset_autoapply, struct dt_lib_module_t *self);
 G_END_DECLS
 
 #endif // FULL_API_H
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

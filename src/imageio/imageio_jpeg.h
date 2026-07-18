@@ -36,12 +36,12 @@ G_BEGIN_DECLS
 
 typedef struct dt_imageio_jpeg_t
 {
-  int width, height;
-  struct jpeg_source_mgr src;
-  struct jpeg_destination_mgr dest;
-  struct jpeg_decompress_struct dinfo;
-  struct jpeg_compress_struct cinfo;
-  FILE *f;
+    int width, height;
+    struct jpeg_source_mgr src;
+    struct jpeg_destination_mgr dest;
+    struct jpeg_decompress_struct dinfo;
+    struct jpeg_compress_struct cinfo;
+    FILE *f;
 } dt_imageio_jpeg_t;
 
 /** reads the header and fills width/height in jpg struct. */
@@ -54,12 +54,12 @@ int dt_imageio_jpeg_compress(const uint8_t *in, uint8_t *out, const int width, c
                              const int quality);
 
 /** write jpeg to file, with exif if not NULL. */
-int dt_imageio_jpeg_write(const char *filename, const uint8_t *in, const int width, const int height,
-                          const int quality, const void *exif, int exif_len);
+int dt_imageio_jpeg_write(const char *filename, const uint8_t *in, const int width,
+                          const int height, const int quality, const void *exif, int exif_len);
 /** this will collect the images icc profile (or the global export override) and append it during write. */
 int dt_imageio_jpeg_write_with_icc_profile(const char *filename, const uint8_t *in, const int width,
-                                           const int height, const int quality, const void *exif, int exif_len,
-                                           dt_imgid_t imgid);
+                                           const int height, const int quality, const void *exif,
+                                           int exif_len, dt_imgid_t imgid);
 /** read jpeg header from file, leave file descriptor open until jpeg_read is called. */
 int dt_imageio_jpeg_read_header(const char *filename, dt_imageio_jpeg_t *jpg);
 /** reads the jpeg to the (sufficiently allocated) buffer, closes file. */
@@ -70,13 +70,7 @@ int dt_imageio_jpeg_read_profile(dt_imageio_jpeg_t *jpg, uint8_t **out);
 dt_colorspaces_color_profile_type_t dt_imageio_jpeg_read_color_space(dt_imageio_jpeg_t *jpg);
 
 /** utility function to read and open jpeg from imagio.c */
-dt_imageio_retval_t dt_imageio_open_jpeg(dt_image_t *img, const char *filename, dt_mipmap_buffer_t *buf);
+dt_imageio_retval_t dt_imageio_open_jpeg(dt_image_t *img, const char *filename,
+                                         dt_mipmap_buffer_t *buf);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

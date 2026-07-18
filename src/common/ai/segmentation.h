@@ -40,10 +40,10 @@ typedef struct dt_seg_context_t dt_seg_context_t;
  */
 typedef struct dt_seg_point_t
 {
-  float x, y;  ///< pixel coordinates in the original image space
-  int label;   ///< 0 = background (exclude), 1 = foreground (include),
-               ///< 2 = box top-left corner, 3 = box bottom-right corner
-               ///< (box prompts are SAM-only; check dt_seg_supports_box)
+    float x, y; ///< pixel coordinates in the original image space
+    int label;  ///< 0 = background (exclude), 1 = foreground (include),
+                ///< 2 = box top-left corner, 3 = box bottom-right corner
+                ///< (box prompts are SAM-only; check dt_seg_supports_box)
 } dt_seg_point_t;
 
 /**
@@ -55,8 +55,7 @@ typedef struct dt_seg_point_t
  * @param model_id Model ID to look up in the registry.
  * @return Context, or NULL on error.
  */
-dt_seg_context_t *dt_seg_load(dt_ai_environment_t *env,
-                              const char *model_id);
+dt_seg_context_t *dt_seg_load(dt_ai_environment_t *env, const char *model_id);
 
 /**
  * @brief Warm up the decoder by running a single dummy inference.
@@ -78,9 +77,7 @@ void dt_seg_warmup_decoder(dt_seg_context_t *ctx);
  * @param height Image height in pixels.
  * @return TRUE on success, FALSE on error.
  */
-gboolean dt_seg_encode_image(dt_seg_context_t *ctx,
-                             const uint8_t *rgb_data,
-                             const int width,
+gboolean dt_seg_encode_image(dt_seg_context_t *ctx, const uint8_t *rgb_data, const int width,
                              const int height);
 
 /**
@@ -96,11 +93,8 @@ gboolean dt_seg_encode_image(dt_seg_context_t *ctx,
  * @return Float mask buffer (width*height), caller frees with g_free().
  *         Values are in [0,1] range (sigmoid output). NULL on error.
  */
-float *dt_seg_compute_mask(dt_seg_context_t *ctx,
-                           const dt_seg_point_t *points,
-                           const int n_points,
-                           int *out_width,
-                           int *out_height);
+float *dt_seg_compute_mask(dt_seg_context_t *ctx, const dt_seg_point_t *points, const int n_points,
+                           int *out_width, int *out_height);
 
 /**
  * @brief Check if the image has been encoded.
@@ -147,11 +141,8 @@ void dt_seg_reset_prev_mask(dt_seg_context_t *ctx);
  * @param rgb_h RGB height.
  * @return TRUE on success.
  */
-gboolean dt_seg_disk_cache_save(dt_seg_context_t *ctx,
-                                const dt_imgid_t imgid,
-                                const dt_hash_t distort_hash,
-                                const uint8_t *rgb,
-                                const int rgb_w,
+gboolean dt_seg_disk_cache_save(dt_seg_context_t *ctx, const dt_imgid_t imgid,
+                                const dt_hash_t distort_hash, const uint8_t *rgb, const int rgb_w,
                                 const int rgb_h);
 
 /**
@@ -165,8 +156,7 @@ gboolean dt_seg_disk_cache_save(dt_seg_context_t *ctx,
  * @param distort_hash Current distortion module param hash.
  * @return TRUE on cache hit, FALSE on miss or mismatch.
  */
-gboolean dt_seg_disk_cache_load(dt_seg_context_t *ctx,
-                                const dt_imgid_t imgid,
+gboolean dt_seg_disk_cache_load(dt_seg_context_t *ctx, const dt_imgid_t imgid,
                                 const dt_hash_t distort_hash);
 
 /**
@@ -178,9 +168,7 @@ gboolean dt_seg_disk_cache_load(dt_seg_context_t *ctx,
  * @param out_h Set to RGB height (or 0 if not encoded). Optional.
  * @return RGB pointer, or NULL if no encoding is active.
  */
-const uint8_t *dt_seg_get_encoded_rgb(const dt_seg_context_t *ctx,
-                                      int *out_w,
-                                      int *out_h);
+const uint8_t *dt_seg_get_encoded_rgb(const dt_seg_context_t *ctx, int *out_w, int *out_h);
 
 /**
  * @brief Return the model ID string for this context (NULL-safe).
@@ -192,9 +180,3 @@ const char *dt_seg_get_model_id(const dt_seg_context_t *ctx);
  * @param ctx Context to free (NULL-safe).
  */
 void dt_seg_free(dt_seg_context_t *ctx);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

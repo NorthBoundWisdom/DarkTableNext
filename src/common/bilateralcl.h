@@ -19,24 +19,25 @@
 #pragma once
 
 #ifdef HAVE_OPENCL
-#include <CL/cl.h>          // for cl_mem, _cl_mem
-#include <stddef.h>         // for size_t
+#include <CL/cl.h>  // for cl_mem, _cl_mem
+#include <stddef.h> // for size_t
 
 typedef struct dt_bilateral_cl_global_t
 {
-  int kernel_zero, kernel_splat, kernel_blur_line, kernel_blur_line_z, kernel_slice, kernel_slice2;
+    int kernel_zero, kernel_splat, kernel_blur_line, kernel_blur_line_z, kernel_slice,
+        kernel_slice2;
 } dt_bilateral_cl_global_t;
 
 typedef struct dt_bilateral_cl_t
 {
-  dt_bilateral_cl_global_t *global;
-  int devid;
-  int size_x, size_y, size_z;
-  int width, height;
-  size_t blocksizex, blocksizey;
-  float sigma_s, sigma_r;
-  cl_mem dev_grid;
-  cl_mem dev_grid_tmp;
+    dt_bilateral_cl_global_t *global;
+    int devid;
+    int size_x, size_y, size_z;
+    int width, height;
+    size_t blocksizex, blocksizey;
+    float sigma_s, sigma_r;
+    cl_mem dev_grid;
+    cl_mem dev_grid_tmp;
 } dt_bilateral_cl_t;
 
 dt_bilateral_cl_global_t *dt_bilateral_init_cl_global();
@@ -53,17 +54,11 @@ cl_int dt_bilateral_splat_cl(dt_bilateral_cl_t *b, cl_mem in);
 
 cl_int dt_bilateral_blur_cl(dt_bilateral_cl_t *b);
 
-cl_int dt_bilateral_slice_to_output_cl(dt_bilateral_cl_t *b, cl_mem in, cl_mem out, const float detail);
+cl_int dt_bilateral_slice_to_output_cl(dt_bilateral_cl_t *b, cl_mem in, cl_mem out,
+                                       const float detail);
 
 cl_int dt_bilateral_slice_cl(dt_bilateral_cl_t *b, cl_mem in, cl_mem out, const float detail);
 
 void dt_bilateral_free_cl_global(dt_bilateral_cl_global_t *b);
 
 #endif // HAVE_OPENCL
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

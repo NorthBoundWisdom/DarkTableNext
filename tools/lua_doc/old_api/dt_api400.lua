@@ -5699,4 +5699,3 @@ API["darktable"]["database"]["duplicate"] = API["darktable"]["register_storage"]
 API["darktable"]["database"]["delete"] = API["darktable"]["register_storage"].__attributes["signature"]["3"].__attributes["signature"]["1"].__attributes["reported_type"]["supports_format"].__attributes["signature"]["2"].__attributes["reported_type"]["write_image"].__attributes["signature"]["2"].__attributes["reported_type"]["delete"]
 return API
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

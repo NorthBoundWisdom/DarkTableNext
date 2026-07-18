@@ -25,31 +25,25 @@ G_BEGIN_DECLS
 
 typedef struct dt_dng_gain_map_t
 {
-  uint32_t top;
-  uint32_t left;
-  uint32_t bottom;
-  uint32_t right;
-  uint32_t plane;
-  uint32_t planes;
-  uint32_t row_pitch;
-  uint32_t col_pitch;
-  uint32_t map_points_v;
-  uint32_t map_points_h;
-  double map_spacing_v;
-  double map_spacing_h;
-  double map_origin_v;
-  double map_origin_h;
-  uint32_t map_planes;
-  float map_gain[];
+    uint32_t top;
+    uint32_t left;
+    uint32_t bottom;
+    uint32_t right;
+    uint32_t plane;
+    uint32_t planes;
+    uint32_t row_pitch;
+    uint32_t col_pitch;
+    uint32_t map_points_v;
+    uint32_t map_points_h;
+    double map_spacing_v;
+    double map_spacing_h;
+    double map_origin_v;
+    double map_origin_h;
+    uint32_t map_planes;
+    float map_gain[];
 } dt_dng_gain_map_t;
 
 void dt_dng_opcode_process_opcode_list_2(uint8_t *buf, uint32_t size, dt_image_t *img);
 void dt_dng_opcode_process_opcode_list_3(uint8_t *buf, uint32_t size, dt_image_t *img);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

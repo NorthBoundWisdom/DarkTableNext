@@ -25,20 +25,18 @@ G_BEGIN_DECLS
 
 typedef struct dt_image_cache_t
 {
-  dt_cache_t cache;
-}
-dt_image_cache_t;
+    dt_cache_t cache;
+} dt_image_cache_t;
 
 // what to do if an image struct is
 // released after writing.
 typedef enum dt_image_cache_write_mode_t
 {
-  // always write to database and xmp
-  DT_IMAGE_CACHE_SAFE = 0,
-  // only write to db and do xmp only during shutdown
-  DT_IMAGE_CACHE_RELAXED = 1
-}
-dt_image_cache_write_mode_t;
+    // always write to database and xmp
+    DT_IMAGE_CACHE_SAFE = 0,
+    // only write to db and do xmp only during shutdown
+    DT_IMAGE_CACHE_RELAXED = 1
+} dt_image_cache_write_mode_t;
 
 void dt_image_cache_init(void);
 void dt_image_cache_cleanup(void);
@@ -64,8 +62,7 @@ void dt_image_cache_read_release(const dt_image_t *img);
 // is present, also to xmp sidecar files (safe setting).
 void dt_image_cache_write_release(dt_image_t *img, const dt_image_cache_write_mode_t mode);
 // As above with some additional information
-void dt_image_cache_write_release_info(dt_image_t *img,
-                                       const dt_image_cache_write_mode_t mode,
+void dt_image_cache_write_release_info(dt_image_t *img, const dt_image_cache_write_mode_t mode,
                                        const char *info);
 
 // remove the image from the cache
@@ -73,15 +70,10 @@ void dt_image_cache_remove(const dt_imgid_t imgid);
 
 // register timestamps in cache
 void dt_image_cache_set_change_timestamp(const dt_imgid_t imgid);
-void dt_image_cache_set_change_timestamp_from_image(const dt_imgid_t imgid, const dt_imgid_t sourceid);
+void dt_image_cache_set_change_timestamp_from_image(const dt_imgid_t imgid,
+                                                    const dt_imgid_t sourceid);
 void dt_image_cache_unset_change_timestamp(const dt_imgid_t imgid);
 void dt_image_cache_set_export_timestamp(const dt_imgid_t imgid);
 void dt_image_cache_set_print_timestamp(const dt_imgid_t imgid);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

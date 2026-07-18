@@ -1,10 +1,13 @@
 build*/
 source_roots.lock.jsonc
+CMakePresets.json
+.clangd
 .freecm/
 __pycache__/
 *.py[cod]
 obj*/
 *~
+.freecm.workspace.lock
 *.pot
 *.mo
 doc/usermanual/darktable-usermanual*.pdf
@@ -14,7 +17,6 @@ tools/iop_deps.pdf
 .DS_Store
 cscope.out
 .*.swp
-.vscode/
 .clangd/
 .cache
 tags

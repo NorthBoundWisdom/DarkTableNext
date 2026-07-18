@@ -17,7 +17,7 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// avoid error reported when including exiv2.hpp on macOS (XCode 15.2)
+// Exiv2 headers trigger a shadow warning under the project's strict warning policy.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #include <exiv2/exif.hpp>
@@ -74,4 +74,3 @@ exit:
 
   return ret;
 }
-

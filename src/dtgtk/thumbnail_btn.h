@@ -24,15 +24,16 @@
 G_BEGIN_DECLS
 
 #define DTGTK_TYPE_THUMBNAIL_BTN dtgtk_thumbnail_btn_get_type()
-G_DECLARE_FINAL_TYPE(GtkDarktableThumbnailBtn, dtgtk_thumbnail_btn, DTGTK, THUMBNAIL_BTN, GtkDrawingArea)
+G_DECLARE_FINAL_TYPE(GtkDarktableThumbnailBtn, dtgtk_thumbnail_btn, DTGTK, THUMBNAIL_BTN,
+                     GtkDrawingArea)
 
 struct _GtkDarktableThumbnailBtn
 {
-  GtkDrawingArea widget;
-  DTGTKCairoPaintIconFunc icon;
-  gint icon_flags;
-  void *icon_data;
-  gboolean hidden;
+    GtkDrawingArea widget;
+    DTGTKCairoPaintIconFunc icon;
+    gint icon_flags;
+    void *icon_data;
+    gboolean hidden;
 };
 
 /** instantiate a new darktable button control passing paint function as content */
@@ -41,10 +42,3 @@ GtkWidget *dtgtk_thumbnail_btn_new(DTGTKCairoPaintIconFunc paint, gint paintflag
 gboolean dtgtk_thumbnail_btn_is_hidden(GtkWidget *widget);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

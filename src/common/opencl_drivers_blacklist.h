@@ -22,9 +22,8 @@
 #include <strings.h>
 
 // FIXME: in the future, we may want to also take DRIVER_VERSION into account
-static const gchar *bad_opencl_drivers[] =
-{
-  // clang-format off
+static const gchar *bad_opencl_drivers[] = {
+    // clang-format off
 
   "beignet",
   "clover",
@@ -38,31 +37,25 @@ static const gchar *bad_opencl_drivers[] =
 #endif
   NULL
 
-  // clang-format on
+    // clang-format on
 };
 
 // returns TRUE if blacklisted
 static gboolean _opencl_check_driver_blacklist(const char *device_version)
 {
-  gchar *device = g_ascii_strdown(device_version, -1);
+    gchar *device = g_ascii_strdown(device_version, -1);
 
-  for(int i = 0; bad_opencl_drivers[i]; i++)
-  {
-    if(!g_strrstr(device, bad_opencl_drivers[i])) continue;
+    for (int i = 0; bad_opencl_drivers[i]; i++)
+    {
+        if (!g_strrstr(device, bad_opencl_drivers[i]))
+            continue;
 
-    // oops, found in black list
+        // oops, found in black list
+        g_free(device);
+        return TRUE;
+    }
+
+    // did not find in the black list, guess it's ok.
     g_free(device);
-    return TRUE;
-  }
-
-  // did not find in the black list, guess it's ok.
-  g_free(device);
-  return FALSE;
+    return FALSE;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -35,7 +35,7 @@
 
 #include <glib.h>
 
-#include "common/image.h"  // for dt_imgid_t
+#include "common/image.h" // for dt_imgid_t
 
 // --- opaque types ---
 
@@ -55,10 +55,10 @@ typedef struct dt_restore_context_t dt_restore_context_t;
 //   LINEAR -> dt_restore_load_rawdenoise_linear
 typedef enum
 {
-  DT_RESTORE_SENSOR_CLASS_BAYER = 0,
-  DT_RESTORE_SENSOR_CLASS_XTRANS,
-  DT_RESTORE_SENSOR_CLASS_LINEAR,
-  DT_RESTORE_SENSOR_CLASS_UNSUPPORTED,
+    DT_RESTORE_SENSOR_CLASS_BAYER = 0,
+    DT_RESTORE_SENSOR_CLASS_XTRANS,
+    DT_RESTORE_SENSOR_CLASS_LINEAR,
+    DT_RESTORE_SENSOR_CLASS_UNSUPPORTED,
 } dt_restore_sensor_class_t;
 
 // classify a raw image by its CFA pattern. pure function of img flags
@@ -272,9 +272,7 @@ int dt_restore_get_overlap(int scale);
 // @param h packed-space tile height (= sensor_h / 2)
 // @param out_3ch output buffer (planar 3ch at 2w * 2h)
 // @return 0 on success
-int dt_restore_run_patch_bayer(dt_restore_context_t *ctx,
-                               const float *in_4ch,
-                               int w, int h,
+int dt_restore_run_patch_bayer(dt_restore_context_t *ctx, const float *in_4ch, int w, int h,
                                float *out_3ch);
 
 // @brief run a single RawNIND linear inference patch
@@ -292,9 +290,7 @@ int dt_restore_run_patch_bayer(dt_restore_context_t *ctx,
 // @param h tile height
 // @param out_3ch output buffer (planar 3ch, 3 * w * h floats)
 // @return 0 on success
-int dt_restore_run_patch_3ch_raw(dt_restore_context_t *ctx,
-                                 const float *in_3ch,
-                                 int w, int h,
+int dt_restore_run_patch_3ch_raw(dt_restore_context_t *ctx, const float *in_3ch, int w, int h,
                                  float *out_3ch);
 
 // @brief tile size baked into the loaded ONNX model
@@ -359,20 +355,6 @@ gboolean dt_restore_reload_session_cpu(dt_restore_context_t *ctx);
 //                     *out_w / *out_h (not the requested roi_w/roi_h)
 //                     for subsequent indexing.
 // @return 0 on success; *out_rgb set to NULL on failure.
-int dt_restore_run_user_pipe_roi(dt_imgid_t imgid,
-                                 void *input_native,
-                                 int iw,
-                                 int ih,
-                                 int roi_x,
-                                 int roi_y,
-                                 int roi_w,
-                                 int roi_h,
-                                 int *out_w,
-                                 int *out_h,
+int dt_restore_run_user_pipe_roi(dt_imgid_t imgid, void *input_native, int iw, int ih, int roi_x,
+                                 int roi_y, int roi_w, int roi_h, int *out_w, int *out_h,
                                  float **out_rgb);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

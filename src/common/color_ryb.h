@@ -34,20 +34,20 @@
 // mapping via simple piecewise-linear interpolation, which is accurate enough
 // for GUI display purposes (hue sliders, swatch colors).
 
-static const float dt_color_ryb_x_vtx[7] =
-  { 0.f, 1.f/6, 2.f/6, 3.f/6, 4.f/6, 5.f/6, 1.f };
+static const float dt_color_ryb_x_vtx[7] = {0.f, 1.f / 6, 2.f / 6, 3.f / 6, 4.f / 6, 5.f / 6, 1.f};
 
-static const float dt_color_ryb_y_vtx[7] =
-  { 0.f, 1.f/3, 0.472217f, 0.611105f, 0.715271f, 5.f/6, 1.f };
+static const float dt_color_ryb_y_vtx[7] = {0.f,       1.f / 3, 0.472217f, 0.611105f,
+                                            0.715271f, 5.f / 6, 1.f};
 
 // Convert an RGB HSV hue [0, 1) to a RYB hue [0, 1) using piecewise linear
 // interpolation of the Gossett control points.
 static inline float dt_rgb_hue_to_ryb_hue(const float h)
 {
-  const float hc = h - floorf(h);
-  int i = 0;
-  while(i < 5 && hc >= dt_color_ryb_x_vtx[i + 1]) i++;
-  const float t = (hc - dt_color_ryb_x_vtx[i])
-                / (dt_color_ryb_x_vtx[i + 1] - dt_color_ryb_x_vtx[i]);
-  return dt_color_ryb_y_vtx[i] + t * (dt_color_ryb_y_vtx[i + 1] - dt_color_ryb_y_vtx[i]);
+    const float hc = h - floorf(h);
+    int i = 0;
+    while (i < 5 && hc >= dt_color_ryb_x_vtx[i + 1])
+        i++;
+    const float t =
+        (hc - dt_color_ryb_x_vtx[i]) / (dt_color_ryb_x_vtx[i + 1] - dt_color_ryb_x_vtx[i]);
+    return dt_color_ryb_y_vtx[i] + t * (dt_color_ryb_y_vtx[i + 1] - dt_color_ryb_y_vtx[i]);
 }

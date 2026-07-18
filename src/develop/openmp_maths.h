@@ -16,9 +16,8 @@
    along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#include <glib.h>            // for inline
-#include <math.h>            // for log, logf, powf
+#include <glib.h> // for inline
+#include <math.h> // for log, logf, powf
 
 #pragma once
 
@@ -27,67 +26,56 @@
 DT_OMP_DECLARE_SIMD()
 static inline float fast_exp10f(const float x)
 {
-  // we use the property : 10^x = exp(log(10) * x) = 2^(log(10) * x / log(2))
-  // max relative error over x = [0; 4] is 1.5617955706227326e-15
-  return exp2f(3.3219280948873626f * x);
+    // we use the property : 10^x = exp(log(10) * x) = 2^(log(10) * x / log(2))
+    // max relative error over x = [0; 4] is 1.5617955706227326e-15
+    return exp2f(3.3219280948873626f * x);
 }
 
 // Since we are at it, write an optimized expf
 DT_OMP_DECLARE_SIMD()
 static inline float fast_expf(const float x)
 {
-  // we use the property : exp(x) = 2^(x / log(2))
-  // max relative error over x = [0; 4] is 5.246203046472202e-16
-  return exp2f(1.4426950408889634f * x);
+    // we use the property : exp(x) = 2^(x / log(2))
+    // max relative error over x = [0; 4] is 5.246203046472202e-16
+    return exp2f(1.4426950408889634f * x);
 }
 
-
-DT_OMP_DECLARE_SIMD(aligned(vector:16))
+DT_OMP_DECLARE_SIMD(aligned(vector : 16))
 static inline float v_maxf(const float vector[3])
 {
-  // Find the max over an RGB vector
-  return fmaxf(fmaxf(vector[0], vector[1]), vector[2]);
+    // Find the max over an RGB vector
+    return fmaxf(fmaxf(vector[0], vector[1]), vector[2]);
 }
 
-
-DT_OMP_DECLARE_SIMD(aligned(vector:16))
+DT_OMP_DECLARE_SIMD(aligned(vector : 16))
 static inline float v_minf(const float vector[3])
 {
-  // Find the min over an RGB vector
-  return fminf(fminf(vector[0], vector[1]), vector[2]);
+    // Find the min over an RGB vector
+    return fminf(fminf(vector[0], vector[1]), vector[2]);
 }
 
-DT_OMP_DECLARE_SIMD(aligned(vector:16))
+DT_OMP_DECLARE_SIMD(aligned(vector : 16))
 static inline float v_sumf(const float vector[3])
 {
-  return vector[0] + vector[1] + vector[2];
+    return vector[0] + vector[1] + vector[2];
 }
-
 
 DT_OMP_DECLARE_SIMD()
 static inline float fmaxabsf(const float a, const float b)
 {
-  // Find the max in absolute value and return it with its sign
-  return (fabsf(a) > fabsf(b)) ? a : (dt_isnan(b)) ? 0.f : b;
+    // Find the max in absolute value and return it with its sign
+    return (fabsf(a) > fabsf(b)) ? a : (dt_isnan(b)) ? 0.f : b;
 }
-
 
 DT_OMP_DECLARE_SIMD()
 static inline float fminabsf(const float a, const float b)
 {
-  // Find the min in absolute value and return it with its sign
-  return (fabsf(a) < fabsf(b)) ? a : (dt_isnan(b)) ? 0.f : b;
+    // Find the min in absolute value and return it with its sign
+    return (fabsf(a) < fabsf(b)) ? a : (dt_isnan(b)) ? 0.f : b;
 }
-
 
 DT_OMP_DECLARE_SIMD()
 static inline float clamp_simd(const float x)
 {
-  return fminf(fmaxf(x, 0.0f), 1.0f);
+    return fminf(fmaxf(x, 0.0f), 1.0f);
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

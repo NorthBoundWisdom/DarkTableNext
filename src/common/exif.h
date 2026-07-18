@@ -27,35 +27,35 @@ G_BEGIN_DECLS
 
 typedef enum dt_dng_illuminant_t // from adobes dng_sdk
 {
-	DT_LS_Unknown              =  0,
-	DT_LS_Daylight             =  1,
-	DT_LS_Fluorescent          =  2,
-	DT_LS_Tungsten             =  3,
-	DT_LS_Flash                =  4,
-	DT_LS_FineWeather          =  9,
-	DT_LS_CloudyWeather        = 10,
-	DT_LS_Shade                = 11,
-	DT_LS_DaylightFluorescent  = 12, // D  5700 - 7100K
-	DT_LS_DayWhiteFluorescent  = 13, // N  4600 - 5500K
-	DT_LS_CoolWhiteFluorescent = 14, // W  3800 - 4500K
-	DT_LS_WhiteFluorescent     = 15, // WW 3250 - 3800K
-	DT_LS_WarmWhiteFluorescent = 16, // L  2600 - 3250K
-	DT_LS_StandardLightA       = 17,
-	DT_LS_StandardLightB       = 18,
-	DT_LS_StandardLightC       = 19,
-	DT_LS_D55                  = 20,
-	DT_LS_D65                  = 21,
-	DT_LS_D75                  = 22,
-	DT_LS_D50                  = 23,
-	DT_LS_ISOStudioTungsten    = 24,
-	DT_LS_Other                = 25 // in SDK this is 255, in dt this is the last defined
+    DT_LS_Unknown = 0,
+    DT_LS_Daylight = 1,
+    DT_LS_Fluorescent = 2,
+    DT_LS_Tungsten = 3,
+    DT_LS_Flash = 4,
+    DT_LS_FineWeather = 9,
+    DT_LS_CloudyWeather = 10,
+    DT_LS_Shade = 11,
+    DT_LS_DaylightFluorescent = 12,  // D  5700 - 7100K
+    DT_LS_DayWhiteFluorescent = 13,  // N  4600 - 5500K
+    DT_LS_CoolWhiteFluorescent = 14, // W  3800 - 4500K
+    DT_LS_WhiteFluorescent = 15,     // WW 3250 - 3800K
+    DT_LS_WarmWhiteFluorescent = 16, // L  2600 - 3250K
+    DT_LS_StandardLightA = 17,
+    DT_LS_StandardLightB = 18,
+    DT_LS_StandardLightC = 19,
+    DT_LS_D55 = 20,
+    DT_LS_D65 = 21,
+    DT_LS_D75 = 22,
+    DT_LS_D50 = 23,
+    DT_LS_ISOStudioTungsten = 24,
+    DT_LS_Other = 25 // in SDK this is 255, in dt this is the last defined
 } dt_dng_illuminant_t;
 
 // stores hard-coded crop factors for models for which we can't calculate the correct value
 struct dt_model_cropfactor
 {
-  const char *model;
-  float cropfactor;
+    const char *model;
+    float cropfactor;
 };
 
 typedef struct dt_dng_illuminant_data_t
@@ -71,7 +71,7 @@ void dt_exif_set_exiv2_taglist();
 
 /** get the list of available tags from Exvi2 */
 /** must not be freed */
-const GList* dt_exif_get_exiv2_taglist();
+const GList *dt_exif_get_exiv2_taglist();
 
 /** ensure DateTime string is in canonical EXIF format */
 void dt_exif_sanitize_datetime(char *datetime);
@@ -86,8 +86,8 @@ gboolean dt_exif_read_from_blob(dt_image_t *img, uint8_t *blob, const int size);
 
 /** write exif to blob, return length in bytes. blob will be allocated by the function. sRGB should be true
  * if sRGB colorspace is used as output. */
-int dt_exif_read_blob(uint8_t **blob, const char *path, const dt_imgid_t imgid, const gboolean sRGB, const int out_width,
-                      const int out_height, const gboolean dng_mode);
+int dt_exif_read_blob(uint8_t **blob, const char *path, const dt_imgid_t imgid, const gboolean sRGB,
+                      const int out_width, const int out_height, const gboolean dng_mode);
 
 /** Reads exif tags that are not cached in the database */
 void dt_exif_img_check_additional_tags(dt_image_t *img, const char *filename);
@@ -100,11 +100,12 @@ int dt_exif_write_blob(uint8_t *blob, uint32_t size, const char *path, const int
     would be written, and the write is skipped if they are the same.  This preserves the sidecar
     timestamp for the case where multiple computers share a drive and the crawler is used to
     find new edits. */
-gboolean dt_exif_xmp_write(const dt_imgid_t imgid, const char *filename, const gboolean force_write);
+gboolean dt_exif_xmp_write(const dt_imgid_t imgid, const char *filename,
+                           const gboolean force_write);
 
 /** write xmp packet inside an image. */
 gboolean dt_exif_xmp_attach_export(const dt_imgid_t imgid, const char *filename, void *metadata,
-    dt_develop_t *dev, dt_dev_pixelpipe_t *pipe);
+                                   dt_develop_t *dev, dt_dev_pixelpipe_t *pipe);
 
 /** get the xmp blob for imgid. */
 char *dt_exif_xmp_read_string(const dt_imgid_t imgid);
@@ -124,7 +125,8 @@ void dt_exif_cleanup();
 
 /** encode / decode op params */
 char *dt_exif_xmp_encode(const unsigned char *input, const int len, int *output_len);
-char *dt_exif_xmp_encode_internal(const unsigned char *input, const int len, int *output_len, gboolean do_compress);
+char *dt_exif_xmp_encode_internal(const unsigned char *input, const int len, int *output_len,
+                                  gboolean do_compress);
 unsigned char *dt_exif_xmp_decode(const char *input, const int len, int *output_len);
 
 /** look for color space hints in data and tell the caller if it's sRGB, AdobeRGB or something else. used for mipmaps */
@@ -134,9 +136,3 @@ dt_colorspaces_color_profile_type_t dt_exif_get_color_space(const uint8_t *data,
 void dt_exif_get_basic_data(const uint8_t *data, size_t size, dt_image_basic_exif_t *basic_exif);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

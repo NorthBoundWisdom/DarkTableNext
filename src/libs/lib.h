@@ -37,104 +37,100 @@ struct dt_colorpicker_sample_t;
 /** struct responsible for all library related shared routines and plugins. */
 typedef struct dt_lib_t
 {
-  GList *plugins;
-  struct dt_lib_module_t *gui_module;
+    GList *plugins;
+    struct dt_lib_module_t *gui_module;
 
-  /** Proxy functions for communication with views */
-  struct
-  {
-    /** Colorpicker plugin hooks */
+    /** Proxy functions for communication with views */
     struct
     {
-      struct dt_lib_module_t *module;
-      struct dt_colorpicker_sample_t *primary_sample;
-      struct dt_iop_color_picker_t *picker_proxy;
-      GSList *live_samples;
-      struct dt_colorpicker_sample_t *selected_sample;
-      gboolean display_samples;
-      gboolean restrict_histogram;
-      int statistic;
-      void (*update_panel)(struct dt_lib_module_t *self);
-      void (*update_samples)(struct dt_lib_module_t *self);
-      void (*set_sample_box_area)(struct dt_lib_module_t *self,
-                                  const dt_boundingbox_t size);
-      void (*set_sample_point)(struct dt_lib_module_t *self,
-                               const float pos[2]);
-      void (*setup_sample)(struct dt_lib_module_t *self,
-                           const gboolean denoise,
-                           const gboolean pick_output);
-    } colorpicker;
+        /** Colorpicker plugin hooks */
+        struct
+        {
+            struct dt_lib_module_t *module;
+            struct dt_colorpicker_sample_t *primary_sample;
+            struct dt_iop_color_picker_t *picker_proxy;
+            GSList *live_samples;
+            struct dt_colorpicker_sample_t *selected_sample;
+            gboolean display_samples;
+            gboolean restrict_histogram;
+            int statistic;
+            void (*update_panel)(struct dt_lib_module_t *self);
+            void (*update_samples)(struct dt_lib_module_t *self);
+            void (*set_sample_box_area)(struct dt_lib_module_t *self, const dt_boundingbox_t size);
+            void (*set_sample_point)(struct dt_lib_module_t *self, const float pos[2]);
+            void (*setup_sample)(struct dt_lib_module_t *self, const gboolean denoise,
+                                 const gboolean pick_output);
+        } colorpicker;
 
-    /** Histogram processing hooks */
-    struct
-    {
-      struct dt_lib_module_t *module;
-      void (*process)(struct dt_lib_module_t *self, const float *const input,
-                      int width, int height,
-                      const dt_iop_order_iccprofile_info_t *const profile_info_from,
-                      const dt_iop_order_iccprofile_info_t *const profile_info_to);
-      void (*get_harmony)(struct dt_lib_module_t *self, dt_color_harmony_guide_t *guide);
-      void (*set_harmony)(struct dt_lib_module_t *self, const dt_color_harmony_guide_t *guide);
-      void (*set_scope)(struct dt_lib_module_t *self, int scope);
-      void (*set_type)(struct dt_lib_module_t *self, int type);
-      void (*get_sector_angles)(struct dt_lib_module_t *self,
-                                const dt_color_harmony_type_t type,
-                                const int rotation,
-                                float *angles,
-                                int *n);
-      void (*set_harmony_callback)(struct dt_lib_module_t *self,
-                                   void (*cb)(const dt_color_harmony_guide_t *, void *),
-                                   void *user_data);
-      gboolean is_linear;
-    } histogram;
+        /** Histogram processing hooks */
+        struct
+        {
+            struct dt_lib_module_t *module;
+            void (*process)(struct dt_lib_module_t *self, const float *const input, int width,
+                            int height,
+                            const dt_iop_order_iccprofile_info_t *const profile_info_from,
+                            const dt_iop_order_iccprofile_info_t *const profile_info_to);
+            void (*get_harmony)(struct dt_lib_module_t *self, dt_color_harmony_guide_t *guide);
+            void (*set_harmony)(struct dt_lib_module_t *self,
+                                const dt_color_harmony_guide_t *guide);
+            void (*set_scope)(struct dt_lib_module_t *self, int scope);
+            void (*set_type)(struct dt_lib_module_t *self, int type);
+            void (*get_sector_angles)(struct dt_lib_module_t *self,
+                                      const dt_color_harmony_type_t type, const int rotation,
+                                      float *angles, int *n);
+            void (*set_harmony_callback)(struct dt_lib_module_t *self,
+                                         void (*cb)(const dt_color_harmony_guide_t *, void *),
+                                         void *user_data);
+            gboolean is_linear;
+        } histogram;
 
-    struct
-    {
-      struct dt_lib_module_t *module;
-    } navigation;
+        struct
+        {
+            struct dt_lib_module_t *module;
+        } navigation;
 
-    struct
-    {
-      gboolean enabled;
-    } snapshots;
-  } proxy;
+        struct
+        {
+            gboolean enabled;
+        } snapshots;
+    } proxy;
 } dt_lib_t;
 
 typedef struct dt_lib_module_t
 {
-  dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
+    dt_action_t actions; // !!! NEEDS to be FIRST (to be able to cast convert)
 
 #define INCLUDE_API_FROM_MODULE_H
 #include "libs/lib_api.h"
 
-  /** opened module. */
-  GModule *module;
-  /** other stuff that may be needed by the module, not only in gui mode. */
-  void *data;
-  /** string identifying this operation. */
-  char plugin_name[128];
-  /** child widget which is added to the GtkExpander. */
-  GtkWidget *widget;
-  /** expander containing the widget. */
-  GtkWidget *expander;
-  /** does gui need to be updated if visible */
-  gboolean gui_uptodate;
+    /** opened module. */
+    GModule *module;
+    /** other stuff that may be needed by the module, not only in gui mode. */
+    void *data;
+    /** string identifying this operation. */
+    char plugin_name[128];
+    /** child widget which is added to the GtkExpander. */
+    GtkWidget *widget;
+    /** expander containing the widget. */
+    GtkWidget *expander;
+    /** does gui need to be updated if visible */
+    gboolean gui_uptodate;
 
-  GtkWidget *arrow;
-  GtkWidget *preset_label;
-  GtkWidget *reset_button;
-  GtkWidget *presets_button;
+    GtkWidget *arrow;
+    GtkWidget *preset_label;
+    GtkWidget *reset_button;
+    GtkWidget *presets_button;
 
-  gboolean pref_based_presets;
+    gboolean pref_based_presets;
 } dt_lib_module_t;
 
 typedef struct dt_lib_module_info_t
 {
-  char *plugin_name;
-  int32_t version;
-  char *params;
-  int params_size;
-  dt_lib_module_t *module;
+    char *plugin_name;
+    int32_t version;
+    char *params;
+    int params_size;
+    dt_lib_module_t *module;
 } dt_lib_module_info_t;
 
 void dt_lib_init(dt_lib_t *lib);
@@ -143,8 +139,7 @@ void dt_lib_cleanup(dt_lib_t *lib);
 /** creates a label widget for the expander, with callback to enable/disable this module. */
 GtkWidget *dt_lib_gui_get_expander(dt_lib_module_t *module);
 /** set an expand/collapse plugin expander */
-void dt_lib_gui_set_expanded(dt_lib_module_t *module,
-                             const gboolean expanded);
+void dt_lib_gui_set_expanded(dt_lib_module_t *module, const gboolean expanded);
 /** get the expanded state of a plugin */
 gboolean dt_lib_gui_get_expanded(dt_lib_module_t *module);
 /** queue plugin gui to be updated if visible */
@@ -161,15 +156,12 @@ uint32_t dt_lib_get_container(dt_lib_module_t *module);
 /** get the visible state of a plugin */
 gboolean dt_lib_is_visible(dt_lib_module_t *module);
 /** set the visible state of a plugin */
-void dt_lib_set_visible(dt_lib_module_t *module,
-                        const gboolean visible);
+void dt_lib_set_visible(dt_lib_module_t *module, const gboolean visible);
 /** check if a plugin is to be shown in a given view */
-gboolean dt_lib_is_visible_in_view(dt_lib_module_t *module,
-                                   const dt_view_t *view);
+gboolean dt_lib_is_visible_in_view(dt_lib_module_t *module, const dt_view_t *view);
 
 /** set module label */
-void dt_lib_gui_set_label(dt_lib_module_t *module,
-                          const char *label);
+void dt_lib_gui_set_label(dt_lib_module_t *module, const char *label);
 
 /** returns the localized plugin name for a given plugin_name. must not be freed. */
 gchar *dt_lib_get_localized_name(const gchar *plugin_name);
@@ -180,33 +172,21 @@ gchar *dt_lib_get_localized_name(const gchar *plugin_name);
 gchar *dt_lib_get_active_preset_name(dt_lib_module_info_t *minfo);
 
 /** add or replace a preset for this operation. */
-void dt_lib_presets_add(const char *name,
-                        const char *plugin_name,
-                        const int32_t version,
-                        const void *params,
-                        const int32_t params_size,
-                        const gboolean readonly,
+void dt_lib_presets_add(const char *name, const char *plugin_name, const int32_t version,
+                        const void *params, const int32_t params_size, const gboolean readonly,
                         const dt_gui_presets_format_flag_t format);
 
 // apply a preset to the given module
-gboolean dt_lib_presets_apply(const gchar *preset,
-                              const gchar *module_name,
+gboolean dt_lib_presets_apply(const gchar *preset, const gchar *module_name,
                               const int module_version);
 // duplicate a preset
-gchar *dt_lib_presets_duplicate(const gchar *preset,
-                                const gchar *module_name,
+gchar *dt_lib_presets_duplicate(const gchar *preset, const gchar *module_name,
                                 const int module_version);
 // remove a preset
-void dt_lib_presets_remove(const gchar *preset,
-                           const gchar *module_name,
-                           const int module_version);
+void dt_lib_presets_remove(const gchar *preset, const gchar *module_name, const int module_version);
 // update a preset
-void dt_lib_presets_update(const gchar *preset,
-                           const gchar *module_name,
-                           const int module_version,
-                           const gchar *newname,
-                           const gchar *desc,
-                           const void *params,
+void dt_lib_presets_update(const gchar *preset, const gchar *module_name, const int module_version,
+                           const gchar *newname, const gchar *desc, const void *params,
                            const int32_t params_size);
 // know if the module can autoapply presets
 gboolean dt_lib_presets_can_autoapply(dt_lib_module_t *mod);
@@ -216,12 +196,10 @@ gboolean dt_lib_presets_can_autoapply(dt_lib_module_t *mod);
  */
 
 /** set the colorpicker area selection tool and size, box[k] 0.0 - 1.0 */
-void dt_lib_colorpicker_set_box_area(dt_lib_t *lib,
-                                     const dt_pickerbox_t box);
+void dt_lib_colorpicker_set_box_area(dt_lib_t *lib, const dt_pickerbox_t box);
 
 /** set the colorpicker point selection tool and position */
-void dt_lib_colorpicker_set_point(dt_lib_t *lib,
-                                  const float pos[2]);
+void dt_lib_colorpicker_set_point(dt_lib_t *lib, const float pos[2]);
 
 /** get the histogram color harmony */
 void dt_lib_histogram_get_harmony(dt_lib_t *lib, dt_color_harmony_guide_t *guide);
@@ -231,7 +209,8 @@ void dt_lib_histogram_set_harmony(dt_lib_t *lib, const dt_color_harmony_guide_t 
 
 /** register a callback notified on user-driven vectorscope harmony changes */
 void dt_lib_histogram_set_harmony_callback(dt_lib_t *lib,
-    void (*cb)(const dt_color_harmony_guide_t *, void *), void *user_data);
+                                           void (*cb)(const dt_color_harmony_guide_t *, void *),
+                                           void *user_data);
 
 /** set the histogram scope type */
 void dt_lib_histogram_set_scope(dt_lib_t *lib, int scope);
@@ -240,20 +219,15 @@ void dt_lib_histogram_set_scope(dt_lib_t *lib, int scope);
 void dt_lib_histogram_set_type(dt_lib_t *lib, int type);
 
 /** get the absolute RYB sector angles for a predefined harmony type and rotation */
-void dt_lib_histogram_get_sector_angles(dt_lib_t *lib,
-                                        const dt_color_harmony_type_t type,
-                                        const int rotation,
-                                        float *angles,
-                                        int *n);
+void dt_lib_histogram_get_sector_angles(dt_lib_t *lib, const dt_color_harmony_type_t type,
+                                        const int rotation, float *angles, int *n);
 
 /* reset color picker pos to default */
 void dt_lib_colorpicker_reset_box_area(dt_pickerbox_t box);
 void dt_lib_colorpicker_reset_point(dt_pickerpoint_t pos);
 
 /** setup colorpicker options */
-void dt_lib_colorpicker_setup(dt_lib_t *lib,
-                              const gboolean denoise,
-                              const gboolean pick_output);
+void dt_lib_colorpicker_setup(dt_lib_t *lib, const gboolean denoise, const gboolean pick_output);
 
 /** sorter callback to add a lib in the list of libs after init */
 gint dt_lib_sort_plugins(gconstpointer a, gconstpointer b);
@@ -261,12 +235,4 @@ gint dt_lib_sort_plugins(gconstpointer a, gconstpointer b);
 void dt_lib_init_presets(dt_lib_module_t *module);
 
 /** handle Enter key for dialog. Note it uses GTK_RESPONSE_ACCEPT code */
-gboolean dt_handle_dialog_enter(GtkWidget *widget,
-                                GdkEventKey *event,
-                                gpointer data);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+gboolean dt_handle_dialog_enter(GtkWidget *widget, GdkEventKey *event, gpointer data);

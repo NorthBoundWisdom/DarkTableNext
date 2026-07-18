@@ -23,14 +23,14 @@
 
 typedef struct dt_dbus_t
 {
-  gboolean connected;
+    gboolean connected;
 
-  GDBusNodeInfo *introspection_data;
-  guint owner_id;
-  guint registration_id;
+    GDBusNodeInfo *introspection_data;
+    guint owner_id;
+    guint registration_id;
 
-  // used for client actions on the bus
-  GDBusConnection *dbus_connection;
+    // used for client actions on the bus
+    GDBusConnection *dbus_connection;
 } dt_dbus_t;
 
 /** allocates and initializes dbus */
@@ -42,10 +42,3 @@ void dt_dbus_destroy(const dt_dbus_t *);
 /** have we managed to get the dbus name? when not, then there is already another instance of darktable
  * running */
 gboolean dt_dbus_connected(const dt_dbus_t *);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

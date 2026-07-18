@@ -24,13 +24,13 @@ G_BEGIN_DECLS
 
 typedef struct dt_metadata_t
 {
-  uint32_t key;
-  gchar *tagname;
-  gchar *name;
-  uint32_t internal;
-  gboolean visible;
-  gboolean priv;
-  uint32_t display_order;
+    uint32_t key;
+    gchar *tagname;
+    gchar *name;
+    uint32_t internal;
+    gboolean visible;
+    gboolean priv;
+    uint32_t display_order;
 } dt_metadata_t;
 
 // for compatibility we need to keep the number of metadata fields we had
@@ -39,16 +39,14 @@ typedef struct dt_metadata_t
 
 typedef enum dt_metadata_signal_t
 {
-  DT_METADATA_SIGNAL_NEW_VALUE,     // metadata value changed
-  DT_METADATA_SIGNAL_PREF_CHANGED   // metadata preferences changed
-}
-dt_metadata_signal_t;
+    DT_METADATA_SIGNAL_NEW_VALUE,   // metadata value changed
+    DT_METADATA_SIGNAL_PREF_CHANGED // metadata preferences changed
+} dt_metadata_signal_t;
 
 typedef enum dt_metadata_flag_t
 {
-  DT_METADATA_FLAG_IMPORTED = 1 << 2    // metadata import
-}
-dt_metadata_flag_t;
+    DT_METADATA_FLAG_IMPORTED = 1 << 2 // metadata import
+} dt_metadata_flag_t;
 
 /** return the list of metadata items */
 GList *dt_metadata_get_list();
@@ -66,7 +64,7 @@ dt_metadata_t *dt_metadata_get_metadata_by_keyid(const uint32_t keyid);
 dt_metadata_t *dt_metadata_get_metadata_by_tagname(const char *tagname);
 
 /** return the keyid of the metadata key */
-uint32_t dt_metadata_get_keyid(const char* key);
+uint32_t dt_metadata_get_keyid(const char *key);
 
 /** return the key of the metadata keyid */
 const char *dt_metadata_get_key(const uint32_t keyid);
@@ -81,7 +79,8 @@ const char *dt_metadata_get_tag_subkey(const char *tagname);
 void dt_metadata_init();
 
 /** Set metadata for a specific image, or all selected for an invalid id */
-void dt_metadata_set(const dt_imgid_t imgid, const char *key, const char *value, const gboolean undo_on); // duplicate.c, lua/image.c
+void dt_metadata_set(const dt_imgid_t imgid, const char *key, const char *value,
+                     const gboolean undo_on); // duplicate.c, lua/image.c
 
 /** Set imported metadata for a specific image (with mutex lock) */
 void dt_metadata_set_import_lock(const dt_imgid_t imgid, const char *key, const char *value);
@@ -91,7 +90,8 @@ void dt_metadata_set_import(const dt_imgid_t imgid, const char *key, const char 
 
 /** Set metadata (named keys) for a specific image, or all selected for id == -1. */
 /** list is a set of key, value */
-void dt_metadata_set_list(const GList *imgs, GList *key_value, const gboolean undo_on); // libs/metadata.c
+void dt_metadata_set_list(const GList *imgs, GList *key_value,
+                          const gboolean undo_on); // libs/metadata.c
 
 /** Set metadata (id keys) for a list of images.
     list is a set of keyid, value
@@ -117,10 +117,3 @@ void dt_metadata_clear(const GList *imgs, const gboolean undo_on); // libs/metad
 gboolean dt_metadata_already_imported(const char *filename, const char *datetime);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

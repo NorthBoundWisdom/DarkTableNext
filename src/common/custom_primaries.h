@@ -26,7 +26,5 @@
 // along the profile gamut footprint boundary by the given amounts.
 // Then scale them by the given amounts.
 void dt_rotate_and_scale_primary(const dt_iop_order_iccprofile_info_t *const profile,
-                                 const float scaling,
-                                 const float rotation,
-                                 const size_t primary_index,
-                                 float new_xy[2]);
+                                 const float scaling, const float rotation,
+                                 const size_t primary_index, float new_xy[2]);

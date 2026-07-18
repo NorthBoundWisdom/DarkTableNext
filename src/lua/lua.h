@@ -20,7 +20,6 @@
 
 /* this file can safely be included when lua is disabled */
 
-
 /* these include are out of the ifdef to avoid compile errors when compiling with/without lua
    users that accidentally use it won't be affected by the ifdef USE_LUA
  */
@@ -53,7 +52,6 @@ int dt_lua_push_darktable_lib(lua_State *L);
 */
 void dt_lua_goto_subtable(lua_State *L, const char *sub_name);
 
-
 void dt_lua_init_lock();
 void dt_lua_lock_internal(const char *function, const char *file, int line, gboolean silent);
 void dt_lua_unlock_internal(const char *function, int line);
@@ -63,30 +61,29 @@ void dt_lua_debug_stack_internal(lua_State *L, const char *function, int line);
 #define dt_lua_debug_table(L, index) dt_lua_debug_table_internal(L, index, __FUNCTION__, __LINE__)
 void dt_lua_debug_table_internal(lua_State *L, int t, const char *function, int line);
 
-
 #define dt_lua_lock() dt_lua_lock_internal(__FUNCTION__, __FILE__, __LINE__, FALSE)
 #define dt_lua_lock_silent() dt_lua_lock_internal(__FUNCTION__, __FILE__, __LINE__, TRUE)
-#define dt_lua_unlock() dt_lua_unlock_internal( __FUNCTION__, __LINE__)
+#define dt_lua_unlock() dt_lua_unlock_internal(__FUNCTION__, __LINE__)
 
 typedef struct
 {
-  lua_State *state;                  // main lua context
+    lua_State *state; // main lua context
 
-  dt_pthread_mutex_t mutex;          // mutex protecting the lua condition variable
-  pthread_cond_t cond;               // condition variable to wait for the lua lock
-  volatile bool exec_lock;           // true if some lua code is running. this is logically a mutex
+    dt_pthread_mutex_t mutex; // mutex protecting the lua condition variable
+    pthread_cond_t cond;      // condition variable to wait for the lua lock
+    volatile bool exec_lock;  // true if some lua code is running. this is logically a mutex
 
-  bool ending;                       // true if we are in the process of terminating DT
+    bool ending; // true if we are in the process of terminating DT
 
-  GMainLoop *loop;                   // loop running the lua context
-  GMainContext *context;             // the lua context responsible for dispatching tasks
-  GThreadPool *pool;                 // pool of threads to run lua tasks on (should be one or two at most, unless lot of blocking lua threads
-  GAsyncQueue * stacked_job_queue;   // queue of jobs whose arguments are on a lua stack
-  GAsyncQueue * alien_job_queue;     // queue of jobs coming from C, args are passed in a glist
-  GAsyncQueue * string_job_queue;    // queue of jobs as lua expressions, passed with args as a string
+    GMainLoop *loop;       // loop running the lua context
+    GMainContext *context; // the lua context responsible for dispatching tasks
+    GThreadPool *
+        pool; // pool of threads to run lua tasks on (should be one or two at most, unless lot of blocking lua threads
+    GAsyncQueue *stacked_job_queue; // queue of jobs whose arguments are on a lua stack
+    GAsyncQueue *alien_job_queue;   // queue of jobs coming from C, args are passed in a glist
+    GAsyncQueue *string_job_queue; // queue of jobs as lua expressions, passed with args as a string
 
 } dt_lua_state_t;
-
 
 void dt_lua_redraw_screen();
 
@@ -98,15 +95,8 @@ typedef int luaA_Type;
 #define LUAA_INVALID_TYPE -1
 typedef struct
 {
-  int unused; // if this is empty clang++ complains that the struct has size 0 in C and size 1 in C++
+    int unused; // if this is empty clang++ complains that the struct has size 0 in C and size 1 in C++
 } dt_lua_state_t;
 #endif
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

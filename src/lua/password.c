@@ -27,54 +27,48 @@
 
 static int get_password(lua_State *L)
 {
-  const char *application = luaL_checkstring(L, 1);
-  const char *username = luaL_checkstring(L, 2);
-  GHashTable *table = dt_pwstorage_get(application);
-  gchar *password = g_strdup(g_hash_table_lookup(table, username));
-  g_hash_table_destroy(table);
-  lua_pushstring(L, password);
-  return 1;
+    const char *application = luaL_checkstring(L, 1);
+    const char *username = luaL_checkstring(L, 2);
+    GHashTable *table = dt_pwstorage_get(application);
+    gchar *password = g_strdup(g_hash_table_lookup(table, username));
+    g_hash_table_destroy(table);
+    lua_pushstring(L, password);
+    return 1;
 }
 
 static int save_password(lua_State *L)
 {
-  const char *application = luaL_checkstring(L, 1);
-  const char *username = luaL_checkstring(L, 2);
-  const char *password = luaL_checkstring(L, 3);
-  gboolean result = TRUE;
+    const char *application = luaL_checkstring(L, 1);
+    const char *username = luaL_checkstring(L, 2);
+    const char *password = luaL_checkstring(L, 3);
+    gboolean result = TRUE;
 
-  GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
 
-  g_hash_table_insert(table, (gchar *)username, (gchar *)password);
+    g_hash_table_insert(table, (gchar *)username, (gchar *)password);
 
-  if(!dt_pwstorage_set(application, table))
-  {
-    dt_print(DT_DEBUG_PWSTORAGE, "[%s] cannot store username/token", application);
-    result = FALSE;
-  }
+    if (!dt_pwstorage_set(application, table))
+    {
+        dt_print(DT_DEBUG_PWSTORAGE, "[%s] cannot store username/token", application);
+        result = FALSE;
+    }
 
-  g_hash_table_destroy(table);
-  lua_pushboolean(L, result);
-  return 1;
+    g_hash_table_destroy(table);
+    lua_pushboolean(L, result);
+    return 1;
 }
 
 int dt_lua_init_password(lua_State *L)
 {
-  dt_lua_push_darktable_lib(L);
-  dt_lua_goto_subtable(L, "password");
+    dt_lua_push_darktable_lib(L);
+    dt_lua_goto_subtable(L, "password");
 
-  lua_pushcfunction(L, get_password);
-  lua_setfield(L, -2, "get");
+    lua_pushcfunction(L, get_password);
+    lua_setfield(L, -2, "get");
 
-  lua_pushcfunction(L, save_password);
-  lua_setfield(L, -2, "save");
+    lua_pushcfunction(L, save_password);
+    lua_setfield(L, -2, "save");
 
-  lua_pop(L, 1);
-  return 0;
+    lua_pop(L, 1);
+    return 0;
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

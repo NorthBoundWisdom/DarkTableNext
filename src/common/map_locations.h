@@ -27,39 +27,39 @@
 
 typedef enum dt_map_locations_type_t
 {
-  MAP_LOCATION_SHAPE_ELLIPSE,
-  MAP_LOCATION_SHAPE_RECTANGLE,
-  MAP_LOCATION_SHAPE_POLYGONS,
-  MAP_LOCATION_SHAPE_MAX
+    MAP_LOCATION_SHAPE_ELLIPSE,
+    MAP_LOCATION_SHAPE_RECTANGLE,
+    MAP_LOCATION_SHAPE_POLYGONS,
+    MAP_LOCATION_SHAPE_MAX
 } dt_map_locations_type_t;
 
 typedef enum dt_map_locations_action_t
 {
-  MAP_LOCATION_ACTION_REMOVE,
-  MAP_LOCATION_ACTION_UPDATE_OTHERS,
-  MAP_LOCATION_ACTION_MAX
+    MAP_LOCATION_ACTION_REMOVE,
+    MAP_LOCATION_ACTION_UPDATE_OTHERS,
+    MAP_LOCATION_ACTION_MAX
 } dt_map_locations_action_t;
 
 typedef struct dt_map_location_data_t
 {
-  double lon, lat, delta1, delta2, ratio;
-  int shape;
-  GList *polygons;
-  int plg_pts;
+    double lon, lat, delta1, delta2, ratio;
+    int shape;
+    GList *polygons;
+    int plg_pts;
 } dt_map_location_data_t;
 
 typedef struct dt_location_draw_t
 {
-  guint id;
-  dt_map_location_data_t data;
-  void *location;
+    guint id;
+    dt_map_location_data_t data;
+    void *location;
 } dt_location_draw_t;
 
 typedef struct dt_map_location_t
 {
-  guint id;
-  gchar *tag;
-  guint count;
+    guint id;
+    gchar *tag;
+    guint count;
 } dt_map_location_t;
 
 // create a new location
@@ -79,8 +79,7 @@ int dt_map_location_get_images_count(const guint locid);
 
 // retrieve list of tags which are on that path
 // to be freed with dt_map_location_free_result()
-GList *dt_map_location_get_locations_by_path(const gchar *path,
-                                             const gboolean remove_root);
+GList *dt_map_location_get_locations_by_path(const gchar *path, const gboolean remove_root);
 
 // retrieve list of locations which are on the map
 // to be freed with g_list_free_full(list, g_free)
@@ -111,8 +110,7 @@ gboolean dt_map_location_update_images(dt_location_draw_t *ld);
 const char *dt_map_location_data_tag_root();
 
 // tell if the point (lon, lat) belongs to location
-gboolean dt_map_location_included(const float lon, const float lat,
-                                  dt_map_location_data_t *g);
+gboolean dt_map_location_included(const float lon, const float lat, dt_map_location_data_t *g);
 
 // get the map box containing the polygon + flat polygons
 GList *dt_map_location_convert_polygons(void *polygons, dt_map_box_t *bbox, int *nb_pts);
@@ -122,10 +120,3 @@ void dt_map_location_get_polygons(dt_location_draw_t *ld);
 
 // free flat polygons
 void dt_map_location_free_polygons(dt_location_draw_t *ld);
-
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

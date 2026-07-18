@@ -10528,7 +10528,6 @@ msgstr ""
 "%s\n"
 "ctrl+klik om %s"
 
-#. clang-format off
 #. smoother cubic spline curve
 #: ../src/develop/imageop_gui.c:326 ../src/iop/basecurve.c:304
 msgid "cubic spline"
@@ -11450,11 +11449,6 @@ msgstr "selecteer filmrol"
 msgid "select untouched"
 msgstr "selecteer onbewerkte"
 
-#. clang-format off
-#. modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-#. clang-format on
 #. allow time for the error to display before script_manager writes it's error message
 #. allow time for the error to display before script_manager writes it's error message
 #.
@@ -11516,8 +11510,6 @@ msgstr "selecteer onbewerkte"
 #.
 #.
 #. The actual content of the module
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #. local function to run a test command on windows and return a true if it succeeds
 #. instead of returning true if it runs
@@ -12836,8 +12828,6 @@ msgstr "enfuse gereed, resultaat '%s' is geïmporteerd met id %d"
 msgid "could not find enfuse executable, not loading enfuse exporter..."
 msgstr "enfuse programma niet gevonden, enfuse export niet geladen..."
 
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
-#. kate: hl Lua;
 #.
 #.
 #. extract_burst_roll_images.lua - extract burst images from a burst roll file
@@ -13144,8 +13134,6 @@ msgstr "het command voor de txt sidecars lijkt niet ok. check de voorkeuren"
 #. we are confident now that it's safe to write the file
 #. compose the command to run
 #. finally, run it
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #.
 #. group_persistence.lua - preserve groups between darktable instances
@@ -13350,7 +13338,6 @@ msgid "selected images path"
 msgstr "pad van geselecteerde afbeeldingen"
 
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #. This file is part of darktable,
 #. copyright (c) 2015 Tobias Ellinghaus
@@ -13413,8 +13400,6 @@ msgstr "import filters worden toegepast na afloop van de import dialoog"
 #. this is just a wrapper which calls the active import filter
 #. add a new global function to register import filters
 #. noting to destroy
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #. This file is part of darktable,
 #. copyright (c) 2015-2016 Tobias Ellinghaus & Christian Mandel
@@ -13466,8 +13451,6 @@ msgstr "import filteren"
 #. the dummy but that may break in the future), table.remove(images) does not
 #. work reliable because it can fail for sparse tables
 #. nothing to destroy
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent
-#. kate: tab-indents: off; indent-width 2; replace-tabs on; remove-trailing-space on;
 #.
 #.
 #. recent_bookmarks.lua - add recently edited and exported images to system recent bookmarks
@@ -13773,7 +13756,6 @@ msgid "switch selection with temporary buffer"
 msgstr "verwissel selectie met tijdelijke buffer"
 
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #.
 #. scheduler.lua - provide scheduler services for multitasking
@@ -14489,7 +14471,6 @@ msgstr "probleem bij uitvoeren PDF-viewer"
 #. this one is probably usefull to the user
 #. finally do some clean-up
 #.
-#. vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua
 #.
 #.
 #. use_paired_jpg_as_mipmap.lua - Use the JPG from the RAW JPG pair as the full size mipmap
@@ -17191,7 +17172,6 @@ msgstr "deze voorkeur `%s' verwijderen?"
 #. add new preset
 #. create a shortcut for the new entry
 #. then show edit dialog
-#. clang-format on
 #. create a shortcut for the new entry
 #. then show edit dialog
 #: ../src/gui/presets.c:208 ../src/gui/presets.c:1035 ../src/gui/presets.c:1038

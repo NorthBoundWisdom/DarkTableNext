@@ -24,12 +24,11 @@
 
 typedef struct Testimg
 {
-  int width;
-  int height;
-  float *pixels;  // [0]=red, [1]=green, [2]=blue, [3]=misc/mask
-  const char* name;
+    int width;
+    int height;
+    float *pixels; // [0]=red, [1]=green, [2]=blue, [3]=misc/mask
+    const char *name;
 } Testimg;
-
 
 /*
  * Creation/deletion
@@ -48,28 +47,26 @@ Testimg *testimg_alloc(const int width, const int height);
 // free test image after usage:
 void testimg_free(Testimg *const ti);
 
-
 /*
  * Access
  */
 
 // access pixel (x -> width, y -> height):
-inline float* get_pixel(const Testimg *const ti, const int x, const int y)
+inline float *get_pixel(const Testimg *const ti, const int x, const int y)
 {
-  // y * width + x, so pixel at index 2 is top row, 2nd from left:
-  return ti->pixels + (y * ti->width + x) * 4;
+    // y * width + x, so pixel at index 2 is top row, 2nd from left:
+    return ti->pixels + (y * ti->width + x) * 4;
 }
 
 // iterate over test images (x in outer loop):
-#define for_testimg_pixels_p_xy(ti) \
-  for (int x=0, y=0; x<ti->width; x+=1, y=0)\
-    for (float *p=get_pixel(ti, x, y); y<ti->height; y+=1, p=get_pixel(ti, x, y))
+#define for_testimg_pixels_p_xy(ti)                                                                \
+    for (int x = 0, y = 0; x < ti->width; x += 1, y = 0)                                           \
+        for (float *p = get_pixel(ti, x, y); y < ti->height; y += 1, p = get_pixel(ti, x, y))
 
 // iterate over test images (y in outer loop):
-#define for_testimg_pixels_p_yx(ti) \
-  for (int y=0, x=0; y<ti->height; y+=1, x=0)\
-    for (float *p=get_pixel(ti, x, y); x<ti->width; x+=1, p=get_pixel(ti, x, y))
-
+#define for_testimg_pixels_p_yx(ti)                                                                \
+    for (int y = 0, x = 0; y < ti->height; y += 1, x = 0)                                          \
+        for (float *p = get_pixel(ti, x, y); x < ti->width; x += 1, p = get_pixel(ti, x, y))
 
 /*
  * Printing
@@ -86,7 +83,6 @@ void testimg_print_by_pixel(const Testimg *const ti);
 
 // default print:
 #define testimg_print testimg_print_by_pixel
-
 
 /*
  * Conversion
@@ -110,21 +106,18 @@ Testimg *testimg_to_exp(Testimg *ti);
 // TESTIMG_STD_DYN_RANGE_EV:
 float testimg_val_to_exp(const float val);
 
-
 /*
  * Constant color image generation
  */
 
 // create an image of given size with constant grey color:
-Testimg *testimg_gen_all_grey(const int width, const int height,
-  const float value);
+Testimg *testimg_gen_all_grey(const int width, const int height, const float value);
 
 // create a purely black image:
 Testimg *testimg_gen_all_black(const int width, const int height);
 
 // create a purely white image:
 Testimg *testimg_gen_all_white(const int width, const int height);
-
 
 /*
  * Full color space image generation
@@ -145,7 +138,6 @@ Testimg *testimg_gen_three_color_space(const int width);
 // create a full rgb color space of given width and fixed height=width*width:
 Testimg *testimg_gen_rgb_space(const int width);
 
-
 /*
  * Bad and nonsense value image generation
  */
@@ -161,9 +153,3 @@ Testimg *testimg_gen_grey_max_dr_neg();
 // create 3 "grey'ish" gradients where in each one a color dominates and clips:
 // height: 3, y=0 => red clips, y=1 => green clips, y=2 => blue clips
 Testimg *testimg_gen_grey_with_rgb_clipping(const int width);
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

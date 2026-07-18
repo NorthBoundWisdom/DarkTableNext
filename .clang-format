@@ -1,0 +1,193 @@
+Language: Cpp
+BasedOnStyle: LLVM
+
+AccessModifierOffset: -4
+
+AlignAfterOpenBracket: Align
+
+AlignConsecutiveAssignments: false
+
+AlignConsecutiveDeclarations: false
+
+AlignEscapedNewlines: Right
+
+AlignOperands: Align
+
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+AllowAllParametersOfDeclarationOnNextLine: false
+
+AllowShortBlocksOnASingleLine: Never
+
+AllowShortCaseLabelsOnASingleLine: false
+
+AllowShortFunctionsOnASingleLine: None
+
+AllowShortIfStatementsOnASingleLine: false
+
+AllowShortLoopsOnASingleLine: false
+
+BreakAfterReturnType: None
+
+AlwaysBreakBeforeMultilineStrings: false
+
+BreakTemplateDeclarations: Yes
+
+BinPackArguments: true
+
+BinPackParameters: true
+
+BreakBeforeBinaryOperators: None
+
+BreakBeforeBraces: Allman
+
+BreakBeforeTernaryOperators: false
+
+BreakConstructorInitializers: BeforeComma
+
+BreakStringLiterals: false
+
+ColumnLimit: 100
+
+CompactNamespaces: true
+
+PackConstructorInitializers: BinPack
+
+ConstructorInitializerIndentWidth: 4
+
+ContinuationIndentWidth: 4
+
+Cpp11BracedListStyle: true
+
+DerivePointerAlignment: false
+
+FixNamespaceComments: true
+
+IndentCaseLabels: false
+
+IndentPPDirectives: None
+
+IndentWidth: 4
+
+IndentWrappedFunctionNames: false
+
+MaxEmptyLinesToKeep: 1
+
+NamespaceIndentation: None
+
+PointerAlignment: Right
+
+ReflowComments: false
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Ui Frame
+  - Regex: "^<Q[A-Z].*"
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: true
+
+  - Regex: "^<(QtWidgets/|QtCore/|QtGui/|QtNetwork/|QtQml/|QtQuick/|QtConcurrent/|QtOpenGL/).*>"
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: true
+
+  - Regex: '^<q[a-z0-9_]+\.h>$'
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: false
+
+  # third party
+  - Regex: "^<(GL/|cavc/|glm/|glew/|pcl/|quill/|CGAL/|CavcCpp/|CavcRustWrapper/|PlaneGCS/|gl/|gtest/|benchmark/|fmt/|Eigen/|happly/|boost/|libtess2/|magic_enum/|opencv2/|nlohmann/).*>"
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: true
+
+  # third party single headers
+  - Regex: '^<(libs3|ft2build)\.h>$'
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: false
+
+  # stdafx.h
+  - Regex: '^"stdafx\.h"$'
+    Priority: 1
+    SortPriority: 0
+    CaseSensitive: false
+
+  # Project headers
+  - Regex: '^".*"'
+    Priority: 6
+    SortPriority: 0
+    CaseSensitive: false
+
+  # third party without folder(like occ)
+  - Regex: '^<.*(\.hpp|\.hxx)>$'
+    Priority: 5
+    SortPriority: 0
+    CaseSensitive: false
+
+  # C std headers with .h suffix
+  - Regex: '^<(assert|ctype|errno|float|limits|locale|math|setjmp|signal|stdarg|stddef|stdint|stdio|stdlib|string|time|wchar|wctype)\.h>$'
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: true
+
+  # OS/system headers with .h suffix
+  - Regex: '^<(Windows|windows|tchar|io|unistd|mach-o/dyld)\.h>$'
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: true
+
+  # C++ std includings
+  - Regex: "^<.*"
+    Priority: 3
+    SortPriority: 0
+    CaseSensitive: false
+
+  # others
+  - Regex: ".*"
+    Priority: 7
+    SortPriority: 0
+    CaseSensitive: false
+
+IncludeIsMainRegex: "([-_](test|unittest))?$"
+IncludeIsMainSourceRegex: ""
+SortIncludes: Never
+
+SortUsingDeclarations: LexicographicNumeric
+
+SpaceAfterCStyleCast: false
+
+SpaceAfterTemplateKeyword: true
+
+SpaceBeforeAssignmentOperators: true
+
+SpaceBeforeParens: ControlStatements
+
+SpaceInEmptyParentheses: false
+
+SpacesBeforeTrailingComments: 1
+
+SpacesInAngles: false
+
+SpacesInCStyleCastParentheses: false
+
+SpacesInContainerLiterals: true
+
+SpacesInParentheses: false
+
+SpacesInSquareBrackets: false
+
+Standard: c++20
+
+TabWidth: 4
+
+UseTab: Never
+
+EmptyLineBeforeAccessModifier: Always
+EmptyLineAfterAccessModifier: Never
+
+KeepEmptyLinesAtTheStartOfBlocks: false

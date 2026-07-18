@@ -25,16 +25,9 @@ G_BEGIN_DECLS
 float dt_osx_get_ppd();
 void dt_osx_disallow_fullscreen(GtkWidget *widget);
 gboolean dt_osx_file_trash(const char *filename, GError **error);
-char* dt_osx_get_bundle_res_path();
+char *dt_osx_get_bundle_res_path();
 void dt_osx_prepare_environment();
 void dt_osx_focus_window();
 gboolean dt_osx_open_url(const char *url);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

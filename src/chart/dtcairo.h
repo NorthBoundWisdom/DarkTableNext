@@ -36,16 +36,10 @@ void draw_boundingbox(cairo_t *cr, point_t *bb);
 void draw_f_boxes(cairo_t *cr, const float *homography, chart_t *chart);
 void draw_d_boxes(cairo_t *cr, const float *homography, chart_t *chart);
 void draw_color_boxes_outline(cairo_t *cr, const float *homography, chart_t *chart);
-void draw_color_boxes_inside(cairo_t *cr, const float *homography, chart_t *chart, float shrink, float line_width,
-                               gboolean colored);
+void draw_color_boxes_inside(cairo_t *cr, const float *homography, chart_t *chart, float shrink,
+                             float line_width, gboolean colored);
 void stroke_boxes(cairo_t *cr, float line_width);
 
 void set_offset_and_scale(image_t *image, float width, float height);
-cairo_surface_t *cairo_surface_create_from_xyz_data(const float *const image, const int width, const int height);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-
+cairo_surface_t *cairo_surface_create_from_xyz_data(const float *const image, const int width,
+                                                    const int height);

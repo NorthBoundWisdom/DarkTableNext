@@ -32,17 +32,6 @@
    The caller must free this list with g_list_free().
 */
 // pixels with mask < threshold are inside the form
-GList *ras2forms(const float *mask,
-                 const int width,
-                 const int height,
-                 const dt_image_t *const image,
-                 const float threshold,
-                 const int turdsize,
-                 const double alphamax,
-                 GList **out_signs);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+GList *ras2forms(const float *mask, const int width, const int height,
+                 const dt_image_t *const image, const float threshold, const int turdsize,
+                 const double alphamax, GList **out_signs);

@@ -27,7 +27,7 @@
 
 typedef struct backend_libsecret_context_t
 {
-  int placeholder; // we have to allocate one of these to signal that init didn't fail
+    int placeholder; // we have to allocate one of these to signal that init didn't fail
 } backend_libsecret_context_t;
 
 /**
@@ -64,11 +64,5 @@ gboolean dt_pwstorage_libsecret_set(const backend_libsecret_context_t *context, 
  *
  * @return table List of (key,value) pairs
  */
-GHashTable *dt_pwstorage_libsecret_get(const backend_libsecret_context_t *context, const gchar *slot);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-
+GHashTable *dt_pwstorage_libsecret_get(const backend_libsecret_context_t *context,
+                                       const gchar *slot);

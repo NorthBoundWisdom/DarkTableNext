@@ -22,46 +22,47 @@
 
 static int _group_number(int group_id)
 {
-  if     (group_id == IOP_GROUP_EFFECT)  return 5;
-  else if(group_id == IOP_GROUP_CORRECT) return 4;
-  else if(group_id == IOP_GROUP_COLOR)   return 3;
-  else if(group_id == IOP_GROUP_TONE)    return 2;
-  else if(group_id == IOP_GROUP_BASIC)   return 1;
-  else                                   return 0;
+    if (group_id == IOP_GROUP_EFFECT)
+        return 5;
+    else if (group_id == IOP_GROUP_CORRECT)
+        return 4;
+    else if (group_id == IOP_GROUP_COLOR)
+        return 3;
+    else if (group_id == IOP_GROUP_TONE)
+        return 2;
+    else if (group_id == IOP_GROUP_BASIC)
+        return 1;
+    else
+        return 0;
 }
 
 int dt_iop_get_group(const dt_iop_module_t *module)
 {
-  gchar *key = g_strdup_printf("plugins/darkroom/%s/modulegroup", module->op);
-  int prefs = dt_conf_get_int(key);
+    gchar *key = g_strdup_printf("plugins/darkroom/%s/modulegroup", module->op);
+    int prefs = dt_conf_get_int(key);
 
-  /* if zero, not found, record it */
-  if(!prefs)
-  {
-    const int default_group = module->default_group();
-    dt_conf_set_int(key, _group_number(default_group));
-    prefs = default_group;
-  }
-  else
-  {
-    gchar *g_key = g_strdup_printf("plugins/darkroom/group_order/%d", prefs);
-    prefs = dt_conf_get_int(g_key);
+    /* if zero, not found, record it */
+    if (!prefs)
+    {
+        const int default_group = module->default_group();
+        dt_conf_set_int(key, _group_number(default_group));
+        prefs = default_group;
+    }
+    else
+    {
+        gchar *g_key = g_strdup_printf("plugins/darkroom/group_order/%d", prefs);
+        prefs = dt_conf_get_int(g_key);
 
-    prefs = 1 << (prefs - 1);
+        prefs = 1 << (prefs - 1);
 
-    if(prefs > IOP_GROUP_EFFECT)
-      prefs = IOP_GROUP_EFFECT;
-    else if(prefs < IOP_GROUP_BASIC)
-      prefs = IOP_GROUP_BASIC;
+        if (prefs > IOP_GROUP_EFFECT)
+            prefs = IOP_GROUP_EFFECT;
+        else if (prefs < IOP_GROUP_BASIC)
+            prefs = IOP_GROUP_BASIC;
 
-    g_free(g_key);
-  }
+        g_free(g_key);
+    }
 
-  g_free(key);
-  return prefs;
+    g_free(key);
+    return prefs;
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

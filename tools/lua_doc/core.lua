@@ -758,4 +758,3 @@ function M.all_children(node)
 	dt.gui.selection{dt.database[1]}
 	return M;
 	--
-	-- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

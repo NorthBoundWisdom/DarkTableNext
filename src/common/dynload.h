@@ -22,20 +22,11 @@
 
 #include <glib.h>
 
-#ifndef __APPLE__
-#include <gmodule.h>
-#endif //!__APPLE__
-
 typedef struct dt_gmodule_t
 {
-#ifndef __APPLE__
-  GModule *gmodule;
-#else
-  void *gmodule;
-#endif
-  char *library;
+    void *gmodule;
+    char *library;
 } dt_gmodule_t;
-
 
 /* check if gmodules is supported on this platform */
 gboolean dt_gmodule_supported(void);
@@ -47,10 +38,3 @@ dt_gmodule_t *dt_gmodule_open(const char *);
 gboolean dt_gmodule_symbol(dt_gmodule_t *, const char *, void (**)(void));
 
 #endif // HAVE_OPENCL
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -22,7 +22,6 @@
 #include <lua.h>
 #include <lualib.h>
 
-
 /**
   Add a new event to the lua API
 * evt_name : the id to use for the event
@@ -54,7 +53,6 @@ EXPECTED STACK
 */
 void dt_lua_event_add(lua_State *L, const char *evt_name);
 
-
 /**
   Trigger an event that has been previously added
   * event : the id the event was registered under
@@ -68,13 +66,12 @@ void dt_lua_event_trigger(lua_State *L, const char *event, int nargs);
   first parameter is the event name
   other parameters will be passed to the event handler
   */
-int dt_lua_event_trigger_wrapper(lua_State *L) ;
+int dt_lua_event_trigger_wrapper(lua_State *L);
 
 /////////////////////
 //    HELPERS      //
 /////////////////////
 // these pairs of functions can usually be used "as is" for registering events
-
 
 /**
   MULTIINSTANCE EVENT
@@ -92,7 +89,6 @@ int dt_lua_event_multiinstance_register(lua_State *L);
 int dt_lua_event_multiinstance_destroy(lua_State *L);
 int dt_lua_event_multiinstance_trigger(lua_State *L);
 
-
 /**
   KEYED EVENT
   an event that is registered with a string key.
@@ -108,17 +104,8 @@ int dt_lua_event_keyed_register(lua_State *L);
 int dt_lua_event_keyed_destroy(lua_State *L);
 int dt_lua_event_keyed_trigger(lua_State *L);
 
-
-
 /**
   initialize events, called at DT start
   */
 int dt_lua_init_early_events(lua_State *L);
 int dt_lua_init_events(lua_State *L);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

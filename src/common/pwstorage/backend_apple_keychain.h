@@ -23,7 +23,6 @@ typedef struct backend_apple_keychain_context_t
 {
 } backend_apple_keychain_context_t;
 
-
 /** Initializes a new apple keychain backend context. */
 const backend_apple_keychain_context_t *dt_pwstorage_apple_keychain_new();
 
@@ -31,17 +30,9 @@ const backend_apple_keychain_context_t *dt_pwstorage_apple_keychain_new();
 void dt_pwstorage_apple_keychain_destroy(const backend_apple_keychain_context_t *context);
 
 /** Store (key,value) pairs. */
-gboolean dt_pwstorage_apple_keychain_set(const backend_apple_keychain_context_t *context, 
-                                         const gchar *slot,
-                                         GHashTable *table);
+gboolean dt_pwstorage_apple_keychain_set(const backend_apple_keychain_context_t *context,
+                                         const gchar *slot, GHashTable *table);
 
 /** Load (key,value) pairs. */
 GHashTable *dt_pwstorage_apple_keychain_get(const backend_apple_keychain_context_t *context,
                                             const gchar *slot);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

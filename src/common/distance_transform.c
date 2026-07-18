@@ -56,106 +56,93 @@
 #include "common/distance_transform.h"
 #include "common/imagebuf.h"
 
-static void _image_distance_transform(const float *f,
-                                      float *z,
-                                      float *d,
-                                      int *v,
-                                      const int n)
+static void _image_distance_transform(const float *f, float *z, float *d, int *v, const int n)
 {
-  int k = 0;
-  v[0] = 0;
-  z[0] = -DT_DISTANCE_TRANSFORM_MAX;
-  z[1] = DT_DISTANCE_TRANSFORM_MAX;
-  for(int q = 1; q <= n-1; q++)
-  {
-    float s = (f[q] + sqrf((float)q)) - (f[v[k]] + sqrf((float)v[k]));
-    while(s <= z[k] * (float)(2*q - 2*v[k]))
+    int k = 0;
+    v[0] = 0;
+    z[0] = -DT_DISTANCE_TRANSFORM_MAX;
+    z[1] = DT_DISTANCE_TRANSFORM_MAX;
+    for (int q = 1; q <= n - 1; q++)
     {
-      k--;
-      s = (f[q] + sqrf((float)q)) - (f[v[k]] + sqrf((float)v[k]));
+        float s = (f[q] + sqrf((float)q)) - (f[v[k]] + sqrf((float)v[k]));
+        while (s <= z[k] * (float)(2 * q - 2 * v[k]))
+        {
+            k--;
+            s = (f[q] + sqrf((float)q)) - (f[v[k]] + sqrf((float)v[k]));
+        }
+        s /= (float)(2 * q - 2 * v[k]);
+        k++;
+        v[k] = q;
+        z[k] = s;
+        z[k + 1] = DT_DISTANCE_TRANSFORM_MAX;
     }
-    s /= (float)(2*q - 2*v[k]);
-    k++;
-    v[k] = q;
-    z[k] = s;
-    z[k+1] = DT_DISTANCE_TRANSFORM_MAX;
-  }
 
-  k = 0;
-  for(int q = 0; q <= n-1; q++)
-  {
-    while(z[k+1] < (float)q)
-      k++;
-    d[q] = sqrf((float)(q-v[k])) + f[v[k]];
-  }
+    k = 0;
+    for (int q = 0; q <= n - 1; q++)
+    {
+        while (z[k + 1] < (float)q)
+            k++;
+        d[q] = sqrf((float)(q - v[k])) + f[v[k]];
+    }
 }
 
-float dt_image_distance_transform(const float *const src,
-                                  float *const out,
-                                  const size_t width,
-                                  const size_t height,
-                                  const float clip,
+float dt_image_distance_transform(const float *const src, float *const out, const size_t width,
+                                  const size_t height, const float clip,
                                   const dt_distance_transform_t mode)
 {
-  switch(mode)
-  {
-    case DT_DISTANCE_TRANSFORM_NONE:
-      break;
-    case DT_DISTANCE_TRANSFORM_MASK:
-      DT_OMP_FOR()
-      for(size_t i = 0; i < width * height; i++)
-        out[i] = (src[i] < clip) ? 0.0f : DT_DISTANCE_TRANSFORM_MAX;
-      break;
-    default:
-      dt_iop_image_fill(out, 0.0f, width, height, 1);
-      dt_print(DT_DEBUG_ALWAYS,
-               "[dt_image_distance_transform] called with unsupported mode %i", mode);
-      return 0.0f;
-  }
-
-  const size_t maxdim = MAX(width, height);
-  float max_distance = 0.0f;
-  DT_OMP_PRAGMA(parallel reduction(max : max_distance)
-                dt_omp_firstprivate(out, maxdim, width, height))
-  {
-    float *f = dt_alloc_align_float(maxdim);
-    float *z = dt_alloc_align_float(maxdim + 1);
-    float *d = dt_alloc_align_float(maxdim);
-    int *v = dt_alloc_align_int(maxdim);
-
-    // transform along columns
-    DT_OMP_PRAGMA(for schedule (static))
-    for(size_t x = 0; x < width; x++)
+    switch (mode)
     {
-      for(size_t y = 0; y < height; y++)
-        f[y] = out[y*width + x];
-      _image_distance_transform(f, z, d, v, height);
-      for(size_t y = 0; y < height; y++)
-        out[y*width + x] = d[y];
+    case DT_DISTANCE_TRANSFORM_NONE:
+        break;
+    case DT_DISTANCE_TRANSFORM_MASK:
+        DT_OMP_FOR()
+        for (size_t i = 0; i < width * height; i++)
+            out[i] = (src[i] < clip) ? 0.0f : DT_DISTANCE_TRANSFORM_MAX;
+        break;
+    default:
+        dt_iop_image_fill(out, 0.0f, width, height, 1);
+        dt_print(DT_DEBUG_ALWAYS, "[dt_image_distance_transform] called with unsupported mode %i",
+                 mode);
+        return 0.0f;
+    }
+
+    const size_t maxdim = MAX(width, height);
+    float max_distance = 0.0f;
+    DT_OMP_PRAGMA(parallel reduction(max : max_distance)
+                      dt_omp_firstprivate(out, maxdim, width, height))
+    {
+        float *f = dt_alloc_align_float(maxdim);
+        float *z = dt_alloc_align_float(maxdim + 1);
+        float *d = dt_alloc_align_float(maxdim);
+        int *v = dt_alloc_align_int(maxdim);
+
+        // transform along columns
+    DT_OMP_PRAGMA(for schedule (static))
+    for (size_t x = 0; x < width; x++)
+    {
+        for (size_t y = 0; y < height; y++)
+            f[y] = out[y * width + x];
+        _image_distance_transform(f, z, d, v, height);
+        for (size_t y = 0; y < height; y++)
+            out[y * width + x] = d[y];
     }
     // implicit barrier :-)
     // transform along rows
     DT_OMP_PRAGMA(for schedule (static) nowait)
-    for(size_t y = 0; y < height; y++)
+    for (size_t y = 0; y < height; y++)
     {
-      _image_distance_transform(&out[y*width], z, d, v, width);
-      for(size_t x = 0; x < width; x++)
-      {
-        const float val = sqrtf(d[x]);
-        out[y*width + x] = val;
-        max_distance = fmaxf(max_distance, val);
-      }
+        _image_distance_transform(&out[y * width], z, d, v, width);
+        for (size_t x = 0; x < width; x++)
+        {
+            const float val = sqrtf(d[x]);
+            out[y * width + x] = val;
+            max_distance = fmaxf(max_distance, val);
+        }
     }
     dt_free_align(f);
     dt_free_align(d);
     dt_free_align(z);
     dt_free_align(v);
-  }
-  return max_distance;
+    }
+    return max_distance;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

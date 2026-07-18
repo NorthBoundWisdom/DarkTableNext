@@ -50,13 +50,6 @@ echo "* archiving git tree"
 dt_decoration=$(git describe --tags --match release-* |
                     sed -e 's,^release-,,;s,-,+,;s,-,~,;' -e 's/rc/~rc/')
 
-# Hot-fix for the compiler version if necessary
-if [[ -n $CLANG_VERSION ]]; then
-    CV=$CLANG_VERSION
-    sed -i "s/\(.*\"Clang\".*\)COMPILER_VERSION VERSION_LESS [0-9][0-9]/\1COMPILER_VERSION VERSION_LESS $CV/" \
-        cmake/compiler-versions.cmake
-fi
-
 echo "* * creating root archive"
 git archive --format tar HEAD \
     --prefix=darktable-"$dt_decoration"/ \
@@ -92,10 +85,6 @@ tar xf "$DT_SRC_DIR/darktable-$dt_decoration.tar"
 echo "* creating version header"
 "$DT_SRC_DIR/tools/create_version_c.sh" \
     "darktable-$dt_decoration/src/version_gen.c" "$dt_decoration"
-
-# drop integration tests
-echo "* removing src/tests/integration"
-rm -rf darktable-"$dt_decoration"/src/tests/integration
 
 # drop all git-related stuff
 find darktable-"$dt_decoration"/ -iname '.git*' -exec rm -fr {} \;

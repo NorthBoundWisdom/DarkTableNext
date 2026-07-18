@@ -78,8 +78,7 @@ void dt_restore_set_profile(dt_restore_context_t *ctx, void *profile);
 //
 // @param ctx context handle (NULL-safe)
 // @param preserve TRUE to enable pass-through, FALSE to denoise everything
-void dt_restore_set_preserve_wide_gamut(dt_restore_context_t *ctx,
-                                        gboolean preserve);
+void dt_restore_set_preserve_wide_gamut(dt_restore_context_t *ctx, gboolean preserve);
 
 // --- inference ---
 
@@ -93,10 +92,7 @@ void dt_restore_set_preserve_wide_gamut(dt_restore_context_t *ctx,
 // @param y scanline index in the output image
 // @param user_data caller-provided context
 // @return 0 on success, non-zero to abort
-typedef int (*dt_restore_row_writer_t)(const float *scanline,
-                                       int out_w,
-                                       int y,
-                                       void *user_data);
+typedef int (*dt_restore_row_writer_t)(const float *scanline, int out_w, int y, void *user_data);
 
 // @brief run a single inference patch with sRGB conversion
 //
@@ -110,11 +106,8 @@ typedef int (*dt_restore_row_writer_t)(const float *scanline,
 // @param out_patch output buffer (planar RGB, 3 * w*s * h*s)
 // @param scale upscale factor (1 for denoise)
 // @return 0 on success
-int dt_restore_run_patch(dt_restore_context_t *ctx,
-                         const float *in_patch,
-                         int w, int h,
-                         float *out_patch,
-                         int scale);
+int dt_restore_run_patch(dt_restore_context_t *ctx, const float *in_patch, int w, int h,
+                         float *out_patch, int scale);
 
 // @brief process an image with tiled inference
 //
@@ -131,12 +124,8 @@ int dt_restore_run_patch(dt_restore_context_t *ctx,
 // @param writer_data user data passed to row_writer
 // @param control_job job handle for progress/cancellation (NULL-safe)
 // @return 0 on success
-int dt_restore_process_tiled(dt_restore_context_t *ctx,
-                             const float *in_data,
-                             int width, int height,
-                             int scale,
-                             dt_restore_row_writer_t row_writer,
-                             void *writer_data,
+int dt_restore_process_tiled(dt_restore_context_t *ctx, const float *in_data, int width, int height,
+                             int scale, dt_restore_row_writer_t row_writer, void *writer_data,
                              struct _dt_job_t *control_job);
 
 // --- detail recovery ---
@@ -152,10 +141,8 @@ int dt_restore_process_tiled(dt_restore_context_t *ctx,
 // @param width image width
 // @param height image height
 // @param alpha blend strength (0 = none, 1 = full)
-void dt_restore_apply_detail_recovery(const float *original_4ch,
-                                      float *denoised_4ch,
-                                      int width, int height,
-                                      float alpha);
+void dt_restore_apply_detail_recovery(const float *original_4ch, float *denoised_4ch, int width,
+                                      int height, float alpha);
 
 // @brief compute DWT-filtered luminance detail from 3ch buffers
 //
@@ -169,12 +156,5 @@ void dt_restore_apply_detail_recovery(const float *original_4ch,
 // @param height image height
 // @return newly allocated 1ch buffer, or NULL. caller frees
 //         with dt_free_align()
-float *dt_restore_compute_dwt_detail(const float *before_3ch,
-                                     const float *after_3ch,
-                                     int width, int height);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+float *dt_restore_compute_dwt_detail(const float *before_3ch, const float *after_3ch, int width,
+                                     int height);

@@ -24,13 +24,14 @@
 G_BEGIN_DECLS
 
 #define DTGTK_TYPE_DRAWING_AREA dtgtk_drawing_area_get_type()
-G_DECLARE_FINAL_TYPE(GtkDarktableDrawingArea, dtgtk_drawing_area, DTGTK, DRAWING_AREA, GtkDrawingArea)
+G_DECLARE_FINAL_TYPE(GtkDarktableDrawingArea, dtgtk_drawing_area, DTGTK, DRAWING_AREA,
+                     GtkDrawingArea)
 
 struct _GtkDarktableDrawingArea
 {
-  GtkDrawingArea area;
+    GtkDrawingArea area;
 
-  /*
+    /*
    * drawing area aspect ratio.
    * width = as much as possible
    * height = width * aspect
@@ -39,8 +40,8 @@ struct _GtkDarktableDrawingArea
    *      0.5 => height is 2 times smaller than width
    *      2   => height is 2 times bigger than width
    */
-  double aspect;
-  int height;
+    double aspect;
+    int height;
 };
 
 GType dtgtk_drawing_area_get_type(void);
@@ -51,9 +52,3 @@ void dtgtk_drawing_area_set_aspect_ratio(GtkWidget *w, double aspect);
 void dtgtk_drawing_area_set_height(GtkWidget *w, int height);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

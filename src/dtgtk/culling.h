@@ -24,96 +24,93 @@
 
 typedef enum dt_culling_mode_t
 {
-  DT_CULLING_MODE_CULLING = 0, // classic culling mode
-  DT_CULLING_MODE_PREVIEW      // full preview mode
+    DT_CULLING_MODE_CULLING = 0, // classic culling mode
+    DT_CULLING_MODE_PREVIEW      // full preview mode
 } dt_culling_mode_t;
 
 typedef enum dt_culling_move_t
 {
-  DT_CULLING_MOVE_NONE,
-  DT_CULLING_MOVE_LEFT,
-  DT_CULLING_MOVE_UP,
-  DT_CULLING_MOVE_RIGHT,
-  DT_CULLING_MOVE_DOWN,
-  DT_CULLING_MOVE_PAGEUP,
-  DT_CULLING_MOVE_PAGEDOWN,
-  DT_CULLING_MOVE_START,
-  DT_CULLING_MOVE_END
+    DT_CULLING_MOVE_NONE,
+    DT_CULLING_MOVE_LEFT,
+    DT_CULLING_MOVE_UP,
+    DT_CULLING_MOVE_RIGHT,
+    DT_CULLING_MOVE_DOWN,
+    DT_CULLING_MOVE_PAGEUP,
+    DT_CULLING_MOVE_PAGEDOWN,
+    DT_CULLING_MOVE_START,
+    DT_CULLING_MOVE_END
 } dt_culling_move_t;
 
 typedef struct dt_culling_t
 {
-  dt_culling_mode_t mode;
+    dt_culling_mode_t mode;
 
-  GtkWidget *widget; // GtkLayout -- main widget
+    GtkWidget *widget; // GtkLayout -- main widget
 
-  // list of thumbnails loaded inside main widget (dt_thumbnail_t)
-  GList *list;
+    // list of thumbnails loaded inside main widget (dt_thumbnail_t)
+    GList *list;
 
-  // rowid of the main shown image inside 'memory.collected_images'
-  int offset;
-  dt_imgid_t offset_imgid;
+    // rowid of the main shown image inside 'memory.collected_images'
+    int offset;
+    dt_imgid_t offset_imgid;
 
-  int thumbs_count;            // last nb of thumb to display
-  int view_width, view_height; // last main widget size
-  GdkRectangle thumbs_area;    // coordinate of all the currently loaded thumbs area
+    int thumbs_count;            // last nb of thumb to display
+    int view_width, view_height; // last main widget size
+    GdkRectangle thumbs_area;    // coordinate of all the currently loaded thumbs area
 
-  gboolean navigate_inside_selection; // do we navigate inside selection or inside full collection
-  gboolean selection_sync;            // should the selection follow current culling images
+    gboolean navigate_inside_selection; // do we navigate inside selection or inside full collection
+    gboolean selection_sync;            // should the selection follow current culling images
 
-  gboolean select_desactivate;
+    gboolean select_desactivate;
 
-  // the global zoom level of all images in the culling view.
-  // scales images from 0 "image to fit" to 1 "100% zoom".
-  float zoom_ratio;
+    // the global zoom level of all images in the culling view.
+    // scales images from 0 "image to fit" to 1 "100% zoom".
+    float zoom_ratio;
 
-  gboolean panning;      // are we moving zoomed images ?
-  double pan_x;          // last position during panning
-  double pan_y;          //
-  gboolean mouse_inside; // is the mouse inside culling center view ?
+    gboolean panning;      // are we moving zoomed images ?
+    double pan_x;          // last position during panning
+    double pan_y;          //
+    gboolean mouse_inside; // is the mouse inside culling center view ?
 
-  // Safety-net timer that finalises a deferred zoom gesture (reloads the
-  // surface at the correct resolution) shortly after the last zoom event.
-  // Smooth-scroll "stop" events are not reliably delivered by every device,
-  // so we cannot depend on them alone to trigger dt_culling_zoom_end().
-  guint zoom_finalize_timeout_id;
+    // Safety-net timer that finalises a deferred zoom gesture (reloads the
+    // surface at the correct resolution) shortly after the last zoom event.
+    // Smooth-scroll "stop" events are not reliably delivered by every device,
+    // so we cannot depend on them alone to trigger dt_culling_zoom_end().
+    guint zoom_finalize_timeout_id;
 
-  gboolean focus; // do we show focus rectangles on images ?
+    gboolean focus; // do we show focus rectangles on images ?
 
-  dt_thumbnail_overlay_t overlays; // overlays type
-  int overlays_block_timeout;      // overlay block visibility duration
-  gboolean show_tooltips;          // are tooltips visible ?
+    dt_thumbnail_overlay_t overlays; // overlays type
+    int overlays_block_timeout;      // overlay block visibility duration
+    gboolean show_tooltips;          // are tooltips visible ?
 
-  dt_imgid_t selection; // image selected inside culling (used with selection act_on algorithm)
+    dt_imgid_t selection; // image selected inside culling (used with selection act_on algorithm)
 } dt_culling_t;
 
 dt_culling_t *dt_culling_new(const dt_culling_mode_t mode);
 // reload all thumbs from scratch.
-void dt_culling_full_redraw(dt_culling_t *table,
-                            const gboolean force);
+void dt_culling_full_redraw(dt_culling_t *table, const gboolean force);
 // initialise culling offset/navigation mode, etc before entering.  if
 // offset is > 0 it'll be used as offset, otherwise offset will be
 // determined by other means
-void dt_culling_init(dt_culling_t *table,
-                     const int offset,
+void dt_culling_init(dt_culling_t *table, const int offset,
                      const dt_lighttable_culling_restriction_t restriction);
 // move by key actions.
 // this key accels are not managed here but inside view
-gboolean dt_culling_key_move(dt_culling_t *table,
-                             const dt_culling_move_t move);
+gboolean dt_culling_key_move(dt_culling_t *table, const dt_culling_move_t move);
 
 // change the offset imgid. This will recompute everything even if
 // offset doesn't change because this may means that other images have
 // changed
-void dt_culling_change_offset_image(dt_culling_t *table,
-                                    const int offset);
+void dt_culling_change_offset_image(dt_culling_t *table, const int offset);
 
 void dt_culling_zoom_max(dt_culling_t *table);
 void dt_culling_zoom_fit(dt_culling_t *table);
 
 // zoom by zoom_delta (in th->zoom units) centered on culling-local (x_culling, y_culling).
 // equivalent to _thumbs_zoom_add.
-gboolean dt_culling_zoom_add(dt_culling_t *table, float zoom_delta, float x_culling, float y_culling, int state);
+gboolean dt_culling_zoom_add(dt_culling_t *table, float zoom_delta, float x_culling,
+                             float y_culling, int state);
 // Finalise a zoom gesture: reload surfaces at the correct resolution for thumbnails
 // that were in deferred-preview mode during the gesture.
 void dt_culling_zoom_end(dt_culling_t *table);
@@ -123,16 +120,8 @@ void dt_culling_zoom_end(dt_culling_t *table);
 gboolean dt_culling_pan_move(dt_culling_t *table, float dx, float dy, int state);
 
 // set the overlays type
-void dt_culling_set_overlays_mode(dt_culling_t *table,
-                                  const dt_thumbnail_overlay_t over);
-void dt_culling_force_overlay(dt_culling_t *table,
-                              const gboolean force);
+void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over);
+void dt_culling_force_overlay(dt_culling_t *table, const gboolean force);
 
 // update active images list
 void dt_culling_update_active_images_list(dt_culling_t *table);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

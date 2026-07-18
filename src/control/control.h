@@ -46,7 +46,8 @@ struct dt_lib_backgroundjob_element_t;
 // called from gui
 void dt_control_expose(GtkWidget *widget, cairo_t *cr);
 gboolean dt_control_draw_endmarker(GtkWidget *widget, cairo_t *crf, gpointer user_data);
-void dt_control_button_pressed(double x, double y, double pressure, int which, int type, uint32_t state);
+void dt_control_button_pressed(double x, double y, double pressure, int which, int type,
+                               uint32_t state);
 void dt_control_button_released(double x, double y, int which, uint32_t state);
 void dt_control_mouse_moved(double x, double y, double pressure, int which);
 void dt_control_mouse_leave(void);
@@ -120,118 +121,119 @@ void dt_control_hinter_message(const char *message);
 
 typedef enum dt_control_state_t
 {
-  DT_CONTROL_STATE_DISABLED = 0,
-  DT_CONTROL_STATE_RUNNING  = 1,
-  DT_CONTROL_STATE_CLEANUP  = -1
+    DT_CONTROL_STATE_DISABLED = 0,
+    DT_CONTROL_STATE_RUNNING = 1,
+    DT_CONTROL_STATE_CLEANUP = -1
 } dt_control_state_t;
 
 typedef struct dt_control_t
 {
-  gboolean accel_initialised;
+    gboolean accel_initialised;
 
-  dt_action_t *actions, actions_global,
-               actions_views, actions_thumb,
-               actions_libs, actions_format, actions_storage,
-               actions_iops, actions_blend, actions_focus,
-               actions_lua, actions_fallbacks, *actions_modifiers;
+    dt_action_t *actions, actions_global, actions_views, actions_thumb, actions_libs,
+        actions_format, actions_storage, actions_iops, actions_blend, actions_focus, actions_lua,
+        actions_fallbacks, *actions_modifiers;
 
-  GSequence *shortcuts;
-  gboolean enable_fallbacks;
-  GtkWidget *mapping_widget;
-  gboolean confirm_mapping;
-  dt_action_element_t element;
-  GPtrArray *widget_definitions;
-  GSList *input_drivers;
+    GSequence *shortcuts;
+    gboolean enable_fallbacks;
+    GtkWidget *mapping_widget;
+    gboolean confirm_mapping;
+    dt_action_element_t element;
+    GPtrArray *widget_definitions;
+    GSList *input_drivers;
 
-  // gui related stuff
-  double tabborder;
-  int32_t width, height;
-  pthread_t gui_thread;
-  int button_down, button_down_which, button_type;
-  double button_x, button_y;
-  int history_start;
-  dt_imgid_t mouse_over_id;
-  dt_imgid_t last_clicked_filmstrip_id;
-  gboolean lock_cursor_shape;
+    // gui related stuff
+    double tabborder;
+    int32_t width, height;
+    pthread_t gui_thread;
+    int button_down, button_down_which, button_type;
+    double button_x, button_y;
+    int history_start;
+    dt_imgid_t mouse_over_id;
+    dt_imgid_t last_clicked_filmstrip_id;
+    gboolean lock_cursor_shape;
 
-  int busy;
-  dt_pthread_mutex_t log_mutex;
+    int busy;
+    dt_pthread_mutex_t log_mutex;
 
-  // message log
-  int32_t log_pos, log_ack;
-  char log_message[DT_CTL_LOG_SIZE][DT_CTL_LOG_MSG_SIZE];
-  guint log_message_timeout_id;
+    // message log
+    int32_t log_pos, log_ack;
+    char log_message[DT_CTL_LOG_SIZE][DT_CTL_LOG_MSG_SIZE];
+    guint log_message_timeout_id;
 
-  // toast log
-  int32_t toast_pos, toast_ack;
-  char toast_message[DT_CTL_TOAST_SIZE][DT_CTL_TOAST_MSG_SIZE];
-  guint toast_message_timeout_id;
+    // toast log
+    int32_t toast_pos, toast_ack;
+    char toast_message[DT_CTL_TOAST_SIZE][DT_CTL_TOAST_MSG_SIZE];
+    guint toast_message_timeout_id;
 
-  // persistent log history
-  GList *log_history;                     // GList of log history entries (newest last)
-  dt_pthread_mutex_t log_history_mutex;   // mutex for history access
+    // persistent log history
+    GList *log_history;                   // GList of log history entries (newest last)
+    dt_pthread_mutex_t log_history_mutex; // mutex for history access
 
-  // gui settings
-  dt_pthread_mutex_t global_mutex, image_mutex;
+    // gui settings
+    dt_pthread_mutex_t global_mutex, image_mutex;
 
-  // job management
-  dt_atomic_int running;
-  dt_atomic_int quitting;
-  dt_atomic_int pending_jobs;
-  gboolean cups_started;
-  gboolean export_scheduled;
-  dt_pthread_mutex_t queue_mutex, cond_mutex;
-  pthread_cond_t cond;
-  int32_t num_threads;
-  pthread_t *thread, kick_on_workers_thread, update_gphoto_thread;
-  dt_job_t **job;
+    // job management
+    dt_atomic_int running;
+    dt_atomic_int quitting;
+    dt_atomic_int pending_jobs;
+    gboolean cups_started;
+    gboolean export_scheduled;
+    dt_pthread_mutex_t queue_mutex, cond_mutex;
+    pthread_cond_t cond;
+    int32_t num_threads;
+    pthread_t *thread, kick_on_workers_thread, update_gphoto_thread;
+    dt_job_t **job;
 
-  GList *queues[DT_JOB_QUEUE_MAX];
-  size_t queue_length[DT_JOB_QUEUE_MAX];
+    GList *queues[DT_JOB_QUEUE_MAX];
+    size_t queue_length[DT_JOB_QUEUE_MAX];
 
-  dt_pthread_mutex_t res_mutex;
-  dt_job_t *job_res[DT_CTL_WORKER_RESERVED];
-  uint8_t new_res[DT_CTL_WORKER_RESERVED];
-  pthread_t thread_res[DT_CTL_WORKER_RESERVED];
+    dt_pthread_mutex_t res_mutex;
+    dt_job_t *job_res[DT_CTL_WORKER_RESERVED];
+    uint8_t new_res[DT_CTL_WORKER_RESERVED];
+    pthread_t thread_res[DT_CTL_WORKER_RESERVED];
 
-  struct
-  {
-    GList *list;
-    size_t list_length;
-    size_t n_progress_bar;
-    double global_progress;
-    dt_pthread_mutex_t mutex;
+    struct
+    {
+        GList *list;
+        size_t list_length;
+        size_t n_progress_bar;
+        double global_progress;
+        dt_pthread_mutex_t mutex;
 
 #ifdef _WIN32
-    ITaskbarList3 *taskbarlist;
+        ITaskbarList3 *taskbarlist;
 #endif
 
-    // these proxy functions should ONLY be used by control/process.c!
+        // these proxy functions should ONLY be used by control/process.c!
+        struct
+        {
+            dt_lib_module_t *module;
+            void *(*added)(dt_lib_module_t *self, gboolean has_progress_bar, const gchar *message);
+            void (*destroyed)(dt_lib_module_t *self,
+                              struct dt_lib_backgroundjob_element_t *instance);
+            void (*cancellable)(dt_lib_module_t *self,
+                                struct dt_lib_backgroundjob_element_t *instance,
+                                dt_progress_t *progress);
+            void (*updated)(dt_lib_module_t *self, struct dt_lib_backgroundjob_element_t *instance,
+                            double value);
+            void (*message_updated)(dt_lib_module_t *self,
+                                    struct dt_lib_backgroundjob_element_t *instance,
+                                    const char *message);
+        } proxy;
+
+    } progress_system;
+
+    /* proxy */
     struct
     {
-      dt_lib_module_t *module;
-      void *(*added)(dt_lib_module_t *self, gboolean has_progress_bar, const gchar *message);
-      void (*destroyed)(dt_lib_module_t *self, struct dt_lib_backgroundjob_element_t *instance);
-      void (*cancellable)(dt_lib_module_t *self, struct dt_lib_backgroundjob_element_t *instance,
-                          dt_progress_t *progress);
-      void (*updated)(dt_lib_module_t *self, struct dt_lib_backgroundjob_element_t *instance, double value);
-      void (*message_updated)(dt_lib_module_t *self, struct dt_lib_backgroundjob_element_t *instance,
-                              const char *message);
+        struct
+        {
+            dt_lib_module_t *module;
+            void (*set_message)(dt_lib_module_t *self, const gchar *message);
+        } hinter;
+
     } proxy;
-
-  } progress_system;
-
-  /* proxy */
-  struct
-  {
-
-    struct
-    {
-      dt_lib_module_t *module;
-      void (*set_message)(dt_lib_module_t *self, const gchar *message);
-    } hinter;
-
-  } proxy;
 
 } dt_control_t;
 
@@ -253,9 +255,3 @@ dt_imgid_t dt_control_get_mouse_over_id(void);
 void dt_control_set_mouse_over_id(const dt_imgid_t value);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

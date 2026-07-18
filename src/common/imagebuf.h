@@ -23,11 +23,10 @@ G_BEGIN_DECLS
 
 // Allocate a 64-byte aligned buffer for an image of the given dimensions and channels.
 // The return value must be freed with dt_free_align().
-static inline float *__restrict__ dt_iop_image_alloc(const size_t width,
-                                                     const size_t height,
+static inline float *__restrict__ dt_iop_image_alloc(const size_t width, const size_t height,
                                                      const size_t ch)
 {
-  return dt_alloc_align_float(width * height * ch);
+    return dt_alloc_align_float(width * height * ch);
 }
 
 // Allocate one or more buffers as detailed in the given parameters.
@@ -43,33 +42,31 @@ gboolean dt_iop_alloc_image_buffers(struct dt_iop_module_t *const module,
                                     const struct dt_iop_roi_t *const roi_out, ...);
 // Optional flags to add to size request.  Default is to allocate N channels per pixel according to
 // the dimensions of roi_out
-#define DT_IMGSZ_CH_MASK    0x000FFFF  // isolate just the number of floats per pixel
+#define DT_IMGSZ_CH_MASK 0x000FFFF // isolate just the number of floats per pixel
 
-#define DT_IMGSZ_ROI_MASK   0x0100000  // isolate just input/output selection
-#define DT_IMGSZ_OUTPUT     0x0000000  // read image dimensions from roi_out
-#define DT_IMGSZ_INPUT      0x0100000  // read image dimensions from roi_in
+#define DT_IMGSZ_ROI_MASK 0x0100000 // isolate just input/output selection
+#define DT_IMGSZ_OUTPUT 0x0000000   // read image dimensions from roi_out
+#define DT_IMGSZ_INPUT 0x0100000    // read image dimensions from roi_in
 
-#define DT_IMGSZ_PERTHREAD  0x0200000  // allocate a separate buffer for each thread
-#define DT_IMGSZ_CLEARBUF   0x0400000  // zero the allocated buffer
+#define DT_IMGSZ_PERTHREAD 0x0200000 // allocate a separate buffer for each thread
+#define DT_IMGSZ_CLEARBUF 0x0400000  // zero the allocated buffer
 
-#define DT_IMGSZ_DIM_MASK   0x00F0000  // isolate the requested image dimension(s)
-#define DT_IMGSZ_FULL       0x0000000  // full height times width
-#define DT_IMGSZ_HEIGHT     0x0010000  // buffer equal to one column of the image
-#define DT_IMGSZ_WIDTH      0x0020000  // buffer equal to one row of the image
-#define DT_IMGSZ_LONGEST    0x0030000  // buffer equal to larger of one row/one column
-
+#define DT_IMGSZ_DIM_MASK 0x00F0000 // isolate the requested image dimension(s)
+#define DT_IMGSZ_FULL 0x0000000     // full height times width
+#define DT_IMGSZ_HEIGHT 0x0010000   // buffer equal to one column of the image
+#define DT_IMGSZ_WIDTH 0x0020000    // buffer equal to one row of the image
+#define DT_IMGSZ_LONGEST 0x0030000  // buffer equal to larger of one row/one column
 
 __DT_CLONE_TARGETS__
-static inline void dt_simd_memcpy(const float *const __restrict__ in,
-                                  float *const __restrict__ out,
+static inline void dt_simd_memcpy(const float *const __restrict__ in, float *const __restrict__ out,
                                   const size_t num_elem)
 {
-  // Perform a parallel vectorized memcpy on 64-bits aligned
-  // contiguous buffers. This is several times faster than the original memcpy
+    // Perform a parallel vectorized memcpy on 64-bits aligned
+    // contiguous buffers. This is several times faster than the original memcpy
 
-  DT_OMP_FOR_SIMD(aligned(in, out:64))
-  for(size_t k = 0; k < num_elem; k++)
-    out[k] = in[k];
+    DT_OMP_FOR_SIMD(aligned(in, out : 64))
+    for (size_t k = 0; k < num_elem; k++)
+        out[k] = in[k];
 }
 
 // Copy an image buffer, specifying the number of floats it contains.
@@ -77,8 +74,7 @@ static inline void dt_simd_memcpy(const float *const __restrict__ in,
 // because it helps document the purpose of the code and because it
 // gives us a single point where we can optimize performance on
 // different architectures.
-void dt_iop_image_copy(float *const __restrict__ out,
-                       const float *const __restrict__ in,
+void dt_iop_image_copy(float *const __restrict__ out, const float *const __restrict__ in,
                        const size_t nfloats);
 
 // Copy an image buffer, specifying its dimensions and number of
@@ -87,12 +83,10 @@ void dt_iop_image_copy(float *const __restrict__ out,
 // because it gives us a single point where we can optimize
 // performance on different architectures.
 static inline void dt_iop_image_copy_by_size(float *const __restrict__ out,
-                                             const float *const __restrict__ in,
-                                             const size_t width,
-                                             const size_t height,
-                                             const size_t ch)
+                                             const float *const __restrict__ in, const size_t width,
+                                             const size_t height, const size_t ch)
 {
-  dt_iop_image_copy(out, in, width * height * ch);
+    dt_iop_image_copy(out, in, width * height * ch);
 }
 
 // Copy an image buffer, specifying the region of interest.  The
@@ -100,70 +94,44 @@ static inline void dt_iop_image_copy_by_size(float *const __restrict__ out,
 // result is padded with zeros.
 // If the output RoI is smaller than the input RoI, only a portion of
 // the input buffer will be copied.
-void dt_iop_copy_image_roi(float *const __restrict__ out,
-                           const float *const __restrict__ in,
-                           const size_t ch,
-                           const dt_iop_roi_t *const __restrict__ roi_in,
+void dt_iop_copy_image_roi(float *const __restrict__ out, const float *const __restrict__ in,
+                           const size_t ch, const dt_iop_roi_t *const __restrict__ roi_in,
                            const dt_iop_roi_t *const __restrict__ roi_out);
 
 // Copy one image buffer to another, multiplying each element by the
 // specified scale factor
-void dt_iop_image_scaled_copy(float *const __restrict__ buf,
-                              const float *const __restrict__ src,
-                              const float scale,
-                              const size_t width,
-                              const size_t height,
+void dt_iop_image_scaled_copy(float *const __restrict__ buf, const float *const __restrict__ src,
+                              const float scale, const size_t width, const size_t height,
                               const size_t ch);
 
 // Fill an image buffer with a specified value.
-void dt_iop_image_fill(float *const buf,
-                       const float fill_value,
-                       const size_t width,
-                       const size_t height,
-                       const size_t ch);
+void dt_iop_image_fill(float *const buf, const float fill_value, const size_t width,
+                       const size_t height, const size_t ch);
 
 // Add a specified constant value to every element of the image buffer
-void dt_iop_image_add_const(float *const buf,
-                            const float add_value,
-                            const size_t width,
-                            const size_t height,
-                            const size_t ch);
+void dt_iop_image_add_const(float *const buf, const float add_value, const size_t width,
+                            const size_t height, const size_t ch);
 
 // Add the contents of another image buffer to the given buffer, element-wise
-void dt_iop_image_add_image(float *const buf,
-                            const float *const other_buf,
-                            const size_t width,
-                            const size_t height,
-                            const size_t ch);
+void dt_iop_image_add_image(float *const buf, const float *const other_buf, const size_t width,
+                            const size_t height, const size_t ch);
 
 // Subtract the contents of another image buffer from the given buffer, element-wise
-void dt_iop_image_sub_image(float *const buf,
-                            const float *const other_buf,
-                            const size_t width,
-                            const size_t height,
-                            const size_t ch);
+void dt_iop_image_sub_image(float *const buf, const float *const other_buf, const size_t width,
+                            const size_t height, const size_t ch);
 
 // Subtract each element of the image buffer from the given constant value
-void dt_iop_image_invert(float *const buf,
-                         const float max_value,
-                         const size_t width,
-                         const size_t height,
-                         const size_t ch);
+void dt_iop_image_invert(float *const buf, const float max_value, const size_t width,
+                         const size_t height, const size_t ch);
 
 // Multiply every element of the image buffer by a specified constant value
-void dt_iop_image_mul_const(float *const buf,
-                            const float mul_value,
-                            const size_t width,
-                            const size_t height,
-                            const size_t ch);
+void dt_iop_image_mul_const(float *const buf, const float mul_value, const size_t width,
+                            const size_t height, const size_t ch);
 
 // elementwise: buf = lammda*buf + (1-lambda)*other
-void dt_iop_image_linear_blend(float *const __restrict__ buf,
-                               const float lambda,
-                               const float *const __restrict__ other_buf,
-                               const size_t width,
-                               const size_t height,
-                               const size_t ch);
+void dt_iop_image_linear_blend(float *const __restrict__ buf, const float lambda,
+                               const float *const __restrict__ other_buf, const size_t width,
+                               const size_t height, const size_t ch);
 
 // perform timings to determine the optimal threshold for switching to
 // parallel operations, as well as the maximal number of threads
@@ -174,9 +142,3 @@ void dt_iop_image_copy_benchmark();
 void dt_iop_image_copy_configure();
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

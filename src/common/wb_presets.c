@@ -95,229 +95,227 @@ const char uf_auto_wb[] = N_("auto WB");
 int wb_presets_size = 10000;
 int wb_presets_count = 0;
 
-#define _ERROR(...)     {\
-                          dt_print(DT_DEBUG_CONTROL, "[wb_presets] error: " __VA_ARGS__);\
-                          valid = FALSE; \
-                          goto end;\
-                        }
+#define _ERROR(...)                                                                                \
+    {                                                                                              \
+        dt_print(DT_DEBUG_CONTROL, "[wb_presets] error: " __VA_ARGS__);                            \
+        valid = FALSE;                                                                             \
+        goto end;                                                                                  \
+    }
 
 dt_wb_data *wb_presets;
 
 int dt_wb_presets_count(void)
 {
-  return wb_presets_count;
+    return wb_presets_count;
 }
 
 dt_wb_data *dt_wb_preset(const int k)
 {
-  return &wb_presets[k];
+    return &wb_presets[k];
 }
 
 // extern void dt_wb_presets_w(void);
 
 void dt_wb_presets_init(const char *alternative)
 {
-  wb_presets = calloc(sizeof(dt_wb_data), wb_presets_size);
-  if(!wb_presets)
-  {
-    wb_presets_size = 0;
-    dt_print(DT_DEBUG_ALWAYS, "[wb_presets] out of memory while initializing");
-    return;
-  }
-
-  // dt_wb_presets_w();
-
-  GError *error = NULL;
-  char filename[PATH_MAX] = { 0 };
-
-  if(alternative == NULL)
-  {
-    // TODO: shall we look for profiles in the user config dir?
-    char datadir[PATH_MAX] = { 0 };
-    dt_loc_get_datadir(datadir, sizeof(datadir));
-    snprintf(filename, sizeof(filename), "%s/%s", datadir, "wb_presets.json");
-  }
-  else
-    g_strlcpy(filename, alternative, sizeof(filename));
-
-  const gboolean preset_file = g_file_test(filename, G_FILE_TEST_EXISTS);
-  dt_print(DT_DEBUG_CONTROL, "[wb_presets] loading wb_presets from `%s'%s",
-    filename, preset_file ? "" : " missing");
-  if(!preset_file) return;
-
-  JsonParser *parser = json_parser_new();
-  if(!json_parser_load_from_file(parser, filename, &error))
-  {
-    dt_print(DT_DEBUG_ALWAYS,
-             "[wb_presets] error: parsing json from `%s' failed: %s", filename, error->message);
-    g_error_free(error);
-    g_object_unref(parser);
-    return;
-  }
-
-  // read file, store into wb_preset
-
-  JsonReader *reader = NULL;
-  gboolean valid = TRUE;
-
-  JsonNode *root = json_parser_get_root(parser);
-  if(!root) _ERROR("can't get the root node");
-
-  reader = json_reader_new(root);
-
-  if(!json_reader_read_member(reader, "version"))
-    _ERROR("can't find file version.");
-
-  // check the file version
-  const int version = json_reader_get_int_value(reader);
-  json_reader_end_member(reader);
-
-  if(version > DT_WB_PRESETS_VERSION)
-    _ERROR("file version is not what this code understands");
-
-  if(!json_reader_read_member(reader, "wb_presets"))
-    _ERROR("can't find `wb_presets' entry.");
-
-  if(!json_reader_is_array(reader))
-    _ERROR("`wb_presets' is supposed to be an array");
-
-  const int n_makers = json_reader_count_elements(reader);
-  dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d makers", n_makers);
-
-  for(int i = 0; i < n_makers; i++)
-  {
-    if(!json_reader_read_element(reader, i))
-      _ERROR("can't access maker at position %d / %d", i+1, n_makers);
-
-    if(!json_reader_read_member(reader, "maker"))
-      _ERROR("missing `maker`");
-
-    const int current_make = wb_presets_count;
-
-    wb_presets[wb_presets_count].make =
-      g_strdup(json_reader_get_string_value(reader));
-    json_reader_end_member(reader);
-
-    // go through all models and check those
-
-    if(!json_reader_read_member(reader, "models"))
-      _ERROR("missing `models`");
-
-    const int n_models = json_reader_count_elements(reader);
-    dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d models for maker `%s'", n_models, wb_presets[wb_presets_count].make);
-
-    for(int j = 0; j < n_models; j++)
+    wb_presets = calloc(sizeof(dt_wb_data), wb_presets_size);
+    if (!wb_presets)
     {
-      if(!json_reader_read_element(reader, j))
-        _ERROR("can't access model at position %d / %d", j+1, n_models);
-
-      if(!json_reader_read_member(reader, "model"))
-        _ERROR("missing `model`");
-
-      const int current_model = wb_presets_count;
-
-      wb_presets[wb_presets_count].model =
-        g_strdup(json_reader_get_string_value(reader));
-
-      json_reader_end_member(reader);
-
-      if(!json_reader_read_member(reader, "presets"))
-        _ERROR("missing `presets`");
-
-      const int n_presets = json_reader_count_elements(reader);
-      dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d presets for `%s'",
-               n_presets, wb_presets[wb_presets_count].model);
-
-      for(int k = 0; k < n_presets; k++)
-      {
-        // we point to the same make/model string, save some memory
-        // this is ok as we never deallocate this struct.
-        if(wb_presets[wb_presets_count].make == NULL)
-          wb_presets[wb_presets_count].make = wb_presets[current_make].make;
-        if(wb_presets[wb_presets_count].model == NULL)
-          wb_presets[wb_presets_count].model = wb_presets[current_model].model;
-
-        if(!json_reader_read_element(reader, k))
-          _ERROR("can't access preset at position %d / %d", k+1, n_presets);
-
-        // name
-        json_reader_read_member(reader, "name");
-        wb_presets[wb_presets_count].name =
-          g_utf8_strdown(json_reader_get_string_value(reader), -1);
-        json_reader_end_member(reader);
-
-        // tuning
-        json_reader_read_member(reader, "tuning");
-        wb_presets[wb_presets_count].tuning =
-          json_reader_get_int_value(reader);
-        json_reader_end_member(reader);
-
-        // channels
-        json_reader_read_member(reader, "channels");
-
-        for(int c = 0; c < 4; c++)
-        {
-          json_reader_read_element(reader, c);
-          wb_presets[wb_presets_count].channels[c] =
-            json_reader_get_double_value(reader);
-          json_reader_end_element(reader);
-        }
-        json_reader_end_member(reader);
-
-        wb_presets_count++;
-
-        if(wb_presets_count ==  wb_presets_size)
-        {
-          // increment for 2000 presets
-          wb_presets_size +=2000;
-          dt_wb_data *tmp = realloc(wb_presets, sizeof(dt_wb_data) * wb_presets_size);
-          if(tmp)
-          {
-            wb_presets = tmp;
-            memset((void *)&wb_presets[wb_presets_count], 0, sizeof(dt_wb_data) * 2000);
-          }
-          else
-          {
-            _ERROR("fails to realloc memory at %d", wb_presets_count);
-          }
-        }
-
-        json_reader_end_element(reader);
-      }
-
-      json_reader_end_member(reader);  // presets
-      json_reader_end_element(reader); // models
+        wb_presets_size = 0;
+        dt_print(DT_DEBUG_ALWAYS, "[wb_presets] out of memory while initializing");
+        return;
     }
 
-    json_reader_end_member(reader);  // models
-    json_reader_end_element(reader); // makers
-  }
+    // dt_wb_presets_w();
 
-  dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d wb presets",
-           wb_presets_count);
+    GError *error = NULL;
+    char filename[PATH_MAX] = {0};
+
+    if (alternative == NULL)
+    {
+        // TODO: shall we look for profiles in the user config dir?
+        char datadir[PATH_MAX] = {0};
+        dt_loc_get_datadir(datadir, sizeof(datadir));
+        snprintf(filename, sizeof(filename), "%s/%s", datadir, "wb_presets.json");
+    }
+    else
+        g_strlcpy(filename, alternative, sizeof(filename));
+
+    const gboolean preset_file = g_file_test(filename, G_FILE_TEST_EXISTS);
+    dt_print(DT_DEBUG_CONTROL, "[wb_presets] loading wb_presets from `%s'%s", filename,
+             preset_file ? "" : " missing");
+    if (!preset_file)
+        return;
+
+    JsonParser *parser = json_parser_new();
+    if (!json_parser_load_from_file(parser, filename, &error))
+    {
+        dt_print(DT_DEBUG_ALWAYS, "[wb_presets] error: parsing json from `%s' failed: %s", filename,
+                 error->message);
+        g_error_free(error);
+        g_object_unref(parser);
+        return;
+    }
+
+    // read file, store into wb_preset
+
+    JsonReader *reader = NULL;
+    gboolean valid = TRUE;
+
+    JsonNode *root = json_parser_get_root(parser);
+    if (!root)
+        _ERROR("can't get the root node");
+
+    reader = json_reader_new(root);
+
+    if (!json_reader_read_member(reader, "version"))
+        _ERROR("can't find file version.");
+
+    // check the file version
+    const int version = json_reader_get_int_value(reader);
+    json_reader_end_member(reader);
+
+    if (version > DT_WB_PRESETS_VERSION)
+        _ERROR("file version is not what this code understands");
+
+    if (!json_reader_read_member(reader, "wb_presets"))
+        _ERROR("can't find `wb_presets' entry.");
+
+    if (!json_reader_is_array(reader))
+        _ERROR("`wb_presets' is supposed to be an array");
+
+    const int n_makers = json_reader_count_elements(reader);
+    dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d makers", n_makers);
+
+    for (int i = 0; i < n_makers; i++)
+    {
+        if (!json_reader_read_element(reader, i))
+            _ERROR("can't access maker at position %d / %d", i + 1, n_makers);
+
+        if (!json_reader_read_member(reader, "maker"))
+            _ERROR("missing `maker`");
+
+        const int current_make = wb_presets_count;
+
+        wb_presets[wb_presets_count].make = g_strdup(json_reader_get_string_value(reader));
+        json_reader_end_member(reader);
+
+        // go through all models and check those
+
+        if (!json_reader_read_member(reader, "models"))
+            _ERROR("missing `models`");
+
+        const int n_models = json_reader_count_elements(reader);
+        dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d models for maker `%s'", n_models,
+                 wb_presets[wb_presets_count].make);
+
+        for (int j = 0; j < n_models; j++)
+        {
+            if (!json_reader_read_element(reader, j))
+                _ERROR("can't access model at position %d / %d", j + 1, n_models);
+
+            if (!json_reader_read_member(reader, "model"))
+                _ERROR("missing `model`");
+
+            const int current_model = wb_presets_count;
+
+            wb_presets[wb_presets_count].model = g_strdup(json_reader_get_string_value(reader));
+
+            json_reader_end_member(reader);
+
+            if (!json_reader_read_member(reader, "presets"))
+                _ERROR("missing `presets`");
+
+            const int n_presets = json_reader_count_elements(reader);
+            dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d presets for `%s'", n_presets,
+                     wb_presets[wb_presets_count].model);
+
+            for (int k = 0; k < n_presets; k++)
+            {
+                // we point to the same make/model string, save some memory
+                // this is ok as we never deallocate this struct.
+                if (wb_presets[wb_presets_count].make == NULL)
+                    wb_presets[wb_presets_count].make = wb_presets[current_make].make;
+                if (wb_presets[wb_presets_count].model == NULL)
+                    wb_presets[wb_presets_count].model = wb_presets[current_model].model;
+
+                if (!json_reader_read_element(reader, k))
+                    _ERROR("can't access preset at position %d / %d", k + 1, n_presets);
+
+                // name
+                json_reader_read_member(reader, "name");
+                wb_presets[wb_presets_count].name =
+                    g_utf8_strdown(json_reader_get_string_value(reader), -1);
+                json_reader_end_member(reader);
+
+                // tuning
+                json_reader_read_member(reader, "tuning");
+                wb_presets[wb_presets_count].tuning = json_reader_get_int_value(reader);
+                json_reader_end_member(reader);
+
+                // channels
+                json_reader_read_member(reader, "channels");
+
+                for (int c = 0; c < 4; c++)
+                {
+                    json_reader_read_element(reader, c);
+                    wb_presets[wb_presets_count].channels[c] = json_reader_get_double_value(reader);
+                    json_reader_end_element(reader);
+                }
+                json_reader_end_member(reader);
+
+                wb_presets_count++;
+
+                if (wb_presets_count == wb_presets_size)
+                {
+                    // increment for 2000 presets
+                    wb_presets_size += 2000;
+                    dt_wb_data *tmp = realloc(wb_presets, sizeof(dt_wb_data) * wb_presets_size);
+                    if (tmp)
+                    {
+                        wb_presets = tmp;
+                        memset((void *)&wb_presets[wb_presets_count], 0, sizeof(dt_wb_data) * 2000);
+                    }
+                    else
+                    {
+                        _ERROR("fails to realloc memory at %d", wb_presets_count);
+                    }
+                }
+
+                json_reader_end_element(reader);
+            }
+
+            json_reader_end_member(reader);  // presets
+            json_reader_end_element(reader); // models
+        }
+
+        json_reader_end_member(reader);  // models
+        json_reader_end_element(reader); // makers
+    }
+
+    dt_print(DT_DEBUG_CONTROL, "[wb_presets] found %d wb presets", wb_presets_count);
 
 end:
-  if(parser) g_object_unref(parser);
-  if(reader) g_object_unref(reader);
-  if(!valid) exit(1);
-  return;
+    if (parser)
+        g_object_unref(parser);
+    if (reader)
+        g_object_unref(reader);
+    if (!valid)
+        exit(1);
+    return;
 }
 
 /*
  * interpolate values from p1 and p2 into out.
  */
-void dt_wb_preset_interpolate
-(const dt_wb_data *const p1, // the smaller tuning
- const dt_wb_data *const p2, // the larger tuning (can't be == p1)
- dt_wb_data *out)            // has tuning initialized
+void dt_wb_preset_interpolate(const dt_wb_data *const p1, // the smaller tuning
+                              const dt_wb_data *const p2, // the larger tuning (can't be == p1)
+                              dt_wb_data *out)            // has tuning initialized
 {
-  const double t = CLAMP((double)(out->tuning - p1->tuning) / (double)(p2->tuning - p1->tuning), 0.0, 1.0);
-  for(int k = 0; k < 3; k++)
-  {
-    out->channels[k] = 1.0 / (((1.0 - t) / p1->channels[k]) + (t / p2->channels[k]));
-  }
+    const double t =
+        CLAMP((double)(out->tuning - p1->tuning) / (double)(p2->tuning - p1->tuning), 0.0, 1.0);
+    for (int k = 0; k < 3; k++)
+    {
+        out->channels[k] = 1.0 / (((1.0 - t) / p1->channels[k]) + (t / p2->channels[k]));
+    }
 }
-
-// vim: tabstop=8 shiftwidth=8 softtabstop=8
-// kate: tab-width: 8; replace-tabs off; indent-width 8; tab-indents: on;
-// kate: indent-mode c; remove-trailing-spaces modified;

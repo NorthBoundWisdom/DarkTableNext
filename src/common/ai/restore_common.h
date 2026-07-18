@@ -44,25 +44,25 @@
 // comply with everything documented for that label in restore.h
 typedef enum
 {
-  DT_RESTORE_INPUT_KIND_UNKNOWN = 0,
-  DT_RESTORE_INPUT_KIND_BAYER_V1,
-  // reserved for a future dedicated X-Trans denoise model. accepted as
-  // a manifest value so packages shipping an xtrans variant can be
-  // validated; the actual preprocessing pipeline is TBD and filed in
-  // restore_raw_xtrans.c when Benoit's model format stabilizes. until
-  // then X-Trans sensors route to the linear pipeline as a fallback
-  // via dt_restore_load_rawdenoise_xtrans
-  DT_RESTORE_INPUT_KIND_XTRANS_V1,
-  DT_RESTORE_INPUT_KIND_LINEAR_V1,
+    DT_RESTORE_INPUT_KIND_UNKNOWN = 0,
+    DT_RESTORE_INPUT_KIND_BAYER_V1,
+    // reserved for a future dedicated X-Trans denoise model. accepted as
+    // a manifest value so packages shipping an xtrans variant can be
+    // validated; the actual preprocessing pipeline is TBD and filed in
+    // restore_raw_xtrans.c when Benoit's model format stabilizes. until
+    // then X-Trans sensors route to the linear pipeline as a fallback
+    // via dt_restore_load_rawdenoise_xtrans
+    DT_RESTORE_INPUT_KIND_XTRANS_V1,
+    DT_RESTORE_INPUT_KIND_LINEAR_V1,
 } dt_restore_input_kind_t;
 
 // color space the linear path feeds to the model. bayer path ignores
 // this (4ch-packed layout fixes the space to camRGB by construction)
 typedef enum
 {
-  DT_RESTORE_CS_LIN_REC2020 = 0,   // default for linear path
-  DT_RESTORE_CS_CAMRGB,
-  DT_RESTORE_CS_SRGB_LINEAR,
+    DT_RESTORE_CS_LIN_REC2020 = 0, // default for linear path
+    DT_RESTORE_CS_CAMRGB,
+    DT_RESTORE_CS_SRGB_LINEAR,
 } dt_restore_colorspace_t;
 
 // how WB is normalized before inference (and inverted after). DAYLIGHT
@@ -70,9 +70,9 @@ typedef enum
 // the raw's wb_coeffs; NONE leaves camRGB untouched
 typedef enum
 {
-  DT_RESTORE_WB_DAYLIGHT = 0,
-  DT_RESTORE_WB_AS_SHOT,
-  DT_RESTORE_WB_NONE,
+    DT_RESTORE_WB_DAYLIGHT = 0,
+    DT_RESTORE_WB_AS_SHOT,
+    DT_RESTORE_WB_NONE,
 } dt_restore_wb_mode_t;
 
 // post-inference output scale handling. MATCH_GAIN rescales the model
@@ -81,8 +81,8 @@ typedef enum
 // the model output as-is
 typedef enum
 {
-  DT_RESTORE_OUT_MATCH_GAIN = 0,
-  DT_RESTORE_OUT_ABSOLUTE,
+    DT_RESTORE_OUT_MATCH_GAIN = 0,
+    DT_RESTORE_OUT_ABSOLUTE,
 } dt_restore_output_scale_t;
 
 // how the 4-channel packed Bayer input is oriented. FORCE_RGGB extracts
@@ -93,8 +93,8 @@ typedef enum
 // that accept any Bayer pattern unchanged
 typedef enum
 {
-  DT_RESTORE_BAYER_FORCE_RGGB = 0,
-  DT_RESTORE_BAYER_NATIVE,
+    DT_RESTORE_BAYER_FORCE_RGGB = 0,
+    DT_RESTORE_BAYER_NATIVE,
 } dt_restore_bayer_orientation_t;
 
 // edge handling when a tile extends past the image boundary. MIRROR is
@@ -105,8 +105,8 @@ typedef enum
 // bit-identical corner tiles on non-RGGB sensors under bayer_v1
 typedef enum
 {
-  DT_RESTORE_EDGE_MIRROR_CROPPED = 0,
-  DT_RESTORE_EDGE_MIRROR,
+    DT_RESTORE_EDGE_MIRROR_CROPPED = 0,
+    DT_RESTORE_EDGE_MIRROR,
 } dt_restore_edge_pad_t;
 
 // dt_restore_sensor_class_t and _classify_sensor now live in restore.h
@@ -117,47 +117,47 @@ typedef enum
 
 struct dt_restore_env_t
 {
-  dt_ai_environment_t *ai_env;
+    dt_ai_environment_t *ai_env;
 };
 
 struct dt_restore_context_t
 {
-  dt_ai_context_t *ai_ctx;
-  struct dt_restore_env_t *env;
-  char *model_id;
-  char *model_file;
-  char *task;
-  char *input_kind; // variant-declared input kind (e.g. "packed_bayer",
-                    // "lin_rec2020"); NULL if the model doesn't declare one
-  // policy enums resolved from the manifest at load time; see comments
-  // on each enum in this file and the per-variant contract in restore.h.
-  // defaults (0-init from g_new0) reproduce RawNIND v1 behavior, except
-  // target_mean which needs explicit initialization — see _load
-  dt_restore_input_kind_t        input_kind_enum;
-  dt_restore_colorspace_t        input_colorspace;
-  dt_restore_wb_mode_t           wb_mode;
-  dt_restore_output_scale_t      output_scale;
-  dt_restore_bayer_orientation_t bayer_orientation;
-  dt_restore_edge_pad_t          edge_pad;
-  float                          target_mean;  // NAN = no exposure boost
-  int scale;        // model upscale factor (1 for denoise, 2/4 for upscale)
-  int tile_size;    // static input dim baked into the loaded ONNX
-  // color management (RGB path): convert working profile → sRGB before
-  // inference and back after. if has_profile is FALSE, fall back to
-  // gamma-only conversion (treats working-profile numbers as if sRGB).
-  gboolean has_profile;
-  float wp_to_srgb[9];   // working profile RGB -> sRGB linear
-  float srgb_to_wp[9];   // sRGB linear -> working profile RGB
-  // RGB path: when TRUE (default), out-of-sRGB-gamut pixels pass
-  // through unchanged during denoise. when FALSE, every pixel uses
-  // the model output and wide-gamut colors get clipped to sRGB.
-  gboolean preserve_wide_gamut;
-  // RGB path: shadow_boost_capable is set once at load from the
-  // model's "shadow_boost" attribute; shadow_boost is re-computed
-  // per image inside dt_restore_process_tiled() based on luminance.
-  gboolean shadow_boost_capable;
-  gboolean shadow_boost;
-  gint ref_count;
+    dt_ai_context_t *ai_ctx;
+    struct dt_restore_env_t *env;
+    char *model_id;
+    char *model_file;
+    char *task;
+    char *input_kind; // variant-declared input kind (e.g. "packed_bayer",
+                      // "lin_rec2020"); NULL if the model doesn't declare one
+    // policy enums resolved from the manifest at load time; see comments
+    // on each enum in this file and the per-variant contract in restore.h.
+    // defaults (0-init from g_new0) reproduce RawNIND v1 behavior, except
+    // target_mean which needs explicit initialization — see _load
+    dt_restore_input_kind_t input_kind_enum;
+    dt_restore_colorspace_t input_colorspace;
+    dt_restore_wb_mode_t wb_mode;
+    dt_restore_output_scale_t output_scale;
+    dt_restore_bayer_orientation_t bayer_orientation;
+    dt_restore_edge_pad_t edge_pad;
+    float target_mean; // NAN = no exposure boost
+    int scale;         // model upscale factor (1 for denoise, 2/4 for upscale)
+    int tile_size;     // static input dim baked into the loaded ONNX
+    // color management (RGB path): convert working profile → sRGB before
+    // inference and back after. if has_profile is FALSE, fall back to
+    // gamma-only conversion (treats working-profile numbers as if sRGB).
+    gboolean has_profile;
+    float wp_to_srgb[9]; // working profile RGB -> sRGB linear
+    float srgb_to_wp[9]; // sRGB linear -> working profile RGB
+    // RGB path: when TRUE (default), out-of-sRGB-gamut pixels pass
+    // through unchanged during denoise. when FALSE, every pixel uses
+    // the model output and wide-gamut colors get clipped to sRGB.
+    gboolean preserve_wide_gamut;
+    // RGB path: shadow_boost_capable is set once at load from the
+    // model's "shadow_boost" attribute; shadow_boost is re-computed
+    // per image inside dt_restore_process_tiled() based on luminance.
+    gboolean shadow_boost_capable;
+    gboolean shadow_boost;
+    gint ref_count;
 };
 
 // DWT detail-recovery band count (used by restore_rgb.c)
@@ -170,29 +170,25 @@ struct dt_restore_context_t
 // guarded against non-positive values so callers can divide safely.
 // shared by the Bayer prep helper (restore_raw_bayer.c) and by the
 // linear path's raw re-mosaic step (restore_raw_linear.c)
-static inline void _compute_cfa_black_range(const dt_image_t *img,
-                                            float black[4],
-                                            float range[4],
+static inline void _compute_cfa_black_range(const dt_image_t *img, float black[4], float range[4],
                                             float *out_white)
 {
-  const float white = img->raw_white_point
-    ? (float)img->raw_white_point : 65535.0f;
-  if(out_white) *out_white = white;
+    const float white = img->raw_white_point ? (float)img->raw_white_point : 65535.0f;
+    if (out_white)
+        *out_white = white;
 
-  const gboolean have_separate
-    = (img->raw_black_level_separate[0] != 0
-       || img->raw_black_level_separate[1] != 0
-       || img->raw_black_level_separate[2] != 0
-       || img->raw_black_level_separate[3] != 0);
-  for(int i = 0; i < 4; i++)
-    black[i] = have_separate
-      ? (float)img->raw_black_level_separate[i]
-      : (float)img->raw_black_level;
-  for(int i = 0; i < 4; i++)
-  {
-    range[i] = white - black[i];
-    if(range[i] <= 0.0f) range[i] = 1.0f;
-  }
+    const gboolean have_separate =
+        (img->raw_black_level_separate[0] != 0 || img->raw_black_level_separate[1] != 0 ||
+         img->raw_black_level_separate[2] != 0 || img->raw_black_level_separate[3] != 0);
+    for (int i = 0; i < 4; i++)
+        black[i] =
+            have_separate ? (float)img->raw_black_level_separate[i] : (float)img->raw_black_level;
+    for (int i = 0; i < 4; i++)
+    {
+        range[i] = white - black[i];
+        if (range[i] <= 0.0f)
+            range[i] = 1.0f;
+    }
 }
 
 // periodic mirror-pad index reflection, shared by every restore_*
@@ -200,13 +196,17 @@ static inline void _compute_cfa_black_range(const dt_image_t *img,
 // raw linear). fully periodic: any input index maps into [0, n)
 static inline int _mirror(int i, int n)
 {
-  if(n <= 1) return 0;
-  if(i < 0) i = -i;
-  const int period = 2 * (n - 1);
-  i = i % period;
-  if(i < 0) i += period;
-  if(i >= n) i = period - i;
-  return i;
+    if (n <= 1)
+        return 0;
+    if (i < 0)
+        i = -i;
+    const int period = 2 * (n - 1);
+    i = i % period;
+    if (i < 0)
+        i += period;
+    if (i >= n)
+        i = period - i;
+    return i;
 }
 
 // mirror-pad reflection within an arbitrary sub-range [lo, hi) of the
@@ -216,8 +216,8 @@ static inline int _mirror(int i, int n)
 // pipelines that physically crop the sensor to RGGB before tiling
 static inline int _mirror_in_range(int i, int lo, int hi)
 {
-  const int n = hi - lo;
-  return lo + _mirror(i - lo, n);
+    const int n = hi - lo;
+    return lo + _mirror(i - lo, n);
 }
 
 // tile overlap blending weights: each tile contributes ax·ay; adjacent
@@ -227,35 +227,25 @@ static inline int _mirror_in_range(int i, int lo, int hi)
 
 static inline float _seam_ramp(int d, int sensor_O)
 {
-  return ((float)d + 0.5f) / (float)(2 * sensor_O);
+    return ((float)d + 0.5f) / (float)(2 * sensor_O);
 }
 
-static inline float _seam_ax(int sc,
-                             int px_base, int px_end,
-                             int sensor_O,
-                             gboolean has_left, gboolean has_right)
+static inline float _seam_ax(int sc, int px_base, int px_end, int sensor_O, gboolean has_left,
+                             gboolean has_right)
 {
-  if(has_left && sc < px_base + sensor_O)
-    return _seam_ramp(sc - (px_base - sensor_O), sensor_O);
-  if(has_right && sc >= px_end - sensor_O)
-    return 1.0f - _seam_ramp(sc - (px_end - sensor_O), sensor_O);
-  return 1.0f;
+    if (has_left && sc < px_base + sensor_O)
+        return _seam_ramp(sc - (px_base - sensor_O), sensor_O);
+    if (has_right && sc >= px_end - sensor_O)
+        return 1.0f - _seam_ramp(sc - (px_end - sensor_O), sensor_O);
+    return 1.0f;
 }
 
-static inline float _seam_ay(int sr,
-                             int py_base, int py_end,
-                             int sensor_O,
-                             gboolean has_top, gboolean has_bot)
+static inline float _seam_ay(int sr, int py_base, int py_end, int sensor_O, gboolean has_top,
+                             gboolean has_bot)
 {
-  if(has_top && sr < py_base + sensor_O)
-    return _seam_ramp(sr - (py_base - sensor_O), sensor_O);
-  if(has_bot && sr >= py_end - sensor_O)
-    return 1.0f - _seam_ramp(sr - (py_end - sensor_O), sensor_O);
-  return 1.0f;
+    if (has_top && sr < py_base + sensor_O)
+        return _seam_ramp(sr - (py_base - sensor_O), sensor_O);
+    if (has_bot && sr >= py_end - sensor_O)
+        return 1.0f - _seam_ramp(sr - (py_end - sensor_O), sensor_O);
+    return 1.0f;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

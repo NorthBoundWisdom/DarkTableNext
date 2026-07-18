@@ -26,32 +26,30 @@ G_BEGIN_DECLS
 /** Available interpolations */
 enum dt_interpolation_type
 {
-  DT_INTERPOLATION_FIRST = 0,                         /**< Helper for easy iteration on interpolators */
-  DT_INTERPOLATION_BILINEAR = DT_INTERPOLATION_FIRST, /**< Bilinear interpolation (aka tent filter) */
-  DT_INTERPOLATION_BICUBIC,                           /**< Bicubic interpolation (with -0.5 parameter) */
-  DT_INTERPOLATION_LANCZOS2,                          /**< Lanczos interpolation (with 2 lobes) */
-  DT_INTERPOLATION_LANCZOS3,                          /**< Lanczos interpolation (with 3 lobes) */
-  DT_INTERPOLATION_LAST,                              /**< Helper for easy iteration on interpolators */
-  DT_INTERPOLATION_DEFAULT = DT_INTERPOLATION_BILINEAR,
-  DT_INTERPOLATION_DEFAULT_WARP = DT_INTERPOLATION_BICUBIC,
-  DT_INTERPOLATION_USERPREF,  /**< can be specified so that user setting is chosen */
-  DT_INTERPOLATION_USERPREF_WARP  /**< can be specified so that user setting is chosen */
+    DT_INTERPOLATION_FIRST = 0, /**< Helper for easy iteration on interpolators */
+    DT_INTERPOLATION_BILINEAR =
+        DT_INTERPOLATION_FIRST, /**< Bilinear interpolation (aka tent filter) */
+    DT_INTERPOLATION_BICUBIC,   /**< Bicubic interpolation (with -0.5 parameter) */
+    DT_INTERPOLATION_LANCZOS2,  /**< Lanczos interpolation (with 2 lobes) */
+    DT_INTERPOLATION_LANCZOS3,  /**< Lanczos interpolation (with 3 lobes) */
+    DT_INTERPOLATION_LAST,      /**< Helper for easy iteration on interpolators */
+    DT_INTERPOLATION_DEFAULT = DT_INTERPOLATION_BILINEAR,
+    DT_INTERPOLATION_DEFAULT_WARP = DT_INTERPOLATION_BICUBIC,
+    DT_INTERPOLATION_USERPREF,     /**< can be specified so that user setting is chosen */
+    DT_INTERPOLATION_USERPREF_WARP /**< can be specified so that user setting is chosen */
 };
 
 /** Interpolation function */
-typedef float (*dt_interpolation_func)(float *taps,
-                                       size_t num_taps,
-                                       float width,
-                                       float first_tap,
+typedef float (*dt_interpolation_func)(float *taps, size_t num_taps, float width, float first_tap,
                                        float interval);
 
 /** Interpolation structure */
 typedef struct dt_interpolation_t
 {
-  enum dt_interpolation_type id;     /**< Id such as defined by the dt_interpolation_type */
-  const char *name;                  /**< internal name  */
-  size_t width;                      /**< Half width of its kernel support */
-  dt_interpolation_func maketaps;    /**< Kernel function */
+    enum dt_interpolation_type id;  /**< Id such as defined by the dt_interpolation_type */
+    const char *name;               /**< internal name  */
+    size_t width;                   /**< Half width of its kernel support */
+    dt_interpolation_func maketaps; /**< Kernel function */
 } dt_interpolation_t;
 
 /** Compute a single interpolated sample.
@@ -74,9 +72,10 @@ typedef struct dt_interpolation_t
  *
  * @return computed sample
  */
-float dt_interpolation_compute_sample(const dt_interpolation_t *itor, const float *in, const float x,
-                                      const float y, const int width, const int height,
-                                      const int samplestride, const int linestride);
+float dt_interpolation_compute_sample(const dt_interpolation_t *itor, const float *in,
+                                      const float x, const float y, const int width,
+                                      const int height, const int samplestride,
+                                      const int linestride);
 
 /** Compute an interpolated 4 component pixel.
  *
@@ -98,8 +97,8 @@ float dt_interpolation_compute_sample(const dt_interpolation_t *itor, const floa
  *
  */
 void dt_interpolation_compute_pixel4c(const dt_interpolation_t *itor, const float *in, float *out,
-                                      const float x, const float y, const int width, const int height,
-                                      const int linestride);
+                                      const float x, const float y, const int width,
+                                      const int height, const int linestride);
 
 /** Get an interpolator from type
  * @param type Interpolator to search for
@@ -129,24 +128,23 @@ const dt_interpolation_t *dt_interpolation_new(enum dt_interpolation_type type);
  * @param in_stride [in] Input line stride in <strong>bytes</strong>
  */
 void dt_interpolation_resample(const dt_interpolation_t *itor, float *out,
-                               const dt_iop_roi_t *const roi_out,
-                               const float *const in, const dt_iop_roi_t *const roi_in);
+                               const dt_iop_roi_t *const roi_out, const float *const in,
+                               const dt_iop_roi_t *const roi_in);
 
 void dt_interpolation_resample_roi(const dt_interpolation_t *itor, float *out,
-                                   const dt_iop_roi_t *const roi_out,
-                                   const float *const in, const dt_iop_roi_t *const roi_in);
+                                   const dt_iop_roi_t *const roi_out, const float *const in,
+                                   const dt_iop_roi_t *const roi_in);
 
 #ifdef HAVE_OPENCL
 typedef struct dt_interpolation_cl_global_t
 {
-  int kernel_interpolation_resample;
-  int kernel_copy_resample;
+    int kernel_interpolation_resample;
+    int kernel_copy_resample;
 } dt_interpolation_cl_global_t;
 
 dt_interpolation_cl_global_t *dt_interpolation_init_cl_global(void);
 
 void dt_interpolation_free_cl_global(dt_interpolation_cl_global_t *g);
-
 
 /** Image resampler OpenCL version.
  *
@@ -179,19 +177,12 @@ int dt_interpolation_resample_roi_cl(const dt_interpolation_t *itor, int devid, 
                                      const dt_iop_roi_t *const roi_in);
 #endif
 
-void dt_interpolation_resample_mask(const dt_interpolation_t *itor,
-                                  float *out, const dt_iop_roi_t *const roi_out,
-                                  const float *const in, const dt_iop_roi_t *const roi_in);
+void dt_interpolation_resample_mask(const dt_interpolation_t *itor, float *out,
+                                    const dt_iop_roi_t *const roi_out, const float *const in,
+                                    const dt_iop_roi_t *const roi_in);
 
-void dt_interpolation_resample_roi_mask(const dt_interpolation_t *itor,
-                                      float *out, const dt_iop_roi_t *const roi_out,
-                                      const float *const in, const dt_iop_roi_t *const roi_in);
+void dt_interpolation_resample_roi_mask(const dt_interpolation_t *itor, float *out,
+                                        const dt_iop_roi_t *const roi_out, const float *const in,
+                                        const dt_iop_roi_t *const roi_in);
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

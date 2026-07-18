@@ -22,7 +22,8 @@
   returns dimension and available color channels if pointer is provided.
   parameter planes tells how many color channels the output *float shall have.
 */
-float *dt_read_pfm(const char *filename, int *error, int *wd, int *ht, int *ch, const size_t planes);
+float *dt_read_pfm(const char *filename, int *error, int *wd, int *ht, int *ch,
+                   const size_t planes);
 
 /*
   we support 3 types of bpp for *data
@@ -30,11 +31,5 @@ float *dt_read_pfm(const char *filename, int *error, int *wd, int *ht, int *ch, 
   bpp=4 1 float
   bpp=16 4 floats
 */
-void dt_write_pfm(const char *filename, const size_t width, const size_t height, const void *data, const size_t bpp);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-
+void dt_write_pfm(const char *filename, const size_t width, const size_t height, const void *data,
+                  const size_t bpp);

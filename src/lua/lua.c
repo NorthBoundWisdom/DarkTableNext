@@ -22,84 +22,85 @@
 
 void dt_lua_debug_stack_internal(lua_State *L, const char *function, int line)
 {
-  printf("lua stack at %s:%d", function, line);
-  if(!L)
-  {
-    printf(" Stack is NULL\n");
-    return;
-  }
-  else
-  {
-    printf("(size %d),\n",lua_gettop(L)); //useful to detect underflows
-  }
-  for(int i = 1; i <= lua_gettop(L); i++)
-  {
+    printf("lua stack at %s:%d", function, line);
+    if (!L)
+    {
+        printf(" Stack is NULL\n");
+        return;
+    }
+    else
+    {
+        printf("(size %d),\n", lua_gettop(L)); //useful to detect underflows
+    }
+    for (int i = 1; i <= lua_gettop(L); i++)
+    {
 #if 1
-    printf("\t%d:%s %s\n", i, lua_typename(L, lua_type(L, i)), luaL_tolstring(L, i, NULL));
-    lua_pop(L, 1); // remove the result of luaL_tolstring() from the stack
+        printf("\t%d:%s %s\n", i, lua_typename(L, lua_type(L, i)), luaL_tolstring(L, i, NULL));
+        lua_pop(L, 1); // remove the result of luaL_tolstring() from the stack
 #else
-    // no tolstring when stack is really screwed up
-    printf("\t%d:%s %p\n", i, lua_typename(L, lua_type(L, i)),lua_topointer(L,i));
+        // no tolstring when stack is really screwed up
+        printf("\t%d:%s %p\n", i, lua_typename(L, lua_type(L, i)), lua_topointer(L, i));
 #endif
-  }
+    }
 }
 
 void dt_lua_debug_table_internal(lua_State *L, int t, const char *function, int line)
 {
-  t = lua_absindex(L,t);
-  /* table is in the stack at index 't' */
-  lua_len(L,t);
-  printf("lua table at index %d at %s:%d (length %f)\n", t, function, line,lua_tonumber(L,-1));
-  lua_pop(L,1);
-  if(lua_type(L, t) != LUA_TTABLE)
-  {
-    printf("\tnot a table: %s\n", lua_typename(L, lua_type(L, t)));
-    return;
-  }
-  lua_pushnil(L); /* first key */
-  while(lua_next(L, t ) != 0)
-  {
-    /* uses 'key' (at index -2) and 'value' (at index -1) */
-    if(lua_type(L,-2) != LUA_TNUMBER) {
-      printf("%s - %s\n", lua_tostring(L, -2), lua_typename(L, lua_type(L, -1)));
-    } else {
-      printf("%f - %s\n", luaL_checknumber(L, -2), lua_typename(L, lua_type(L, -1)));
-    }
-
-    /* removes 'value'; keeps 'key' for next iteration */
+    t = lua_absindex(L, t);
+    /* table is in the stack at index 't' */
+    lua_len(L, t);
+    printf("lua table at index %d at %s:%d (length %f)\n", t, function, line, lua_tonumber(L, -1));
     lua_pop(L, 1);
-  }
-}
+    if (lua_type(L, t) != LUA_TTABLE)
+    {
+        printf("\tnot a table: %s\n", lua_typename(L, lua_type(L, t)));
+        return;
+    }
+    lua_pushnil(L); /* first key */
+    while (lua_next(L, t) != 0)
+    {
+        /* uses 'key' (at index -2) and 'value' (at index -1) */
+        if (lua_type(L, -2) != LUA_TNUMBER)
+        {
+            printf("%s - %s\n", lua_tostring(L, -2), lua_typename(L, lua_type(L, -1)));
+        }
+        else
+        {
+            printf("%f - %s\n", luaL_checknumber(L, -2), lua_typename(L, lua_type(L, -1)));
+        }
 
+        /* removes 'value'; keeps 'key' for next iteration */
+        lua_pop(L, 1);
+    }
+}
 
 int dt_lua_push_darktable_lib(lua_State *L)
 {
-  lua_getfield(L, LUA_REGISTRYINDEX, "dt_lua_dtlib");
-  if(lua_isnil(L, -1))
-  {
-    lua_pop(L, 1);
-    lua_newtable(L);
-    lua_newtable(L);
-    lua_setmetatable(L, -2);
-    lua_pushvalue(L, -1);
-    lua_setfield(L, LUA_REGISTRYINDEX, "dt_lua_dtlib");
-  }
-  return 1;
+    lua_getfield(L, LUA_REGISTRYINDEX, "dt_lua_dtlib");
+    if (lua_isnil(L, -1))
+    {
+        lua_pop(L, 1);
+        lua_newtable(L);
+        lua_newtable(L);
+        lua_setmetatable(L, -2);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, LUA_REGISTRYINDEX, "dt_lua_dtlib");
+    }
+    return 1;
 }
-
 
 void dt_lua_goto_subtable(lua_State *L, const char *sub_name)
 {
-  luaL_checktype(L, -1, LUA_TTABLE);
-  lua_getfield(L, -1, sub_name);
-  if(lua_isnil(L, -1))
-  {
-    lua_pop(L, 1);
-    lua_newtable(L);
-    lua_setfield(L, -2, sub_name);
+    luaL_checktype(L, -1, LUA_TTABLE);
     lua_getfield(L, -1, sub_name);
-  }
-  lua_remove(L, -2);
+    if (lua_isnil(L, -1))
+    {
+        lua_pop(L, 1);
+        lua_newtable(L);
+        lua_setfield(L, -2, sub_name);
+        lua_getfield(L, -1, sub_name);
+    }
+    lua_remove(L, -2);
 }
 
 /* LUA LOCKING
@@ -118,68 +119,65 @@ void dt_lua_goto_subtable(lua_State *L, const char *sub_name)
 
 void dt_lua_init_lock()
 {
-  pthread_mutexattr_t a;
-  pthread_mutexattr_init(&a);
-  //pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
-  dt_pthread_mutex_init(&darktable.lua_state.mutex, &a);
-  pthread_mutexattr_destroy(&a);
-  pthread_cond_init(&darktable.lua_state.cond,NULL);
-  // we want our lock initialized locked so that code between dt_lua_init_early() and dt_lua_init() can't use lua
-  dt_pthread_mutex_lock(&darktable.lua_state.mutex);
-  darktable.lua_state.exec_lock = true;
-  dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
+    pthread_mutexattr_t a;
+    pthread_mutexattr_init(&a);
+    //pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
+    dt_pthread_mutex_init(&darktable.lua_state.mutex, &a);
+    pthread_mutexattr_destroy(&a);
+    pthread_cond_init(&darktable.lua_state.cond, NULL);
+    // we want our lock initialized locked so that code between dt_lua_init_early() and dt_lua_init() can't use lua
+    dt_pthread_mutex_lock(&darktable.lua_state.mutex);
+    darktable.lua_state.exec_lock = true;
+    dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
 }
 
 void dt_lua_lock_internal(const char *function, const char *file, int line, gboolean silent)
 {
 #ifdef _DEBUG
-  if(!silent && !darktable.lua_state.ending && pthread_equal(darktable.control->gui_thread, pthread_self()) != 0)
-  {
-    dt_print(DT_DEBUG_LUA, "LUA WARNING locking from the gui thread should be avoided");
-    //g_assert(false);
-  }
+    if (!silent && !darktable.lua_state.ending &&
+        pthread_equal(darktable.control->gui_thread, pthread_self()) != 0)
+    {
+        dt_print(DT_DEBUG_LUA, "LUA WARNING locking from the gui thread should be avoided");
+        //g_assert(false);
+    }
 
-  dt_print(DT_DEBUG_LUA,"LUA DEBUG : thread %p waiting from %s:%d", g_thread_self(), function, line);
+    dt_print(DT_DEBUG_LUA, "LUA DEBUG : thread %p waiting from %s:%d", g_thread_self(), function,
+             line);
 #endif
-  dt_pthread_mutex_lock(&darktable.lua_state.mutex);
-  while(darktable.lua_state.exec_lock == true) {
-    dt_pthread_cond_wait(&darktable.lua_state.cond,&darktable.lua_state.mutex);
-  }
-  darktable.lua_state.exec_lock = true;
-  dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
+    dt_pthread_mutex_lock(&darktable.lua_state.mutex);
+    while (darktable.lua_state.exec_lock == true)
+    {
+        dt_pthread_cond_wait(&darktable.lua_state.cond, &darktable.lua_state.mutex);
+    }
+    darktable.lua_state.exec_lock = true;
+    dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
 #ifdef _DEBUG
-  dt_print(DT_DEBUG_LUA,"LUA DEBUG : thread %p taken from %s:%d",  g_thread_self(), function, line);
+    dt_print(DT_DEBUG_LUA, "LUA DEBUG : thread %p taken from %s:%d", g_thread_self(), function,
+             line);
 #endif
 }
 void dt_lua_unlock_internal(const char *function, int line)
 {
 #ifdef _DEBUG
-  dt_print(DT_DEBUG_LUA,"LUA DEBUG : thread %p released from %s:%d",g_thread_self(), function,line);
+    dt_print(DT_DEBUG_LUA, "LUA DEBUG : thread %p released from %s:%d", g_thread_self(), function,
+             line);
 #endif
-  dt_pthread_mutex_lock(&darktable.lua_state.mutex);
-  darktable.lua_state.exec_lock = false;
-  pthread_cond_signal(&darktable.lua_state.cond);
-  dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
+    dt_pthread_mutex_lock(&darktable.lua_state.mutex);
+    darktable.lua_state.exec_lock = false;
+    pthread_cond_signal(&darktable.lua_state.cond);
+    dt_pthread_mutex_unlock(&darktable.lua_state.mutex);
 }
 
 static gboolean async_redraw(gpointer data)
 {
-  dt_control_queue_redraw();
-  return false;
+    dt_control_queue_redraw();
+    return false;
 }
 
 void dt_lua_redraw_screen()
 {
-  if(darktable.gui != NULL)
-  {
-    g_idle_add(async_redraw,NULL);
-  }
+    if (darktable.gui != NULL)
+    {
+        g_idle_add(async_redraw, NULL);
+    }
 }
-
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

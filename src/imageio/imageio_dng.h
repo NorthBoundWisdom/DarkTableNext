@@ -31,7 +31,7 @@
 #include <stdint.h>
 #include <glib.h>
 
-#include "common/dttypes.h"  // for dt_aligned_pixel_t
+#include "common/dttypes.h" // for dt_aligned_pixel_t
 
 struct dt_image_t;
 
@@ -42,10 +42,10 @@ struct dt_image_t;
 // raw. when NULL, falls back to the historical single-IFD layout
 typedef struct dt_imageio_dng_preview_t
 {
-  const uint8_t *data;     // pre-encoded JPEG bytes, 8-bit YCbCr
-  int            len;      // length of @p data in bytes
-  int            width;    // declared image width
-  int            height;   // declared image height
+    const uint8_t *data; // pre-encoded JPEG bytes, 8-bit YCbCr
+    int len;             // length of @p data in bytes
+    int width;           // declared image width
+    int height;          // declared image height
 } dt_imageio_dng_preview_t;
 
 // @brief Write a 32-bit float CFA DNG (Bayer or X-Trans).
@@ -67,15 +67,9 @@ typedef struct dt_imageio_dng_preview_t
 // @param whitelevel pre-normalized white level (typically 1.0f for HDR)
 // @param wb_coeffs camera-RGB raw-to-white multipliers
 // @param adobe_XYZ_to_CAM XYZ->cameraRGB matrix (4x3, only first 3 rows used)
-void dt_imageio_dng_write_float(const char *filename,
-                                const float *pixel,
-                                int wd,
-                                int ht,
-                                void *exif,
-                                int exif_len,
-                                uint32_t filter,
-                                const uint8_t xtrans[6][6],
-                                float whitelevel,
+void dt_imageio_dng_write_float(const char *filename, const float *pixel, int wd, int ht,
+                                void *exif, int exif_len, uint32_t filter,
+                                const uint8_t xtrans[6][6], float whitelevel,
                                 const dt_aligned_pixel_t wb_coeffs,
                                 const float adobe_XYZ_to_CAM[4][3]);
 
@@ -98,14 +92,9 @@ void dt_imageio_dng_write_float(const char *filename,
 // @param exif_blob optional Exif blob to embed (NULL = skip)
 // @param exif_len  size of exif_blob in bytes
 // @return 0 on success, non-zero on failure (file is removed on failure)
-int dt_imageio_dng_write_cfa_bayer(const char *filename,
-                                   const uint16_t *cfa,
-                                   int width,
-                                   int height,
-                                   const struct dt_image_t *img,
-                                   const void *exif_blob,
-                                   int exif_len,
-                                   const dt_imageio_dng_preview_t *preview);
+int dt_imageio_dng_write_cfa_bayer(const char *filename, const uint16_t *cfa, int width, int height,
+                                   const struct dt_image_t *img, const void *exif_blob,
+                                   int exif_len, const dt_imageio_dng_preview_t *preview);
 
 // @brief Write a demosaicked 3-channel linear DNG.
 //
@@ -130,17 +119,6 @@ int dt_imageio_dng_write_cfa_bayer(const char *filename,
 // @param exif_blob optional Exif blob to embed (NULL = skip)
 // @param exif_len  size of exif_blob in bytes
 // @return 0 on success, non-zero on failure (file removed on failure)
-int dt_imageio_dng_write_linear(const char *filename,
-                                const float *rgb,
-                                int width,
-                                int height,
-                                const struct dt_image_t *img,
-                                const void *exif_blob,
-                                int exif_len,
+int dt_imageio_dng_write_linear(const char *filename, const float *rgb, int width, int height,
+                                const struct dt_image_t *img, const void *exif_blob, int exif_len,
                                 const dt_imageio_dng_preview_t *preview);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

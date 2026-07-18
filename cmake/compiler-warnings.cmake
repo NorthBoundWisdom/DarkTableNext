@@ -4,13 +4,8 @@ include(CheckCXXCompilerFlagAndEnableIt)
 
 CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wall)
 
-if(WIN32)
-  # MSYS2 gcc compiler gives false positive warnings for (format (printf, 1, 2) - need to turn off for the time being
-  CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-format)
-else()
-  CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wformat)
-  CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wformat-security)
-endif()
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wformat)
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wformat-security)
 
 CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wshadow)
 
@@ -24,19 +19,12 @@ CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wthread-safety)
 
 CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wmaybe-uninitialized)
 
-# since checking if defined(__GNUC__) is not enough to prevent Clang from using GCC-specific pragmas
-# (so Clang defines __GNUC__ ???) we need to disable the warnings about unknown pragmas
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-unknown-pragmas)
-
 # may be our bug :(
 CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=varargs)
 
-# need proper gcc7 to try to fix all the warnings.
-# so just disable for now.
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-format-truncation)
-
-# clang-4.0 bug https://llvm.org/bugs/show_bug.cgi?id=28115#c7
-CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=address-of-packed-member)
+# Fixed-size path buffers still produce conservative truncation diagnostics
+# with current GCC. Keep the diagnostic visible without making it fatal.
+CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=format-truncation)
 
 # needed to deal with warnings in libheif
 CHECK_C_COMPILER_FLAG_AND_ENABLE_IT(-Wno-typedef-redefinition)

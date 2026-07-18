@@ -35,28 +35,21 @@ int dt_welcome_screen_add_page(dt_welcome_screen_t *ws);
 // are inferred from the darktableconfig.xml metadata for conf_key.
 // description is optional (NULL = none); it accepts Pango markup
 // (e.g. <b>, <i>, <a href="...">).
-void dt_welcome_screen_page_add_conf(dt_welcome_screen_t *ws,
-                                     int                  page_idx,
-                                     const char          *conf_key,
-                                     const char          *description);
+void dt_welcome_screen_page_add_conf(dt_welcome_screen_t *ws, int page_idx, const char *conf_key,
+                                     const char *description);
 
 // Add a plain paragraph of text to a page (Pango markup supported).
 // Pass centered=TRUE to centre-align the text horizontally.
-void dt_welcome_screen_page_add_paragraph(dt_welcome_screen_t *ws,
-                                          int                  page_idx,
-                                          const char          *text,
-                                          gboolean             centered);
+void dt_welcome_screen_page_add_paragraph(dt_welcome_screen_t *ws, int page_idx, const char *text,
+                                          gboolean centered);
 
 // Add a directory-chooser row to a page.
 // Reads and writes a string conf key holding the directory path.
 // Use this for string keys that hold path patterns (e.g. containing
 // $(PICTURES_FOLDER)) which cannot be typed as 'dir' in the XML.
 // description is optional (NULL = none).
-void dt_welcome_screen_page_add_dirchooser(dt_welcome_screen_t *ws,
-                                           int                  page_idx,
-                                           const char          *label,
-                                           const char          *description,
-                                           const char          *conf_key);
+void dt_welcome_screen_page_add_dirchooser(dt_welcome_screen_t *ws, int page_idx, const char *label,
+                                           const char *description, const char *conf_key);
 
 // Build the GTK dialog and block until the user closes it.
 void dt_welcome_screen_show(dt_welcome_screen_t *ws);
@@ -67,9 +60,3 @@ void dt_welcome_screen_free(dt_welcome_screen_t *ws);
 // High-level entry point: checks the "ui/show_welcome_screen" preference,
 // builds and shows the screen on first run, then clears the flag.
 void dt_welcome_screen_run_if_needed(void);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

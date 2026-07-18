@@ -35,12 +35,7 @@ gboolean dt_gui_styles_dialog_new(const dt_imgid_t imgid);
 /** shows a dialog for editing existing style */
 void dt_gui_styles_dialog_edit(const char *name, char **new_name);
 
-cairo_surface_t *dt_gui_get_style_preview(const dt_imgid_t imgid, const char *name, const int psize);
+cairo_surface_t *dt_gui_get_style_preview(const dt_imgid_t imgid, const char *name,
+                                          const int psize);
 
 GtkWidget *dt_gui_style_content_dialog(char *name, const dt_imgid_t imgid);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

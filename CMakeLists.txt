@@ -23,16 +23,15 @@ else()
   project(darktable VERSION 0 LANGUAGES CXX C)
 endif()
 
-# Allow forcing the C/CPP compiler that is actually used during the compilation
-# to something other than what is used by the cmake run. This is useful when
-# the compiler for some reason breaks the initial cmake checks but works fine
-# for actually compiling darktable. This allows building darktable using
-# afl-clang-fast achieving a >4x speedup in fuzzing.
-IF(DEFINED DT_FORCE_C_COMPILER)
-  set(CMAKE_C_COMPILER ${DT_FORCE_C_COMPILER})
+if(NOT APPLE)
+  message(FATAL_ERROR "DarkTableNext supports macOS only.")
 endif()
-IF(DEFINED DT_FORCE_CXX_COMPILER)
-  set(CMAKE_CXX_COMPILER ${DT_FORCE_CXX_COMPILER})
+
+if(NOT CMAKE_C_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU)$")
+  message(FATAL_ERROR "Unsupported C compiler: ${CMAKE_C_COMPILER_ID}. Use Clang or GCC.")
+endif()
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU)$")
+  message(FATAL_ERROR "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER_ID}. Use Clang or GCC.")
 endif()
 
 include(DefineOptions.cmake)
@@ -58,37 +57,35 @@ set(DARKTABLE_SHAREDIR  "${DARKTABLE_BINDIR}/${REL_BIN_TO_SHAREDIR}")
 set(DARKTABLE_DATADIR   "${DARKTABLE_BINDIR}/${REL_BIN_TO_DATADIR}") # DATAROOTDIR == DATADIR # darktablerc, themes, icons, ... Cannot use ${CMAKE_BINDIR}/data because not everything resides there. Like icons (pixmaps)
 set(DARKTABLE_LOCALEDIR "${DARKTABLE_BINDIR}/${REL_BIN_TO_LOCALEDIR}")
 
-# https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
-if(${FORCE_COLORED_OUTPUT})
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+
+if(FORCE_COLORED_OUTPUT)
+  check_cxx_compiler_flag("-fdiagnostics-color=always" DT_HAS_GNU_COLORED_DIAGNOSTICS)
+  if(DT_HAS_GNU_COLORED_DIAGNOSTICS)
     add_compile_options(-fdiagnostics-color=always)
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options(-fcolor-diagnostics)
+  else()
+    check_cxx_compiler_flag("-fcolor-diagnostics" DT_HAS_CLANG_COLORED_DIAGNOSTICS)
+    if(DT_HAS_CLANG_COLORED_DIAGNOSTICS)
+      add_compile_options(-fcolor-diagnostics)
+    endif()
   endif()
 endif()
 
-# Whether to use relative paths for the build RPATH
-if (APPLE)
-    set(CMAKE_MACOSX_RPATH ON)
-    set(RPATH_ORIGIN @loader_path)
-else()
-    set(RPATH_ORIGIN $ORIGIN)
+# macOS uses loader-relative install names for bundled libraries and modules.
+set(CMAKE_MACOSX_RPATH ON)
+set(RPATH_ORIGIN @loader_path)
+
+check_c_compiler_flag("-fopenmp-version=51" DT_C_HAS_OPENMP_51_FLAG)
+if(DT_C_HAS_OPENMP_51_FLAG)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp-version=51")
+endif()
+check_cxx_compiler_flag("-fopenmp-version=51" DT_CXX_HAS_OPENMP_51_FLAG)
+if(DT_CXX_HAS_OPENMP_51_FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=51")
 endif()
 
-if (USE_OPENMP)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
-        CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-
-        # Clang has an option to specify the OpenMP standard to use. Specify it.
-        # FIXME: Implement this in FindOpenMP.cmake
-        set(OPENMP_VERSION_SPECIFIER "-fopenmp-version=51")
-
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPENMP_VERSION_SPECIFIER}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OPENMP_VERSION_SPECIFIER}")
-    endif()
-
-    find_package(OpenMP 4.5 REQUIRED)
-endif()
+find_package(OpenMP 4.5 REQUIRED)
 
 # Check for base threading library
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -98,10 +95,6 @@ find_package(Threads REQUIRED)
 if (NOT CMAKE_USE_PTHREADS_INIT)
     message(FATAL_ERROR "POSIX threads: not found")
 endif()
-
-include(ConfigureChecks.cmake)
-
-include(CheckCCompilerFlag)
 
 # Check if this is source package build
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git)
@@ -113,45 +106,24 @@ endif()
 #
 # Set platform defaults...
 #
-if(APPLE)
-	message("-- Mac OS X build detected, setting default features")
-  find_program(HOMEBREW_EXISTS "brew")
-  if(HOMEBREW_EXISTS)
-    execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
-    string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
-    message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
-    LIST(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX})
-    # Explicitly add llvm and icu4c to prefix path
-    LIST(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX}/opt/llvm)
-    LIST(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX}/opt/icu4c)
-  else()
-    message("-- Setting CMAKE_PREFIX_PATH to prefer MacPorts and/or user-installed libraries over system ones")
-    LIST(APPEND CMAKE_PREFIX_PATH /opt/local /usr/local)
-  endif()
-	set(CMAKE_FIND_FRAMEWORK "LAST")
-	# except libstdc++ (only one linked via -l flag, not full path)
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib")
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/usr/lib")
-	set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -L/usr/lib")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DARWIN_C_SOURCE")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
-	add_definitions("-DOS_OBJECT_USE_OBJC=0")
-endif(APPLE)
-
-include(compiler-versions)
-
-if(WIN32)
-  message("-- Win32 build detected, setting default features")
-  set(USE_COLORD OFF)
-  set(USE_KWALLET OFF)
-  set(BUILD_CMSTEST OFF)
-  set(BUILD_PRINT OFF)
-  set(TESTBUILD_OPENCL_PROGRAMS OFF)
-  if(BUILD_MSYS2_INSTALL)
-    add_definitions(-DMSYS2_INSTALL)
-  endif()
-endif(WIN32)
-
+message("-- macOS build")
+find_program(HOMEBREW_EXISTS "brew")
+if(HOMEBREW_EXISTS)
+  execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
+  string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
+  message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
+  list(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX} ${HOMEBREW_PREFIX}/opt/llvm ${HOMEBREW_PREFIX}/opt/icu4c)
+else()
+  message("-- Setting CMAKE_PREFIX_PATH to prefer MacPorts and/or user-installed libraries over system ones")
+  list(APPEND CMAKE_PREFIX_PATH /opt/local /usr/local)
+endif()
+set(CMAKE_FIND_FRAMEWORK "LAST")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/usr/lib")
+set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -L/usr/lib")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DARWIN_C_SOURCE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
+add_definitions("-DOS_OBJECT_USE_OBJC=0")
 
 #
 # Set package version
@@ -249,7 +221,6 @@ if(CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$" AND SOURCE_PACKAGE)
 endif()
 
 include(compiler-warnings)
-include(windows-macros)
 
 # we need some external programs for building darktable
 message(STATUS "Looking for external programs")
@@ -387,45 +358,6 @@ else()
 	SET(HAVE_OPENCL 0)
 endif(USE_OPENCL)
 
-if(NOT SOURCE_PACKAGE AND NOT (CMAKE_VERSION VERSION_LESS 3.3) AND DEFINED ENV{_DO_IWYU})
-  find_program(iwyu_path NAMES include-what-you-use iwyu)
-
-  if(iwyu_path)
-    set(DT_CMAKE_INCLUDE_WHAT_YOU_USE ${iwyu_path} -Xiwyu --mapping_file=${CMAKE_SOURCE_DIR}/iwyu.imp -Xiwyu --prefix_header_includes=add)
-  endif()
-
-  find_program(iwyu_tool_path NAMES iwyu_tool.py)
-  if (iwyu_tool_path)
-    add_custom_command(
-      OUTPUT "${CMAKE_BINARY_DIR}/iwyu.log"
-      COMMAND "${iwyu_tool_path}" -v -p "${CMAKE_BINARY_DIR}"
-              -- --mapping_file=${CMAKE_SOURCE_DIR}/iwyu.imp
-              --prefix_header_includes=add 2>
-              "${CMAKE_BINARY_DIR}/iwyu.log"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      COMMENT "Running include-what-you-use tool"
-      VERBATIM
-    )
-    add_custom_target(iwyu
-      DEPENDS "${CMAKE_BINARY_DIR}/iwyu.log"
-      VERBATIM
-    )
-  endif()
-
-  find_program(fix_includes_path NAMES fix_includes.py)
-  if (fix_includes_path)
-    add_custom_target(iwyu_fix
-      COMMAND "${fix_includes_path}" --noblank_lines --comments
-              --nosafe_headers < "${CMAKE_BINARY_DIR}/iwyu.log" || true
-      COMMAND ${CMAKE_COMMAND} -E remove "${CMAKE_BINARY_DIR}/iwyu.log"
-      DEPENDS "${CMAKE_BINARY_DIR}/iwyu.log"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-      COMMENT "Running include-what-you-use fix_includes tool"
-      VERBATIM
-    )
-  endif()
-endif()
-
 if(BUILD_TESTING)
   find_package(cmocka 1.1.0 CONFIG REQUIRED)
   include(AddCMockaTest)
@@ -433,16 +365,8 @@ if(BUILD_TESTING)
   include_directories(${CMOCKA_INCLUDE_DIR} include)
 endif(BUILD_TESTING)
 
-# we need some specific functions:
-if(NOT WIN32)
-    if(CMAKE_SYSTEM MATCHES "SunOS.*")
-        add_definitions("-D_XOPEN_SOURCE=600")
-    else()
-        add_definitions("-D_XOPEN_SOURCE=700")
-    endif(CMAKE_SYSTEM MATCHES "SunOS.*")
-else()
-    add_definitions("-D_USE_MATH_DEFINES")
-endif()
+# macOS uses the POSIX 2008 interfaces throughout the core.
+add_definitions("-D_XOPEN_SOURCE=700")
 
 # Set default component name - that way external modules like RawSpeed will install their
 # materials under the default component and not under 'Unspecified'
@@ -452,23 +376,20 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME DTApplication)
 include(data/supported_extensions.cmake) # this file needs to be included first as it gets amended in bin/
 add_subdirectory(src "${DARKTABLE_BINDIR}") # directory needs to be there before data directory so that the correct CSS file gets installed
 add_subdirectory(data "${DARKTABLE_DATADIR}")
-add_subdirectory(doc)
 add_subdirectory(tools "${DARKTABLE_DATADIR}/tools")
 
 # This contains fixup_bundle
 # And adding a separate subderectory as a last one will make sure
 # that fixup_bundle will run _after_ all files has been installed
-add_subdirectory(packaging)
-
-include(cmake/darktable-packaging.cmake)
-
 # uninstall target
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     @ONLY)
 
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+if(NOT TARGET uninstall)
+  add_custom_target(uninstall
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
 
 feature_summary(WHAT ALL)

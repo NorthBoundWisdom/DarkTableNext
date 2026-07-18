@@ -26,10 +26,3 @@
 dt_job_t *dt_image_load_job_create(dt_imgid_t imgid, dt_mipmap_size_t mip);
 
 dt_job_t *dt_image_import_job_create(dt_filmid_t filmid, const char *filename);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -35,12 +35,6 @@ find_library(Exiv2_LIBRARY
 )
 mark_as_advanced(Exiv2_LIBRARY)
 
-if(WIN32)
-  find_library(EXPAT_LIBRARY NAMES expat )
-  find_library(ICONV_LIBRARY NAMES iconv )
-  list(APPEND Exiv2_LIBRARY ${EXPAT_LIBRARY} ${ICONV_LIBRARY})
-endif(WIN32)
-
 if(Exiv2_PKGCONF_VERSION VERSION_LESS Exiv2_FIND_VERSION)
   message(FATAL_ERROR "Exiv2 version check failed.  Version ${Exiv2_PKGCONF_VERSION} was found, at least version ${Exiv2_FIND_VERSION} is required")
 endif(Exiv2_PKGCONF_VERSION VERSION_LESS Exiv2_FIND_VERSION)

@@ -5592,4 +5592,3 @@ API["darktable"]["gui"]["libs"]["snapshots"]["selected"].__attributes["reported_
 API["types"]["dt_lua_snapshot_t"] = API["darktable"]["gui"]["libs"]["snapshots"]["#"].__attributes["reported_type"]
 return API
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

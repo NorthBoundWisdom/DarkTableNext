@@ -79,7 +79,3 @@ module WbPresetsCommon
     return presets
   end
 end
-
-# vim: tabstop=2 expandtab shiftwidth=2 softtabstop=2
-# kate: tab-width: 2; replace-tabs on; indent-width 2; tab-indents: off;
-# kate: indent-mode ruby; remove-trailing-spaces modified;

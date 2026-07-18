@@ -44,6 +44,48 @@ DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
         env_key="WHEREAMI_SOURCE_ROOT",
         required_relative_paths=("src/whereami.c", "src/whereami.h"),
     ),
+    DependencyRootSpec(
+        dependency_name="exiv2",
+        repo_name="exiv2",
+        env_key="EXIV2_SOURCE_ROOT",
+        required_relative_paths=("CMakeLists.txt",),
+    ),
+    DependencyRootSpec(
+        dependency_name="Imath",
+        repo_name="Imath",
+        env_key="IMATH_SOURCE_ROOT",
+        required_relative_paths=("CMakeLists.txt",),
+    ),
+    DependencyRootSpec(
+        dependency_name="OpenEXR",
+        repo_name="OpenEXR",
+        env_key="OPENEXR_SOURCE_ROOT",
+        required_relative_paths=("CMakeLists.txt",),
+    ),
+    DependencyRootSpec(
+        dependency_name="inih",
+        repo_name="inih",
+        env_key="INIH_SOURCE_ROOT",
+        required_relative_paths=("ini.c", "ini.h", "cpp/INIReader.cpp", "cpp/INIReader.h"),
+    ),
+    DependencyRootSpec(
+        dependency_name="LibRaw",
+        repo_name="LibRaw",
+        env_key="LIBRAW_SOURCE_ROOT",
+        required_relative_paths=("libraw/libraw_version.h",),
+    ),
+    DependencyRootSpec(
+        dependency_name="lua-scripts",
+        repo_name="lua-scripts",
+        env_key="LUA_SCRIPTS_SOURCE_ROOT",
+        required_relative_paths=("README.md",),
+    ),
+    DependencyRootSpec(
+        dependency_name="darktable-tests",
+        repo_name="darktable-tests",
+        env_key="DARKTABLE_TESTS_SOURCE_ROOT",
+        required_relative_paths=("images/mire1.cr2",),
+    ),
 )
 
 

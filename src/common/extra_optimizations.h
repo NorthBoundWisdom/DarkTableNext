@@ -26,10 +26,8 @@
  * in the code, the rest is loop reorganization and vectorization optimization
  **/
 
-#if defined(__GNUC__)
-#pragma GCC optimize ("unroll-loops", "split-loops", \
-                      "loop-nest-optimize", "tree-loop-im", \
-                      "tree-loop-ivcanon", "ira-loop-pressure", \
-                      "variable-expansion-in-unroller", \
-                      "ivopts", "finite-math-only")
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC optimize("unroll-loops", "split-loops", "loop-nest-optimize", "tree-loop-im",          \
+                     "tree-loop-ivcanon", "ira-loop-pressure", "variable-expansion-in-unroller",   \
+                     "ivopts", "finite-math-only")
 #endif

@@ -29,6 +29,64 @@ dt_resolve_freecm_source_root(OPENCL_PATH OPENCL_HEADERS_SOURCE_ROOT OPENCL_HEAD
 dt_resolve_freecm_source_root(RAWSPEED_PATH RAWSPEED_SOURCE_ROOT RAWSPEED_SOURCE_ROOT rawspeed CMakeLists.txt)
 set(OPENCL_PATH "${OPENCL_PATH}" PARENT_SCOPE)
 
+# Homebrew C++ packages are built with libc++, whereas Homebrew GCC uses
+# libstdc++. Build the C++ libraries with GCC when it is selected so the ABI
+# remains consistent all the way to lib_darktable.
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  dt_resolve_freecm_source_root(IMATH_PATH IMATH_SOURCE_ROOT IMATH_SOURCE_ROOT Imath CMakeLists.txt)
+  dt_resolve_freecm_source_root(OPENEXR_PATH OPENEXR_SOURCE_ROOT OPENEXR_SOURCE_ROOT OpenEXR CMakeLists.txt)
+  dt_resolve_freecm_source_root(EXIV2_PATH EXIV2_SOURCE_ROOT EXIV2_SOURCE_ROOT exiv2 CMakeLists.txt)
+  dt_resolve_freecm_source_root(INIH_PATH INIH_SOURCE_ROOT INIH_SOURCE_ROOT inih cpp/INIReader.cpp)
+
+  message(STATUS "Building Imath, OpenEXR, and Exiv2 from FreeCM source roots for GCC")
+
+  set(IMATH_INSTALL OFF CACHE BOOL "" FORCE)
+  add_subdirectory("${IMATH_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/Imath" EXCLUDE_FROM_ALL)
+  # OpenEXR calls find_package(Imath) even when the Imath target is already
+  # present. Imath's build-tree config expects this generated export file only
+  # when it is consumed from an installed build, so provide an empty one here.
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Imath/config/ImathTargets.cmake"
+       "# Imath is already available as a build-tree target.\n")
+
+  set(OPENEXR_INSTALL OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_INSTALL_PKG_CONFIG OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_TEST_LIBRARIES OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_TEST_TOOLS OFF CACHE BOOL "" FORCE)
+  set(OPENEXR_TEST_PYTHON OFF CACHE BOOL "" FORCE)
+  add_subdirectory("${OPENEXR_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/OpenEXR" EXCLUDE_FROM_ALL)
+
+  # inih ships Meson metadata only. Build its C parser and C++ wrapper from
+  # the locked source root, then satisfy Exiv2's standard Findinih module with
+  # these targets instead of Homebrew's libc++ binaries.
+  add_library(darktable_inih STATIC "${INIH_PATH}/ini.c")
+  target_include_directories(darktable_inih PUBLIC "${INIH_PATH}")
+  set_target_properties(darktable_inih PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  add_library(darktable_inireader STATIC "${INIH_PATH}/cpp/INIReader.cpp")
+  target_include_directories(darktable_inireader PUBLIC "${INIH_PATH}/cpp")
+  target_link_libraries(darktable_inireader PUBLIC darktable_inih)
+  set_target_properties(darktable_inireader PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+  set(inih_INCLUDE_DIR "${INIH_PATH}" CACHE PATH "" FORCE)
+  set(inih_inireader_INCLUDE_DIR "${INIH_PATH}/cpp" CACHE PATH "" FORCE)
+  set(inih_LIBRARY darktable_inih CACHE STRING "" FORCE)
+  set(inih_inireader_LIBRARY darktable_inireader CACHE STRING "" FORCE)
+
+  set(EXIV2_BUILD_EXIV2_COMMAND OFF CACHE BOOL "" FORCE)
+  set(EXIV2_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+  set(EXIV2_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+  set(EXIV2_BUILD_FUZZ_TESTS OFF CACHE BOOL "" FORCE)
+  set(EXIV2_BUILD_DOC OFF CACHE BOOL "" FORCE)
+  add_subdirectory("${EXIV2_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/exiv2" EXCLUDE_FROM_ALL)
+
+  set(DARKTABLE_MANAGED_CPP_DEPENDENCIES ON PARENT_SCOPE)
+  set(DARKTABLE_MANAGED_EXIV2_INCLUDE_DIR "${EXIV2_PATH}/include" PARENT_SCOPE)
+  set(DARKTABLE_MANAGED_EXIV2_CONFIG_HEADER "${CMAKE_BINARY_DIR}/exv_conf.h" PARENT_SCOPE)
+endif()
+
 if(USE_XCF)
   add_subdirectory("${LIBXCF_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/libxcf")
 endif()
@@ -57,7 +115,7 @@ set(BUILD_BENCHMARKING_SAVE "${BUILD_BENCHMARKING}")
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(BUILD_BENCHMARKING OFF CACHE BOOL "" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
-set(WITH_OPENMP ${USE_OPENMP} CACHE BOOL "" FORCE)
+set(WITH_OPENMP ON CACHE BOOL "" FORCE)
 
 set(RAWSPEED_BINARY_PREFIX "darktable")
 
@@ -110,10 +168,15 @@ if(USE_LUA)
 #
 # lua system scripts
 #
-FILE(COPY lua-scripts DESTINATION "${DARKTABLE_DATADIR}")
-install(DIRECTORY "lua-scripts" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication
-  PATTERN "lua-scripts/.git/*" EXCLUDE
-  PATTERN "lua-scripts/.git" EXCLUDE
-  PATTERN "lua-scripts/.gitignore" EXCLUDE
+dt_resolve_freecm_source_root(LUA_SCRIPTS_PATH LUA_SCRIPTS_SOURCE_ROOT LUA_SCRIPTS_SOURCE_ROOT lua-scripts README.md)
+
+file(COPY "${LUA_SCRIPTS_PATH}" DESTINATION "${DARKTABLE_DATADIR}")
+install(
+  DIRECTORY "${LUA_SCRIPTS_PATH}/"
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/darktable/lua-scripts"
+  COMPONENT DTApplication
+  PATTERN ".git/*" EXCLUDE
+  PATTERN ".git" EXCLUDE
+  PATTERN ".gitignore" EXCLUDE
 )
 endif(USE_LUA)

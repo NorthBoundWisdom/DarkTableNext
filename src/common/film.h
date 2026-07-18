@@ -31,12 +31,12 @@
  */
 typedef struct dt_film_t
 {
-  dt_filmid_t id;
-  char dirname[512];
-  dt_pthread_mutex_t images_mutex;
-  GDir *dir;
-  int32_t num_images, last_loaded;
-  int32_t ref;
+    dt_filmid_t id;
+    char dirname[512];
+    dt_pthread_mutex_t images_mutex;
+    GDir *dir;
+    int32_t num_images, last_loaded;
+    int32_t ref;
 } dt_film_t;
 
 void dt_film_init(dt_film_t *film);
@@ -65,9 +65,3 @@ void dt_film_remove_empty();
 GList *dt_film_get_image_ids(const dt_filmid_t filmid);
 // initialize film folder status
 void dt_film_set_folder_status();
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

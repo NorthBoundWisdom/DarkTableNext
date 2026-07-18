@@ -75,5 +75,3 @@ dt.preferences.write("luarc", "darktable_first_run_complete", "bool", true)
 if dt.configuration.has_gui then
   require "tools/script_manager"
 end
-
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

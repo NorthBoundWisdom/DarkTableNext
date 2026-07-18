@@ -112,7 +112,7 @@ darktable-bench-null.xmp : a sidecar file with minimal processing,
 darktable-bench-3.6.xmp  : the default benchmarking sidecar
 darktable-bench-3.4.xmp  : alternate sidecar for older version
 
-../integration/images/mire1.cr2 : the default benchmarking image
+../../../build/dependency_source_roots/darktable-tests/images/mire1.cr2 : the default benchmarking image
 
 
 How to add a new benchmark
@@ -128,7 +128,7 @@ How to add a new benchmark
    darktable-bench -v XYZ
 
    to apply your new sidecar to the standard image from the
-   integration test suite (src/tests/integration/images/mire1.cr2).
+   FreeCM test source root (build/dependency_source_roots/darktable-tests/images/mire1.cr2).
 
 
 Comparative Performance

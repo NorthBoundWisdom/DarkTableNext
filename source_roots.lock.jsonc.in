@@ -1,13 +1,34 @@
 {
   "schemaVersion": 5,
-  "cmakeEnvironment": {},
-  "cmakeCacheVariables": {},
+  "projectVersion": "0.9.0",
+  "cmakeEnvironment": {
+    "PATH": "/opt/homebrew/opt/llvm/bin:$penv{PATH}"
+  },
+  "cmakeCacheVariables": {
+    "PROJECT_VERSION": "0.9.0",
+    "mac": {
+      "CURL_INCLUDE_DIR": "/opt/homebrew/opt/curl/include",
+      "CURL_LIBRARY": "/opt/homebrew/opt/curl/lib/libcurl.dylib",
+      "SQLite3_INCLUDE_DIR": "/opt/homebrew/opt/sqlite/include",
+      "SQLite3_LIBRARY": "/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib",
+      "ZLIB_ROOT": "/opt/homebrew/opt/zlib",
+      "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+      "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+    }
+  },
   "depsMode": "pinned",
   "depsManualPath": {
     "rawspeed": "",
     "OpenCL": "",
     "libxcf": "",
-    "whereami": ""
+    "whereami": "",
+    "exiv2": "",
+    "Imath": "",
+    "OpenEXR": "",
+    "inih": "",
+    "LibRaw": "",
+    "lua-scripts": "",
+    "darktable-tests": ""
   },
   "dependencies": {
     "rawspeed": {
@@ -29,6 +50,41 @@
       "repoName": "whereami",
       "remote": "https://github.com/gpakosz/whereami.git",
       "commit": "dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e"
+    },
+    "exiv2": {
+      "repoName": "exiv2",
+      "remote": "https://github.com/Exiv2/exiv2.git",
+      "commit": "2cd987a731236037b6b78cbff897d08685a8ef49"
+    },
+    "Imath": {
+      "repoName": "Imath",
+      "remote": "https://github.com/AcademySoftwareFoundation/Imath.git",
+      "commit": "1e480d11cb98b032a2dece9b9a8730512effc7f6"
+    },
+    "OpenEXR": {
+      "repoName": "OpenEXR",
+      "remote": "https://github.com/AcademySoftwareFoundation/openexr.git",
+      "commit": "741ecb82ccdb291ce5b04713fc6c03208753575e"
+    },
+    "inih": {
+      "repoName": "inih",
+      "remote": "https://github.com/benhoyt/inih.git",
+      "commit": "26254ee9de7681f8825433415443e7116ff24b98"
+    },
+    "LibRaw": {
+      "repoName": "LibRaw",
+      "remote": "https://github.com/LibRaw/LibRaw.git",
+      "commit": "87241b45d8c8178247faca4aa8e6a1896b0b1eeb"
+    },
+    "lua-scripts": {
+      "repoName": "lua-scripts",
+      "remote": "https://github.com/darktable-org/lua-scripts.git",
+      "commit": "3ade2a8b4059b954ae2993b84bb29c65985f0deb"
+    },
+    "darktable-tests": {
+      "repoName": "darktable-tests",
+      "remote": "https://github.com/darktable-org/darktable-tests.git",
+      "commit": "271ecc5afce1ee142cd92c3d6569721c00ee5af1"
     }
   }
 }

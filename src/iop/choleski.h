@@ -26,7 +26,6 @@
 #include "common/imagebuf.h"
 #include "develop/imageop_math.h"
 
-
 /* DOCUMENTATION
  *
  * Choleski decomposition is a fast way to solve linear systems of equations
@@ -81,266 +80,243 @@
  *
  */
 
-
 __DT_CLONE_TARGETS__
-static inline gboolean _choleski_decompose(const float *const restrict A,
-                                           float *const restrict L,
-                                           size_t n,
-                                           const gboolean verbose)
+static inline gboolean _choleski_decompose(const float *const restrict A, float *const restrict L,
+                                           size_t n, const gboolean verbose)
 {
-  // A is input n×n matrix, decompose it into L such that A = L × L'
-  // slow and safe variant : we check values for negatives in sqrt and
-  // divisions by 0.
+    // A is input n×n matrix, decompose it into L such that A = L × L'
+    // slow and safe variant : we check values for negatives in sqrt and
+    // divisions by 0.
 
-  if(A[0] <= 0.0f) return FALSE; // failure : non positive definite matrice
+    if (A[0] <= 0.0f)
+        return FALSE; // failure : non positive definite matrice
 
-  gboolean valid = TRUE;
+    gboolean valid = TRUE;
 
-  for(size_t i = 0; i < n; i++)
-    for(size_t j = 0; j < (i + 1); j++)
-    {
-      float sum = 0.0f;
-
-      for(size_t k = 0; k < j; k++)
-        sum += L[i * n + k] * L[j * n + k];
-
-      if(i == j)
-      {
-        const float temp = A[i * n + i] - sum;
-
-        if(temp < 0.0f)
+    for (size_t i = 0; i < n; i++)
+        for (size_t j = 0; j < (i + 1); j++)
         {
-          valid = FALSE;
-          L[i * n + j] = NAN;
-        }
-        else
-          L[i * n + j] = sqrtf(A[i * n + i] - sum);
-      }
-      else
-      {
-        const float temp = L[j * n + j];
+            float sum = 0.0f;
 
-        if(temp == 0.0f)
-        {
-          valid = FALSE;
-          L[i * n + j] = NAN;
-        }
-        else
-          L[i * n + j] = (A[i * n + j] - sum) / temp;
-      }
-    }
+            for (size_t k = 0; k < j; k++)
+                sum += L[i * n + k] * L[j * n + k];
 
-  if(!valid && verbose)
-    dt_print(DT_DEBUG_ALWAYS, "Cholesky decomposition returned NaNs");
-  return valid;
+            if (i == j)
+            {
+                const float temp = A[i * n + i] - sum;
+
+                if (temp < 0.0f)
+                {
+                    valid = FALSE;
+                    L[i * n + j] = NAN;
+                }
+                else
+                    L[i * n + j] = sqrtf(A[i * n + i] - sum);
+            }
+            else
+            {
+                const float temp = L[j * n + j];
+
+                if (temp == 0.0f)
+                {
+                    valid = FALSE;
+                    L[i * n + j] = NAN;
+                }
+                else
+                    L[i * n + j] = (A[i * n + j] - sum) / temp;
+            }
+        }
+
+    if (!valid && verbose)
+        dt_print(DT_DEBUG_ALWAYS, "Cholesky decomposition returned NaNs");
+    return valid;
 }
-
 
 __DT_CLONE_TARGETS__
 static inline gboolean _triangular_descent(const float *const restrict L,
-                                           const float *const restrict y,
-                                           float *const restrict b,
-                                           const size_t n,
-                                           const gboolean verbose)
+                                           const float *const restrict y, float *const restrict b,
+                                           const size_t n, const gboolean verbose)
 {
-  // solve L × b = y for b
-  // use the lower triangular part of L from top to bottom
+    // solve L × b = y for b
+    // use the lower triangular part of L from top to bottom
 
-  gboolean valid = TRUE;
+    gboolean valid = TRUE;
 
-  for(size_t i = 0; i < n; ++i)
-  {
-    float sum = y[i];
-    for(size_t j = 0; j < i; ++j)
-      sum -= L[i * n + j] * b[j];
-
-    const float temp = L[i * n + i];
-
-    if(temp != 0.0f)
-      b[i] = sum / temp;
-    else
+    for (size_t i = 0; i < n; ++i)
     {
-      b[i] = NAN;
-      valid = FALSE;
+        float sum = y[i];
+        for (size_t j = 0; j < i; ++j)
+            sum -= L[i * n + j] * b[j];
+
+        const float temp = L[i * n + i];
+
+        if (temp != 0.0f)
+            b[i] = sum / temp;
+        else
+        {
+            b[i] = NAN;
+            valid = FALSE;
+        }
     }
-  }
-  if(!valid && verbose)
-    dt_print(DT_DEBUG_ALWAYS, "Cholesky LU triangular descent returned NaNs");
-  return valid;
+    if (!valid && verbose)
+        dt_print(DT_DEBUG_ALWAYS, "Cholesky LU triangular descent returned NaNs");
+    return valid;
 }
 
 __DT_CLONE_TARGETS__
 static inline gboolean _triangular_ascent(const float *const restrict L,
-                                          const float *const restrict b,
-                                          float *const restrict x,
-                                          const size_t n,
-                                          const gboolean verbose)
+                                          const float *const restrict b, float *const restrict x,
+                                          const size_t n, const gboolean verbose)
 {
-  // solve L' × x = b for x
-  // use the lower triangular part of L transposed from bottom to top
+    // solve L' × x = b for x
+    // use the lower triangular part of L transposed from bottom to top
 
-  gboolean valid = TRUE;
+    gboolean valid = TRUE;
 
-  for(int i = (n - 1); i > -1 ; --i)
-  {
-    float sum = b[i];
-    for(int j = (n - 1); j > i; --j)
-      sum -= L[j * n + i] * x[j];
-
-    const float temp = L[i * n + i];
-    if(temp != 0.0f)
-      x[i] = sum / temp;
-    else
+    for (int i = (n - 1); i > -1; --i)
     {
-      x[i] = NAN;
-      valid = FALSE;
-    }
-  }
+        float sum = b[i];
+        for (int j = (n - 1); j > i; --j)
+            sum -= L[j * n + i] * x[j];
 
-  if(!valid && verbose)
-    dt_print(DT_DEBUG_ALWAYS, "Cholesky LU triangular ascent returned NaNs");
-  return valid;
+        const float temp = L[i * n + i];
+        if (temp != 0.0f)
+            x[i] = sum / temp;
+        else
+        {
+            x[i] = NAN;
+            valid = FALSE;
+        }
+    }
+
+    if (!valid && verbose)
+        dt_print(DT_DEBUG_ALWAYS, "Cholesky LU triangular ascent returned NaNs");
+    return valid;
 }
 
-
 __DT_CLONE_TARGETS__
-static inline gboolean _solve_hermitian(const float *const restrict A,
-                                        float *const restrict y,
-                                        const size_t n,
-                                        const gboolean verbose)
+static inline gboolean _solve_hermitian(const float *const restrict A, float *const restrict y,
+                                        const size_t n, const gboolean verbose)
 {
-  // Solve A x = y where A an hermitian positive definite matrix n × n
-  // x and y are n vectors. Output the result in y
+    // Solve A x = y where A an hermitian positive definite matrix n × n
+    // x and y are n vectors. Output the result in y
 
-  float *const restrict x = dt_alloc_align_float(n);
-  float *const restrict L = dt_alloc_align_float(n * n);
+    float *const restrict x = dt_alloc_align_float(n);
+    float *const restrict L = dt_alloc_align_float(n * n);
 
-  if(!x || !L)
-  {
+    if (!x || !L)
+    {
+        dt_free_align(x);
+        dt_free_align(L);
+        dt_control_log(_("Choleski decomposition failed to allocate memory,"
+                         " check your RAM settings"));
+        dt_print(DT_DEBUG_PIPE, "Choleski decomposition failed to allocate memory");
+        return FALSE;
+    }
+
+    gboolean valid = FALSE;
+
+    // LU decomposition
+    valid = _choleski_decompose(A, L, n, verbose);
+
+    // Triangular descent
+    if (valid)
+        valid = _triangular_descent(L, y, x, n, verbose);
+
+    // Triangular ascent
+    if (valid)
+        valid = _triangular_ascent(L, x, y, n, verbose);
+
     dt_free_align(x);
     dt_free_align(L);
-    dt_control_log(_("Choleski decomposition failed to allocate memory,"
-                     " check your RAM settings"));
-    dt_print(DT_DEBUG_PIPE, "Choleski decomposition failed to allocate memory");
-    return FALSE;
-  }
 
-  gboolean valid = FALSE;
-
-  // LU decomposition
-  valid = _choleski_decompose(A, L, n, verbose);
-
-  // Triangular descent
-  if(valid)
-    valid = _triangular_descent(L, y, x, n, verbose);
-
-  // Triangular ascent
-  if(valid)
-    valid = _triangular_ascent(L, x, y, n, verbose);
-
-  dt_free_align(x);
-  dt_free_align(L);
-
-  return valid;
+    return valid;
 }
 
-
 __DT_CLONE_TARGETS__
-static inline void _transpose_dot_matrix(float *const restrict A, // input
+static inline void _transpose_dot_matrix(float *const restrict A,        // input
                                          float *const restrict A_square, // output
-                                         const size_t m,
-                                         const size_t n)
+                                         const size_t m, const size_t n)
 {
-  // Construct the square symmetrical definite positive matrix A' A,
-  // BUT only compute the lower triangle part for performance
+    // Construct the square symmetrical definite positive matrix A' A,
+    // BUT only compute the lower triangle part for performance
 
-  for(size_t i = 0; i < n; ++i)
-    for(size_t j = 0; j < (i + 1); ++j)
-    {
-      float sum = 0.0f;
-      for(size_t k = 0; k < m; ++k)
-        sum += A[k * n + i] * A[k * n + j];
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < (i + 1); ++j)
+        {
+            float sum = 0.0f;
+            for (size_t k = 0; k < m; ++k)
+                sum += A[k * n + i] * A[k * n + j];
 
-      A_square[i * n + j] = sum;
-    }
+            A_square[i * n + j] = sum;
+        }
 }
 
-
 __DT_CLONE_TARGETS__
-static inline void _transpose_dot_vector(float *const restrict A, // input
-                                         float *const restrict y, // input
+static inline void _transpose_dot_vector(float *const restrict A,        // input
+                                         float *const restrict y,        // input
                                          float *const restrict y_square, // output
-                                         const size_t m,
-                                         const size_t n)
+                                         const size_t m, const size_t n)
 {
-  // Construct the vector A' y
-  for(size_t i = 0; i < n; ++i)
-  {
-    float sum = 0.0f;
-    for(size_t k = 0; k < m; ++k)
-      sum += A[k * n + i] * y[k];
+    // Construct the vector A' y
+    for (size_t i = 0; i < n; ++i)
+    {
+        float sum = 0.0f;
+        for (size_t k = 0; k < m; ++k)
+            sum += A[k * n + i] * y[k];
 
-    y_square[i] = sum;
-  }
+        y_square[i] = sum;
+    }
 }
-
 
 __DT_CLONE_TARGETS__
-static inline gboolean pseudo_solve(float *const restrict A,
-                                    float *const restrict y,
-                                    const size_t m,
-                                    const size_t n,
-                                    const gboolean verbose)
+static inline gboolean pseudo_solve(float *const restrict A, float *const restrict y,
+                                    const size_t m, const size_t n, const gboolean verbose)
 {
-  // Solve the linear problem A x = y with the over-constrained
-  // rectanguler matrice A of dimension m × n (m >= n) by the least
-  // squares method
+    // Solve the linear problem A x = y with the over-constrained
+    // rectanguler matrice A of dimension m × n (m >= n) by the least
+    // squares method
 
-  if(m < n || n < 2 || m < 2)
-  {
-    dt_print(DT_DEBUG_ALWAYS, "Pseudo solve: cannot cast %zu × %zu matrice", m, n);
-    return FALSE;
-  }
+    if (m < n || n < 2 || m < 2)
+    {
+        dt_print(DT_DEBUG_ALWAYS, "Pseudo solve: cannot cast %zu × %zu matrice", m, n);
+        return FALSE;
+    }
 
-  float *const restrict A_square = dt_alloc_align_float(n * n);
-  float *const restrict y_square = dt_alloc_align_float(n);
+    float *const restrict A_square = dt_alloc_align_float(n * n);
+    float *const restrict y_square = dt_alloc_align_float(n);
 
-  if(!A_square || !y_square)
-  {
-    dt_free_align(A_square);
+    if (!A_square || !y_square)
+    {
+        dt_free_align(A_square);
+        dt_free_align(y_square);
+        dt_print(DT_DEBUG_PIPE, "Choleski decomposition failed to allocate memory");
+        dt_control_log(_("Choleski decomposition failed to allocate memory,"
+                         " check your RAM settings"));
+        return FALSE;
+    }
+
+    DT_OMP_PRAGMA(parallel sections)
+    {
+        DT_OMP_PRAGMA(section)
+        {
+            // Prepare the least squares matrix = A' A
+            _transpose_dot_matrix(A, A_square, m, n);
+        }
+        DT_OMP_PRAGMA(section)
+        {
+            // Prepare the y square vector = A' y
+            _transpose_dot_vector(A, y, y_square, m, n);
+        }
+    }
+
+    // Solve A' A x = A' y for x
+    gboolean valid = _solve_hermitian(A_square, y_square, n, verbose);
+    if (valid)
+        dt_simd_memcpy(y_square, y, n);
+
     dt_free_align(y_square);
-    dt_print(DT_DEBUG_PIPE, "Choleski decomposition failed to allocate memory");
-    dt_control_log(_("Choleski decomposition failed to allocate memory,"
-                     " check your RAM settings"));
-    return FALSE;
-  }
+    dt_free_align(A_square);
 
-  DT_OMP_PRAGMA(parallel sections)
-  {
-    DT_OMP_PRAGMA(section)
-    {
-      // Prepare the least squares matrix = A' A
-      _transpose_dot_matrix(A, A_square, m, n);
-    }
-    DT_OMP_PRAGMA(section)
-    {
-      // Prepare the y square vector = A' y
-      _transpose_dot_vector(A, y, y_square, m, n);
-    }
-  }
-
-  // Solve A' A x = A' y for x
-  gboolean valid = _solve_hermitian(A_square, y_square, n, verbose);
-  if(valid) dt_simd_memcpy(y_square, y, n);
-
-  dt_free_align(y_square);
-  dt_free_align(A_square);
-
-  return valid;
+    return valid;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

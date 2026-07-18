@@ -40,8 +40,4 @@ set_target_properties(darktable-cmstest
                      PROPERTIES LINKER_LANGUAGE C
                      RUNTIME_OUTPUT_DIRECTORY ${DARKTABLE_BINDIR})
 
-if (WIN32)
-  _detach_debuginfo (darktable-cmstest bin)
-endif(WIN32)
-
 install(TARGETS darktable-cmstest DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)

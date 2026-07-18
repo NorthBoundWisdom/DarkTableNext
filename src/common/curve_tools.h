@@ -38,7 +38,6 @@
 #define CT_WARNING 104
 #define CT_SET_ERROR 200
 
-
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 // DATA STRUCTURES
@@ -50,38 +49,38 @@ CurveData:
 ***********************************************************/
 typedef struct
 {
-  float x;
-  float y;
+    float x;
+    float y;
 } CurveAnchorPoint;
 
 typedef struct
 {
-  // Type for this curve
-  uint32_t m_spline_type;
+    // Type for this curve
+    uint32_t m_spline_type;
 
-  // Box data
-  float m_min_x;
-  float m_max_x;
-  float m_min_y;
-  float m_max_y;
+    // Box data
+    float m_min_x;
+    float m_max_x;
+    float m_min_y;
+    float m_max_y;
 
-  // Number of anchor points
-  uint8_t m_numAnchors;
+    // Number of anchor points
+    uint8_t m_numAnchors;
 
-  // contains a list of anchors, 2 floats per each point, x-y format
-  // max is 20 points
-  CurveAnchorPoint m_anchors[MAX_ANCHORS];
+    // contains a list of anchors, 2 floats per each point, x-y format
+    // max is 20 points
+    CurveAnchorPoint m_anchors[MAX_ANCHORS];
 
 } CurveData;
 
 typedef struct
 {
-  // Number of samples to use for the curve.
-  uint32_t m_samplingRes;
-  uint32_t m_outputRes;
+    // Number of samples to use for the curve.
+    uint32_t m_samplingRes;
+    uint32_t m_outputRes;
 
-  // Sampling array
-  uint16_t *m_Samples; // jo: changed to short int to save memory
+    // Sampling array
+    uint16_t *m_Samples; // jo: changed to short int to save memory
 
 } CurveSample;
 
@@ -127,10 +126,3 @@ float *interpolate_set(int n, float x[], float y[], unsigned int type);
  *      yval  - interpolated value at xval
  *******************************************************************/
 float interpolate_val(int n, float x[], float xval, float y[], float tangents[], unsigned int type);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -3620,4 +3620,3 @@ API["types"]["dt_imageio_module_format_data_j2k"].__attributes["parent"] = API["
 API["events"]["intermediate-export-image"]["callback"].__attributes["signature"]["4"].__attributes["reported_type"] = API["darktable"]["register_storage"].__attributes["signature"]["3"].__attributes["signature"]["1"].__attributes["reported_type"]["supports_format"].__attributes["signature"]["2"].__attributes["reported_type"]
 return API
 --
--- vim: shiftwidth=2 expandtab tabstop=2 cindent syntax=lua

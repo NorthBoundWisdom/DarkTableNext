@@ -16,51 +16,37 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-static void passthrough_monochrome(float *out,
-                                   const float *const in,
-                                   const int width,
+static void passthrough_monochrome(float *out, const float *const in, const int width,
                                    const int height)
 {
-  DT_OMP_FOR(collapse(2))
-  for(int j = 0; j < height; j++)
-  {
-    for(int i = 0; i < width; i++)
+    DT_OMP_FOR(collapse(2))
+    for (int j = 0; j < height; j++)
     {
-      for(int c = 0; c < 3; c++)
-      {
-        out[(size_t)4 * ((size_t)j * width + i) + c] = in[(size_t)j * width + i];
-      }
-      out[(size_t)4 * ((size_t)j * width + i) + 3] = 0.0f;
+        for (int i = 0; i < width; i++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                out[(size_t)4 * ((size_t)j * width + i) + c] = in[(size_t)j * width + i];
+            }
+            out[(size_t)4 * ((size_t)j * width + i) + 3] = 0.0f;
+        }
     }
-  }
 }
 
-static void passthrough_color(float *out,
-                              const float *const in,
-                              const int width,
-                              const int height,
-                              const uint32_t filters,
-                              const uint8_t (*const xtrans)[6])
+static void passthrough_color(float *out, const float *const in, const int width, const int height,
+                              const uint32_t filters, const uint8_t (*const xtrans)[6])
 {
-  DT_OMP_FOR(collapse(2))
-  for(int row = 0; row < height; row++)
-  {
-    for(int col = 0; col < width; col++)
+    DT_OMP_FOR(collapse(2))
+    for (int row = 0; row < height; row++)
     {
-      const float val = in[(size_t)col + row * width];
-      const size_t offset = (size_t)4 * ((size_t)row * width + col);
-      const size_t ch = fcol(row, col, filters, xtrans);
+        for (int col = 0; col < width; col++)
+        {
+            const float val = in[(size_t)col + row * width];
+            const size_t offset = (size_t)4 * ((size_t)row * width + col);
+            const size_t ch = fcol(row, col, filters, xtrans);
 
-      out[offset] = out[offset + 1] = out[offset + 2] = out[offset + 3] = 0.0f;
-      out[offset + ch] = val;
+            out[offset] = out[offset + 1] = out[offset + 2] = out[offset + 3] = 0.0f;
+            out[offset + ch] = val;
+        }
     }
-  }
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

@@ -1,6 +1,4 @@
-# Only build on real *nix system or MSYS2 installation
-if ((NOT WIN32) OR BUILD_MSYS2_INSTALL)
-    find_package(PkgConfig)
+find_package(PkgConfig)
     pkg_check_modules(GMODULE REQUIRED gmodule-2.0)
     include_directories(${GMODULE_INCLUDE_DIRS})
 
@@ -28,4 +26,3 @@ if ((NOT WIN32) OR BUILD_MSYS2_INSTALL)
                ${CMAKE_INSTALL_LIBEXECDIR}/darktable/tools
             COMPONENT
                 DTApplication)
-endif()

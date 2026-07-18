@@ -23,26 +23,14 @@
 
 #include <cmocka.h>
 
-#ifdef _WIN32
-#include "win/main_wrapper.h"
-#endif
-
 static void test_sample(void **state)
 {
-  // most efficient test: does just nothing :-)
+    // most efficient test: does just nothing :-)
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-  const struct CMUnitTest tests[] = {
-    cmocka_unit_test(test_sample)
-  };
+    const struct CMUnitTest tests[] = {cmocka_unit_test(test_sample)};
 
-  return cmocka_run_group_tests(tests, NULL, NULL);
+    return cmocka_run_group_tests(tests, NULL, NULL);
 }
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

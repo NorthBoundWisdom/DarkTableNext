@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.jsonc.in": "jsonc",
+    "*.jsonc": "jsonc"
+  }
+}

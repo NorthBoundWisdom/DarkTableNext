@@ -21,55 +21,53 @@
 
 static int32_t dt_dev_process_preview_job_run(dt_job_t *job)
 {
-  dt_develop_t *dev = dt_control_job_get_params(job);
-  dt_dev_process_image_job(dev, NULL, dev->preview_pipe,
-                           DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED, DT_DEVICE_NONE);
-  return 0;
+    dt_develop_t *dev = dt_control_job_get_params(job);
+    dt_dev_process_image_job(dev, NULL, dev->preview_pipe, DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED,
+                             DT_DEVICE_NONE);
+    return 0;
 }
 
 static int32_t dt_dev_process_preview2_job_run(dt_job_t *job)
 {
-  dt_develop_t *dev = dt_control_job_get_params(job);
-  dt_dev_process_image_job(dev, &dev->preview2, dev->preview2.pipe,
-                           DT_SIGNAL_DEVELOP_PREVIEW2_PIPE_FINISHED, DT_DEVICE_NONE);
-  return 0;
+    dt_develop_t *dev = dt_control_job_get_params(job);
+    dt_dev_process_image_job(dev, &dev->preview2, dev->preview2.pipe,
+                             DT_SIGNAL_DEVELOP_PREVIEW2_PIPE_FINISHED, DT_DEVICE_NONE);
+    return 0;
 }
 
 static int32_t dt_dev_process_image_job_run(dt_job_t *job)
 {
-  dt_develop_t *dev = dt_control_job_get_params(job);
-  dt_dev_process_image_job(dev, &dev->full, dev->full.pipe,
-                           DT_SIGNAL_DEVELOP_UI_PIPE_FINISHED, DT_DEVICE_NONE);
-  return 0;
+    dt_develop_t *dev = dt_control_job_get_params(job);
+    dt_dev_process_image_job(dev, &dev->full, dev->full.pipe, DT_SIGNAL_DEVELOP_UI_PIPE_FINISHED,
+                             DT_DEVICE_NONE);
+    return 0;
 }
 
 dt_job_t *dt_dev_process_preview_job_create(dt_develop_t *dev)
 {
-  dt_job_t *job = dt_control_job_create(&dt_dev_process_preview_job_run, "develop process preview");
-  if(!job) return NULL;
-  dt_control_job_set_params(job, dev, NULL);
-  return job;
+    dt_job_t *job =
+        dt_control_job_create(&dt_dev_process_preview_job_run, "develop process preview");
+    if (!job)
+        return NULL;
+    dt_control_job_set_params(job, dev, NULL);
+    return job;
 }
 
 dt_job_t *dt_dev_process_preview2_job_create(dt_develop_t *dev)
 {
-  dt_job_t *job = dt_control_job_create(&dt_dev_process_preview2_job_run, "develop process preview 2");
-  if(!job) return NULL;
-  dt_control_job_set_params(job, dev, NULL);
-  return job;
+    dt_job_t *job =
+        dt_control_job_create(&dt_dev_process_preview2_job_run, "develop process preview 2");
+    if (!job)
+        return NULL;
+    dt_control_job_set_params(job, dev, NULL);
+    return job;
 }
 
 dt_job_t *dt_dev_process_image_job_create(dt_develop_t *dev)
 {
-  dt_job_t *job = dt_control_job_create(&dt_dev_process_image_job_run, "develop process image");
-  if(!job) return NULL;
-  dt_control_job_set_params(job, dev, NULL);
-  return job;
+    dt_job_t *job = dt_control_job_create(&dt_dev_process_image_job_run, "develop process image");
+    if (!job)
+        return NULL;
+    dt_control_job_set_params(job, dev, NULL);
+    return job;
 }
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-

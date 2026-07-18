@@ -24,14 +24,14 @@
 
 typedef struct dt_noiseprofile_t
 {
-  char *name;
-  char *maker;
-  char *model;
-  int iso;
-  dt_aligned_pixel_t a; // poissonian part; use 4 aligned instead of 3 elements to aid vectorization
-  dt_aligned_pixel_t b; // gaussian part
-}
-dt_noiseprofile_t;
+    char *name;
+    char *maker;
+    char *model;
+    int iso;
+    dt_aligned_pixel_t
+        a; // poissonian part; use 4 aligned instead of 3 elements to aid vectorization
+    dt_aligned_pixel_t b; // gaussian part
+} dt_noiseprofile_t;
 
 extern const dt_noiseprofile_t dt_noiseprofile_generic;
 
@@ -51,13 +51,6 @@ void dt_noiseprofile_free(gpointer data);
  * interpolate values from p1 and p2 into out.
  */
 void dt_noiseprofile_interpolate(
-  const dt_noiseprofile_t *const p1,  // the smaller iso
-  const dt_noiseprofile_t *const p2,  // the larger iso (can't be == iso1)
-  dt_noiseprofile_t *out);            // has iso initialized
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
-
+    const dt_noiseprofile_t *const p1, // the smaller iso
+    const dt_noiseprofile_t *const p2, // the larger iso (can't be == iso1)
+    dt_noiseprofile_t *out);           // has iso initialized

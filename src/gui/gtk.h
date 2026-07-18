@@ -37,16 +37,15 @@ G_BEGIN_DECLS
 
 typedef struct dt_gui_widgets_t
 {
+    // Borders
+    GtkWidget *left_border;
+    GtkWidget *right_border;
+    GtkWidget *bottom_border;
+    GtkWidget *top_border;
 
-  // Borders
-  GtkWidget *left_border;
-  GtkWidget *right_border;
-  GtkWidget *bottom_border;
-  GtkWidget *top_border;
-
-  /* resize of left/right panels */
-  gboolean panel_handle_dragging;
-  int panel_handle_x, panel_handle_y;
+    /* resize of left/right panels */
+    gboolean panel_handle_dragging;
+    int panel_handle_x, panel_handle_y;
 } dt_gui_widgets_t;
 
 typedef struct dt_gui_scrollbars_t
@@ -59,142 +58,157 @@ typedef struct dt_gui_scrollbars_t
 
 typedef enum dt_gui_color_t
 {
-  DT_GUI_COLOR_BG = 0,
-  DT_GUI_COLOR_DARKROOM_BG,
-  DT_GUI_COLOR_DARKROOM_PREVIEW_BG,
-  DT_GUI_COLOR_LIGHTTABLE_BG,
-  DT_GUI_COLOR_LIGHTTABLE_PREVIEW_BG,
-  DT_GUI_COLOR_LIGHTTABLE_FONT,
-  DT_GUI_COLOR_PRINT_BG,
-  DT_GUI_COLOR_BRUSH_CURSOR,
-  DT_GUI_COLOR_BRUSH_TRACE,
-  DT_GUI_COLOR_BUTTON_FG,
-  DT_GUI_COLOR_THUMBNAIL_BG,
-  DT_GUI_COLOR_THUMBNAIL_SELECTED_BG,
-  DT_GUI_COLOR_THUMBNAIL_HOVER_BG,
-  DT_GUI_COLOR_THUMBNAIL_OUTLINE,
-  DT_GUI_COLOR_THUMBNAIL_SELECTED_OUTLINE,
-  DT_GUI_COLOR_THUMBNAIL_HOVER_OUTLINE,
-  DT_GUI_COLOR_THUMBNAIL_FONT,
-  DT_GUI_COLOR_THUMBNAIL_SELECTED_FONT,
-  DT_GUI_COLOR_THUMBNAIL_HOVER_FONT,
-  DT_GUI_COLOR_THUMBNAIL_BORDER,
-  DT_GUI_COLOR_THUMBNAIL_SELECTED_BORDER,
-  DT_GUI_COLOR_FILMSTRIP_BG,
-  DT_GUI_COLOR_TIMELINE_BG,
-  DT_GUI_COLOR_TIMELINE_FG,
-  DT_GUI_COLOR_TIMELINE_TEXT_BG,
-  DT_GUI_COLOR_TIMELINE_TEXT_FG,
-  DT_GUI_COLOR_CULLING_SELECTED_BORDER,
-  DT_GUI_COLOR_CULLING_FILMSTRIP_SELECTED_BORDER,
-  DT_GUI_COLOR_PREVIEW_HOVER_BORDER,
-  DT_GUI_COLOR_LOG_BG,
-  DT_GUI_COLOR_LOG_FG,
-  DT_GUI_COLOR_MAP_COUNT_SAME_LOC,
-  DT_GUI_COLOR_MAP_COUNT_DIFF_LOC,
-  DT_GUI_COLOR_MAP_COUNT_BG,
-  DT_GUI_COLOR_MAP_LOC_SHAPE_HIGH,
-  DT_GUI_COLOR_MAP_LOC_SHAPE_LOW,
-  DT_GUI_COLOR_MAP_LOC_SHAPE_DEF,
-  DT_GUI_COLOR_COLOR_ASSESSMENT_BG,
-  DT_GUI_COLOR_COLOR_ASSESSMENT_FG,
-  DT_GUI_COLOR_LAST
+    DT_GUI_COLOR_BG = 0,
+    DT_GUI_COLOR_DARKROOM_BG,
+    DT_GUI_COLOR_DARKROOM_PREVIEW_BG,
+    DT_GUI_COLOR_LIGHTTABLE_BG,
+    DT_GUI_COLOR_LIGHTTABLE_PREVIEW_BG,
+    DT_GUI_COLOR_LIGHTTABLE_FONT,
+    DT_GUI_COLOR_PRINT_BG,
+    DT_GUI_COLOR_BRUSH_CURSOR,
+    DT_GUI_COLOR_BRUSH_TRACE,
+    DT_GUI_COLOR_BUTTON_FG,
+    DT_GUI_COLOR_THUMBNAIL_BG,
+    DT_GUI_COLOR_THUMBNAIL_SELECTED_BG,
+    DT_GUI_COLOR_THUMBNAIL_HOVER_BG,
+    DT_GUI_COLOR_THUMBNAIL_OUTLINE,
+    DT_GUI_COLOR_THUMBNAIL_SELECTED_OUTLINE,
+    DT_GUI_COLOR_THUMBNAIL_HOVER_OUTLINE,
+    DT_GUI_COLOR_THUMBNAIL_FONT,
+    DT_GUI_COLOR_THUMBNAIL_SELECTED_FONT,
+    DT_GUI_COLOR_THUMBNAIL_HOVER_FONT,
+    DT_GUI_COLOR_THUMBNAIL_BORDER,
+    DT_GUI_COLOR_THUMBNAIL_SELECTED_BORDER,
+    DT_GUI_COLOR_FILMSTRIP_BG,
+    DT_GUI_COLOR_TIMELINE_BG,
+    DT_GUI_COLOR_TIMELINE_FG,
+    DT_GUI_COLOR_TIMELINE_TEXT_BG,
+    DT_GUI_COLOR_TIMELINE_TEXT_FG,
+    DT_GUI_COLOR_CULLING_SELECTED_BORDER,
+    DT_GUI_COLOR_CULLING_FILMSTRIP_SELECTED_BORDER,
+    DT_GUI_COLOR_PREVIEW_HOVER_BORDER,
+    DT_GUI_COLOR_LOG_BG,
+    DT_GUI_COLOR_LOG_FG,
+    DT_GUI_COLOR_MAP_COUNT_SAME_LOC,
+    DT_GUI_COLOR_MAP_COUNT_DIFF_LOC,
+    DT_GUI_COLOR_MAP_COUNT_BG,
+    DT_GUI_COLOR_MAP_LOC_SHAPE_HIGH,
+    DT_GUI_COLOR_MAP_LOC_SHAPE_LOW,
+    DT_GUI_COLOR_MAP_LOC_SHAPE_DEF,
+    DT_GUI_COLOR_COLOR_ASSESSMENT_BG,
+    DT_GUI_COLOR_COLOR_ASSESSMENT_FG,
+    DT_GUI_COLOR_LAST
 } dt_gui_color_t;
 
 typedef enum dt_gui_session_type_t
 {
-  DT_GUI_SESSION_UNKNOWN,
-  DT_GUI_SESSION_X11,
-  DT_GUI_SESSION_QUARTZ,
-  DT_GUI_SESSION_WAYLAND,
+    DT_GUI_SESSION_UNKNOWN,
+    DT_GUI_SESSION_X11,
+    DT_GUI_SESSION_QUARTZ,
+    DT_GUI_SESSION_WAYLAND,
 } dt_gui_session_type_t;
 
 typedef struct dt_gui_gtk_t
 {
-  struct dt_ui_t *ui;
+    struct dt_ui_t *ui;
 
-  dt_gui_widgets_t widgets;
+    dt_gui_widgets_t widgets;
 
-  dt_gui_scrollbars_t scrollbars;
+    dt_gui_scrollbars_t scrollbars;
 
-  cairo_surface_t *surface;  // cached prior image when config var ui/loading_screen is FALSE
-  gboolean drawing_snapshot;
+    cairo_surface_t *surface; // cached prior image when config var ui/loading_screen is FALSE
+    gboolean drawing_snapshot;
 
-  char *last_preset;
+    char *last_preset;
 
-  dt_atomic_int reset;
-  GdkRGBA colors[DT_GUI_COLOR_LAST];
+    dt_atomic_int reset;
+    GdkRGBA colors[DT_GUI_COLOR_LAST];
 
-  int32_t hide_tooltips;
+    int32_t hide_tooltips;
 
-  gboolean grouping;
-  dt_imgid_t expanded_group_id;
+    gboolean grouping;
+    dt_imgid_t expanded_group_id;
 
-  gboolean show_overlays;
-  gboolean show_focus_peaking;
-  gboolean touchpad_gestures_enabled;
-  double overlay_red, overlay_blue, overlay_green, overlay_contrast;
-  GtkWidget *focus_peaking_button;
+    gboolean show_overlays;
+    gboolean show_focus_peaking;
+    gboolean touchpad_gestures_enabled;
+    double overlay_red, overlay_blue, overlay_green, overlay_contrast;
+    GtkWidget *focus_peaking_button;
 
-  double dpi, dpi_factor, ppd, ppd_thb;
-  gboolean have_pen_pressure;
+    double dpi, dpi_factor, ppd, ppd_thb;
+    gboolean have_pen_pressure;
 
-  int icon_size; // size of top panel icons
+    int icon_size; // size of top panel icons
 
-  // store which gtkrc we loaded:
-  char gtkrc[PATH_MAX];
+    // store which gtkrc we loaded:
+    char gtkrc[PATH_MAX];
 
-  gint scroll_mask;
-  guint sidebar_scroll_mask;
+    gint scroll_mask;
+    guint sidebar_scroll_mask;
 
-  cairo_filter_t filter_image;    // filtering used to scale images to screen
+    cairo_filter_t filter_image; // filtering used to scale images to screen
 } dt_gui_gtk_t;
 
 typedef struct _gui_collapsible_section_t
 {
-  GtkBox *parent;       // the parent widget
-  gchar *confname;      // configuration name for the toggle status
-  GtkWidget *toggle;    // toggle button
-  GtkWidget *expander;  // the expanded
-  GtkWidget *label;	// the label containing the section's title text
-  GtkBox *container;    // the container for all widgets into the section
-  struct dt_action_t *module; // the lib or iop module that contains this section
+    GtkBox *parent;             // the parent widget
+    gchar *confname;            // configuration name for the toggle status
+    GtkWidget *toggle;          // toggle button
+    GtkWidget *expander;        // the expanded
+    GtkWidget *label;           // the label containing the section's title text
+    GtkBox *container;          // the container for all widgets into the section
+    struct dt_action_t *module; // the lib or iop module that contains this section
 } dt_gui_collapsible_section_t;
 
-static inline cairo_surface_t *dt_cairo_image_surface_create(cairo_format_t format, int width, int height) {
-  cairo_surface_t *cst = cairo_image_surface_create(format, width * darktable.gui->ppd, height * darktable.gui->ppd);
-  cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
-  return cst;
+static inline cairo_surface_t *dt_cairo_image_surface_create(cairo_format_t format, int width,
+                                                             int height)
+{
+    cairo_surface_t *cst =
+        cairo_image_surface_create(format, width * darktable.gui->ppd, height * darktable.gui->ppd);
+    cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
+    return cst;
 }
 
-static inline cairo_surface_t *dt_cairo_image_surface_create_for_data(unsigned char *data, cairo_format_t format, int width, int height, int stride) {
-  cairo_surface_t *cst = cairo_image_surface_create_for_data(data, format, width, height, stride);
-  cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
-  return cst;
+static inline cairo_surface_t *dt_cairo_image_surface_create_for_data(unsigned char *data,
+                                                                      cairo_format_t format,
+                                                                      int width, int height,
+                                                                      int stride)
+{
+    cairo_surface_t *cst = cairo_image_surface_create_for_data(data, format, width, height, stride);
+    cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
+    return cst;
 }
 
-static inline cairo_surface_t *dt_cairo_image_surface_create_from_png(const char *filename) {
-  cairo_surface_t *cst = cairo_image_surface_create_from_png(filename);
-  cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
-  return cst;
+static inline cairo_surface_t *dt_cairo_image_surface_create_from_png(const char *filename)
+{
+    cairo_surface_t *cst = cairo_image_surface_create_from_png(filename);
+    cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
+    return cst;
 }
 
-static inline int dt_cairo_image_surface_get_width(cairo_surface_t *surface) {
-  return cairo_image_surface_get_width(surface) / darktable.gui->ppd;
+static inline int dt_cairo_image_surface_get_width(cairo_surface_t *surface)
+{
+    return cairo_image_surface_get_width(surface) / darktable.gui->ppd;
 }
 
-static inline int dt_cairo_image_surface_get_height(cairo_surface_t *surface) {
-  return cairo_image_surface_get_height(surface) / darktable.gui->ppd;
+static inline int dt_cairo_image_surface_get_height(cairo_surface_t *surface)
+{
+    return cairo_image_surface_get_height(surface) / darktable.gui->ppd;
 }
 
-static inline cairo_surface_t *dt_gdk_cairo_surface_create_from_pixbuf(const GdkPixbuf *pixbuf, int scale, GdkWindow *for_window) {
-  cairo_surface_t *cst = gdk_cairo_surface_create_from_pixbuf(pixbuf, scale, for_window);
-  cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
-  return cst;
+static inline cairo_surface_t *
+dt_gdk_cairo_surface_create_from_pixbuf(const GdkPixbuf *pixbuf, int scale, GdkWindow *for_window)
+{
+    cairo_surface_t *cst = gdk_cairo_surface_create_from_pixbuf(pixbuf, scale, for_window);
+    cairo_surface_set_device_scale(cst, darktable.gui->ppd, darktable.gui->ppd);
+    return cst;
 }
 
-static inline GdkPixbuf *dt_gdk_pixbuf_new_from_file_at_size(const char *filename, int width, int height, GError **error) {
-  return gdk_pixbuf_new_from_file_at_size(filename, width * darktable.gui->ppd, height * darktable.gui->ppd, error);
+static inline GdkPixbuf *dt_gdk_pixbuf_new_from_file_at_size(const char *filename, int width,
+                                                             int height, GError **error)
+{
+    return gdk_pixbuf_new_from_file_at_size(filename, width * darktable.gui->ppd,
+                                            height * darktable.gui->ppd, error);
 }
 
 // call class function to add or remove CSS classes (need to be set on top of this file as first function is used in this file)
@@ -211,8 +225,7 @@ void dt_gui_store_last_preset(const char *name);
 int dt_gui_gtk_load_config();
 int dt_gui_gtk_write_config();
 void dt_gui_gtk_set_source_rgb(cairo_t *cr, dt_gui_color_t color);
-void dt_gui_gtk_set_source_rgba(cairo_t *cr, dt_gui_color_t color,
-                                const float opacity_coef);
+void dt_gui_gtk_set_source_rgba(cairo_t *cr, dt_gui_color_t color, const float opacity_coef);
 double dt_get_system_gui_ppd(GtkWidget *widget);
 double dt_get_screen_resolution(GtkWidget *widget);
 
@@ -250,106 +263,96 @@ gboolean dt_gui_get_scroll_unit_delta(const GdkEventScroll *event, int *delta);
  * new ui api
  */
 
-
 typedef enum dt_ui_container_t
 {
-  /* the top container of left panel, the top container
+    /* the top container of left panel, the top container
      disables the module expander and does not scroll with other modules
   */
-  DT_UI_CONTAINER_PANEL_LEFT_TOP = 0,
+    DT_UI_CONTAINER_PANEL_LEFT_TOP = 0,
 
-  /* the center container of left panel, the center container
+    /* the center container of left panel, the center container
      contains the scrollable area that all plugins are placed within and last
      widget is the end marker.
      This container will always expand|fill empty vertical space
   */
-  DT_UI_CONTAINER_PANEL_LEFT_CENTER = 1,
+    DT_UI_CONTAINER_PANEL_LEFT_CENTER = 1,
 
-  /* the bottom container of left panel, this container works just like
+    /* the bottom container of left panel, this container works just like
      the top container but will be attached to bottom in the panel, such as
      plugins like background jobs module in lighttable and the plugin selection
      module in darkroom,
   */
-  DT_UI_CONTAINER_PANEL_LEFT_BOTTOM = 2,
+    DT_UI_CONTAINER_PANEL_LEFT_BOTTOM = 2,
 
-  DT_UI_CONTAINER_PANEL_RIGHT_TOP = 3,
-  DT_UI_CONTAINER_PANEL_RIGHT_CENTER = 4,
-  DT_UI_CONTAINER_PANEL_RIGHT_BOTTOM = 5,
+    DT_UI_CONTAINER_PANEL_RIGHT_TOP = 3,
+    DT_UI_CONTAINER_PANEL_RIGHT_CENTER = 4,
+    DT_UI_CONTAINER_PANEL_RIGHT_BOTTOM = 5,
 
+    /* the top header bar, left slot where darktable name is placed */
+    DT_UI_CONTAINER_PANEL_TOP_LEFT = 6,
+    /* center which is expanded as wide it can */
+    DT_UI_CONTAINER_PANEL_TOP_CENTER = 7,
+    /* right side were the different views are accessed */
+    DT_UI_CONTAINER_PANEL_TOP_RIGHT = 8,
 
-  /* the top header bar, left slot where darktable name is placed */
-  DT_UI_CONTAINER_PANEL_TOP_LEFT = 6,
-  /* center which is expanded as wide it can */
-  DT_UI_CONTAINER_PANEL_TOP_CENTER = 7,
-  /* right side were the different views are accessed */
-  DT_UI_CONTAINER_PANEL_TOP_RIGHT = 8,
+    DT_UI_CONTAINER_PANEL_CENTER_TOP_LEFT = 9,
+    DT_UI_CONTAINER_PANEL_CENTER_TOP_CENTER = 10,
+    DT_UI_CONTAINER_PANEL_CENTER_TOP_RIGHT = 11,
 
-  DT_UI_CONTAINER_PANEL_CENTER_TOP_LEFT = 9,
-  DT_UI_CONTAINER_PANEL_CENTER_TOP_CENTER = 10,
-  DT_UI_CONTAINER_PANEL_CENTER_TOP_RIGHT = 11,
+    DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_LEFT = 12,
+    DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_CENTER = 13,
+    DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_RIGHT = 14,
 
-  DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_LEFT = 12,
-  DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_CENTER = 13,
-  DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_RIGHT = 14,
-
-  /* this panel is placed at bottom of ui
+    /* this panel is placed at bottom of ui
      only used by the filmstrip if shown */
-  DT_UI_CONTAINER_PANEL_BOTTOM = 15,
+    DT_UI_CONTAINER_PANEL_BOTTOM = 15,
 
-  /* Count of containers */
-  DT_UI_CONTAINER_SIZE
+    /* Count of containers */
+    DT_UI_CONTAINER_SIZE
 } dt_ui_container_t;
 
 typedef enum dt_ui_panel_t
 {
-  /* the header panel */
-  DT_UI_PANEL_TOP,
-  /* center top toolbar panel */
-  DT_UI_PANEL_CENTER_TOP,
-  /* center bottom toolbar panel */
-  DT_UI_PANEL_CENTER_BOTTOM,
-  /* left panel */
-  DT_UI_PANEL_LEFT,
-  /* right panel */
-  DT_UI_PANEL_RIGHT,
-  /* bottom panel */
-  DT_UI_PANEL_BOTTOM,
+    /* the header panel */
+    DT_UI_PANEL_TOP,
+    /* center top toolbar panel */
+    DT_UI_PANEL_CENTER_TOP,
+    /* center bottom toolbar panel */
+    DT_UI_PANEL_CENTER_BOTTOM,
+    /* left panel */
+    DT_UI_PANEL_LEFT,
+    /* right panel */
+    DT_UI_PANEL_RIGHT,
+    /* bottom panel */
+    DT_UI_PANEL_BOTTOM,
 
-  DT_UI_PANEL_SIZE
+    DT_UI_PANEL_SIZE
 } dt_ui_panel_t;
 
 typedef enum dt_ui_border_t
 {
-  DT_UI_BORDER_TOP,
-  DT_UI_BORDER_BOTTOM,
-  DT_UI_BORDER_LEFT,
-  DT_UI_BORDER_RIGHT,
+    DT_UI_BORDER_TOP,
+    DT_UI_BORDER_BOTTOM,
+    DT_UI_BORDER_LEFT,
+    DT_UI_BORDER_RIGHT,
 
-  DT_UI_BORDER_SIZE
+    DT_UI_BORDER_SIZE
 } dt_ui_border_t;
 
 /** \brief swap the container in the left and right panels */
-void dt_ui_container_swap_left_right(struct dt_ui_t *ui,
-                                     gboolean swap);
+void dt_ui_container_swap_left_right(struct dt_ui_t *ui, gboolean swap);
 /** \brief add's a widget to a defined container */
-void dt_ui_container_add_widget(const struct dt_ui_t *ui,
-                                const dt_ui_container_t c,
-                                GtkWidget *w);
+void dt_ui_container_add_widget(const struct dt_ui_t *ui, const dt_ui_container_t c, GtkWidget *w);
 /** \brief gives a widget focus in the container */
-void dt_ui_container_focus_widget(const struct dt_ui_t *ui,
-                                  const dt_ui_container_t c,
+void dt_ui_container_focus_widget(const struct dt_ui_t *ui, const dt_ui_container_t c,
                                   GtkWidget *w);
 /** \brief calls a callback on all children widgets from container */
-void dt_ui_container_foreach(const struct dt_ui_t *ui,
-                             const dt_ui_container_t c,
+void dt_ui_container_foreach(const struct dt_ui_t *ui, const dt_ui_container_t c,
                              GtkCallback callback);
 /** \brief destroy all child widgets from container */
-void dt_ui_container_destroy_children(const struct dt_ui_t *ui,
-                                      const dt_ui_container_t c);
+void dt_ui_container_destroy_children(const struct dt_ui_t *ui, const dt_ui_container_t c);
 /** \brief shows/hide a panel */
-void dt_ui_panel_show(const struct dt_ui_t *ui,
-                      const dt_ui_panel_t,
-                      const gboolean show,
+void dt_ui_panel_show(const struct dt_ui_t *ui, const dt_ui_panel_t, const gboolean show,
                       const gboolean write);
 /** \brief restore saved state of panel visibility for current view */
 void dt_ui_restore_panels(const struct dt_ui_t *ui);
@@ -362,19 +365,13 @@ void dt_ui_toggle_panels_visibility(const struct dt_ui_t *ui);
 /** \brief draw user's attention */
 void dt_ui_notify_user();
 /** \brief get visible state of panel */
-gboolean dt_ui_panel_visible(const struct dt_ui_t *ui,
-                             const dt_ui_panel_t);
+gboolean dt_ui_panel_visible(const struct dt_ui_t *ui, const dt_ui_panel_t);
 /**  \brief get width of right, left, or bottom panel */
-int dt_ui_panel_get_size(struct dt_ui_t *ui,
-                         const dt_ui_panel_t p);
+int dt_ui_panel_get_size(struct dt_ui_t *ui, const dt_ui_panel_t p);
 /**  \brief set width of right, left, or bottom panel */
-void dt_ui_panel_set_size(const struct dt_ui_t *ui,
-                          const dt_ui_panel_t p,
-                          int s);
+void dt_ui_panel_set_size(const struct dt_ui_t *ui, const dt_ui_panel_t p, int s);
 /** \brief is the panel ancestor of widget */
-gboolean dt_ui_panel_ancestor(const struct dt_ui_t *ui,
-                              const dt_ui_panel_t p,
-                              GtkWidget *w);
+gboolean dt_ui_panel_ancestor(const struct dt_ui_t *ui, const dt_ui_panel_t p, GtkWidget *w);
 /** \brief get the center drawable widget */
 GtkWidget *dt_ui_center(const struct dt_ui_t *ui);
 GtkWidget *dt_ui_center_base(const struct dt_ui_t *ui);
@@ -388,40 +385,40 @@ GtkWidget *dt_ui_log_msg(const struct dt_ui_t *ui);
 /** \brief get the toast message widget */
 GtkWidget *dt_ui_toast_msg(const struct dt_ui_t *ui);
 
-GtkBox *dt_ui_get_container(const struct dt_ui_t *ui,
-                            const dt_ui_container_t c);
+GtkBox *dt_ui_get_container(const struct dt_ui_t *ui, const dt_ui_container_t c);
 
 /*  activate ellipsization of the combox entries */
 void dt_ellipsize_combo(GtkComboBox *cbox);
 
 static inline void dt_ui_section_label_set(GtkWidget *label)
 {
-  gtk_widget_set_halign(label, GTK_ALIGN_FILL); // make it span the whole available width
-  gtk_label_set_xalign (GTK_LABEL(label), 0.5f);
-  gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END); // ellipsize labels
-  dt_gui_add_class(label, "dt_section_label"); // make sure that we can style these easily
+    gtk_widget_set_halign(label, GTK_ALIGN_FILL); // make it span the whole available width
+    gtk_label_set_xalign(GTK_LABEL(label), 0.5f);
+    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END); // ellipsize labels
+    dt_gui_add_class(label, "dt_section_label"); // make sure that we can style these easily
 }
 
 static inline GtkWidget *dt_ui_section_label_new(const gchar *str)
 {
-  GtkWidget *label = gtk_label_new(str);
-  dt_ui_section_label_set(label);
-  return label;
+    GtkWidget *label = gtk_label_new(str);
+    dt_ui_section_label_set(label);
+    return label;
 };
 
 static inline GtkWidget *dt_ui_label_new(const gchar *str)
 {
-  GtkWidget *label = gtk_label_new(str);
-  g_object_set(label, "halign", GTK_ALIGN_START, "xalign", 0.0f, "ellipsize", PANGO_ELLIPSIZE_END, (void *)0);
-  return label;
+    GtkWidget *label = gtk_label_new(str);
+    g_object_set(label, "halign", GTK_ALIGN_START, "xalign", 0.0f, "ellipsize", PANGO_ELLIPSIZE_END,
+                 (void *)0);
+    return label;
 };
 
 static inline GtkWidget *dt_ui_entry_new(gint width_chars)
 {
-  GtkWidget *entry = gtk_entry_new();
-  gtk_drag_dest_unset(entry);
-  gtk_entry_set_width_chars(GTK_ENTRY(entry), width_chars);
-  return entry;
+    GtkWidget *entry = gtk_entry_new();
+    gtk_drag_dest_unset(entry);
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), width_chars);
+    return entry;
 };
 
 extern const struct dt_action_def_t dt_action_def_tabs_all_rgb;
@@ -430,37 +427,27 @@ extern const struct dt_action_def_t dt_action_def_tabs_none;
 
 GtkNotebook *dt_ui_notebook_new(struct dt_action_def_t *def);
 
-GtkWidget *dt_ui_notebook_page(GtkNotebook *notebook,
-                               const char *text,
-                               const char *tooltip);
+GtkWidget *dt_ui_notebook_page(GtkNotebook *notebook, const char *text, const char *tooltip);
 
 // show a dialog box with 2 buttons in case some user interaction is
 // required BEFORE dt's gui is initialised.  this expects gtk_init()
 // to be called already which should be the case during most of dt's
 // init phase.
-gboolean dt_gui_show_standalone_yes_no_dialog(const char *title,
-                                              const char *markup,
-                                              const char *no_text,
-                                              const char *yes_text);
+gboolean dt_gui_show_standalone_yes_no_dialog(const char *title, const char *markup,
+                                              const char *no_text, const char *yes_text);
 
 // similar to the one above. this one asks the user for some
 // string. the hint is shown in the empty entry box
-char *dt_gui_show_standalone_string_dialog(const char *title,
-                                           const char *markup,
-                                           const char *placeholder,
-                                           const char *no_text,
+char *dt_gui_show_standalone_string_dialog(const char *title, const char *markup,
+                                           const char *placeholder, const char *no_text,
                                            const char *yes_text);
 
 // returns TRUE if YES was answered, FALSE otherwise
-gboolean dt_gui_show_yes_no_dialog(const char *title,
-                                   const char *wname,
-                                   const char *format, ...);
+gboolean dt_gui_show_yes_no_dialog(const char *title, const char *wname, const char *format, ...);
 
-void dt_gui_add_help_link(GtkWidget *widget,
-                          const char *link);
+void dt_gui_add_help_link(GtkWidget *widget, const char *link);
 char *dt_gui_get_help_url(GtkWidget *widget);
-void dt_gui_dialog_add_help(GtkDialog *dialog,
-                            const char *topic);
+void dt_gui_dialog_add_help(GtkDialog *dialog, const char *topic);
 void dt_gui_show_help(GtkWidget *widget);
 
 // load a CSS theme
@@ -477,9 +464,7 @@ guint dt_gui_translated_key_state(const GdkEventKey *event);
 // return modifier keys currently pressed, independent of any key event
 GdkModifierType dt_key_modifier_state();
 
-GtkWidget *dt_ui_resize_wrap(GtkWidget *w,
-                             const gint min_size,
-                             char *config_str);
+GtkWidget *dt_ui_resize_wrap(GtkWidget *w, const gint min_size, char *config_str);
 
 // check whether the given container has any user-added children
 gboolean dt_gui_container_has_children(GtkContainer *container);
@@ -488,8 +473,7 @@ int dt_gui_container_num_children(GtkContainer *container);
 // return the first child of the given container
 GtkWidget *dt_gui_container_first_child(GtkContainer *container);
 // return the requested child of the given container, or NULL if it has fewer children
-GtkWidget *dt_gui_container_nth_child(GtkContainer *container,
-                                      const int which);
+GtkWidget *dt_gui_container_nth_child(GtkContainer *container, const int which);
 
 // remove all of the children we've added to the container.  Any which
 // no longer have any references will be destroyed.
@@ -501,38 +485,26 @@ void dt_gui_container_remove_children(GtkContainer *container);
 // instead; it's a bit slower but safer).
 void dt_gui_container_destroy_children(GtkContainer *container);
 
-void dt_gui_menu_popup(GtkMenu *menu,
-                       GtkWidget *button,
-                       GdkGravity widget_anchor,
+void dt_gui_menu_popup(GtkMenu *menu, GtkWidget *button, GdkGravity widget_anchor,
                        GdkGravity menu_anchor);
 
-void dt_gui_draw_rounded_rectangle(cairo_t *cr,
-                                   const float width,
-                                   const float height,
-                                   const float x,
-                                   const float y);
+void dt_gui_draw_rounded_rectangle(cairo_t *cr, const float width, const float height,
+                                   const float x, const float y);
 
 void dt_gui_widget_reallocate_now(GtkWidget *widget);
 
 // event handler for "key-press-event" of GtkTreeView to decide if
 // focus switches to GtkSearchEntry
-gboolean dt_gui_search_start(GtkWidget *widget,
-                             GdkEventKey *event,
-                             GtkSearchEntry *entry);
+gboolean dt_gui_search_start(GtkWidget *widget, GdkEventKey *event, GtkSearchEntry *entry);
 
 // event handler for "stop-search" of GtkSearchEntry
-void dt_gui_search_stop(GtkSearchEntry *entry,
-                        GtkWidget *widget);
+void dt_gui_search_stop(GtkSearchEntry *entry, GtkWidget *widget);
 
 // create a collapsible section, insert in parent, return the container
-void dt_gui_new_collapsible_section(dt_gui_collapsible_section_t *cs,
-                                    const char *confname,
-                                    const char *label,
-                                    GtkBox *parent,
-                                    struct dt_action_t *module);
+void dt_gui_new_collapsible_section(dt_gui_collapsible_section_t *cs, const char *confname,
+                                    const char *label, GtkBox *parent, struct dt_action_t *module);
 // update the collapsible section's label text
-void dt_gui_collapsible_section_set_label(dt_gui_collapsible_section_t *cs,
-                                          const char *label);
+void dt_gui_collapsible_section_set_label(dt_gui_collapsible_section_t *cs, const char *label);
 // routine to be called from gui_update
 void dt_gui_update_collapsible_section(const dt_gui_collapsible_section_t *cs);
 
@@ -540,60 +512,54 @@ void dt_gui_update_collapsible_section(const dt_gui_collapsible_section_t *cs);
 void dt_gui_hide_collapsible_section(const dt_gui_collapsible_section_t *cs);
 
 // is delay between first and second click/press longer than double-click time?
-gboolean dt_gui_long_click(const guint second,
-                           const guint first);
+gboolean dt_gui_long_click(const guint second, const guint first);
 
 #define ASSERT_FUNC_TYPE(func, expected_type) (void)(1 ? (func) : (expected_type)0)
 
-GtkGestureSingle *(dt_gui_connect_click)(GtkWidget *widget,
-                                         GCallback pressed,
-                                         GCallback released,
+GtkGestureSingle *(dt_gui_connect_click)(GtkWidget * widget, GCallback pressed, GCallback released,
                                          gpointer data);
-#define dt_gui_connect_click(widget, pressed, released, data) ( \
-  ASSERT_FUNC_TYPE(pressed, void(*)(GtkGestureSingle *, int, double, double, __typeof__(data))), \
-  ASSERT_FUNC_TYPE(released, void(*)(GtkGestureSingle *, int, double, double, __typeof__(data))), \
-  dt_gui_connect_click(GTK_WIDGET(widget), G_CALLBACK(pressed), G_CALLBACK(released), (data)))
-#define dt_gui_connect_click_all(widget, pressed, released, data) \
-  gtk_gesture_single_set_button(dt_gui_connect_click(widget, pressed, released, data), 0)
+#define dt_gui_connect_click(widget, pressed, released, data)                                      \
+    (ASSERT_FUNC_TYPE(pressed,                                                                     \
+                      void (*)(GtkGestureSingle *, int, double, double, __typeof__(data))),        \
+     ASSERT_FUNC_TYPE(released,                                                                    \
+                      void (*)(GtkGestureSingle *, int, double, double, __typeof__(data))),        \
+     dt_gui_connect_click(GTK_WIDGET(widget), G_CALLBACK(pressed), G_CALLBACK(released), (data)))
+#define dt_gui_connect_click_all(widget, pressed, released, data)                                  \
+    gtk_gesture_single_set_button(dt_gui_connect_click(widget, pressed, released, data), 0)
 
-GtkGesture *(dt_gui_connect_drag)(GtkWidget *widget,
-                                  GCallback drag_begin,
-                                  GCallback drag_end,
-				  GCallback drag_update,
-                                  gpointer data);
-#define dt_gui_connect_drag(widget, drag_begin, drag_end, drag_update, data) ( \
-  ASSERT_FUNC_TYPE(drag_begin, void(*)(GtkGestureDrag *, double, double, __typeof__(data))), \
-  ASSERT_FUNC_TYPE(drag_end, void(*)(GtkGestureDrag *, double, double, __typeof__(data))), \
-  ASSERT_FUNC_TYPE(drag_update, void(*)(GtkGestureDrag *, double, double, __typeof__(data))), \
-  dt_gui_connect_drag(GTK_WIDGET(widget), G_CALLBACK(drag_begin), G_CALLBACK(drag_end), G_CALLBACK(drag_update), (data)))
+GtkGesture *(dt_gui_connect_drag)(GtkWidget * widget, GCallback drag_begin, GCallback drag_end,
+                                  GCallback drag_update, gpointer data);
+#define dt_gui_connect_drag(widget, drag_begin, drag_end, drag_update, data)                       \
+    (ASSERT_FUNC_TYPE(drag_begin, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),   \
+     ASSERT_FUNC_TYPE(drag_end, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),     \
+     ASSERT_FUNC_TYPE(drag_update, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),  \
+     dt_gui_connect_drag(GTK_WIDGET(widget), G_CALLBACK(drag_begin), G_CALLBACK(drag_end),         \
+                         G_CALLBACK(drag_update), (data)))
 
-GtkEventController *(dt_gui_connect_motion)(GtkWidget *widget,
-                                            GCallback motion,
-                                            GCallback enter,
-                                            GCallback leave,
-                                            gpointer data);
-#define dt_gui_connect_motion(widget, motion, enter, leave, data) ( \
-  ASSERT_FUNC_TYPE(motion, void(*)(GtkEventControllerMotion *, double, double, __typeof__(data))), \
-  ASSERT_FUNC_TYPE(enter, void(*)(GtkEventControllerMotion *, double, double, __typeof__(data))), \
-  ASSERT_FUNC_TYPE(leave, void(*)(GtkEventControllerMotion *, __typeof__(data))), \
-  dt_gui_connect_motion(GTK_WIDGET(widget), G_CALLBACK(motion), G_CALLBACK(enter), G_CALLBACK(leave), (data)))
+GtkEventController *(dt_gui_connect_motion)(GtkWidget * widget, GCallback motion, GCallback enter,
+                                            GCallback leave, gpointer data);
+#define dt_gui_connect_motion(widget, motion, enter, leave, data)                                  \
+    (ASSERT_FUNC_TYPE(motion,                                                                      \
+                      void (*)(GtkEventControllerMotion *, double, double, __typeof__(data))),     \
+     ASSERT_FUNC_TYPE(enter,                                                                       \
+                      void (*)(GtkEventControllerMotion *, double, double, __typeof__(data))),     \
+     ASSERT_FUNC_TYPE(leave, void (*)(GtkEventControllerMotion *, __typeof__(data))),              \
+     dt_gui_connect_motion(GTK_WIDGET(widget), G_CALLBACK(motion), G_CALLBACK(enter),              \
+                           G_CALLBACK(leave), (data)))
 
-GtkEventController *(dt_gui_connect_scroll)(GtkWidget *widget,
-					    GtkEventControllerScrollFlags flags,
-                                            GCallback scroll,
-                                            gpointer data);
-#define dt_gui_connect_scroll(widget, flags, scroll, data) ( \
-  ASSERT_FUNC_TYPE(scroll, void(*)(GtkEventControllerScroll *, double, double, __typeof__(data))), \
-  dt_gui_connect_scroll(GTK_WIDGET(widget), (flags), G_CALLBACK(scroll), (data)))
+GtkEventController *(dt_gui_connect_scroll)(GtkWidget * widget, GtkEventControllerScrollFlags flags,
+                                            GCallback scroll, gpointer data);
+#define dt_gui_connect_scroll(widget, flags, scroll, data)                                         \
+    (ASSERT_FUNC_TYPE(scroll,                                                                      \
+                      void (*)(GtkEventControllerScroll *, double, double, __typeof__(data))),     \
+     dt_gui_connect_scroll(GTK_WIDGET(widget), (flags), G_CALLBACK(scroll), (data)))
 
-#define dt_gui_claim(gesture) \
-      gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED)
-#define dt_gui_deny(gesture) \
-      gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_DENIED)
+#define dt_gui_claim(gesture)                                                                      \
+    gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED)
+#define dt_gui_deny(gesture) gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_DENIED)
 
 // GTK4 gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller));
-#define dt_modifier_eq(controller, mask)\
-  dt_modifier_is(dt_key_modifier_state(), mask)
+#define dt_modifier_eq(controller, mask) dt_modifier_is(dt_key_modifier_state(), mask)
 
 // control whether the mouse pointer displays as a "busy" cursor, e.g. watch or timer
 // the calls may be nested, but must be matched
@@ -608,67 +574,74 @@ void dt_gui_process_events();
 #ifdef __cplusplus
 extern "C++"
 {
-template<typename... Widgets>
-inline GtkWidget *dt_gui_box_add(gpointer box, Widgets*... w)
-{
-  // fold expression: expands to gtk_container_add(box, a), gtk_container_add(box, b), ...
-  (gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(w)), ...);
-  return GTK_WIDGET(box);
-}
+    template <typename... Widgets>
+    inline GtkWidget *dt_gui_box_add(gpointer box, Widgets *...w)
+    {
+        // fold expression: expands to gtk_container_add(box, a), gtk_container_add(box, b), ...
+        (gtk_container_add(GTK_CONTAINER(box), GTK_WIDGET(w)), ...);
+        return GTK_WIDGET(box);
+    }
 }
 #else
-GtkWidget *(dt_gui_box_add)(const char *file, const int line, const char *function, GtkBox *box, gpointer list[]);
-#define dt_gui_box_add(box, ...) dt_gui_box_add(__FILE__, __LINE__, __FUNCTION__, GTK_BOX(box), (gpointer[]){ __VA_ARGS__ __VA_OPT__(,) (gpointer)-1 })
+GtkWidget *(dt_gui_box_add)(const char *file, const int line, const char *function, GtkBox *box,
+                            gpointer list[]);
+#define dt_gui_box_add(box, ...)                                                                   \
+    dt_gui_box_add(__FILE__, __LINE__, __FUNCTION__, GTK_BOX(box),                                 \
+                   (gpointer[]){__VA_ARGS__ __VA_OPT__(, )(gpointer) - 1})
 #endif
-#define dt_gui_hbox(...) dt_gui_box_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0) __VA_OPT__(,) __VA_ARGS__)
-#define dt_gui_vbox(...) dt_gui_box_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0) __VA_OPT__(,) __VA_ARGS__)
-#define dt_gui_dialog_add(dialog, ...) dt_gui_box_add(gtk_dialog_get_content_area(GTK_DIALOG(dialog)), __VA_ARGS__)
+#define dt_gui_hbox(...)                                                                           \
+    dt_gui_box_add(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0) __VA_OPT__(, ) __VA_ARGS__)
+#define dt_gui_vbox(...)                                                                           \
+    dt_gui_box_add(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0) __VA_OPT__(, ) __VA_ARGS__)
+#define dt_gui_dialog_add(dialog, ...)                                                             \
+    dt_gui_box_add(gtk_dialog_get_content_area(GTK_DIALOG(dialog)), __VA_ARGS__)
 #define dt_gui_expand(widget) dt_gui_expand(GTK_WIDGET(widget))
 #define dt_gui_align_right(widget) dt_gui_align_right(GTK_WIDGET(widget))
 
-static inline GtkWidget *(dt_gui_expand)(GtkWidget *widget)
+static inline GtkWidget *(dt_gui_expand)(GtkWidget * widget)
 {
-  gtk_widget_set_hexpand(widget, TRUE);
-  return widget;
+    gtk_widget_set_hexpand(widget, TRUE);
+    return widget;
 }
 
-static inline GtkWidget *(dt_gui_align_right)(GtkWidget *widget)
+static inline GtkWidget *(dt_gui_align_right)(GtkWidget * widget)
 {
-  gtk_widget_set_halign(widget, GTK_ALIGN_END);
-  return dt_gui_expand(widget);
+    gtk_widget_set_halign(widget, GTK_ALIGN_END);
+    return dt_gui_expand(widget);
 }
 
 static inline GtkWidget *dt_gui_scroll_wrap(GtkWidget *widget)
 {
-  GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
-  gtk_widget_set_vexpand(scrolled_window, TRUE);
-  gtk_container_add(GTK_CONTAINER(scrolled_window), widget);
-  return scrolled_window;
+    GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_vexpand(scrolled_window, TRUE);
+    gtk_container_add(GTK_CONTAINER(scrolled_window), widget);
+    return scrolled_window;
 }
 
 // Simulate a mouse button event (button is 1, 2, 3 - mouse button) sent to a Widget
-void dt_gui_simulate_button_event(GtkWidget *widget,
-                                  const GdkEventType eventtype,
+void dt_gui_simulate_button_event(GtkWidget *widget, const GdkEventType eventtype,
                                   const int button);
 
 // Setup auto-commit on focus loss for editable renderers
-void dt_gui_commit_on_focus_loss(GtkCellRenderer *renderer,
-                                 GtkCellEditable **active_editable);
+void dt_gui_commit_on_focus_loss(GtkCellRenderer *renderer, GtkCellEditable **active_editable);
 
 // restore dialog size from config file
-void dt_gui_dialog_restore_size(GtkDialog *dialog,
-                                const char *conf);
+void dt_gui_dialog_restore_size(GtkDialog *dialog, const char *conf);
 
 // returns the session type at runtime
 dt_gui_session_type_t dt_gui_get_session_type(void);
 
 #if !defined(__cplusplus)
 #undef G_CALLBACK
-static inline GCallback G_CALLBACK(void *f) { return (GCallback)f; } // as a macro it gets expanded before reaching here
+static inline GCallback G_CALLBACK(void *f)
+{
+    return (GCallback)f;
+} // as a macro it gets expanded before reaching here
 #define DISABLINGPREFIXG_CALLBACK
 #define BOOLSIGNAL(s, signal) || !strcmp(s, #signal)
 #undef _Static_assert
-#undef  g_signal_connect
+#undef g_signal_connect
+// clang-format off
 #define g_signal_connect(instance, signal, c_handler, user_data) do { \
   _Static_assert(((strlen(signal)>4 && !strcmp("event", &signal[strlen(signal)-5])) \
     BOOLSIGNAL(signal, drag-motion) \
@@ -683,12 +656,7 @@ static inline GCallback G_CALLBACK(void *f) { return (GCallback)f; } // as a mac
     ) == _Generic((DISABLINGPREFIX##c_handler), gboolean(*)(): TRUE, default: FALSE), \
     "signal " signal " return type does not match specified handler " #c_handler); \
   g_signal_connect_data((instance), (signal), (GCallback)(c_handler), (user_data), NULL, (GConnectFlags) 0); } while(0)
+// clang-format on
 #endif // __cplusplus
 
 G_END_DECLS
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

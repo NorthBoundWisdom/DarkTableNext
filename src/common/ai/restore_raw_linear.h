@@ -71,13 +71,8 @@ struct dt_image_t;
 //                  the denoised result (1)
 // @param control_job job handle for progress/cancellation (NULL-safe)
 // @return 0 on success; out_rgb left untouched on failure
-int dt_restore_raw_linear(dt_restore_context_t *ctx,
-                          const dt_imgid_t imgid,
-                          float **out_rgb,
-                          int *out_w,
-                          int *out_h,
-                          float strength,
-                          struct _dt_job_t *control_job);
+int dt_restore_raw_linear(dt_restore_context_t *ctx, const dt_imgid_t imgid, float **out_rgb,
+                          int *out_w, int *out_h, float strength, struct _dt_job_t *control_job);
 
 // @brief Once-per-image demosaic + WB + camRGB->lin_rec2020 prep.
 //
@@ -98,11 +93,8 @@ int dt_restore_raw_linear(dt_restore_context_t *ctx,
 // @param out_w     out: sensor width
 // @param out_h     out: sensor height
 // @return 0 on success
-int dt_restore_raw_linear_prepare(const dt_restore_context_t *ctx,
-                                  const dt_imgid_t imgid,
-                                  float **out_rgb,
-                                  int *out_w,
-                                  int *out_h);
+int dt_restore_raw_linear_prepare(const dt_restore_context_t *ctx, const dt_imgid_t imgid,
+                                  float **out_rgb, int *out_w, int *out_h);
 
 // @brief Linear preview through darktable's real pixelpipe — "preview =
 //        batch" for X-Trans / non-Bayer sensors.
@@ -143,23 +135,8 @@ int dt_restore_raw_linear_prepare(const dt_restore_context_t *ctx,
 //                          buffers share these dims).
 // @param out_h             receives actual rendered height.
 // @return 0 on success; both outputs NULL on failure.
-int dt_restore_raw_linear_preview_piped(dt_restore_context_t *ctx,
-                                        const struct dt_image_t *img,
-                                        dt_imgid_t imgid,
-                                        const float *full_rgb,
-                                        int width,
-                                        int height,
-                                        int crop_x,
-                                        int crop_y,
-                                        int crop_w,
-                                        int crop_h,
-                                        float **out_before_rgb,
-                                        float **out_denoised_rgb,
-                                        int *out_w,
-                                        int *out_h);
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on
+int dt_restore_raw_linear_preview_piped(dt_restore_context_t *ctx, const struct dt_image_t *img,
+                                        dt_imgid_t imgid, const float *full_rgb, int width,
+                                        int height, int crop_x, int crop_y, int crop_w, int crop_h,
+                                        float **out_before_rgb, float **out_denoised_rgb,
+                                        int *out_w, int *out_h);

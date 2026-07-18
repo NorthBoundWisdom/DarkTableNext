@@ -27,10 +27,6 @@
 
 #include <errno.h>
 
-#ifdef _WIN32
-#define drand48() ((double)rand() / ((unsigned int)RAND_MAX + 1))
-#endif
-
 /* --------------------------------------------------------------------------
  * curve and histogram resolution
  * ------------------------------------------------------------------------*/

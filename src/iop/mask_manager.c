@@ -32,99 +32,89 @@ DT_MODULE_INTROSPECTION(2, dt_iop_mask_manager_params_t)
 
 typedef struct dt_iop_mask_manager_params_t
 {
-  int dummy;
+    int dummy;
 } dt_iop_mask_manager_params_t;
 
 typedef struct dt_iop_mask_manager_params_t dt_iop_mask_manager_data_t;
 
 const char *name()
 {
-  return _("mask manager");
+    return _("mask manager");
 }
 
 int groups()
 {
-  return IOP_GROUP_BASIC | IOP_GROUP_TECHNICAL;
+    return IOP_GROUP_BASIC | IOP_GROUP_TECHNICAL;
 }
 
 int flags()
 {
-  return IOP_FLAGS_HIDDEN | IOP_FLAGS_ONE_INSTANCE | IOP_FLAGS_UNSAFE_COPY;
+    return IOP_FLAGS_HIDDEN | IOP_FLAGS_ONE_INSTANCE | IOP_FLAGS_UNSAFE_COPY;
 }
 
-dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self,
-                                            dt_dev_pixelpipe_t *pipe,
+dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe,
                                             dt_dev_pixelpipe_iop_t *piece)
 {
-  return IOP_CS_RGB;
+    return IOP_CS_RGB;
 }
 
-int legacy_params(dt_iop_module_t *self,
-                  const void *const old_params,
-                  const int old_version,
-                  void **new_params,
-                  int32_t *new_params_size,
-                  int *new_version)
+int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
+                  void **new_params, int32_t *new_params_size, int *new_version)
 {
-  typedef struct dt_iop_mask_manager_params_v2_t
-  {
-    int dummy;
-  } dt_iop_mask_manager_params_v2_t;
+    typedef struct dt_iop_mask_manager_params_v2_t
+    {
+        int dummy;
+    } dt_iop_mask_manager_params_v2_t;
 
-  if(old_version == 1)
-  {
-    dt_iop_mask_manager_params_v2_t *n = malloc(sizeof(dt_iop_mask_manager_params_v2_t));
+    if (old_version == 1)
+    {
+        dt_iop_mask_manager_params_v2_t *n = malloc(sizeof(dt_iop_mask_manager_params_v2_t));
 
-    n->dummy = 0;
+        n->dummy = 0;
 
-    *new_params = n;
-    *new_params_size = sizeof(dt_iop_mask_manager_params_v2_t);
-    *new_version = 2;
-    return 0;
-  }
-  return 1;
+        *new_params = n;
+        *new_params_size = sizeof(dt_iop_mask_manager_params_v2_t);
+        *new_version = 2;
+        return 0;
+    }
+    return 1;
 }
 
-void process(struct dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *const i, void *const o,
-             const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
+void process(struct dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *const i,
+             void *const o, const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
 {
-  const int ch = piece->colors;
-  dt_iop_image_copy_by_size(o, i, roi_out->width, roi_out->height, ch);
+    const int ch = piece->colors;
+    dt_iop_image_copy_by_size(o, i, roi_out->width, roi_out->height, ch);
 }
 
 #ifdef HAVE_OPENCL
-int process_cl(struct dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem dev_in, cl_mem dev_out,
-               const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
+int process_cl(struct dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem dev_in,
+               cl_mem dev_out, const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
 {
-  const int devid = piece->pipe->devid;
-  const int width = roi_in->width;
-  const int height = roi_in->height;
+    const int devid = piece->pipe->devid;
+    const int width = roi_in->width;
+    const int height = roi_in->height;
 
-  const size_t region[2] = { width, height };
-  return dt_opencl_enqueue_copy_image(devid, dev_in, dev_out, CLIMG_ORIGIN, CLIMG_ORIGIN, region);
+    const size_t region[2] = {width, height};
+    return dt_opencl_enqueue_copy_image(devid, dev_in, dev_out, CLIMG_ORIGIN, CLIMG_ORIGIN, region);
 }
 #endif
 
 void commit_params(struct dt_iop_module_t *self, dt_iop_params_t *params, dt_dev_pixelpipe_t *pipe,
                    dt_dev_pixelpipe_iop_t *piece)
 {
-  memcpy(piece->data, params, sizeof(dt_iop_mask_manager_params_t));
+    memcpy(piece->data, params, sizeof(dt_iop_mask_manager_params_t));
 }
 
-void init_pipe(struct dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe, dt_dev_pixelpipe_iop_t *piece)
+void init_pipe(struct dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe,
+               dt_dev_pixelpipe_iop_t *piece)
 {
-  piece->data = malloc(sizeof(dt_iop_mask_manager_data_t));
+    piece->data = malloc(sizeof(dt_iop_mask_manager_data_t));
 }
 
-void cleanup_pipe(struct dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe, dt_dev_pixelpipe_iop_t *piece)
+void cleanup_pipe(struct dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe,
+                  dt_dev_pixelpipe_iop_t *piece)
 {
-  free(piece->data);
-  piece->data = NULL;
+    free(piece->data);
+    piece->data = NULL;
 }
-
-
-// clang-format off
-// modelines: These editor modelines have been set for all relevant files by tools/update_modelines.py
-// vim: shiftwidth=2 expandtab tabstop=2 cindent
-// kate: tab-indents: off; indent-width 2; replace-tabs on; indent-mode cstyle; remove-trailing-spaces modified;
-// clang-format on

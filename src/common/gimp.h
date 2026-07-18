@@ -51,7 +51,6 @@ thumb <path> <dim> Write a thumbnail jpg file to a temporary location.
                      For raw files this is sensor size containing valid data.
 */
 
-
 #define DT_GIMP_VERSION 1
 
 // returns TRUE in case of success
