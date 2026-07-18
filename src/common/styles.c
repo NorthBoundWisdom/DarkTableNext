@@ -731,19 +731,6 @@ void dt_styles_apply_style_item(dt_develop_t *dev, dt_style_item_t *style_item,
                     // auto-init module
                     autoinit = TRUE;
                 }
-                else
-                {
-                    if (dt_iop_module_is(module, "spots") && style_item->module_version == 1)
-                    {
-                        // FIXME: not sure how to handle this here...
-                        // quick and dirty hack to handle spot removal legacy_params
-                        /* memcpy(module->blend_params, module->blend_params,
-                      sizeof(dt_develop_blend_params_t));
-               memcpy(module->blend_params, module->default_blendop_params,
-                      sizeof(dt_develop_blend_params_t)); */
-                    }
-                }
-
                 /*
          * Fix for flip iop: previously it was not always needed, but it might be
          * in history stack as "orientation (off)", but now we always want it

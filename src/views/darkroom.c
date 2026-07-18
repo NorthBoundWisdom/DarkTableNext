@@ -2258,9 +2258,8 @@ static void _toggle_mask_visibility_callback(dt_action_t *action)
     dt_develop_t *dev = dt_action_view(action)->data;
     dt_iop_module_t *mod = dev->gui_module;
 
-    //retouch and spot removal module use masks differently and have
-    //different buttons associated keep the shortcuts independent
-    if (mod && !dt_iop_module_is(mod, "spots") && !dt_iop_module_is(mod, "retouch"))
+    // Retouch uses masks differently and keeps separate shortcuts.
+    if (mod && !dt_iop_module_is(mod, "retouch"))
     {
         dt_iop_gui_blend_data_t *bd = mod->blend_data;
 

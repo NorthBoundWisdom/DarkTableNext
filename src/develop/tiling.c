@@ -1191,8 +1191,7 @@ fallback:
 /* if a module does not implement process_tiling() by itself, this function is called instead.
    _default_process_tiling_ptp() is able to handle standard cases where pixels do not change their places.
    _default_process_tiling_roi() takes care of all other cases where image gets distorted and for module
-   "clipping",
-   "flip" as this may flip or mirror the image. */
+   "crop", "flip" as this may flip or mirror the image. */
 void default_process_tiling(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
                             const void *const ivoid, void *const ovoid,
                             const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out,

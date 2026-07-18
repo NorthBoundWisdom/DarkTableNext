@@ -95,9 +95,10 @@
   - 需要先决定：是否支持导入旧 darktable 数据库/XMP、支持的最低版本、是否提供一次性外部迁移工具。
   - 建议：保留一个独立导入/迁移工具，而不是让主应用长期携带每一代 schema 和参数转换代码。
 
-- [ ] 处理 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
-  - 当前模块：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
-  - 对每个模块选择“删除”“保留为兼容导入”“迁移到替代模块”之一；删除必须与旧 XMP/历史堆栈兼容策略一起完成。
+- [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
+  - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
+  - 一并移除了它们的 CMake 目标、图标、偏好项、帮助链接、模块组与 `spots` 专用遮罩兼容代码；新建 RAW/JPEG 的 v5 IOP 顺序不再写入这些模块。
+  - 历史 XMP、样式和数据库顺序表的拒绝/移除与下一个数据兼容边界事项一起完成。
 
 - [ ] 以新 UI 的功能清单驱动数据资产清理，而不是盲删运行时资源。
   - 可候选移除：旧主题、图标、样式、快捷键、预置水印、图库导出 (`data/pswp/` + `imageio/storage/gallery.c`)、LaTeX 图书导出 (`data/latex/` + `imageio/storage/latex.c`)。

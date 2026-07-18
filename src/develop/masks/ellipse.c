@@ -616,9 +616,7 @@ static int _ellipse_events_button_pressed(dt_iop_module_t *module, const float p
             // we save the move
             dt_dev_add_history_item(darktable.develop, crea_module, TRUE);
             // and we switch in edit mode to show all the forms
-            // spots and retouch have their own handling of creation_continuous
-            if (gui->creation_continuous && (dt_iop_module_is(crea_module, "spots") ||
-                                             dt_iop_module_is(crea_module, "retouch")))
+            if (gui->creation_continuous && dt_iop_module_is(crea_module, "retouch"))
                 dt_masks_set_edit_mode_single_form(crea_module, form->formid, DT_MASKS_EDIT_FULL);
             else if (!gui->creation_continuous)
                 dt_masks_set_edit_mode(crea_module, DT_MASKS_EDIT_FULL);
@@ -665,10 +663,8 @@ static int _ellipse_events_button_pressed(dt_iop_module_t *module, const float p
 
             dt_masks_select_form(module, dt_masks_get_from_id(darktable.develop, form->formid));
         }
-        //spot and retouch manage creation_continuous in their own way
         if (gui->creation_continuous &&
-            (!crea_module || (!dt_iop_module_is(crea_module, "spots") &&
-                              !dt_iop_module_is(crea_module, "retouch"))))
+            (!crea_module || !dt_iop_module_is(crea_module, "retouch")))
         {
             if (crea_module)
             {

@@ -71,29 +71,9 @@
     background-image: url('../pixmaps/plugins/darkroom/cacorrect.svg');
 }
 
-#iop-panel-icon-channelmixer
-{
-    background-image: url('../pixmaps/plugins/darkroom/channelmixer.svg');
-}
-
-#iop-panel-icon-clahe
-{
-    background-image: url('../pixmaps/plugins/darkroom/clahe.svg');
-}
-
-#iop-panel-icon-clipping
-{
-    background-image: url('../pixmaps/plugins/darkroom/clipping.svg');
-}
-
 #iop-panel-icon-crop
 {
-    background-image: url('../pixmaps/plugins/darkroom/clipping.svg');
-}
-
-#iop-panel-icon-colisa
-{
-    background-image: url('../pixmaps/plugins/darkroom/colisa.svg');
+    background-image: url('../pixmaps/plugins/darkroom/default.svg');
 }
 
 #iop-panel-icon-colorcorrection
@@ -119,11 +99,6 @@
 #iop-panel-icon-colorreconstruct
 {
     background-image: url('../pixmaps/plugins/darkroom/colorreconstruct.svg');
-}
-
-#iop-panel-icon-colortransfer
-{
-    background-image: url('../pixmaps/plugins/darkroom/colortransfer.svg');
 }
 
 #iop-panel-icon-colorzones
@@ -186,19 +161,9 @@
     background-image: url('../pixmaps/plugins/darkroom/hotpixels.svg');
 }
 
-#iop-panel-icon-invert
-{
-    background-image: url('../pixmaps/plugins/darkroom/invert.svg');
-}
-
 #iop-panel-icon-lens
 {
     background-image: url('../pixmaps/plugins/darkroom/lens.svg');
-}
-
-#iop-panel-icon-levels
-{
-    background-image: url('../pixmaps/plugins/darkroom/levels.svg');
 }
 
 #iop-panel-icon-liquify
@@ -223,7 +188,7 @@
 
 #iop-panel-icon-negadoctor
 {
-    background-image: url('../pixmaps/plugins/darkroom/invert.svg');
+    background-image: url('../pixmaps/plugins/darkroom/default.svg');
 }
 
 #iop-panel-icon-nlmeans
@@ -251,11 +216,6 @@
     background-image: url('../pixmaps/plugins/darkroom/rawprepare.svg');
 }
 
-#iop-panel-icon-relight
-{
-    background-image: url('../pixmaps/plugins/darkroom/relight.svg');
-}
-
 #iop-panel-icon-shadhi
 {
     background-image: url('../pixmaps/plugins/darkroom/shadhi.svg');
@@ -276,11 +236,6 @@
     background-image: url('../pixmaps/plugins/darkroom/splittoning.svg');
 }
 
-#iop-panel-icon-spots
-{
-    background-image: url('../pixmaps/plugins/darkroom/spots.svg');
-}
-
 #iop-panel-icon-temperature
 {
     background-image: url('../pixmaps/plugins/darkroom/temperature.svg');
@@ -296,11 +251,6 @@
     background-image: url('../pixmaps/plugins/darkroom/tonecurve.svg');
 }
 
-#iop-panel-icon-tonemap
-{
-    background-image: url('../pixmaps/plugins/darkroom/tonemap.svg');
-}
-
 #iop-panel-icon-velvia
 {
     background-image: url('../pixmaps/plugins/darkroom/velvia.svg');
@@ -314,9 +264,4 @@
 #iop-panel-icon-watermark
 {
     background-image: url('../pixmaps/plugins/darkroom/watermark.svg');
-}
-
-#iop-panel-icon-zonesystem
-{
-    background-image: url('../pixmaps/plugins/darkroom/zonesystem.svg');
 }

@@ -2602,15 +2602,7 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
                 continue;
             }
             else
-            {
-                if (dt_iop_module_is(hist->module, "spots") && modversion == 1)
-                {
-                    // quick and dirty hack to handle spot removal legacy_params
-                    memcpy(hist->blend_params, hist->module->blend_params,
-                           sizeof(dt_develop_blend_params_t));
-                }
                 legacy_params = TRUE;
-            }
 
             /*
        * Fix for flip iop: previously it was not always needed, but it might be

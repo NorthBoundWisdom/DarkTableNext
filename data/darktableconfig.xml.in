@@ -3143,104 +3143,6 @@
     <longdescription/>
   </dtconfig>
   <dtconfig>
-    <name>plugins/darkroom/spots/circle_size</name>
-    <type>float</type>
-    <default>0.02</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/circle_border</name>
-    <type>float</type>
-    <default>0.02</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/ellipse_radius_a</name>
-    <type>float</type>
-    <default>0.02</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/ellipse_radius_b</name>
-    <type>float</type>
-    <default>0.01414</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/ellipse_border</name>
-    <type>float</type>
-    <default>0.02</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/ellipse_rotation</name>
-    <type>float</type>
-    <default>90.0</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/ellipse_flags</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/path_border</name>
-    <type>float</type>
-    <default>0.05</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/brush_border</name>
-    <type>float</type>
-    <default>0.05</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/brush_density</name>
-    <type>float</type>
-    <default>1.0</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/spots/brush_hardness</name>
-    <type>float</type>
-    <default>0.66</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/clipping/ratio_d</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription>last chosen aspect ratio denominator</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/clipping/ratio_n</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription>last chosen aspect ratio numerator</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/clipping/guide</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription>last chosen guide style</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
     <name>plugins/darkroom/histogram/graphheight</name>
     <type min="100" max="300">int</type>
     <default>180</default>
@@ -3295,13 +3197,6 @@
     <default>200</default>
     <shortdescription>height of lowlight graph in per cent</shortdescription>
     <longdescription>height of lowlight graph in per cent</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/levels/graphheight</name>
-    <type min="100" max="300">int</type>
-    <default>200</default>
-    <shortdescription>height of levels graph in per cent</shortdescription>
-    <longdescription>height of levels graph in per cent</longdescription>
   </dtconfig>
   <dtconfig>
     <name>plugins/darkroom/rgblevels/graphheight</name>
