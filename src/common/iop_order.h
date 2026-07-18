@@ -134,7 +134,7 @@ void dt_ioppr_check_duplicate_iop_order(GList **_iop_list, GList *history_list);
 
 /** sets the default iop_order to iop_list */
 void dt_ioppr_set_default_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid);
-void dt_ioppr_migrate_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid);
+void dt_ioppr_apply_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid);
 void dt_ioppr_change_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid,
                                GList *new_iop_list);
 /** extract all modules with multi-instances */

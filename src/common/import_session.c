@@ -104,11 +104,6 @@ static gboolean _import_session_initialize_filmroll(dt_import_session_t *self, c
     return FALSE;
 }
 
-static void _import_session_migrate_old_config()
-{
-    /* TODO: check if old config exists, migrate to new and remove old */
-}
-
 static gchar *_import_session_path_pattern()
 {
     gchar *res = NULL;
@@ -153,8 +148,6 @@ dt_import_session_t *dt_import_session_new()
 
     dt_variables_params_init(&is->vp);
 
-    /* migrate old configuration */
-    _import_session_migrate_old_config();
     return is;
 }
 

@@ -495,16 +495,7 @@ static void _image_local_copy_full_path(const dt_imgid_t imgid, char *pathname,
         while (*c != '.' && c > filename)
             c--;
 
-        // cache filename old format: <cachedir>/img-<id>-<MD5>.<ext>
-        // for upward compatibility we check for the old name, if found we return it
-        snprintf(pathname, pathname_len, "%s/img-%d-%s%s", cachedir, imgid, md5_filename, c);
-
-        // if it does not exist, we return the new naming
-        if (!g_file_test(pathname, G_FILE_TEST_EXISTS))
-        {
-            // cache filename format: <cachedir>/img-<MD5>.<ext>
-            snprintf(pathname, pathname_len, "%s/img-%s%s", cachedir, md5_filename, c);
-        }
+        snprintf(pathname, pathname_len, "%s/img-%s%s", cachedir, md5_filename, c);
 
         g_free(md5_filename);
     }

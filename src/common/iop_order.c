@@ -112,7 +112,7 @@ const dt_iop_order_entry_t raw_order[] = {
     {{34.0f}, "highpass", 0}, // same
     {{35.0f}, "sharpen", 0},  // same, worst than atrous in same use-case, less control overall
 
-    {{38.0f}, "colormapping", 0}, // same
+    {{38.0f}, "colormapping", 0},    // same
     {{40.5f}, "colorharmonizer", 0}, // nudges hues towards a set of target nodes
     {{41.0f}, "colorbalance", 0},    // scene-referred color manipulation
     {{41.2f}, "colorequal", 0},
@@ -127,10 +127,10 @@ const dt_iop_order_entry_t raw_order[] = {
          //    on camera JPEG default look
     {{45.3f}, "sigmoid", 0},
     {{45.5f}, "agx", 0},
-    {{46.0f}, "filmicrgb", 0},     // same, upgraded
-    {{36.0f}, "lut3d", 0},         // apply a creative style or film emulation, possibly non-linear
-    {{48.0f}, "tonecurve", 0},     // same
-    {{50.0f}, "shadhi", 0},        // same
+    {{46.0f}, "filmicrgb", 0}, // same, upgraded
+    {{36.0f}, "lut3d", 0},     // apply a creative style or film emulation, possibly non-linear
+    {{48.0f}, "tonecurve", 0}, // same
+    {{50.0f}, "shadhi", 0},    // same
     {{54.0f}, "bilat", 0}, // improve clarity/local contrast after all the bad things we have done
                            //    to it with tonemapping
     {{55.0f},
@@ -217,7 +217,7 @@ const dt_iop_order_entry_t jpg_order[] = {
     {{34.0f}, "highpass", 0}, // same
     {{35.0f}, "sharpen", 0},  // same, worst than atrous in same use-case, less control overall
 
-    {{38.0f}, "colormapping", 0}, // same
+    {{38.0f}, "colormapping", 0},    // same
     {{40.5f}, "colorharmonizer", 0}, // nudges hues towards a set of target nodes
     {{41.0f}, "colorbalance", 0},    // scene-referred color manipulation
     {{41.2f}, "colorequal", 0},
@@ -233,10 +233,10 @@ const dt_iop_order_entry_t jpg_order[] = {
          //    on camera JPEG default look
     {{45.3f}, "sigmoid", 0},
     {{45.5f}, "agx", 0},
-    {{46.0f}, "filmicrgb", 0},     // same, upgraded
-    {{36.0f}, "lut3d", 0},         // apply a creative style or film emulation, possibly non-linear
-    {{48.0f}, "tonecurve", 0},     // same
-    {{50.0f}, "shadhi", 0},        // same
+    {{46.0f}, "filmicrgb", 0}, // same, upgraded
+    {{36.0f}, "lut3d", 0},     // apply a creative style or film emulation, possibly non-linear
+    {{48.0f}, "tonecurve", 0}, // same
+    {{50.0f}, "shadhi", 0},    // same
     {{54.0f}, "bilat", 0}, // improve clarity/local contrast after all the bad things we have done
                            //    to it with tonemapping
     {{55.0f},
@@ -269,8 +269,8 @@ const dt_iop_order_entry_t jpg_order[] = {
     {{78.0f}, "gamma", 0},
     {{0.0f}, "", 0}};
 
-const dt_iop_order_entry_t *const _iop_order_tables[DT_IOP_ORDER_LAST] = {
-    NULL, raw_order, jpg_order};
+const dt_iop_order_entry_t *const _iop_order_tables[DT_IOP_ORDER_LAST] = {NULL, raw_order,
+                                                                          jpg_order};
 
 static void *_dup_iop_order_entry(const void *src, gpointer data);
 
@@ -312,8 +312,8 @@ dt_iop_order_t dt_ioppr_get_iop_order_version(const dt_imgid_t imgid)
     if (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const dt_iop_order_t version = sqlite3_column_int(stmt, 0);
-        if (version == DT_IOP_ORDER_CUSTOM || version == DT_IOP_ORDER_RAW
-            || version == DT_IOP_ORDER_JPG)
+        if (version == DT_IOP_ORDER_CUSTOM || version == DT_IOP_ORDER_RAW ||
+            version == DT_IOP_ORDER_JPG)
             iop_order_version = version;
     }
     sqlite3_finalize(stmt);
@@ -337,7 +337,7 @@ GList *dt_ioppr_get_iop_order_rules(void)
         {.op_prev = "demosaic", .op_next = "colorin"},
         {.op_prev = "colorin", .op_next = "colorout"},
         {.op_prev = "colorout", .op_next = "gamma"},
-        {.op_prev = "flip", .op_next = "crop"},     // crop GUI broken if flip is done on top
+        {.op_prev = "flip", .op_next = "crop"}, // crop GUI broken if flip is done on top
         {.op_prev = "colorin", .op_next = "channelmixerrgb"},
         {"\0", "\0"}};
 
@@ -831,7 +831,7 @@ void dt_ioppr_set_default_iop_order(dt_develop_t *dev, const dt_imgid_t imgid)
     dt_ioppr_resync_modules_order(dev);
 }
 
-void dt_ioppr_migrate_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid)
+void dt_ioppr_apply_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid)
 {
     dt_ioppr_set_default_iop_order(dev, imgid);
     dt_dev_reload_history_items(dev);
@@ -852,7 +852,7 @@ void dt_ioppr_change_iop_order(struct dt_develop_t *dev, const dt_imgid_t imgid,
     dt_ioppr_write_iop_order(DT_IOP_ORDER_CUSTOM, iop_list, imgid);
     g_list_free_full(iop_list, g_free);
 
-    dt_ioppr_migrate_iop_order(darktable.develop, imgid);
+    dt_ioppr_apply_iop_order(darktable.develop, imgid);
 }
 
 GList *dt_ioppr_extract_multi_instances_list(GList *iop_order_list)

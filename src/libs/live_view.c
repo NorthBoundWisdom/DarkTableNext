@@ -211,8 +211,7 @@ static void _focus_button_clicked(GtkWidget *widget, gpointer user_data)
     if (dt_camctl_camera_get_property_type(darktable.camctl, NULL, "manualfocusdrive",
                                            &property_type))
     {
-        // default to avoid breaking backwards compatibility
-        // note that this might not work on non-Canon EOS cameras
+        // Canon-style drivers expose focus steps as choices.
         dt_camctl_camera_set_property_choice(darktable.camctl, NULL, "manualfocusdrive", focus);
     }
     else
