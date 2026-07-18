@@ -1099,7 +1099,6 @@ gboolean dt_gui_presets_autoapply_for_module(dt_iop_module_t *module, GtkWidget 
 
     dt_image_t *image = &module->dev->image_storage;
 
-    const gboolean is_display_referred = dt_is_display_referred();
     const gboolean is_scene_referred = dt_is_scene_referred();
     const gboolean has_matrix = dt_image_is_matrix_correction_supported(image);
 
@@ -1126,16 +1125,14 @@ gboolean dt_gui_presets_autoapply_for_module(dt_iop_module_t *module, GtkWidget 
      "  OR (name = ?13)) AND op_version = ?14"
      " ORDER BY writeprotect ASC, rowid DESC",
      format_filter,
-     is_display_referred?"":"basecurve");
+     "basecurve");
     // clang-format on
 
     g_free(format_filter);
 
     sqlite3_stmt *stmt;
     const char *workflow_preset =
-        has_matrix && is_display_referred ?
-            BUILTIN_PRESET("display-referred default") :
-            (has_matrix && is_scene_referred ? BUILTIN_PRESET("scene-referred default") : "\t\n");
+        has_matrix && is_scene_referred ? BUILTIN_PRESET("scene-referred default") : "\t\n";
 
     DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
     DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, module->op, -1, SQLITE_TRANSIENT);

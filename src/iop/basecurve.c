@@ -369,22 +369,8 @@ void init_presets(dt_iop_module_so_t *self)
     // sql commit
     dt_database_release_transaction(darktable.db);
 
-    // auto-applied display-referred default
+    // Reload preset defaults when the camera-preset preference changes.
     self->pref_based_presets = TRUE;
-
-    const gboolean is_display_referred = dt_is_display_referred();
-
-    if (is_display_referred)
-    {
-        dt_gui_presets_add_generic(_("display-referred default"), self->op, self->version(), NULL,
-                                   0, TRUE, DEVELOP_BLEND_CS_RGB_DISPLAY);
-
-        dt_gui_presets_update_format(BUILTIN_PRESET("display-referred default"), self->op,
-                                     self->version(), FOR_RAW);
-
-        dt_gui_presets_update_autoapply(BUILTIN_PRESET("display-referred default"), self->op,
-                                        self->version(), TRUE);
-    }
 }
 
 static float exposure_increment(float stops, int e, float fusion, float bias)

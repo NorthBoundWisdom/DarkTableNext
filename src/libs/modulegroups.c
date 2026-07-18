@@ -1714,59 +1714,6 @@ void init_presets(dt_lib_module_t *self)
     dt_lib_presets_add(_("workflow: beginner"), self->plugin_name, self->version(), tx, strlen(tx),
                        TRUE, 0);
 
-    // display referred
-    SQA(FALSE);
-
-    SMG(C_("modulegroup", "base"), "basic");
-    AM("basecurve");
-    AM("toneequal");
-    AM("crop");
-    AM("ashift");
-    AM("flip");
-    AM("exposure");
-    AM("temperature");
-    AM("rgbcurve");
-    AM("rgblevels");
-    AM("bilat");
-    AM("shadhi");
-    AM("highlights");
-
-    SMG(C_("modulegroup", "color"), "color");
-    AM("channelmixerrgb");
-    AM("colorbalancergb");
-    AM("colorcorrection");
-    AM("colorzones");
-    AM("monochrome");
-    AM("velvia");
-
-    SMG(C_("modulegroup", "correct"), "correct");
-    AM("cacorrect");
-    AM("cacorrectrgb");
-    AM("denoiseprofile");
-    AM("hazeremoval");
-    AM("hotpixels");
-    AM("lens");
-    AM("retouch");
-    AM("liquify");
-    AM("rasterfile");
-    AM("sharpen");
-    AM("nlmeans");
-
-    SMG(C_("modulegroup", "effect"), "effect");
-    AM("borders");
-    AM("enlargecanvas");
-    AM("colorize");
-    AM("graduatednd");
-    AM("grain");
-    AM("overlay");
-    AM("splittoning");
-    AM("vignette");
-    AM("watermark");
-    AM("censorize");
-
-    dt_lib_presets_add(_("workflow: display-referred"), self->plugin_name, self->version(), tx,
-                       strlen(tx), TRUE, 0);
-
     // scene referred
 
     SQA(TRUE);

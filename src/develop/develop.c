@@ -1796,9 +1796,8 @@ static void _dev_insert_module(dt_develop_t *dev, dt_iop_module_t *module, const
 {
     sqlite3_stmt *stmt;
 
-    // we make sure that the multi-name is updated if possible with the
+    // We make sure that the multi-name is updated if possible with the
     // actual preset name if any is defined for the default parameters.
-
     char *preset_name =
         dt_presets_get_module_label(module->op, module->default_params, module->params_size, TRUE,
                                     module->blend_params, sizeof(dt_develop_blend_params_t));
@@ -1836,78 +1835,16 @@ static gboolean _dev_auto_apply_presets(dt_develop_t *dev)
         run = TRUE;
 
     const gboolean is_raw = dt_image_is_rawprepare_supported(image);
-    const gboolean is_modern_chroma = dt_is_scene_referred();
-
     // flag was already set? only apply presets once in the lifetime of
     // a history stack.  (the flag will be cleared when removing it).
     if (!run || !dt_is_valid_imgid(image->id))
     {
-        // Next section is to recover old edits where all modules with
-        // default parameters were not recorded in the db nor in the .XMP.
-        //
-        // One crucial point is the white-balance which has automatic
-        // default based on the camera and depends on the
-        // chroma-adaptation. In modern mode the default won't be the same
-        // used in legacy mode and if the white-balance is not found on
-        // the history one will be added by default using current
-        // defaults. But if we are in modern chromatic adaptation the
-        // default will not be equivalent to the one used to develop this
-        // old edit.
-
-        // So if the current mode is the modern chromatic-adaptation, do check the history.
-
-        if (is_modern_chroma && is_raw)
-        {
-            // loop over all modules and display a message for default-enabled modules that
-            // are not found on the history.
-
-            for (GList *modules = dev->iop; modules; modules = g_list_next(modules))
-            {
-                dt_iop_module_t *module = modules->data;
-
-                if (module->default_enabled && !(module->flags() & IOP_FLAGS_NO_HISTORY_STACK) &&
-                    !dt_history_check_module_exists(imgid, module->op, FALSE))
-                {
-                    dt_print(DT_DEBUG_PARAMS,
-                             "[_dev_auto_apply_presets] missing mandatory module %s"
-                             " for image id=%d `%s'",
-                             module->op, imgid, dev->image_storage.filename);
-
-                    // If the module is white-balance and we are dealing with a
-                    // raw file we need to add one now with the default legacy
-                    // parameters. And we want to do this only for old edits.
-                    //
-                    // For new edits the temperature will be added back
-                    // depending on the chromatic adaptation the standard way.
-
-                    if (dt_iop_module_is(module, "temperature") && (image->change_timestamp == -1))
-                    {
-                        // it is important to recover temperature in this case
-                        // (modern chroma and not module present as we need to
-                        // have the pre 3.0 default parameters used.
-                        const gchar *current_workflow =
-                            dt_conf_get_string_const("plugins/darkroom/workflow");
-
-                        dt_conf_set_string("plugins/darkroom/workflow",
-                                           "display-referred (legacy)");
-                        dt_iop_reload_defaults(module);
-                        _dev_insert_module(dev, module, imgid);
-                        dt_conf_set_string("plugins/darkroom/workflow", current_workflow);
-                        dt_iop_reload_defaults(module);
-                    }
-                }
-            }
-        }
-
         dt_image_cache_write_release(image, DT_IMAGE_CACHE_RELAXED);
         return FALSE;
     }
 
     //  get current workflow and image characteristics
 
-    const gboolean is_scene_referred = dt_is_scene_referred();
-    const gboolean is_display_referred = dt_is_display_referred();
-    const gboolean is_workflow_none = !is_scene_referred && !is_display_referred;
     const gboolean has_matrix = dt_image_is_matrix_correction_supported(image);
 
     //  set filters
@@ -1991,7 +1928,7 @@ static gboolean _dev_auto_apply_presets(dt_develop_t *dev)
                "  THEN multi_name"
                "  ELSE (ROW_NUMBER() OVER (PARTITION BY operation ORDER BY operation) - 1)"
                " END",
-           is_display_referred ? "" : "basecurve");
+           "basecurve");
     // clang-format on
 
     // query for all modules at once:
@@ -2066,24 +2003,11 @@ static gboolean _dev_auto_apply_presets(dt_develop_t *dev)
         }
         else
         {
-            // we have no auto-apply order, so apply iop order, depending of the workflow
-            if (is_scene_referred || is_workflow_none)
-            {
-                dt_print(
-                    DT_DEBUG_PARAMS,
-                    "[dev_auto_apply_presets] no iop-order preset, use DT_IOP_ORDER_{JPG/RAW} on %d",
-                    imgid);
-                iop_list = dt_ioppr_get_iop_order_list_version(
-                    (iformat & FOR_LDR) ? DT_DEFAULT_IOP_ORDER_JPG : DT_DEFAULT_IOP_ORDER_RAW);
-            }
-            else
-            {
-                dt_print(
-                    DT_DEBUG_PARAMS,
-                    "[dev_auto_apply_presets] no iop-order preset, use the default order on %d",
-                    imgid);
-                iop_list = dt_ioppr_get_iop_order_list_version(DT_DEFAULT_IOP_ORDER_RAW);
-            }
+            dt_print(DT_DEBUG_PARAMS,
+                     "[dev_auto_apply_presets] no iop-order preset, use DT_IOP_ORDER_{JPG/RAW} on %d",
+                     imgid);
+            iop_list = dt_ioppr_get_iop_order_list_version(
+                (iformat & FOR_LDR) ? DT_DEFAULT_IOP_ORDER_JPG : DT_DEFAULT_IOP_ORDER_RAW);
         }
 
         // add multi-instance entries that could have been added if more

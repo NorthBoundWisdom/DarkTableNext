@@ -108,6 +108,7 @@
   - 已移除 filmicrgb 的 color science v1 与未归一化 Euclidean v1：CPU/OpenCL 处理、曲线预览与隐藏 UI 入口均不再保留，highlight reconstruction 使用当前归一化 Euclidean norm。
   - 已从 OpenCL 混合内核删除不再由宿主公开的 disabled/normal/difference、inverse、unbounded、multiply reverse、subtract inverse 与 divide inverse 枚举及其处理分支；内核仅实现当前混合合同。
   - 已从数据库、缓存对象、XMP 和 orientation 默认值中删除只为上游旧翻转位保留的 `raw_parameters`/`raw_params`/`legacy_flip` 合同；模块顺序筛选只映射 0.9 的 custom、RAW 与 JPEG 顺序。
+  - 已下线 `display-referred (legacy)` 工作流：配置项、basecurve 自动预设、旧编辑的温度恢复、自动预设查询与专用模块组均已删除；basecurve 仍可作为当前模块手动添加。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。

@@ -149,7 +149,4 @@ gchar *dt_str_replace(const char *string, const char *search, const char *replac
 // returns true if current settings is scene-referred
 gboolean dt_is_scene_referred(void);
 
-// returns true if current settings is display-referred
-gboolean dt_is_display_referred(void);
-
 G_END_DECLS

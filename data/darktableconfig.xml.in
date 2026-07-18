@@ -3762,13 +3762,12 @@
         <option>scene-referred (sigmoid)</option>
         <option>scene-referred (filmic)</option>
         <option>scene-referred (AgX)</option>
-        <option>display-referred (legacy)</option>
         <option>none</option>
       </enum>
     </type>
     <default>scene-referred (sigmoid)</default>
     <shortdescription>auto-apply pixel workflow defaults</shortdescription>
-    <longdescription><![CDATA[selects which workflow will be used by default in the darkroom\n\n<b>scene-referred (sigmoid)</b> modern workflow, fewer tonemapper controls\n\n<b>scene-referred (filmic)</b> modern workflow, more tone mapping controls\n\n<b>scene-referred (AgX)</b> modern workflow, maximum tone mapping control\n\n<b>display-referred (legacy)</b> legacy workflow (not recommended)\n\n<b>none</b> do not use a predefined workflow]]></longdescription>
+    <longdescription><![CDATA[selects which workflow will be used by default in the darkroom\n\n<b>scene-referred (sigmoid)</b> modern workflow, fewer tonemapper controls\n\n<b>scene-referred (filmic)</b> modern workflow, more tone mapping controls\n\n<b>scene-referred (AgX)</b> modern workflow, maximum tone mapping control\n\n<b>none</b> do not use a predefined workflow]]></longdescription>
     <welcomescreen pagenum="1" questionnum="1"/>
   </dtconfig>
   <dtconfig prefs="processing" section="general">
@@ -3776,7 +3775,7 @@
     <type>bool</type>
     <default>false</default>
     <shortdescription>auto-apply per camera basecurve presets</shortdescription>
-    <longdescription>use the per-camera basecurve by default instead of the generic manufacturer one if there is one available. (restart required)\nthis option is taken into account when the \"auto-apply pixel workflow defaults\" is set to \"display-referred\".\nto prevent auto-apply basecurve presets \"auto-apply pixel workflow defaults\" should be set to \"none\"</longdescription>
+    <longdescription>use the per-camera basecurve by default instead of the generic manufacturer one if there is one available. (restart required)</longdescription>
   </dtconfig>
   <dtconfig prefs="processing" section="general">
     <name>ui/detect_mono_exif</name>
