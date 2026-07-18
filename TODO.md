@@ -102,6 +102,7 @@
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
   - 一并移除了它们的 CMake 目标、图标、偏好项、帮助链接、模块组与 `spots` 专用遮罩兼容代码；新建 RAW/JPEG 的 v5 IOP 顺序不再写入这些模块。
+  - `IOP_FLAGS_DEPRECATED` 及其插件 ABI、历史面板、模块组、快捷键与图标分支也已删除；相机缺样提示保留为独立状态消息。
   - 历史 XMP、样式和数据库顺序表的拒绝/移除与下一个数据兼容边界事项一起完成。
 
 - [ ] 以新 UI 的功能清单驱动数据资产清理，而不是盲删运行时资源。

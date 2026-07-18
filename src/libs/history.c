@@ -170,8 +170,7 @@ void gui_cleanup(dt_lib_module_t *self)
 static GtkWidget *_lib_history_create_button(dt_lib_module_t *self, const int num,
                                              const char *label, const gboolean enabled,
                                              const gboolean default_enabled,
-                                             const gboolean always_on, const gboolean selected,
-                                             const gboolean deprecated)
+                                             const gboolean always_on, const gboolean selected)
 {
     /* create label */
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -207,16 +206,8 @@ static GtkWidget *_lib_history_create_button(dt_lib_module_t *self, const int nu
     }
     else
     {
-        if (deprecated)
-        {
-            onoff = dtgtk_button_new(dtgtk_cairo_paint_switch_deprecated, 0, NULL);
-            gtk_widget_set_tooltip_text(onoff, _("deprecated module"));
-        }
-        else
-        {
-            onoff = dtgtk_button_new(dtgtk_cairo_paint_switch, 0, NULL);
-            dt_gui_add_class(onoff, enabled ? "" : "dt_history_switch_off");
-        }
+        onoff = dtgtk_button_new(dtgtk_cairo_paint_switch, 0, NULL);
+        dt_gui_add_class(onoff, enabled ? "" : "dt_history_switch_off");
         dt_gui_add_class(lab, enabled ? "" : "dt_history_switch_off");
         dtgtk_button_set_active(DTGTK_BUTTON(onoff), enabled);
     }
@@ -1132,7 +1123,7 @@ void gui_update(dt_lib_module_t *self)
 
     /* add default which always should be */
     GtkWidget *widget = _lib_history_create_button(self, -1, _("original"), FALSE, FALSE, TRUE,
-                                                   darktable.develop->history_end == 0, FALSE);
+                                                   darktable.develop->history_end == 0);
     gtk_box_pack_end(GTK_BOX(d->history_box), widget, FALSE, FALSE, 0);
 
     int num = 0;
@@ -1146,8 +1137,7 @@ void gui_update(dt_lib_module_t *self)
         const gboolean selected = (num == darktable.develop->history_end - 1);
         widget = _lib_history_create_button(
             self, num, label, (hitem->enabled || (strcmp(hitem->op_name, "mask_manager") == 0)),
-            hitem->module->default_enabled, hitem->module->hide_enable_button, selected,
-            hitem->module->flags() & IOP_FLAGS_DEPRECATED);
+            hitem->module->default_enabled, hitem->module->hide_enable_button, selected);
 
         g_free(label);
 

@@ -132,11 +132,6 @@ static const char *default_aliases(void)
     return "";
 }
 
-static const char *default_deprecated_msg(void)
-{
-    return NULL;
-}
-
 static void default_commit_params(dt_iop_module_t *self, dt_iop_params_t *params,
                                   dt_dev_pixelpipe_t *pipe, dt_dev_pixelpipe_iop_t *piece)
 {
@@ -2830,14 +2825,9 @@ void dt_iop_gui_set_expander(dt_iop_module_t *module)
     gtk_widget_set_valign(module->instance_name, GTK_ALIGN_BASELINE);
     g_object_set(G_OBJECT(module->instance_name), "xalign", 0.0, (gchar *)0);
 
-    if ((module->flags() & IOP_FLAGS_DEPRECATED) && module->deprecated_msg())
-        gtk_widget_set_tooltip_text(lab, module->deprecated_msg());
-    else
-    {
-        g_signal_connect(lab, "query-tooltip", G_CALLBACK(_iop_tooltip_callback), module);
-        g_signal_connect(header, "query-tooltip", G_CALLBACK(_iop_tooltip_callback), module);
-        gtk_widget_set_has_tooltip(header, TRUE);
-    }
+    g_signal_connect(lab, "query-tooltip", G_CALLBACK(_iop_tooltip_callback), module);
+    g_signal_connect(header, "query-tooltip", G_CALLBACK(_iop_tooltip_callback), module);
+    gtk_widget_set_has_tooltip(header, TRUE);
 
     dt_action_define(&module->so->actions, NULL, NULL, lab, NULL);
     g_signal_connect(lab, "enter-notify-event", G_CALLBACK(_header_enter_notify_callback),
@@ -2873,18 +2863,6 @@ void dt_iop_gui_set_expander(dt_iop_module_t *module)
     dt_gui_add_help_link(lab, module->op);
     dt_gui_add_help_link(expander, module->op);
     dt_gui_add_help_link(header, "module_header");
-
-    // show deprecated message if any
-    if (module->deprecated_msg())
-    {
-        GtkWidget *lb = gtk_label_new(module->deprecated_msg());
-        gtk_label_set_line_wrap(GTK_LABEL(lb), TRUE);
-        gtk_label_set_max_width_chars(GTK_LABEL(lb), 0); // don't propagate natural width
-        gtk_label_set_xalign(GTK_LABEL(lb), 0.0);
-        dt_gui_add_class(lb, "dt_warning");
-        gtk_box_pack_start(GTK_BOX(iopw), lb, TRUE, TRUE, 0);
-        gtk_widget_show(lb);
-    }
 
     /* add the blending ui if supported */
     gtk_box_pack_start(GTK_BOX(iopw), module->widget, TRUE, TRUE, 0);

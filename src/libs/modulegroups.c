@@ -42,9 +42,6 @@ DT_MODULE(1)
 #define FALLBACK_PRESET_NAME "workflow: scene-referred"
 #define T_FALLBACK_PRESET_NAME _("workflow: scene-referred")
 
-#define DEPRECATED_PRESET_NAME "modules: deprecated"
-#define T_DEPRECATED_PRESET_NAME _("modules: deprecated")
-
 #define CURRENT_PRESET_NAME "last modified layout"
 #define T_CURRENT_PRESET_NAME _("last modified layout")
 
@@ -116,8 +113,8 @@ typedef struct dt_lib_modulegroups_t
     GtkWidget *basic_btn;
     GtkWidget *hbox_groups;
     GtkWidget *hbox_search_box;
-    GtkWidget *deprecated;
-    gboolean force_deprecated_message;
+    GtkWidget *status_message;
+    gboolean show_status_message;
     GList *groups;
     gboolean show_search;
     gboolean full_active;
@@ -787,8 +784,7 @@ static void _basics_show(dt_lib_module_t *self)
         if (item_pos != FIRST_MODULE)
             item_pos = NEW_MODULE;
 
-        if (!dt_iop_is_hidden(module) && !(module->flags() & IOP_FLAGS_DEPRECATED) &&
-            module->iop_order != INT_MAX)
+        if (!dt_iop_is_hidden(module) && module->iop_order != INT_MAX)
         {
             // first, we add on-off buttons if any
             for (const GList *l = d->basics; l; l = g_list_next(l))
@@ -875,8 +871,7 @@ static void _lib_modulegroups_update_iop_visibility(dt_lib_module_t *self)
     }
     DT_LEAVE_GUI_UPDATE();
 
-    // hide deprecated message. it will be shown after if needed
-    gtk_widget_set_visible(d->deprecated, FALSE);
+    gtk_widget_set_visible(d->status_message, FALSE);
 
     for (const GList *modules = darktable.develop->iop; modules; modules = g_list_next(modules))
     {
@@ -920,35 +915,22 @@ static void _lib_modulegroups_update_iop_visibility(dt_lib_module_t *self)
         // if there's some search text show matching modules only
         if (text_entered && text_entered[0] != '\0')
         {
-            /* don't show deprecated ones unless they are enabled */
-            if (module->flags() & IOP_FLAGS_DEPRECATED && !(module->enabled))
-            {
-                if (darktable.develop->gui_module == module)
-                    dt_iop_request_focus(NULL);
-                if (w)
-                    gtk_widget_hide(w);
-            }
-            else
-            {
-                const int is_match =
-                    (g_strstr_len(g_utf8_casefold(dt_iop_get_localized_name(module->op), -1), -1,
-                                  g_utf8_casefold(text_entered, -1)) != NULL) ||
-                    (g_strstr_len(g_utf8_casefold(dt_iop_get_localized_aliases(module->op), -1), -1,
-                                  g_utf8_casefold(text_entered, -1)) != NULL) ||
-                    (g_strstr_len(g_utf8_casefold(module->multi_name, -1), -1,
-                                  g_utf8_casefold(text_entered, -1)) != NULL);
+            const int is_match =
+                (g_strstr_len(g_utf8_casefold(dt_iop_get_localized_name(module->op), -1), -1,
+                              g_utf8_casefold(text_entered, -1)) != NULL) ||
+                (g_strstr_len(g_utf8_casefold(dt_iop_get_localized_aliases(module->op), -1), -1,
+                              g_utf8_casefold(text_entered, -1)) != NULL) ||
+                (g_strstr_len(g_utf8_casefold(module->multi_name, -1), -1,
+                              g_utf8_casefold(text_entered, -1)) != NULL);
 
-                if (is_match)
-                    gtk_widget_show(w);
-                else
-                    gtk_widget_hide(w);
-            }
+            if (is_match)
+                gtk_widget_show(w);
+            else
+                gtk_widget_hide(w);
             continue;
         }
 
         /* lets show/hide modules dependent on current group*/
-        const gboolean show_deprecated =
-            dt_conf_is_equal("plugins/darkroom/modulegroups_preset", _(DEPRECATED_PRESET_NAME));
         gboolean show_module = TRUE;
         switch (d->current)
         {
@@ -970,20 +952,14 @@ static void _lib_modulegroups_update_iop_visibility(dt_lib_module_t *self)
         case DT_MODULEGROUP_NONE:
         {
             /* show all except hidden ones */
-            show_module = (((!(module->flags() & IOP_FLAGS_DEPRECATED) || show_deprecated) &&
-                            _lib_modulegroups_test_visible(self, module->op)) ||
-                           module->enabled);
+            show_module = _lib_modulegroups_test_visible(self, module->op) || module->enabled;
         }
         break;
 
         default:
         {
-            // show deprecated module in specific group deprecated
-            gtk_widget_set_visible(d->deprecated, show_deprecated || d->force_deprecated_message);
-
-            show_module =
-                (_lib_modulegroups_test_internal(self, d->current, module) &&
-                 (!(module->flags() & IOP_FLAGS_DEPRECATED) || module->enabled || show_deprecated));
+            gtk_widget_set_visible(d->status_message, d->show_status_message);
+            show_module = _lib_modulegroups_test_internal(self, d->current, module);
         }
         }
 
@@ -1202,7 +1178,7 @@ static gchar *_preset_retrieve_old_layout_updated()
         {
             dt_iop_module_so_t *module = modules->data;
 
-            if (!dt_iop_so_is_hidden(module) && !(module->flags() & IOP_FLAGS_DEPRECATED))
+            if (!dt_iop_so_is_hidden(module))
             {
                 // get previous visibility values
                 const int group = module->default_group();
@@ -1263,7 +1239,7 @@ static gchar *_preset_retrieve_old_layout(const char *list, const char *list_fav
         {
             dt_iop_module_so_t *module = modules->data;
 
-            if (!dt_iop_so_is_hidden(module) && !(module->flags() & IOP_FLAGS_DEPRECATED))
+            if (!dt_iop_so_is_hidden(module))
             {
                 gchar *search = g_strdup_printf("|%s|", module->op);
                 gchar *key;
@@ -1594,9 +1570,8 @@ void init_presets(dt_lib_module_t *self)
     /*
     For the record, one can create the preset list by using the following code:
 
-    $ cat <( git grep "return.*IOP_GROUP_TONE" -- src/iop/ | cut -d':' -f1 ) \
-          <( git grep IOP_FLAGS_DEPRECATED -- src/iop/ | cut -d':' -f1 ) | \
-          grep -E -v "useless|mask_manager|gamma" | sort | uniq --unique | \
+    $ git grep "return.*IOP_GROUP_TONE" -- src/iop/ | cut -d':' -f1 | \
+          grep -E -v "useless|mask_manager|gamma" | sort | uniq | \
           while read file; do BN=$(basename $(basename $file .cc) .c); \
             echo "AM(\"${BN:0:16}\");" ; done
   */
@@ -2128,9 +2103,7 @@ static void _manage_editor_module_update_list(dt_lib_module_t *self,
          modules2 = g_list_previous(modules2))
     {
         dt_iop_module_t *module = modules2->data;
-        if ((!(module->flags() & IOP_FLAGS_DEPRECATED) ||
-             !g_strcmp0(gr->name, C_("modulegroup", "deprecated"))) &&
-            !dt_iop_is_hidden(module) && g_list_find_custom(gr->modules, module->op, _iop_compare))
+        if (!dt_iop_is_hidden(module) && g_list_find_custom(gr->modules, module->op, _iop_compare))
         {
             // we want to avoid showing multiple instances of the same module
             if (module->multi_priority <= 0 ||
@@ -2365,7 +2338,7 @@ static void _manage_module_add_popup(GtkWidget *widget, dt_lib_modulegroups_grou
     {
         dt_iop_module_so_t *module = modules->data;
 
-        if (!dt_iop_so_is_hidden(module) && !(module->flags() & IOP_FLAGS_DEPRECATED))
+        if (!dt_iop_so_is_hidden(module))
         {
             if (!g_list_find_custom(gr->modules, module->op, _iop_compare))
             {
@@ -2474,7 +2447,7 @@ static GtkWidget *_build_menu_from_actions(dt_action_t *actions, dt_lib_module_t
         if (actions->type == DT_ACTION_TYPE_IOP)
         {
             dt_iop_module_so_t *so = (dt_iop_module_so_t *)actions;
-            if (dt_iop_so_is_hidden(so) || so->flags() & IOP_FLAGS_DEPRECATED)
+            if (dt_iop_so_is_hidden(so))
             {
                 actions = actions->next;
                 continue;
@@ -2810,19 +2783,15 @@ static void _dt_dev_image_changed_callback(gpointer instance, dt_lib_module_t *s
     if (image->camera_missing_sample)
     {
         gchar *label = dt_image_camera_missing_sample_message(image, FALSE);
-        d->force_deprecated_message = TRUE;
-        gtk_label_set_markup(GTK_LABEL(d->deprecated), label);
+        d->show_status_message = TRUE;
+        gtk_label_set_markup(GTK_LABEL(d->status_message), label);
         g_free(label);
-        gtk_widget_set_visible(d->deprecated, TRUE);
+        gtk_widget_set_visible(d->status_message, TRUE);
     }
     else
     {
-        d->force_deprecated_message = FALSE;
-        gtk_label_set_markup(
-            GTK_LABEL(d->deprecated),
-            _("the following modules are deprecated because they have internal design mistakes"
-              " that can't be corrected and alternative modules that correct them.\n"
-              "they will be removed for new edits in the next release."));
+        d->show_status_message = FALSE;
+        gtk_widget_set_visible(d->status_message, FALSE);
     }
 }
 
@@ -3016,21 +2985,17 @@ void gui_init(dt_lib_module_t *self)
     gtk_box_pack_start(GTK_BOX(self->widget), d->hbox_buttons, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(self->widget), d->hbox_search_box, TRUE, TRUE, 0);
 
-    // deprecated message
-    d->deprecated = gtk_label_new(
-        _("the following modules are deprecated because they have internal design mistakes"
-          " that can't be corrected and alternative modules that correct them.\n"
-          "they will be removed for new edits in the next release."));
-    dt_gui_add_class(d->deprecated, "dt_warning");
-    gtk_label_set_line_wrap(GTK_LABEL(d->deprecated), TRUE);
-    gtk_box_pack_start(GTK_BOX(self->widget), d->deprecated, TRUE, TRUE, 0);
+    d->status_message = gtk_label_new(NULL);
+    dt_gui_add_class(d->status_message, "dt_warning");
+    gtk_label_set_line_wrap(GTK_LABEL(d->status_message), TRUE);
+    gtk_box_pack_start(GTK_BOX(self->widget), d->status_message, TRUE, TRUE, 0);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->active_btn), TRUE);
     d->current = dt_conf_get_int("plugins/darkroom/groups");
     if (d->current == DT_MODULEGROUP_NONE)
         _lib_modulegroups_update_iop_visibility(self);
     gtk_widget_show_all(self->widget);
-    gtk_widget_set_no_show_all(d->deprecated, TRUE);
+    gtk_widget_set_no_show_all(d->status_message, TRUE);
     gtk_widget_set_no_show_all(d->hbox_buttons, TRUE);
     gtk_widget_set_no_show_all(d->hbox_search_box, TRUE);
 
@@ -3871,7 +3836,7 @@ static void _manage_editor_load(const char *preset, dt_lib_module_t *self)
     // presets buttons
     gtk_widget_set_sensitive(d->presets_btn_rename, !d->edit_ro);
     gtk_widget_set_sensitive(d->presets_btn_remove, !d->edit_ro);
-    gtk_widget_set_sensitive(d->presets_btn_dup, g_strcmp0(sel_preset, _(DEPRECATED_PRESET_NAME)));
+    gtk_widget_set_sensitive(d->presets_btn_dup, !d->edit_ro);
 
     // search checkbox
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->edit_search_cb), d->edit_show_search);

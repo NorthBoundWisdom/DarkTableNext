@@ -88,7 +88,6 @@ typedef enum dt_iop_flags_t
     /** Flag for the iop module to be enabled/included by default when creating a style */
     IOP_FLAGS_INCLUDE_IN_STYLES = 1 << 0,
     IOP_FLAGS_SUPPORTS_BLENDING = 1 << 1, // Does provide blending modes
-    IOP_FLAGS_DEPRECATED = 1 << 2,
     IOP_FLAGS_ALLOW_TILING =
         1 << 4,                // Does allow tile-wise processing (valid for CPU and GPU processing)
     IOP_FLAGS_HIDDEN = 1 << 5, // Hide the iop from userinterface

@@ -349,20 +349,6 @@ void dtgtk_cairo_paint_switch_off(cairo_t *cr, const gint x, const gint y, const
     FINISH
 }
 
-void dtgtk_cairo_paint_switch_deprecated(cairo_t *cr, const gint x, const gint y, const gint w,
-                                         const gint h, gint flags, void *data)
-{
-    PREAMBLE(1, 1, 0, 0)
-
-    cairo_move_to(cr, 0.1, 0.1);
-    cairo_line_to(cr, 0.9, 0.9);
-    cairo_move_to(cr, 0.1, 0.9);
-    cairo_line_to(cr, 0.9, 0.1);
-    cairo_stroke(cr);
-
-    FINISH
-}
-
 void dtgtk_cairo_paint_plus(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
                             const gint flags, void *data)
 {

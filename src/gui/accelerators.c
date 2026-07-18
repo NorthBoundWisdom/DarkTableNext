@@ -1979,8 +1979,7 @@ static gboolean _add_actions_to_tree(GtkTreeIter *parent, dt_action_t *action, d
         if (action->type == DT_ACTION_TYPE_IOP)
         {
             const dt_iop_module_so_t *module = (dt_iop_module_so_t *)action;
-            if (action != &darktable.control->actions_focus &&
-                module->flags() & (IOP_FLAGS_HIDDEN | IOP_FLAGS_DEPRECATED))
+            if (action != &darktable.control->actions_focus && module->flags() & IOP_FLAGS_HIDDEN)
                 continue;
         }
 

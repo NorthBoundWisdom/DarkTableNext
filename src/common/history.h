@@ -100,7 +100,7 @@ gboolean dt_history_paste(const dt_imgid_t imgid, const gboolean merge,
 
 static inline gboolean dt_history_module_skip_copy(const int flags)
 {
-    return flags & (IOP_FLAGS_DEPRECATED | IOP_FLAGS_UNSAFE_COPY | IOP_FLAGS_HIDDEN);
+    return flags & (IOP_FLAGS_UNSAFE_COPY | IOP_FLAGS_HIDDEN);
 }
 
 /** load a dt file and applies to selected images */
