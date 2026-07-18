@@ -29,31 +29,6 @@ static inline float ddirac(const int2 q)
 }
 
 kernel void
-denoiseprofile_precondition(read_only image2d_t in,
-                            write_only image2d_t out,
-                            const int width,
-                            const int height,
-                            const float4 a,
-                            const float4 sigma2)
-{
-  const int x = get_global_id(0);
-  const int y = get_global_id(1);
-
-  if(x >= width || y >= height) return;
-
-  float4 pixel = readpixel(in, x, y);
-  const float alpha = pixel.w;
-
-  float4 t = fmax(pixel / a, 0.f);
-  float4 d = fmax((float4)0.0f, t + (float4)0.375f + sigma2);
-  float4 s = 2.0f * dtcl_sqrt(d);
-
-  s.w = alpha;
-  write_imagef (out, (int2)(x, y), s);
-}
-
-
-kernel void
 denoiseprofile_precondition_v2(read_only image2d_t in,
                                write_only image2d_t out,
                                const int width,
@@ -314,31 +289,6 @@ denoiseprofile_accu(read_only image2d_t in, global float4* U2, global float* U4,
 
 
 kernel void
-denoiseprofile_finish(read_only image2d_t in, global float4* U2, write_only image2d_t out, const int width, const int height,
-                             const float4 a, const float4 sigma2)
-{
-  const int x = get_global_id(0);
-  const int y = get_global_id(1);
-  const int gidx = mad24(y, width, x);
-
-  if(x >= width || y >= height) return;
-
-  float4 u2   = U2[gidx];
-  const float alpha = readalpha(in, x, y);
-
-  float4 px = ((float4)u2.w > (float4)0.0f ? u2/u2.w : (float4)0.0f);
-
-  px = (px < (float4)0.5f ? (float4)0.0f :
-    0.25f*px*px + 0.25f*sqrt(1.5f)/px - 1.375f/(px*px) + 0.625f*dtcl_sqrt(1.5f)/(px*px*px) - 0.125f - sigma2);
-
-  px *= a;
-  px.w = alpha;
-
-  write_imagef (out, (int2)(x, y), px);
-}
-
-
-kernel void
 denoiseprofile_finish_v2(read_only image2d_t in, global float4* U2, write_only image2d_t out, const int width, const int height,
                              const float4 a, const float4 p, const float4 b, const float bias, const float4 wb)
 {
@@ -363,29 +313,6 @@ denoiseprofile_finish_v2(read_only image2d_t in, global float4* U2, write_only i
   write_imagef (out, (int2)(x, y), px);
 }
 
-
-
-kernel void
-denoiseprofile_backtransform(read_only image2d_t in, write_only image2d_t out, const int width, const int height,
-                             const float4 a, const float4 sigma2)
-{
-  const int x = get_global_id(0);
-  const int y = get_global_id(1);
-  const int gidx = mad24(y, width, x);
-
-  if(x >= width || y >= height) return;
-
-  float4 px = readpixel(in, x, y);
-  const float alpha = px.w;
-
-  px = (px < (float4)0.5f ? (float4)0.0f :
-    0.25f*px*px + 0.25f*sqrt(1.5f)/px - 1.375f/(px*px) + 0.625f*sqrt(1.5f)/(px*px*px) - 0.125f - sigma2);
-
-  px *= a;
-  px.w = alpha;
-
-  write_imagef (out, (int2)(x, y), px);
-}
 
 
 kernel void
