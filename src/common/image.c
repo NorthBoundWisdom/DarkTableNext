@@ -37,7 +37,6 @@
 #include "control/control.h"
 #include "control/jobs.h"
 #include "control/jobs/sidecar_jobs.h"
-#include "develop/lightroom.h"
 #include "imageio/imageio_common.h"
 #include "imageio/imageio_rawspeed.h"
 #include "imageio/imageio_libraw.h"
@@ -1975,7 +1974,6 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
     // printf("[image_import] importing `%s' to img id %d\n", imgfname, id);
 
     // lock as shortly as possible:
-    gboolean res = FALSE;
     dt_image_t *img = dt_image_cache_get(id, 'w');
     if (img)
     {
@@ -1989,22 +1987,13 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
         // dt_image_path_append_version(id, dtfilename, sizeof(dtfilename));
         g_strlcat(dtfilename, ".xmp", sizeof(dtfilename));
 
-        res = dt_exif_xmp_read(img, dtfilename, FALSE);
+        dt_exif_xmp_read(img, dtfilename, FALSE);
     }
     // write through to db, but not to xmp.
     dt_image_cache_write_release(img, DT_IMAGE_CACHE_RELAXED);
 
     // read all sidecar files
-    const int nb_xmp = _image_read_duplicates(id, normalized_filename, raise_signals);
-
-    if (res && (nb_xmp == 0))
-    {
-        // Search for Lightroom sidecar file, import tags if found
-        const gboolean lr_xmp = dt_lightroom_import(id, NULL, TRUE);
-        // Make sure that lightroom xmp data (label in particular) are saved in dt xmp
-        if (lr_xmp)
-            dt_image_synch_xmp(id);
-    }
+    _image_read_duplicates(id, normalized_filename, raise_signals);
 
     // add a tag with the file extension
     guint tagid = 0;

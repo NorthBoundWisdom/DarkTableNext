@@ -92,8 +92,11 @@
 
 - [ ] 设定 0.9 数据兼容边界，然后分阶段删除数据库、XMP 和模块参数的历史迁移。
   - 核心位置：`src/common/database.c`、`src/common/iop_order.c`、`src/develop/imageop.c`、`src/develop/blend.c`、`src/develop/masks/masks.c`、`src/develop/lightroom.c`。
-  - 需要先决定：是否支持导入旧 darktable 数据库/XMP、支持的最低版本、是否提供一次性外部迁移工具。
-  - 建议：保留一个独立导入/迁移工具，而不是让主应用长期携带每一代 schema 和参数转换代码。
+  - 已确定：主程序不导入旧 darktable 数据库、XMP 或 Lightroom sidecar；没有内置迁移工具。用户须在原应用中完成导出，再创建新的 0.9 资料库。
+  - 已完成数据库合同：新建库直接创建最终 schema，`library.db`/`data.db` 均为版本 `1`；任何已有版本均明确拒绝。旧数据库升级、XDG 路径迁移和旧 mipmap 清理已删除。
+  - 已完成 XMP 合同：0.9 写入并只读取 `Xmp.darktable.xmp_version = 6`；删除 v1–v5 history、遮罩和时间戳转换。无 darktable 编辑历史的通用 XMP 仍可读取基础元数据。
+  - 已删除 Lightroom 旁路导入（`src/develop/lightroom.*`）及其在导入/暗房中的调用。
+  - 待继续：移除 IOP、混合、遮罩、样式与预置参数的逐版本转换实现，并让版本不匹配的内容直接拒绝。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。

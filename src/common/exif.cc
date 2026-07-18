@@ -34,8 +34,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
-#include <sstream>
 #include <string>
 
 // Exiv2 headers trigger a shadow warning under the project's strict warning policy.
@@ -78,7 +76,7 @@ using namespace std;
 #include "imageio/imageio_common.h"
 #include "imageio/imageio_jpeg.h"
 
-#define DT_XMP_EXIF_VERSION 5
+#define DT_XMP_EXIF_VERSION 6
 
 #if EXIV2_TEST_VERSION(0, 28, 0)
 #define AnyError Error
@@ -464,10 +462,9 @@ public:
 
 static void _exif_import_tags(dt_image_t *img, Exiv2::XmpData::iterator &pos);
 
-static void _read_xmp_timestamps(Exiv2::XmpData &xmpData, dt_image_t *img, const int xmp_version);
+static void _read_xmp_timestamps(Exiv2::XmpData &xmpData, dt_image_t *img);
 
-static void _read_xmp_harmony_guide(Exiv2::XmpData &xmpData, dt_image_t *img,
-                                    const int xmp_version);
+static void _read_xmp_harmony_guide(Exiv2::XmpData &xmpData, dt_image_t *img);
 
 // This array should contain all XmpBag and XmpSeq keys used by dt
 const char *dt_xmp_keys[] = {"Xmp.dc.subject",
@@ -3319,13 +3316,9 @@ typedef struct history_entry_t
     unsigned char *blendop_params;
     int blendop_params_len;
     int num;
-    double iop_order; // kept for compatibility with xmp version < 4
-
-    // Sanity checking
     gboolean have_operation, have_params, have_modversion;
 } history_entry_t;
 
-// Used for a hash table that maps mask_id to the mask data
 typedef struct mask_entry_t
 {
     int mask_id;
@@ -3339,31 +3332,7 @@ typedef struct mask_entry_t
     int mask_src_len;
     gboolean already_added;
     int mask_num;
-    int version;
 } mask_entry_t;
-
-static void _print_history_entry(history_entry_t *entry) __attribute__((unused));
-static void _print_history_entry(history_entry_t *entry)
-{
-    if (!entry || !entry->operation)
-    {
-        std::cout << "malformed entry" << std::endl;
-        return;
-    }
-
-    std::cout << entry->operation << std::endl;
-    std::cout << "  modversion      :" << entry->modversion << std::endl;
-    std::cout << "  enabled         :" << entry->enabled << std::endl;
-    std::cout << "  params          :" << (entry->params ? "<found>" : "<missing>") << std::endl;
-    std::cout << "  multi_name      :" << (entry->multi_name ? entry->multi_name : "<missing>")
-              << std::endl;
-    std::cout << "  multi_priority  :" << entry->multi_priority << std::endl;
-    std::cout << "  iop_order       :" << entry->iop_order << std::endl;
-    std::cout << "  blendop_version :" << entry->blendop_version << std::endl;
-    std::cout << "  blendop_params  :" << (entry->blendop_params ? "<found>" : "<missing>")
-              << std::endl;
-    std::cout << std::endl;
-}
 
 static void _free_history_entry(gpointer data)
 {
@@ -3375,256 +3344,121 @@ static void _free_history_entry(gpointer data)
     free(entry);
 }
 
-// We have to use pugixml as the old format could contain empty rdf:li
-// elements in the multi_name array which causes problems when
-// accessing it with libexiv2 :(. superold is a flag indicating that
-// data is wrapped in <rdf:Bag> instead of <rdf:Seq>.
-static GList *_read_history_v1(const std::string &xmpPacket, const char *filename,
-                               const int superold)
+static GList *_read_history(Exiv2::XmpData &xmpData, const char *filename)
 {
     GList *history_entries = NULL;
-
-    pugi::xml_document doc;
-    pugi::xml_parse_result result = doc.load_string(xmpPacket.c_str());
-
-    if (!result)
-    {
-        dt_print(DT_DEBUG_IMAGEIO,
-                 "XML '%s' parsed with errors\n"
-                 "Error description: %s\n"
-                 "Error offset: %td",
-                 filename, result.description(), result.offset);
-        return NULL;
-    }
-
-    pugi::xpath_node modversion = superold ?
-                                      doc.select_node("//darktable:history_modversion/rdf:Bag") :
-                                      doc.select_node("//darktable:history_modversion/rdf:Seq");
-    pugi::xpath_node enabled = superold ? doc.select_node("//darktable:history_enabled/rdf:Bag") :
-                                          doc.select_node("//darktable:history_enabled/rdf:Seq");
-    pugi::xpath_node operation = superold ?
-                                     doc.select_node("//darktable:history_operation/rdf:Bag") :
-                                     doc.select_node("//darktable:history_operation/rdf:Seq");
-    pugi::xpath_node params = superold ? doc.select_node("//darktable:history_params/rdf:Bag") :
-                                         doc.select_node("//darktable:history_params/rdf:Seq");
-    pugi::xpath_node blendop_params = superold ?
-                                          doc.select_node("//darktable:blendop_params/rdf:Bag") :
-                                          doc.select_node("//darktable:blendop_params/rdf:Seq");
-    pugi::xpath_node blendop_version = superold ?
-                                           doc.select_node("//darktable:blendop_version/rdf:Bag") :
-                                           doc.select_node("//darktable:blendop_version/rdf:Seq");
-    pugi::xpath_node multi_priority = superold ?
-                                          doc.select_node("//darktable:multi_priority/rdf:Bag") :
-                                          doc.select_node("//darktable:multi_priority/rdf:Seq");
-    pugi::xpath_node multi_name = superold ? doc.select_node("//darktable:multi_name/rdf:Bag") :
-                                             doc.select_node("//darktable:multi_name/rdf:Seq");
-
-    // Fill the list of history entries. We are iterating over
-    // history_operation as we know that it's there. The other iters
-    // are taken care of manually.
-    auto modversion_iter = modversion.node().children().begin();
-    auto enabled_iter = enabled.node().children().begin();
-    auto params_iter = params.node().children().begin();
-    auto blendop_params_iter = blendop_params.node().children().begin();
-    auto blendop_version_iter = blendop_version.node().children().begin();
-    auto multi_priority_iter = multi_priority.node().children().begin();
-    auto multi_name_iter = multi_name.node().children().begin();
-
-    for (pugi::xml_node operation_iter : operation.node().children())
-    {
-        history_entry_t *current_entry = (history_entry_t *)calloc(1, sizeof(history_entry_t));
-        if (!current_entry)
-            break;
-        current_entry->blendop_version = 1; // default version in case it's not specified
-        history_entries = g_list_append(history_entries, current_entry);
-
-        current_entry->operation = g_strdup(operation_iter.child_value());
-
-        current_entry->enabled = g_strcmp0(enabled_iter->child_value(), "0") != 0;
-
-        current_entry->modversion = atoi(modversion_iter->child_value());
-
-        current_entry->params =
-            dt_exif_xmp_decode(params_iter->child_value(), strlen(params_iter->child_value()),
-                               &current_entry->params_len);
-
-        if (multi_name && multi_name_iter != multi_name.node().children().end())
-        {
-            current_entry->multi_name = g_strdup(multi_name_iter->child_value());
-            multi_name_iter++;
-        }
-
-        if (multi_priority && multi_priority_iter != multi_priority.node().children().end())
-        {
-            current_entry->multi_priority = atoi(multi_priority_iter->child_value());
-            multi_priority_iter++;
-        }
-
-        if (blendop_version && blendop_version_iter != blendop_version.node().children().end())
-        {
-            current_entry->blendop_version = atoi(blendop_version_iter->child_value());
-            blendop_version_iter++;
-        }
-
-        if (blendop_params && blendop_params_iter != blendop_params.node().children().end())
-        {
-            current_entry->blendop_params = dt_exif_xmp_decode(
-                blendop_params_iter->child_value(), strlen(blendop_params_iter->child_value()),
-                &current_entry->blendop_params_len);
-            blendop_params_iter++;
-        }
-
-        current_entry->iop_order = -1.0;
-
-        modversion_iter++;
-        enabled_iter++;
-        params_iter++;
-    }
-
-    return history_entries;
-}
-
-static GList *_read_history_v2(Exiv2::XmpData &xmpData, const char *filename)
-{
-    GList *history_entries = NULL;
-    history_entry_t *current_entry = NULL;
 
     for (auto history = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history"));
          history != xmpData.end(); history++)
     {
-        // TODO: Support human readable params via introspection with something like this:
-        // XmpText: Xmp.darktable.history[1]/darktable:settings[1]/darktable:name = width
-        // XmpText: Xmp.darktable.history[1]/darktable:settings[1]/darktable:value = 23
-
         std::string key_item = history->key();
         char *key = g_strdup(key_item.c_str());
         char *key_iter = key;
-        if (g_str_has_prefix(key, "Xmp.darktable.history["))
+        if (!g_str_has_prefix(key, "Xmp.darktable.history["))
         {
-            key_iter += strlen("Xmp.darktable.history[");
-            errno = 0;
-            unsigned int n = strtol(key_iter, &key_iter, 10);
-            if (errno)
-            {
-                dt_print(DT_DEBUG_IMAGEIO, "error reading history from '%s' (%s)", key, filename);
-                g_list_free_full(history_entries, _free_history_entry);
-                g_free(key);
-                return NULL;
-            }
-
-            // Skip everything that isn't part of the actual array
-            if (*(key_iter++) != ']')
-            {
-                dt_print(DT_DEBUG_IMAGEIO, "error reading history from '%s' (%s)", key, filename);
-                g_list_free_full(history_entries, _free_history_entry);
-                g_free(key);
-                return NULL;
-            }
-            if (*(key_iter++) != '/')
-                goto skip;
-            if (*key_iter == '?')
-                key_iter++;
-
-            // Make sure we are filling in the details of the correct entry
-            unsigned int length = g_list_length(history_entries);
-            if (n > length)
-            {
-                current_entry = (history_entry_t *)calloc(1, sizeof(history_entry_t));
-                if (current_entry)
-                {
-                    current_entry->blendop_version =
-                        1; // default version in case it's not specified
-                    current_entry->iop_order = -1.0;
-                    history_entries = g_list_append(history_entries, current_entry);
-                }
-            }
-            else if (n < length)
-            {
-                // AFAICT this can't happen with regular Exiv2 parsed XMP
-                // data, but better safe than sorry. It can happen though
-                // when constructing things in a unusual order and then
-                // passing it to us without serializing it in between.
-                current_entry = (history_entry_t *)g_list_nth_data(history_entries, n - 1);
-                // XMP starts counting at 1!
-            }
-
-            // Go on reading things into current_entry
-            if (g_str_has_prefix(key_iter, "darktable:operation"))
-            {
-                current_entry->have_operation = TRUE;
-                std::string value_item = history->toString();
-                current_entry->operation = g_strdup(value_item.c_str());
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:num"))
-            {
-                current_entry->num = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:enabled"))
-            {
-                current_entry->enabled = history->toLong() == 1;
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:modversion"))
-            {
-                current_entry->have_modversion = TRUE;
-                current_entry->modversion = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:params"))
-            {
-                current_entry->have_params = TRUE;
-                std::string value_item = history->toString();
-                current_entry->params = dt_exif_xmp_decode(value_item.c_str(), history->size(),
-                                                           &current_entry->params_len);
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:multi_name_hand_edited"))
-            {
-                current_entry->multi_name_hand_edited = history->toLong() == 1;
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:multi_name"))
-            {
-                std::string value_item = history->toString();
-                current_entry->multi_name = g_strdup(value_item.c_str());
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:multi_priority"))
-            {
-                current_entry->multi_priority = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:iop_order"))
-            {
-                // We ensure reading the iop_order as a high precision float
-                std::string value_item = history->toString();
-                string str = g_strdup(value_item.c_str());
-                static const std::locale &c_locale = std::locale("C");
-                std::istringstream istring(str);
-                istring.imbue(c_locale);
-                istring >> current_entry->iop_order;
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:blendop_version"))
-            {
-                current_entry->blendop_version = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:blendop_params"))
-            {
-                std::string value_item = history->toString();
-                current_entry->blendop_params = dt_exif_xmp_decode(
-                    value_item.c_str(), history->size(), &current_entry->blendop_params_len);
-            }
+            g_free(key);
+            continue;
         }
-    skip:
+
+        key_iter += strlen("Xmp.darktable.history[");
+        errno = 0;
+        const unsigned int n = strtol(key_iter, &key_iter, 10);
+        const unsigned int length = g_list_length(history_entries);
+        if (errno || n == 0 || n > length + 1 || *(key_iter++) != ']')
+        {
+            dt_print(DT_DEBUG_IMAGEIO, "[exif] malformed history entry in '%s'", filename);
+            g_list_free_full(history_entries, _free_history_entry);
+            g_free(key);
+            return NULL;
+        }
+        if (*(key_iter++) != '/')
+        {
+            g_free(key);
+            continue;
+        }
+        if (*key_iter == '?')
+            key_iter++;
+
+        history_entry_t *current_entry = NULL;
+        if (n == length + 1)
+        {
+            current_entry = (history_entry_t *)calloc(1, sizeof(history_entry_t));
+            if (!current_entry)
+            {
+                g_list_free_full(history_entries, _free_history_entry);
+                g_free(key);
+                return NULL;
+            }
+            current_entry->blendop_version = 1;
+            history_entries = g_list_append(history_entries, current_entry);
+        }
+        else
+        {
+            current_entry = (history_entry_t *)g_list_nth_data(history_entries, n - 1);
+        }
+
+        if (g_str_has_prefix(key_iter, "darktable:operation"))
+        {
+            current_entry->have_operation = TRUE;
+            std::string value_item = history->toString();
+            current_entry->operation = g_strdup(value_item.c_str());
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:num"))
+        {
+            current_entry->num = history->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:enabled"))
+        {
+            current_entry->enabled = history->toLong() == 1;
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:modversion"))
+        {
+            current_entry->have_modversion = TRUE;
+            current_entry->modversion = history->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:params"))
+        {
+            current_entry->have_params = TRUE;
+            std::string value_item = history->toString();
+            current_entry->params =
+                dt_exif_xmp_decode(value_item.c_str(), history->size(), &current_entry->params_len);
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:multi_name_hand_edited"))
+        {
+            current_entry->multi_name_hand_edited = history->toLong() == 1;
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:multi_name"))
+        {
+            std::string value_item = history->toString();
+            current_entry->multi_name = g_strdup(value_item.c_str());
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:multi_priority"))
+        {
+            current_entry->multi_priority = history->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:blendop_version"))
+        {
+            current_entry->blendop_version = history->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:blendop_params"))
+        {
+            std::string value_item = history->toString();
+            current_entry->blendop_params = dt_exif_xmp_decode(value_item.c_str(), history->size(),
+                                                               &current_entry->blendop_params_len);
+        }
+
         g_free(key);
     }
 
-    // A final sanity check
     for (GList *iter = history_entries; iter; iter = g_list_next(iter))
     {
         history_entry_t *entry = (history_entry_t *)iter->data;
         if (!(entry->have_operation && entry->have_params && entry->have_modversion))
         {
             dt_print(DT_DEBUG_IMAGEIO,
-                     "[exif] error: reading history from '%s' failed due to missing tags",
-                     filename);
+                     "[exif] current XMP history in '%s' is missing required fields", filename);
             g_list_free_full(history_entries, _free_history_entry);
-            history_entries = NULL;
-            break;
+            return NULL;
         }
     }
 
@@ -3640,207 +3474,115 @@ static void _free_mask_entry(gpointer data)
     free(entry);
 }
 
-static GHashTable *_read_masks(Exiv2::XmpData &xmpData, const char *filename, const int version)
+static GList *_read_masks(Exiv2::XmpData &xmpData, const char *filename)
 {
-    GHashTable *mask_entries =
-        g_hash_table_new_full(g_int_hash, g_int_equal, NULL, _free_mask_entry);
+    GList *mask_entries = NULL;
 
-    // TODO: turn that into something like Xmp.darktable.history!
-    Exiv2::XmpData::iterator mask;
-    Exiv2::XmpData::iterator mask_name;
-    Exiv2::XmpData::iterator mask_type;
-    Exiv2::XmpData::iterator mask_version;
-    Exiv2::XmpData::iterator mask_id;
-    Exiv2::XmpData::iterator mask_nb;
-    Exiv2::XmpData::iterator mask_src;
-    if ((mask = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask"))) != xmpData.end() &&
-        (mask_src = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_src"))) != xmpData.end() &&
-        (mask_name = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_name"))) != xmpData.end() &&
-        (mask_type = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_type"))) != xmpData.end() &&
-        (mask_version = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_version"))) !=
-            xmpData.end() &&
-        (mask_id = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_id"))) != xmpData.end() &&
-        (mask_nb = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.mask_nb"))) != xmpData.end())
+    for (auto mask = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.masks_history"));
+         mask != xmpData.end(); mask++)
     {
-        // Fixes API change happened after Exiv2 v0.27.2.1
-        const size_t cnt = (size_t)mask->count();
-        const size_t mask_src_cnt = (size_t)mask_src->count();
-        const size_t mask_name_cnt = (size_t)mask_name->count();
-        const size_t mask_type_cnt = (size_t)mask_type->count();
-        const size_t mask_version_cnt = (size_t)mask_version->count();
-        const size_t mask_id_cnt = (size_t)mask_id->count();
-        const size_t mask_nb_cnt = (size_t)mask_nb->count();
-
-        if (cnt == mask_src_cnt && cnt == mask_name_cnt && cnt == mask_type_cnt &&
-            cnt == mask_version_cnt && cnt == mask_id_cnt && cnt == mask_nb_cnt)
+        std::string key_item = mask->key();
+        char *key = g_strdup(key_item.c_str());
+        char *key_iter = key;
+        if (!g_str_has_prefix(key, "Xmp.darktable.masks_history["))
         {
-            for (size_t i = 0; i < cnt; i++)
-            {
-                mask_entry_t *entry = (mask_entry_t *)calloc(1, sizeof(mask_entry_t));
-                if (!entry)
-                    break;
-                entry->version = version;
-                entry->mask_id = mask_id->toLong(i);
-                entry->mask_type = mask_type->toLong(i);
-                std::string mask_name_str = mask_name->toString(i);
-                if (mask_name_str.c_str() != NULL)
-                    entry->mask_name = g_strdup(mask_name_str.c_str());
-                else
-                    entry->mask_name = g_strdup("form");
-
-                entry->mask_version = mask_version->toLong(i);
-
-                std::string mask_str = mask->toString(i);
-                const char *mask_c = mask_str.c_str();
-                const size_t mask_c_len = strlen(mask_c);
-                entry->mask_points =
-                    dt_exif_xmp_decode(mask_c, mask_c_len, &entry->mask_points_len);
-
-                entry->mask_nb = mask_nb->toLong(i);
-
-                std::string mask_src_str = mask_src->toString(i);
-                const char *mask_src_c = mask_src_str.c_str();
-                const size_t mask_src_c_len = strlen(mask_src_c);
-                entry->mask_src =
-                    dt_exif_xmp_decode(mask_src_c, mask_src_c_len, &entry->mask_src_len);
-
-                g_hash_table_insert(mask_entries, &entry->mask_id, (gpointer)entry);
-            }
+            g_free(key);
+            continue;
         }
+
+        key_iter += strlen("Xmp.darktable.masks_history[");
+        errno = 0;
+        const unsigned int n = strtol(key_iter, &key_iter, 10);
+        const unsigned int length = g_list_length(mask_entries);
+        if (errno || n == 0 || n > length + 1 || *(key_iter++) != ']')
+        {
+            dt_print(DT_DEBUG_IMAGEIO, "[exif] malformed mask entry in '%s'", filename);
+            g_list_free_full(mask_entries, _free_mask_entry);
+            g_free(key);
+            return NULL;
+        }
+        if (*(key_iter++) != '/')
+        {
+            g_free(key);
+            continue;
+        }
+        if (*key_iter == '?')
+            key_iter++;
+
+        mask_entry_t *current_entry = NULL;
+        if (n == length + 1)
+        {
+            current_entry = (mask_entry_t *)calloc(1, sizeof(mask_entry_t));
+            if (!current_entry)
+            {
+                g_list_free_full(mask_entries, _free_mask_entry);
+                g_free(key);
+                return NULL;
+            }
+            mask_entries = g_list_append(mask_entries, current_entry);
+        }
+        else
+        {
+            current_entry = (mask_entry_t *)g_list_nth_data(mask_entries, n - 1);
+        }
+
+        if (g_str_has_prefix(key_iter, "darktable:mask_num"))
+        {
+            current_entry->mask_num = mask->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_id"))
+        {
+            current_entry->mask_id = mask->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_type"))
+        {
+            current_entry->mask_type = mask->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_name"))
+        {
+            std::string value_item = mask->toString();
+            current_entry->mask_name = g_strdup(value_item.c_str());
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_version"))
+        {
+            current_entry->mask_version = mask->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_points"))
+        {
+            std::string value_item = mask->toString();
+            current_entry->mask_points = dt_exif_xmp_decode(value_item.c_str(), mask->size(),
+                                                            &current_entry->mask_points_len);
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_nb"))
+        {
+            current_entry->mask_nb = mask->toLong();
+        }
+        else if (g_str_has_prefix(key_iter, "darktable:mask_src"))
+        {
+            std::string value_item = mask->toString();
+            current_entry->mask_src =
+                dt_exif_xmp_decode(value_item.c_str(), mask->size(), &current_entry->mask_src_len);
+        }
+
+        g_free(key);
     }
 
     return mask_entries;
 }
 
-static GList *_read_masks_v3(Exiv2::XmpData &xmpData, const char *filename, const int version)
-{
-    GList *history_entries = NULL;
-    mask_entry_t *current_entry = NULL;
-
-    for (auto history = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.masks_history"));
-         history != xmpData.end(); history++)
-    {
-        // TODO: Support human readable params via introspection with something like this:
-        // XmpText: Xmp.darktable.history[1]/darktable:settings[1]/darktable:name = width
-        // XmpText: Xmp.darktable.history[1]/darktable:settings[1]/darktable:value = 23
-
-        std::string key_item = history->key();
-        char *key = g_strdup(key_item.c_str());
-        char *key_iter = key;
-        if (g_str_has_prefix(key, "Xmp.darktable.masks_history["))
-        {
-            key_iter += strlen("Xmp.darktable.masks_history[");
-            errno = 0;
-            unsigned int n = strtol(key_iter, &key_iter, 10);
-            if (errno)
-            {
-                dt_print(DT_DEBUG_IMAGEIO, "error reading masks history from '%s' (%s)", key,
-                         filename);
-                g_list_free_full(history_entries, _free_mask_entry);
-                g_free(key);
-                return NULL;
-            }
-
-            // Skip everything that isn't part of the actual array
-            if (*(key_iter++) != ']')
-            {
-                dt_print(DT_DEBUG_IMAGEIO, "error reading masks history from '%s' (%s)", key,
-                         filename);
-                g_list_free_full(history_entries, _free_mask_entry);
-                g_free(key);
-                return NULL;
-            }
-            if (*(key_iter++) != '/')
-                goto skip;
-            if (*key_iter == '?')
-                key_iter++;
-
-            // Make sure we are filling in the details of the correct entry
-            unsigned int length = g_list_length(history_entries);
-            if (n > length)
-            {
-                current_entry = (mask_entry_t *)calloc(1, sizeof(mask_entry_t));
-                if (current_entry)
-                {
-                    current_entry->version = version;
-                    history_entries = g_list_append(history_entries, current_entry);
-                }
-            }
-            else if (n < length)
-            {
-                // AFAICT this can't happen with regular Exiv2 parsed XMP
-                // data, but better safe than sorry. It can happen though
-                // when constructing things in a unusual order and then
-                // passing it to us without serializing it in between.
-                current_entry = (mask_entry_t *)g_list_nth_data(history_entries, n - 1);
-                // XMP starts counting at 1!
-            }
-
-            // Go on reading things into current_entry
-            if (g_str_has_prefix(key_iter, "darktable:mask_num"))
-            {
-                current_entry->mask_num = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_id"))
-            {
-                current_entry->mask_id = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_type"))
-            {
-                current_entry->mask_type = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_name"))
-            {
-                std::string value_item = history->toString();
-                current_entry->mask_name = g_strdup(value_item.c_str());
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_version"))
-            {
-                current_entry->mask_version = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_points"))
-            {
-                std::string value_item = history->toString();
-                current_entry->mask_points = dt_exif_xmp_decode(value_item.c_str(), history->size(),
-                                                                &current_entry->mask_points_len);
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_nb"))
-            {
-                current_entry->mask_nb = history->toLong();
-            }
-            else if (g_str_has_prefix(key_iter, "darktable:mask_src"))
-            {
-                std::string value_item = history->toString();
-                current_entry->mask_src = dt_exif_xmp_decode(value_item.c_str(), history->size(),
-                                                             &current_entry->mask_src_len);
-            }
-        }
-    skip:
-        g_free(key);
-    }
-
-    return history_entries;
-}
-
 static void _add_mask_entry_to_db(const dt_imgid_t imgid, mask_entry_t *entry)
 {
-    // Add the mask entry only once
     if (entry->already_added)
         return;
     entry->already_added = TRUE;
 
-    const int mask_num = 0;
-
     sqlite3_stmt *stmt;
-    // clang-format off
-  DT_DEBUG_SQLITE3_PREPARE_V2(
-    dt_database_get(darktable.db),
-    "INSERT INTO main.masks_history"
-    " (imgid, num, formid, form, name, version, points, points_count, source)"
-    " VALUES (?1, ?9, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-    -1, &stmt, NULL);
-
-    // clang-format on
+    DT_DEBUG_SQLITE3_PREPARE_V2(
+        dt_database_get(darktable.db),
+        "INSERT INTO main.masks_history"
+        " (imgid, num, formid, form, name, version, points, points_count, source)"
+        " VALUES (?1, ?9, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        -1, &stmt, NULL);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, entry->mask_id);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, entry->mask_type);
@@ -3850,100 +3592,12 @@ static void _add_mask_entry_to_db(const dt_imgid_t imgid, mask_entry_t *entry)
                                SQLITE_TRANSIENT);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 7, entry->mask_nb);
     DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 8, entry->mask_src, entry->mask_src_len, SQLITE_TRANSIENT);
-    if (entry->version < 3)
-    {
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 9, mask_num);
-    }
-    else
-    {
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 9, entry->mask_num);
-    }
+    DT_DEBUG_SQLITE3_BIND_INT(stmt, 9, entry->mask_num);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 }
 
-static void _add_non_clone_mask_entries_to_db(gpointer key, gpointer value, gpointer user_data)
-{
-    dt_imgid_t imgid = *(int *)user_data;
-    mask_entry_t *entry = (mask_entry_t *)value;
-    if (!(entry->mask_type & (DT_MASKS_CLONE | DT_MASKS_NON_CLONE)))
-        _add_mask_entry_to_db(imgid, entry);
-}
-
-static void _add_mask_entries_to_db(const dt_imgid_t imgid, GHashTable *mask_entries,
-                                    const int mask_id)
-{
-    if (mask_id <= 0)
-        return;
-
-    // Look for mask_id in the hash table
-    mask_entry_t *entry = (mask_entry_t *)g_hash_table_lookup(mask_entries, &mask_id);
-
-    if (!entry)
-        return;
-
-    // If it's a group: recurse into the children first
-    if (entry->mask_type & DT_MASKS_GROUP)
-    {
-        dt_masks_point_group_t *group = (dt_masks_point_group_t *)entry->mask_points;
-        if ((int)(entry->mask_nb * sizeof(dt_masks_point_group_t)) != entry->mask_points_len)
-        {
-            dt_print(DT_DEBUG_ALWAYS,
-                     "[masks] error loading masks from XMP file, bad binary blob size.");
-            return;
-        }
-        for (int i = 0; i < entry->mask_nb; i++)
-            _add_mask_entries_to_db(imgid, mask_entries, group[i].formid);
-    }
-
-    _add_mask_entry_to_db(imgid, entry);
-}
-
-// Get MAX multi_priority
-int _get_max_multi_priority(GList *history, const char *operation)
-{
-    int max_prio = 0;
-
-    for (GList *iter = history; iter; iter = g_list_next(iter))
-    {
-        history_entry_t *entry = (history_entry_t *)iter->data;
-
-        if (!strcmp(entry->operation, operation))
-            max_prio = MAX(max_prio, entry->multi_priority);
-    }
-
-    return max_prio;
-}
-
-static gboolean _image_altered_deprecated(const dt_imgid_t imgid)
-{
-    sqlite3_stmt *stmt;
-
-    const gboolean basecurve_auto_apply = dt_is_display_referred();
-
-    char query[1024] = {0};
-
-    // clang-format off
-  snprintf(query, sizeof(query),
-           "SELECT 1"
-           " FROM main.history, main.images"
-           " WHERE id=?1 AND imgid=id AND num<history_end AND enabled=1"
-           "       AND operation NOT IN ('flip', 'dither', 'highlights', 'rawprepare',"
-           "                             'colorin', 'colorout', 'gamma', 'demosaic',"
-           "                             'temperature'%s)",
-           basecurve_auto_apply ? ", 'basecurve'" : "");
-    // clang-format on
-
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, imgid);
-
-    const gboolean altered = (sqlite3_step(stmt) == SQLITE_ROW);
-    sqlite3_finalize(stmt);
-
-    return altered;
-}
-
-// Need a write lock on *img (non-const) to write stars (and soon color labels).
+// Need a write lock on *img (non-const) to write stars and color labels.
 gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean history_only)
 {
     if (!img)
@@ -3952,41 +3606,51 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
                  filename);
         return TRUE;
     }
-    // Exclude pfm to avoid stupid errors on the console
+
     const char *c = filename + strlen(filename) - 4;
     if (c >= filename && !strcmp(c, ".pfm"))
         return TRUE;
+
     try
     {
-        // Read XMP sidecar
         std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(WIDEN(filename)));
         assert(image.get() != 0);
         read_metadata_threadsafe(image);
         Exiv2::XmpData &xmpData = image->xmpData();
+        Exiv2::XmpData::iterator pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.xmp_version"));
+        const bool has_darktable_namespace =
+            image->xmpPacket().find("xmlns:darktable=") != std::string::npos;
 
-        sqlite3_stmt *stmt;
-
-        Exiv2::XmpData::iterator pos;
-
-        int xmp_version = 0;
-        GList *iop_order_list = NULL;
-        dt_iop_order_t iop_order_version = DT_IOP_ORDER_LEGACY;
-
-        int num_masks = 0;
-        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.xmp_version"))) != xmpData.end())
-            xmp_version = pos->toLong();
-
-        if (!history_only)
+        if (pos == xmpData.end())
         {
-            // Otherwise we ignore title, description, ... from non-dt XMP files :(
-            const size_t ns_pos =
-                image->xmpPacket().find("xmlns:darktable=\"http://darktable.sf.net/\"");
-            const bool is_a_dt_xmp = (ns_pos != std::string::npos);
-            _exif_decode_xmp_data(img, xmpData, is_a_dt_xmp ? xmp_version : -1, false);
+            if (has_darktable_namespace)
+            {
+                dt_print(DT_DEBUG_IMAGEIO, "[exif] refusing unversioned darktable XMP sidecar '%s'",
+                         filename);
+                return TRUE;
+            }
+
+            if (!history_only)
+                _exif_decode_xmp_data(img, xmpData, -1, false);
+            img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
+            img->flags &= ~DT_IMAGE_REMOVE;
+            return FALSE;
         }
 
-        // Convert legacy flip bits (will not be written anymore, convert to
-        // flip history item here):
+        if (pos->toLong() != DT_XMP_EXIF_VERSION)
+        {
+            dt_print(
+                DT_DEBUG_IMAGEIO,
+                "[exif] refusing XMP schema version %lld in '%s'; DarkTableNext requires version %d",
+                (long long)pos->toLong(), filename, DT_XMP_EXIF_VERSION);
+            return TRUE;
+        }
+
+        if (!history_only)
+            _exif_decode_xmp_data(img, xmpData, DT_XMP_EXIF_VERSION, false);
+        img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
+        img->flags &= ~DT_IMAGE_REMOVE;
+
         if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.raw_params"))) != xmpData.end())
         {
             union
@@ -3995,252 +3659,107 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
                 dt_image_raw_parameters_t out;
             } raw_params;
             raw_params.in = pos->toLong();
-            const int32_t user_flip = raw_params.out.user_flip;
-            img->legacy_flip.user_flip = user_flip;
+            img->legacy_flip.user_flip = raw_params.out.user_flip;
             img->legacy_flip.legacy = 0;
         }
 
         int32_t preset_applied = 0;
-
         if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.auto_presets_applied"))) !=
             xmpData.end())
-        {
             preset_applied = pos->toLong();
 
-            // In any case, this is no legacy image.
-            img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
-        }
-        else if (xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.xmp_version")) == xmpData.end())
+        GList *iop_order_list = NULL;
+        dt_iop_order_t iop_order_version = DT_IOP_ORDER_CUSTOM;
+        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.iop_order_version"))) ==
+            xmpData.end())
         {
-            // If there is no darktable xmp_version in the XMP, this XMP
-            // must have been generated by another program; since this is
-            // the first time darktable sees it, there can't be legacy
-            // presets.
-            img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
+            dt_print(DT_DEBUG_IMAGEIO, "[exif] XMP sidecar '%s' is missing its IOP order version",
+                     filename);
+            return TRUE;
+        }
+        iop_order_version = (dt_iop_order_t)pos->toLong();
+
+        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.iop_order_list"))) != xmpData.end())
+            iop_order_list = dt_ioppr_deserialize_text_iop_order_list(pos->toString().c_str());
+
+        if (iop_order_version == DT_IOP_ORDER_CUSTOM)
+        {
+            if (!iop_order_list)
+            {
+                dt_print(DT_DEBUG_IMAGEIO, "[exif] XMP sidecar '%s' has no custom IOP order",
+                         filename);
+                return TRUE;
+            }
+        }
+        else if (iop_order_version == DT_IOP_ORDER_V50 || iop_order_version == DT_IOP_ORDER_V50_JPG)
+        {
+            if (!iop_order_list)
+                iop_order_list = dt_ioppr_get_iop_order_list_version(iop_order_version);
         }
         else
         {
-            // So we are legacy (thus have to clear the no-legacy flag)
-            img->flags &= ~DT_IMAGE_NO_LEGACY_PRESETS;
+            dt_print(DT_DEBUG_IMAGEIO, "[exif] refusing unsupported IOP order version %d in '%s'",
+                     iop_order_version, filename);
+            g_list_free_full(iop_order_list, free);
+            return TRUE;
         }
-        // When we are reading the XMP data it doesn't make sense to flag
-        // the image as removed
-        img->flags &= ~DT_IMAGE_REMOVE;
 
-        if (xmp_version == 4 || xmp_version == 5)
+        GList *mask_entries = _read_masks(xmpData, filename);
+        const bool has_history =
+            xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history")) != xmpData.end();
+        GList *history_entries = _read_history(xmpData, filename);
+        if (has_history && !history_entries)
         {
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.iop_order_version"))) !=
-                xmpData.end())
-            {
-                iop_order_version = (dt_iop_order_t)pos->toLong();
-            }
-
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.iop_order_list"))) !=
-                xmpData.end())
-            {
-                iop_order_list = dt_ioppr_deserialize_text_iop_order_list(pos->toString().c_str());
-            }
-            else
-                iop_order_list = dt_ioppr_get_iop_order_list_version(iop_order_version);
-        }
-        else if (xmp_version == 3)
-        {
-            iop_order_version = DT_IOP_ORDER_LEGACY;
-
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.iop_order_version"))) !=
-                xmpData.end())
-            {
-                //  All iop-order version before 3 are legacy one. Starting
-                //  with version 3 we have the first attempts to propose the
-                //  final v3 iop-order.
-                iop_order_version =
-                    pos->toLong() < 3 ? DT_IOP_ORDER_LEGACY : DT_DEFAULT_IOP_ORDER_RAW;
-
-                iop_order_list = dt_ioppr_get_iop_order_list_version(iop_order_version);
-            }
-            else
-                iop_order_list = dt_ioppr_get_iop_order_list_version(DT_IOP_ORDER_LEGACY);
-        }
-        else
-        {
-            iop_order_version = DT_IOP_ORDER_LEGACY;
-            iop_order_list = dt_ioppr_get_iop_order_list_version(DT_IOP_ORDER_LEGACY);
+            g_list_free_full(iop_order_list, free);
+            g_list_free_full(mask_entries, _free_mask_entry);
+            return TRUE;
         }
 
-        // masks
-        GHashTable *mask_entries = NULL;
-        GList *mask_entries_v3 = NULL;
+        sqlite3_stmt *stmt = NULL;
+        gboolean all_ok = TRUE;
+        int num = 0;
 
-        // Clean all old masks for this image
+        dt_database_start_transaction(darktable.db);
+
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                     "DELETE FROM main.masks_history WHERE imgid = ?1", -1, &stmt,
                                     NULL);
         DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-        sqlite3_step(stmt);
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+        {
+            all_ok = FALSE;
+            goto end;
+        }
         sqlite3_finalize(stmt);
+        stmt = NULL;
 
-        // Read the masks from the file first so we can add them to the db
-        // while reading history entries.
-        if (xmp_version < 3)
-            mask_entries = _read_masks(xmpData, filename, xmp_version);
-        else
-            mask_entries_v3 = _read_masks_v3(xmpData, filename, xmp_version);
-
-        // Now add all masks that are not used for cloning. Keeping them might be useful.
-        // TODO: Make this configurable? or remove it altogether?
-        dt_database_start_transaction(darktable.db);
-
-        if (xmp_version < 3)
-        {
-            g_hash_table_foreach(mask_entries, _add_non_clone_mask_entries_to_db, &img->id);
-        }
-        else
-        {
-            for (GList *m_entries = g_list_first(mask_entries_v3); m_entries;
-                 m_entries = g_list_next(m_entries))
-            {
-                mask_entry_t *mask_entry = (mask_entry_t *)m_entries->data;
-
-                _add_mask_entry_to_db(img->id, mask_entry);
-            }
-        }
-
-        dt_database_release_transaction(darktable.db);
-
-        // History
-        int num = 0;
-        gboolean all_ok = TRUE;
-        GList *history_entries = NULL;
-        gboolean has_highlights = FALSE;
-        gboolean has_rawprepare = FALSE;
-        int add_to_history_end = 0;
-
-        if (xmp_version < 2)
-        {
-            std::string &xmpPacket = image->xmpPacket();
-            history_entries = _read_history_v1(xmpPacket, filename, 0);
-            if (!history_entries) // didn't work? try super old version with rdf:Bag
-                history_entries = _read_history_v1(xmpPacket, filename, 1);
-        }
-        else if (xmp_version == 2 || xmp_version == 3 || xmp_version == 4 || xmp_version == 5)
-        {
-            history_entries = _read_history_v2(xmpData, filename);
-        }
-        else
-        {
-            dt_print(DT_DEBUG_IMAGEIO, "error: XMP schema version %d in '%s' not supported",
-                     xmp_version, filename);
-            g_hash_table_destroy(mask_entries);
-            return TRUE;
-        }
-
-        dt_database_start_transaction(darktable.db);
+        for (GList *entry_iter = mask_entries; entry_iter; entry_iter = g_list_next(entry_iter))
+            _add_mask_entry_to_db(img->id, (mask_entry_t *)entry_iter->data);
 
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                     "DELETE FROM main.history WHERE imgid = ?1", -1, &stmt, NULL);
         DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
         if (sqlite3_step(stmt) != SQLITE_DONE)
         {
-            dt_print(DT_DEBUG_ALWAYS, "[exif] error deleting history for image %d", img->id);
-            dt_print(DT_DEBUG_ALWAYS, "[exif]   %s", sqlite3_errmsg(dt_database_get(darktable.db)));
             all_ok = FALSE;
             goto end;
         }
         sqlite3_finalize(stmt);
+        stmt = NULL;
 
-        if (xmp_version < 5)
+        DT_DEBUG_SQLITE3_PREPARE_V2(
+            dt_database_get(darktable.db),
+            "INSERT INTO main.history"
+            " (imgid, num, module, operation, op_params, enabled, blendop_params, blendop_version,"
+            "  multi_priority, multi_name, multi_name_hand_edited)"
+            " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            -1, &stmt, NULL);
+
+        for (GList *entry_iter = history_entries; entry_iter; entry_iter = g_list_next(entry_iter))
         {
-            /*
-      Check if the XMP has the now default enabled highlights module.
-
-      If not we want to add this module but with the CLIP method instead of
-      the new default OPPOSED one. This is to keep compatibility with old-edits.
-
-      Starting with xmp_version = 5 all modules are always recorded, so we don't
-      want to check for this.
-      */
-
-            for (GList *iter = history_entries; iter; iter = g_list_next(iter))
-            {
-                history_entry_t *entry = (history_entry_t *)iter->data;
-
-                if (!strcmp(entry->operation, "highlights"))
-                    has_highlights = TRUE;
-                else if (!strcmp(entry->operation, "rawprepare"))
-                    has_rawprepare = TRUE;
-            }
-
-            // Module highlights is not part of history, add a simple CLIP method
-            if (has_rawprepare && !has_highlights)
-            {
-                // The following lines are Exif encoded parameters. The parameters from
-                // iop dt_iop_highlights_params_t are taken as raw bytes and encoded to
-                // be stored into the XMP. We have captured here:
-                //   - The default CLIP parameters (only the method being set to
-                //     DT_IOP_HIGHLIGHTS_CLIP and the clip field are actually needed)
-                //     for version 4 of highlights.
-                //   - The default blend parameters (no blending activated) for
-                //     version 13 of dt_develop_blend_params_t.
-
-                const char *default_clip = "000000000000803f00000000000000000000803f00000000"
-                                           "1e00000006000000cdcccc3e000000400000000000000000";
-                const char *no_blend = "gz11eJxjYGBgkGAAgRNODGiAEV0AJ2iwh+CRyscOAAdeGQQ=";
-
-                history_entry_t *entry = (history_entry_t *)calloc(1, sizeof(history_entry_t));
-                if (entry)
-                {
-                    entry->operation = g_strdup("highlights");
-                    entry->enabled = TRUE;
-                    entry->modversion = 4;
-                    entry->params =
-                        dt_exif_xmp_decode(default_clip, strlen(default_clip), &entry->params_len);
-                    entry->multi_name = g_strdup("");
-                    entry->multi_name_hand_edited = FALSE;
-                    entry->multi_priority = 0;
-                    entry->blendop_version = 13;
-                    entry->blendop_params =
-                        dt_exif_xmp_decode(no_blend, strlen(no_blend), &entry->blendop_params_len);
-                    // We insert the module in second position, just after rawprepare.
-                    // This is to ensure that history_end do include this module.
-                    // Just adding one to history_end won't work if the history_end
-                    // is not pointing to the last history item.
-                    entry->num = 1;
-                    entry->iop_order = -1;
-
-                    add_to_history_end++;
-                    history_entries = g_list_append(history_entries, entry);
-                }
-            }
-        }
-
-        // clang-format off
-    DT_DEBUG_SQLITE3_PREPARE_V2
-      (dt_database_get(darktable.db),
-       "INSERT INTO main.history"
-       " (imgid, num, module, operation, op_params, enabled,"
-       "  blendop_params, blendop_version, multi_priority,"
-       "  multi_name, multi_name_hand_edited)"
-       " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)", -1, &stmt, NULL);
-        // clang-format on
-
-        for (GList *iter = history_entries; iter; iter = g_list_next(iter))
-        {
-            history_entry_t *entry = (history_entry_t *)iter->data;
-
+            history_entry_t *entry = (history_entry_t *)entry_iter->data;
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-            if (xmp_version < 3)
-            {
-                DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, num);
-            }
-            else
-            {
-                DT_DEBUG_SQLITE3_BIND_INT(
-                    stmt, 2,
-                    entry->num + (entry->num > 1 || (entry->num == 1 &&
-                                                     strcmp(entry->operation, "highlights")) ?
-                                      add_to_history_end :
-                                      0));
-            }
+            DT_DEBUG_SQLITE3_BIND_INT(stmt, 2, entry->num);
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 3, entry->modversion);
             DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 4, entry->operation, -1, SQLITE_TRANSIENT);
             DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 5, entry->params, entry->params_len, SQLITE_TRANSIENT);
@@ -4249,14 +3768,6 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
             {
                 DT_DEBUG_SQLITE3_BIND_BLOB(stmt, 7, entry->blendop_params,
                                            entry->blendop_params_len, SQLITE_TRANSIENT);
-
-                if (xmp_version < 3)
-                {
-                    // Check what mask entries belong to this iop and add them to the db
-                    const dt_develop_blend_params_t *blendop_params =
-                        (dt_develop_blend_params_t *)entry->blendop_params;
-                    _add_mask_entries_to_db(img->id, mask_entries, blendop_params->mask_id);
-                }
             }
             else
             {
@@ -4264,297 +3775,102 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
             }
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 8, entry->blendop_version);
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 9, entry->multi_priority);
-            if (entry->multi_name)
-            {
-                DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 10, entry->multi_name, -1, SQLITE_TRANSIENT);
-            }
-            else
-            {
-                DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 10, "", -1, SQLITE_TRANSIENT);
-            }
+            DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 10, entry->multi_name ? entry->multi_name : "", -1,
+                                       SQLITE_TRANSIENT);
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 11, entry->multi_name_hand_edited);
 
             if (sqlite3_step(stmt) != SQLITE_DONE)
             {
-                dt_print(DT_DEBUG_ALWAYS, "[exif] error adding history entry for image %d",
-                         img->id);
-                dt_print(DT_DEBUG_ALWAYS, "[exif]   %s",
-                         sqlite3_errmsg(dt_database_get(darktable.db)));
                 all_ok = FALSE;
                 goto end;
             }
             sqlite3_reset(stmt);
             sqlite3_clear_bindings(stmt);
-
             num++;
         }
         sqlite3_finalize(stmt);
+        stmt = NULL;
 
-        // We now need to create and store the proper iop-order taking
-        // into account all multi-instances for previous xmp versions.
-
-        if (xmp_version < 4)
-        {
-            // In this version we had iop-order, use it
-
-            for (GList *iter = history_entries; iter; iter = g_list_next(iter))
-            {
-                history_entry_t *entry = (history_entry_t *)iter->data;
-
-                dt_iop_order_entry_t *e =
-                    (dt_iop_order_entry_t *)malloc(sizeof(dt_iop_order_entry_t));
-                memcpy(e->operation, entry->operation, sizeof(e->operation));
-                e->instance = entry->multi_priority;
-
-                if (xmp_version < 3)
-                {
-                    // Prior to v3 there was no iop-order, all multi instances
-                    // where grouped, use the multi_priority to restore the
-                    // order.
-                    GList *base_order =
-                        dt_ioppr_get_iop_order_link(iop_order_list, entry->operation, -1);
-
-                    if (base_order)
-                        e->o.iop_order_f =
-                            ((dt_iop_order_entry_t *)(base_order->data))->o.iop_order_f -
-                            entry->multi_priority / 100.0f;
-                    else
-                    {
-                        dt_print(
-                            DT_DEBUG_ALWAYS,
-                            "[exif] cannot get iop-order for module '%s', XMP may be corrupted",
-                            entry->operation);
-                        g_list_free_full(iop_order_list, free);
-                        g_list_free_full(history_entries, _free_history_entry);
-                        g_list_free_full(mask_entries_v3, _free_mask_entry);
-                        if (mask_entries)
-                            g_hash_table_destroy(mask_entries);
-                        g_free(e);
-                        return TRUE;
-                    }
-                }
-                else
-                {
-                    // Otherwise use the iop_order for the entry
-                    e->o.iop_order_f = entry->iop_order; // legacy iop-order is
-                                                         // used to insert item
-                                                         // at the right
-                                                         // location
-                }
-
-                // Remove a current entry from the iop-order list if found as
-                // it will be replaced, possibly with another iop-order with a
-                // new item in the history.
-
-                GList *link =
-                    dt_ioppr_get_iop_order_link(iop_order_list, e->operation, e->instance);
-                if (link)
-                    iop_order_list = g_list_delete_link(iop_order_list, link);
-
-                iop_order_list = g_list_append(iop_order_list, e);
-            }
-
-            // And finally reorder the full list based on the iop-order.
-            iop_order_list = g_list_sort(iop_order_list, dt_sort_iop_list_by_order_f);
-        }
-
-        // If masks have been read, create a mask manager entry in history.
-        if (xmp_version < 3)
-        {
-            DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                        "SELECT COUNT(*) FROM main.masks_history WHERE imgid = ?1",
-                                        -1, &stmt, NULL);
-            DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-
-            if (sqlite3_step(stmt) == SQLITE_ROW)
-                num_masks = sqlite3_column_int(stmt, 0);
-            sqlite3_finalize(stmt);
-
-            if (num_masks > 0)
-            {
-                // Make room for mask_manager entry
-                DT_DEBUG_SQLITE3_PREPARE_V2(
-                    dt_database_get(darktable.db),
-                    "UPDATE main.history SET num = num + 1 WHERE imgid = ?1", -1, &stmt, NULL);
-                DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-                sqlite3_step(stmt);
-                sqlite3_finalize(stmt);
-
-                // Insert mask_manager entry
-                // clang-format off
-        DT_DEBUG_SQLITE3_PREPARE_V2
-          (dt_database_get(darktable.db),
-           "INSERT INTO main.history"
-           " (imgid, num, module, operation, op_params, enabled, "
-           "  blendop_params, blendop_version, multi_priority, multi_name) "
-           "VALUES"
-           " (?1, 0, 1, 'mask_manager', NULL, 0, NULL, 0, 0, '')",
-           -1, &stmt, NULL);
-                // clang-format on
-                DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-
-                if (sqlite3_step(stmt) != SQLITE_DONE)
-                {
-                    dt_print(DT_DEBUG_ALWAYS, "[exif] error adding mask history entry for image %d",
-                             img->id);
-                    dt_print(DT_DEBUG_ALWAYS, "[exif]   %s",
-                             sqlite3_errmsg(dt_database_get(darktable.db)));
-                    all_ok = FALSE;
-                    goto end;
-                }
-                sqlite3_finalize(stmt);
-
-                num++;
-            }
-        }
-
-        // We shouldn't change history_end when no history was read!
         if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_end"))) != xmpData.end() &&
             num > 0)
         {
-            stmt = NULL;
-
-            int history_end = MIN(pos->toLong(), num) + add_to_history_end;
-            if (num_masks > 0)
-                history_end++;
-
-            if ((history_end < 1) && preset_applied)
-                preset_applied = -1;
-
-            const gboolean ok = dt_image_set_history_end(img->id, history_end);
-
-            if (!ok)
+            if (!dt_image_set_history_end(img->id, MIN(pos->toLong(), num)))
             {
-                dt_print(DT_DEBUG_ALWAYS, "[exif] error writing history_end for image %d", img->id);
-                dt_print(DT_DEBUG_ALWAYS, "[exif]   %s",
-                         sqlite3_errmsg(dt_database_get(darktable.db)));
                 all_ok = FALSE;
                 goto end;
             }
         }
         else
         {
-            if (preset_applied)
-                preset_applied = -1;
-            // clang-format off
-      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                  "UPDATE main.images "
-                                  " SET history_end = (SELECT IFNULL(MAX(num) + 1, 0)"
-                                  "                    FROM main.history"
-                                  "                    WHERE imgid = ?1)"
-                                  " WHERE id = ?1", -1,
-                                  &stmt, NULL);
-            // clang-format on
+            DT_DEBUG_SQLITE3_PREPARE_V2(
+                dt_database_get(darktable.db),
+                "UPDATE main.images"
+                " SET history_end = (SELECT IFNULL(MAX(num) + 1, 0) FROM main.history WHERE imgid = ?1)"
+                " WHERE id = ?1",
+                -1, &stmt, NULL);
             DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, img->id);
-
             if (sqlite3_step(stmt) != SQLITE_DONE)
             {
-                dt_print(DT_DEBUG_ALWAYS, "[exif] error writing history_end for image %d", img->id);
-                dt_print(DT_DEBUG_ALWAYS, "[exif]   %s",
-                         sqlite3_errmsg(dt_database_get(darktable.db)));
                 all_ok = FALSE;
                 goto end;
             }
+            sqlite3_finalize(stmt);
+            stmt = NULL;
         }
+
         if (!dt_ioppr_write_iop_order_list(iop_order_list, img->id))
-        {
-            dt_print(DT_DEBUG_ALWAYS, "[exif] error writing iop_list for image %d", img->id);
-            dt_print(DT_DEBUG_ALWAYS, "[exif]   %s", sqlite3_errmsg(dt_database_get(darktable.db)));
             all_ok = FALSE;
-            goto end;
-        }
 
     end:
-
-        _read_xmp_timestamps(xmpData, img, xmp_version);
-
-        _read_xmp_harmony_guide(xmpData, img, xmp_version);
-
         if (stmt)
             sqlite3_finalize(stmt);
-
-        // Set or clear bit in image struct. ONLY set if the
-        // Xmp.darktable.auto_presets_applied was 1 AND there was a
-        // history in xmp.
-        if (preset_applied > 0)
-        {
-            img->flags |= DT_IMAGE_AUTO_PRESETS_APPLIED;
-        }
-        else
-        {
-            // Not found for old or buggy xmp where it was found but history was 0.
-            img->flags &= ~DT_IMAGE_AUTO_PRESETS_APPLIED;
-
-            if (preset_applied < 0)
-            {
-                dt_print(DT_DEBUG_ALWAYS,
-                         "[exif] dt_exif_xmp_read for %s, id %i found auto_presets_applied"
-                         " but there was no history",
-                         filename, img->id);
-            }
-        }
-
         g_list_free_full(iop_order_list, free);
         g_list_free_full(history_entries, _free_history_entry);
-        g_list_free_full(mask_entries_v3, _free_mask_entry);
-        if (mask_entries)
-            g_hash_table_destroy(mask_entries);
+        g_list_free_full(mask_entries, _free_mask_entry);
 
-        if (all_ok)
+        if (!all_ok)
         {
-            dt_database_release_transaction(darktable.db);
-
-            // history_hash
-            dt_history_hash_values_t hash = {NULL, 0, NULL, 0, NULL, 0};
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_basic_hash"))) !=
-                xmpData.end())
-            {
-                hash.basic = dt_exif_xmp_decode(pos->toString().c_str(),
-                                                strlen(pos->toString().c_str()), &hash.basic_len);
-            }
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_auto_hash"))) !=
-                xmpData.end())
-            {
-                hash.auto_apply = dt_exif_xmp_decode(
-                    pos->toString().c_str(), strlen(pos->toString().c_str()), &hash.auto_apply_len);
-            }
-            if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_current_hash"))) !=
-                xmpData.end())
-            {
-                hash.current = dt_exif_xmp_decode(
-                    pos->toString().c_str(), strlen(pos->toString().c_str()), &hash.current_len);
-            }
-            if (hash.basic || hash.auto_apply || hash.current)
-            {
-                dt_history_hash_write(img->id, &hash);
-            }
-            else
-            {
-                // No choice, use the history itself applying the former rules.
-                dt_history_hash_t hash_flag = DT_HISTORY_HASH_CURRENT;
-                if (!_image_altered_deprecated(img->id))
-                    // We assume the image has an history
-                    hash_flag = (dt_history_hash_t)(hash_flag | DT_HISTORY_HASH_BASIC);
-                dt_history_hash_write_from_history(img->id, hash_flag);
-            }
-        }
-        else
-        {
-            dt_print(DT_DEBUG_IMAGEIO, "[exif] error reading history from '%s'", filename);
+            dt_print(DT_DEBUG_IMAGEIO, "[exif] error reading XMP history from '%s'", filename);
             dt_database_rollback_transaction(darktable.db);
             return TRUE;
         }
+
+        dt_database_release_transaction(darktable.db);
+        _read_xmp_timestamps(xmpData, img);
+        _read_xmp_harmony_guide(xmpData, img);
+
+        if (preset_applied > 0 && num > 0)
+            img->flags |= DT_IMAGE_AUTO_PRESETS_APPLIED;
+        else
+            img->flags &= ~DT_IMAGE_AUTO_PRESETS_APPLIED;
+
+        dt_history_hash_values_t hash = {NULL, 0, NULL, 0, NULL, 0};
+        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_basic_hash"))) !=
+            xmpData.end())
+            hash.basic = dt_exif_xmp_decode(pos->toString().c_str(),
+                                            strlen(pos->toString().c_str()), &hash.basic_len);
+        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_auto_hash"))) !=
+            xmpData.end())
+            hash.auto_apply = dt_exif_xmp_decode(
+                pos->toString().c_str(), strlen(pos->toString().c_str()), &hash.auto_apply_len);
+        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.history_current_hash"))) !=
+            xmpData.end())
+            hash.current = dt_exif_xmp_decode(pos->toString().c_str(),
+                                              strlen(pos->toString().c_str()), &hash.current_len);
+
+        if (hash.basic || hash.auto_apply || hash.current)
+            dt_history_hash_write(img->id, &hash);
+        else
+            dt_history_hash_write_from_history(
+                img->id, (dt_history_hash_t)(DT_HISTORY_HASH_CURRENT | DT_HISTORY_HASH_BASIC));
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
-        // Actually nobody's interested in that if the file doesn't exist:
-        // std::string s(e.what());
-        // std::cerr << "[exiv2] " << filename << ": " << s << std::endl;
         return TRUE;
     }
+
     return FALSE;
 }
-
 // add history metadata to XmpData
 static void _set_xmp_dt_history(Exiv2::XmpData &xmpData, const dt_imgid_t imgid, int history_end)
 {
@@ -4755,49 +4071,28 @@ static void _set_xmp_harmony_guide(Exiv2::XmpData &xmpData, const dt_imgid_t img
     }
 }
 
-GTimeSpan _convert_unix_to_gtimespan(const time_t unix)
-{
-    GDateTime *gdt = g_date_time_new_from_unix_utc(unix);
-    if (gdt)
-    {
-        GTimeSpan gts = dt_datetime_gdatetime_to_gtimespan(gdt);
-        g_date_time_unref(gdt);
-        return gts;
-    }
-    return 0;
-}
-
 // Read timestamps from XmpData
-void _read_xmp_timestamps(Exiv2::XmpData &xmpData, dt_image_t *img, const int xmp_version)
+static void _read_xmp_timestamps(Exiv2::XmpData &xmpData, dt_image_t *img)
 {
     Exiv2::XmpData::iterator pos;
 
     // Do not read for import_ts. It must be updated at each import.
     if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.change_timestamp"))) != xmpData.end())
     {
-        if (xmp_version > 5)
-            img->change_timestamp = pos->toLong();
-        else if (pos->toLong() >= 1)
-            img->change_timestamp = _convert_unix_to_gtimespan(pos->toLong());
+        img->change_timestamp = pos->toLong();
     }
     if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.export_timestamp"))) != xmpData.end())
     {
-        if (xmp_version > 5)
-            img->export_timestamp = pos->toLong();
-        else if (pos->toLong() >= 1)
-            img->export_timestamp = _convert_unix_to_gtimespan(pos->toLong());
+        img->export_timestamp = pos->toLong();
     }
     if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.print_timestamp"))) != xmpData.end())
     {
-        if (xmp_version > 5)
-            img->print_timestamp = pos->toLong();
-        else if (pos->toLong() >= 1)
-            img->print_timestamp = _convert_unix_to_gtimespan(pos->toLong());
+        img->print_timestamp = pos->toLong();
     }
 }
 
 // Read color harmony guides from XmpData
-void _read_xmp_harmony_guide(Exiv2::XmpData &xmpData, dt_image_t *img, const int xmp_version)
+static void _read_xmp_harmony_guide(Exiv2::XmpData &xmpData, dt_image_t *img)
 {
     Exiv2::XmpData::iterator pos;
 

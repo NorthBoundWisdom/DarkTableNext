@@ -39,7 +39,6 @@
 #include "develop/blend.h"
 #include "develop/develop.h"
 #include "develop/imageop.h"
-#include "develop/lightroom.h"
 #include "develop/masks.h"
 #include "libs/modulegroups.h"
 #include "gui/gtk.h"
@@ -2316,10 +2315,6 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
 
         dt_print(DT_DEBUG_PARAMS,
                  "[dt_dev_read_history_ext] temporary history merged with image history");
-
-        //  first time we are loading the image, try to import lightroom .xmp if any
-        if (dev->full.pipe && dev->full.pipe->loading && first_run)
-            dt_lightroom_import(dev->image_storage.id, dev, TRUE);
 
         // if a snapshot move all auto-presets into the history_snapshot table
 
