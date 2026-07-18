@@ -1745,20 +1745,62 @@ void gui_cleanup(dt_lib_module_t *self)
     self->data = NULL;
 }
 
+static gboolean _export_preset_is_current(const void *params, const size_t params_size)
+{
+    if (!params || params_size < 9 * sizeof(int32_t))
+        return FALSE;
+
+    const char *cursor = params;
+    const char *const end = cursor + params_size;
+
+    cursor += 9 * sizeof(int32_t);
+    for (int i = 0; i < 3; i++)
+    {
+        const char *const terminator = memchr(cursor, '\0', end - cursor);
+        if (!terminator)
+            return FALSE;
+        cursor = terminator + 1;
+    }
+
+    const char *const format_name = cursor;
+    const char *const format_terminator = memchr(cursor, '\0', end - cursor);
+    if (!format_terminator)
+        return FALSE;
+    cursor = format_terminator + 1;
+
+    const char *const storage_name = cursor;
+    const char *const storage_terminator = memchr(cursor, '\0', end - cursor);
+    if (!storage_terminator || end - (storage_terminator + 1) < 4 * sizeof(int32_t))
+        return FALSE;
+    cursor = storage_terminator + 1;
+
+    int32_t format_version;
+    int32_t storage_version;
+    int32_t format_size;
+    int32_t storage_size;
+    memcpy(&format_version, cursor, sizeof(format_version));
+    cursor += sizeof(format_version);
+    memcpy(&storage_version, cursor, sizeof(storage_version));
+    cursor += sizeof(storage_version);
+    memcpy(&format_size, cursor, sizeof(format_size));
+    cursor += sizeof(format_size);
+    memcpy(&storage_size, cursor, sizeof(storage_size));
+    cursor += sizeof(storage_size);
+
+    if (format_size < 0 || storage_size < 0 ||
+        (size_t)(end - cursor) != (size_t)format_size + (size_t)storage_size)
+        return FALSE;
+
+    dt_imageio_module_format_t *const format = dt_imageio_get_format_by_name(format_name);
+    dt_imageio_module_storage_t *const storage = dt_imageio_get_storage_by_name(storage_name);
+    return format && storage && format_version == format->version() &&
+           storage_version == storage->version() &&
+           format_size == (int32_t)format->params_size(format) &&
+           storage_size == (int32_t)storage->params_size(storage);
+}
+
 void init_presets(dt_lib_module_t *self)
 {
-    // TODO: store presets in db: dt_lib_presets_add(const char *name,
-    // const char *plugin_name, const void *params, const int32_t
-    // params_size)
-
-    // I know that it is super ugly to have this inside a module, but
-    // then is export not your average module since it handles the
-    // params blobs of imageio libs.  - get all existing presets for
-    // export from db, - extract the versions of the embedded
-    // format/storage blob - check if it's up to date - if older than
-    // the module -> call its legacy_params and update the preset - drop
-    // presets that cannot be updated
-
     const int version = self->version();
 
     sqlite3_stmt *stmt;
@@ -1771,435 +1813,24 @@ void init_presets(dt_lib_module_t *self)
     {
         const int rowid = sqlite3_column_int(stmt, 0);
         const int op_version = sqlite3_column_int(stmt, 1);
-        const void *op_params = (void *)sqlite3_column_blob(stmt, 2);
-        const size_t op_params_size = sqlite3_column_bytes(stmt, 2);
-        const char *name = (char *)sqlite3_column_text(stmt, 3);
+        const void *const params = sqlite3_column_blob(stmt, 2);
+        const size_t params_size = sqlite3_column_bytes(stmt, 2);
+        const char *const name = (const char *)sqlite3_column_text(stmt, 3);
 
-        if (op_version != version)
-        {
-            // shouldn't happen, we run legacy_params on the lib level
-            // before calling this
-            dt_print(DT_DEBUG_ALWAYS,
-                     "[export_init_presets] found export preset '%s' with version %d,"
-                     " version %d was expected. dropping preset",
-                     name, op_version, version);
-            sqlite3_stmt *innerstmt;
-            DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                        "DELETE FROM data.presets WHERE rowid=?1", -1, &innerstmt,
-                                        NULL);
-            DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, rowid);
-            sqlite3_step(innerstmt);
-            sqlite3_finalize(innerstmt);
-        }
-        else
-        {
-            // extract the interesting parts from the blob
-            const char *buf = (const char *)op_params;
-
-            // skip 9*int32_t: max_width, max_height, upscale, high_quality,
-            // export_masks, iccintent, icctype, dimensions_type, print_dpi
-            buf += 9 * sizeof(int32_t);
-            // skip scale string
-            buf += strlen(buf) + 1;
-            // skip metadata presets string
-            buf += strlen(buf) + 1;
-            // next skip iccfilename
-            buf += strlen(buf) + 1;
-
-            // parse both names to '\0'
-            const char *fname = buf;
-            buf += strlen(fname) + 1;
-            const char *sname = buf;
-            buf += strlen(sname) + 1;
-
-            // get module by name and skip if not there.
-            dt_imageio_module_format_t *fmod = dt_imageio_get_format_by_name(fname);
-            dt_imageio_module_storage_t *smod = dt_imageio_get_storage_by_name(sname);
-            if (!fmod || !smod)
-                continue;
-
-            // next we have fversion, sversion, fsize, ssize, fdata, sdata
-            // which is the stuff that might change
-            size_t copy_over_part = (void *)buf - (void *)op_params;
-
-            const int fversion = *(const int *)buf;
-            buf += sizeof(int32_t);
-            const int sversion = *(const int *)buf;
-            buf += sizeof(int32_t);
-            const int fsize = *(const int *)buf;
-            buf += sizeof(int32_t);
-            const int ssize = *(const int *)buf;
-            buf += sizeof(int32_t);
-
-            const void *fdata = buf;
-            buf += fsize;
-            const void *sdata = buf;
-
-            void *new_fdata = NULL;
-            void *new_sdata = NULL;
-            size_t new_fsize = fsize;
-            size_t new_ssize = ssize;
-            const int32_t new_fversion = fmod->version();
-            const int32_t new_sversion = smod->version();
-
-            int32_t cversion = fversion;
-            int32_t new_version = new_fversion;
-            size_t new_size = 0;
-            void *data = (void *)malloc(fsize);
-            memcpy(data, fdata, fsize);
-            while (cversion < new_fversion)
-            {
-                if (fmod->legacy_params &&
-                    (new_fdata = fmod->legacy_params(fmod, data, new_fsize, cversion, &new_version,
-                                                     &new_size)) != NULL)
-                {
-                    free(data);
-                    data = new_fdata;
-                    new_fsize = new_size;
-                    cversion = new_version;
-                }
-                else
-                {
-                    goto delete_preset;
-                }
-            }
-
-            cversion = sversion;
-            new_version = new_sversion;
-            new_size = 0;
-            data = (void *)malloc(ssize);
-            memcpy(data, sdata, ssize);
-            while (cversion < new_sversion)
-            {
-                if (smod->legacy_params &&
-                    (new_sdata = smod->legacy_params(smod, data, new_ssize, cversion, &new_version,
-                                                     &new_size)) != NULL)
-                {
-                    free(data);
-                    data = new_sdata;
-                    new_ssize = new_size;
-                    cversion = new_version;
-                }
-                else
-                {
-                    goto delete_preset;
-                }
-            }
-
-            if (new_fdata || new_sdata)
-            {
-                // we got an updated blob -> reassemble the parts and update the preset
-                const size_t new_params_size =
-                    op_params_size - (fsize + ssize) + (new_fsize + new_ssize);
-                void *new_params = malloc(new_params_size);
-                memcpy(new_params, op_params, copy_over_part);
-                // next we have fversion, sversion, fsize, ssize, fdata, sdata
-                // which is the stuff that might change
-                size_t pos = copy_over_part;
-                memcpy((uint8_t *)new_params + pos, &new_fversion, sizeof(int32_t));
-                pos += sizeof(int32_t);
-                memcpy((uint8_t *)new_params + pos, &new_sversion, sizeof(int32_t));
-                pos += sizeof(int32_t);
-                memcpy((uint8_t *)new_params + pos, &new_fsize, sizeof(int32_t));
-                pos += sizeof(int32_t);
-                memcpy((uint8_t *)new_params + pos, &new_ssize, sizeof(int32_t));
-                pos += sizeof(int32_t);
-                if (new_fdata)
-                    memcpy((uint8_t *)new_params + pos, new_fdata, new_fsize);
-                else
-                    memcpy((uint8_t *)new_params + pos, fdata, fsize);
-                pos += new_fsize;
-                if (new_sdata)
-                    memcpy((uint8_t *)new_params + pos, new_sdata, new_ssize);
-                else
-                    memcpy((uint8_t *)new_params + pos, sdata, ssize);
-
-                // write the updated preset back to db
-                dt_print(DT_DEBUG_ALWAYS,
-                         "[export_init_presets] updating export preset '%s'"
-                         " from versions %d/%d to versions %d/%d",
-                         name, fversion, sversion, new_fversion, new_sversion);
-                sqlite3_stmt *innerstmt;
-                DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                            "UPDATE data.presets"
-                                            " SET op_params=?1"
-                                            " WHERE rowid=?2",
-                                            -1, &innerstmt, NULL);
-                DT_DEBUG_SQLITE3_BIND_BLOB(innerstmt, 1, new_params, new_params_size,
-                                           SQLITE_TRANSIENT);
-                DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 2, rowid);
-                sqlite3_step(innerstmt);
-                sqlite3_finalize(innerstmt);
-
-                free(new_fdata);
-                free(new_sdata);
-                free(new_params);
-            }
-
+        if (op_version == version && _export_preset_is_current(params, params_size))
             continue;
 
-        delete_preset:
-            free(new_fdata);
-            free(new_sdata);
-            dt_print(DT_DEBUG_ALWAYS,
-                     "[export_init_presets] export preset '%s' can't be updated"
-                     " from versions %d/%d to versions %d/%d. dropping preset",
-                     name, fversion, sversion, new_fversion, new_sversion);
-            sqlite3_stmt *innerstmt;
-            DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                        "DELETE FROM data.presets WHERE rowid=?1", -1, &innerstmt,
-                                        NULL);
-            DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, rowid);
-            sqlite3_step(innerstmt);
-            sqlite3_finalize(innerstmt);
-        }
+        dt_print(DT_DEBUG_ALWAYS, "[export_init_presets] dropping incompatible export preset '%s'",
+                 name);
+        sqlite3_stmt *innerstmt;
+        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                    "DELETE FROM data.presets WHERE rowid=?1", -1, &innerstmt,
+                                    NULL);
+        DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, rowid);
+        sqlite3_step(innerstmt);
+        sqlite3_finalize(innerstmt);
     }
     sqlite3_finalize(stmt);
-}
-
-void *legacy_params(dt_lib_module_t *self, const void *const old_params,
-                    const size_t old_params_size, const int old_version, int *new_version,
-                    size_t *new_size)
-{
-    if (old_version == 1)
-    {
-        // add version of format & storage to params
-        const size_t new_params_size = old_params_size + 2 * sizeof(int32_t);
-        void *new_params = malloc(new_params_size);
-
-        const char *buf = (const char *)old_params;
-
-        // skip 3*int32_t: max_width, max_height and iccintent
-        buf += 3 * sizeof(int32_t);
-        // next skip iccprofile
-        buf += strlen(buf) + 1;
-
-        // parse both names to '\0'
-        const char *fname = buf;
-        buf += strlen(fname) + 1;
-        const char *sname = buf;
-        buf += strlen(sname) + 1;
-
-        // get module by name and fail if not there.
-        dt_imageio_module_format_t *fmod = dt_imageio_get_format_by_name(fname);
-        dt_imageio_module_storage_t *smod = dt_imageio_get_storage_by_name(sname);
-        if (!fmod || !smod)
-        {
-            free(new_params);
-            return NULL;
-        }
-
-        // now we are just behind the module/storage names and before
-        // their param sizes. this is the place where we want their
-        // versions copy everything until here to the new params
-        size_t first_half = (void *)buf - (void *)old_params;
-        memcpy(new_params, old_params, first_half);
-        // add the versions. at the time this code was added all modules
-        // were at version 1, except of picasa which was at 2.  every
-        // newer version of the imageio modules should result in a preset
-        // that is not going through this code.
-        int32_t fversion = 1;
-        int32_t sversion = (strcmp(sname, "picasa") == 0 ? 2 : 1);
-        memcpy((uint8_t *)new_params + first_half, &fversion, sizeof(int32_t));
-        memcpy((uint8_t *)new_params + first_half + sizeof(int32_t), &sversion, sizeof(int32_t));
-        // copy the rest of the old params over
-        memcpy((uint8_t *)new_params + first_half + sizeof(int32_t) * 2, buf,
-               old_params_size - first_half);
-
-        *new_size = new_params_size;
-        *new_version = 2;
-        return new_params;
-    }
-    else if (old_version == 2)
-    {
-        // add upscale to params
-        const size_t new_params_size = old_params_size + sizeof(int32_t);
-        void *new_params = calloc(1, new_params_size);
-
-        memcpy(new_params, old_params, sizeof(int32_t) * 2);
-        memcpy((uint8_t *)new_params + sizeof(int32_t) * 3,
-               (uint8_t *)old_params + sizeof(int32_t) * 2, old_params_size - sizeof(int32_t) * 2);
-
-        *new_size = new_params_size;
-        *new_version = 3;
-        return new_params;
-    }
-    else if (old_version == 3)
-    {
-        // replace iccprofile by type + filename
-        // format of v3:
-        //  - 4 x int32_t (max_width, max_height, upscale, iccintent)
-        //  - char* (iccprofile)
-        //  - rest
-        // format of v4:
-        //  - 5 x int32_t (max_width, max_height, upscale, iccintent, icctype)
-        //  - char* (iccfilename)
-        //  - old rest
-
-        const char *buf = (const char *)old_params;
-
-        // first get the old iccprofile to find out how big our new blob has to be
-        const char *iccprofile = buf + 4 * sizeof(int32_t);
-
-        size_t new_params_size = old_params_size - strlen(iccprofile) + sizeof(int32_t);
-        int icctype;
-        const char *iccfilename = "";
-
-        if (!strcmp(iccprofile, "image"))
-            icctype = DT_COLORSPACE_NONE;
-        else if (!strcmp(iccprofile, "sRGB"))
-            icctype = DT_COLORSPACE_SRGB;
-        else if (!strcmp(iccprofile, "linear_rec709_rgb") || !strcmp(iccprofile, "linear_rgb"))
-            icctype = DT_COLORSPACE_LIN_REC709;
-        else if (!strcmp(iccprofile, "linear_rec2020_rgb"))
-            icctype = DT_COLORSPACE_LIN_REC2020;
-        else if (!strcmp(iccprofile, "adobergb"))
-            icctype = DT_COLORSPACE_ADOBERGB;
-        else
-        {
-            icctype = DT_COLORSPACE_FILE;
-            iccfilename = iccprofile;
-            new_params_size += strlen(iccfilename);
-        }
-
-        void *new_params = calloc(1, new_params_size);
-        size_t pos = 0;
-        memcpy(new_params, old_params, sizeof(int32_t) * 4);
-        pos += 4 * sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, &icctype, sizeof(int32_t));
-        pos += sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, iccfilename, strlen(iccfilename) + 1);
-        pos += strlen(iccfilename) + 1;
-        size_t old_pos = 4 * sizeof(int32_t) + strlen(iccprofile) + 1;
-        memcpy((uint8_t *)new_params + pos, (uint8_t *)old_params + old_pos,
-               old_params_size - old_pos);
-
-        *new_size = new_params_size;
-        *new_version = 4;
-        return new_params;
-    }
-    else if (old_version == 4)
-    {
-        // add high_quality to params
-
-        // format of v4:
-        //  - 5 x int32_t (max_width, max_height, upscale, iccintent, icctype)
-        //  - char* (iccfilename)
-        //  - old rest
-        // format of v5:
-        //  - 6 x int32_t (max_width, max_height, upscale, high_quality, iccintent, icctype)
-        //  - char* (iccfilename)
-        //  - old rest
-
-        const size_t new_params_size = old_params_size + sizeof(int32_t);
-        void *new_params = calloc(1, new_params_size);
-
-        size_t pos = 0;
-        memcpy(new_params, old_params, sizeof(int32_t) * 3);
-        pos += 4 * sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, (uint8_t *)old_params + pos - sizeof(int32_t),
-               old_params_size - sizeof(int32_t) * 3);
-
-        *new_size = new_params_size;
-        *new_version = 5;
-        return new_params;
-    }
-    else if (old_version == 5)
-    {
-        // add metadata preset string
-
-        // format of v5:
-        //  - 6 x int32_t (max_width, max_height, upscale, high_quality, iccintent, icctype)
-        //  - char* (iccfilename)
-        //  - old rest
-        // format of v6:
-        //  - 6 x int32_t (max_width, max_height, upscale, high_quality, iccintent, icctype)
-        //  - char* (metadata_export)
-        //  - char* (iccfilename)
-        //  - old rest
-
-        const gboolean omit = dt_conf_get_bool("omit_tag_hierarchy");
-        gchar *flags = g_strdup_printf("%x", dt_lib_export_metadata_default_flags() |
-                                                 (omit ? DT_META_OMIT_HIERARCHY : 0));
-        const int flags_size = strlen(flags) + 1;
-        const size_t new_params_size = old_params_size + flags_size;
-        void *new_params = calloc(1, new_params_size);
-        size_t pos = 0;
-        memcpy(new_params, old_params, sizeof(int32_t) * 6);
-        pos += 6 * sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, flags, flags_size);
-        pos += flags_size;
-        memcpy((uint8_t *)new_params + pos, (uint8_t *)old_params + pos - flags_size,
-               old_params_size - sizeof(int32_t) * 6);
-
-        g_free(flags);
-        *new_size = new_params_size;
-        *new_version = 6;
-        return new_params;
-    }
-    else if (old_version == 6)
-    {
-        // add export_masks
-
-        // format of v6:
-        //  - 6 x int32_t (max_width, max_height, upscale, high_quality, iccintent, icctype)
-        //  - old rest
-        // format of v7:
-        //  - 7 x int32_t (max_width, max_height, upscale, high_quality,
-        //                 export_masks, iccintent, icctype)
-        //  - old rest
-
-        const size_t new_params_size = old_params_size + sizeof(int32_t);
-        void *new_params = calloc(1, new_params_size);
-
-        size_t pos = 0;
-        memcpy(new_params, old_params, sizeof(int32_t) * 4);
-        pos += 5 * sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, (uint8_t *)old_params + pos - sizeof(int32_t),
-               old_params_size - sizeof(int32_t) * 4);
-
-        *new_size = new_params_size;
-        *new_version = 7;
-        return new_params;
-    }
-    else if (old_version == 7)
-    {
-        // add dimension_type, print_dpi and scale
-
-        // format of v7:
-        //  - 7 x int32_t (max_width, max_height, upscale, high_quality,
-        //                 export_masks, iccintent, icctype)
-        //  - old rest
-        // format of v8:
-        //  - 9 x int32_t (max_width, max_height, upscale, high_quality,
-        //                 export_masks, iccintent, icctype, dimensions_type, print_dpi)
-        //  - char* (scale)
-        //  - old rest
-
-        const char *scale = "1.0";
-        const int scale_size = strlen(scale) + 1;
-        const int print_dpi = dt_confgen_get_int("plugins/lighttable/export/print_dpi", DT_DEFAULT);
-
-        const size_t new_params_size = old_params_size + sizeof(int32_t) * 2 + scale_size;
-        void *new_params = calloc(1, new_params_size);
-
-        size_t pos = 0;
-        memcpy(new_params, old_params, sizeof(int32_t) * 7);
-        pos += 7 * sizeof(int32_t);
-        pos += sizeof(int32_t); // dimensions_type
-        memcpy((uint8_t *)new_params + pos, &print_dpi, sizeof(int32_t));
-        pos += sizeof(int32_t);
-        memcpy((uint8_t *)new_params + pos, scale, scale_size);
-        pos += scale_size;
-        memcpy((uint8_t *)new_params + pos,
-               (uint8_t *)old_params + pos - sizeof(int32_t) * 2 - scale_size,
-               old_params_size - sizeof(int32_t) * 7);
-        *new_size = new_params_size;
-        *new_version = 8;
-        return new_params;
-    }
-
-    return NULL;
 }
 
 void *get_params(dt_lib_module_t *self, int *size)

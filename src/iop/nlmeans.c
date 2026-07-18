@@ -96,41 +96,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_LAB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_nlmeans_params_v2_t
-    {
-        float radius;
-        float strength;
-        float luma;
-        float chroma;
-    } dt_iop_nlmeans_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_nlmeans_params_v1_t
-        {
-            float luma;
-            float chroma;
-        } dt_iop_nlmeans_params_v1_t;
-
-        const dt_iop_nlmeans_params_v1_t *o = (dt_iop_nlmeans_params_v1_t *)old_params;
-        dt_iop_nlmeans_params_v2_t *n = malloc(sizeof(dt_iop_nlmeans_params_v2_t));
-
-        n->luma = o->luma;
-        n->chroma = o->chroma;
-        n->strength = 100.0f;
-        n->radius = 3;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_nlmeans_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 int default_group()
 {
     return IOP_GROUP_CORRECT | IOP_GROUP_TECHNICAL;

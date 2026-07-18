@@ -290,26 +290,6 @@ typedef struct dt_iop_agx_data_t
 
 static void _set_scene_referred_default_params(dt_iop_agx_params_t *p);
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    if (old_version < 7)
-    {
-        // SPECIAL CASE: all versions before 7 were unreleased test versions,
-        // and migration is not relevant anymore; they will always be migrated
-        // to the CURRENT LATEST version, without further gradual migration steps
-        dt_iop_agx_params_t *np = calloc(1, sizeof(dt_iop_agx_params_t));
-        _set_scene_referred_default_params(np);
-        *new_params = np;
-        *new_params_size = sizeof(dt_iop_agx_params_t);
-        *new_version = self->so->version(); // SPECIAL CASE: jump directly to latest version
-
-        return 0;
-    }
-
-    return 1;
-}
-
 static inline dt_colorspaces_color_profile_type_t
 _get_base_profile_type_from_enum(const dt_iop_agx_base_primaries_t base_primaries_enum)
 {

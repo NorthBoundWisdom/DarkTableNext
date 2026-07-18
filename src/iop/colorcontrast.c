@@ -103,45 +103,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_LAB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_colorcontrast_params_v2_t
-    {
-        float a_steepness;
-        float a_offset;
-        float b_steepness;
-        float b_offset;
-        int unbound;
-    } dt_iop_colorcontrast_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_colorcontrast_params_v1_t
-        {
-            float a_steepness;
-            float a_offset;
-            float b_steepness;
-            float b_offset;
-        } dt_iop_colorcontrast_params_v1_t;
-
-        const dt_iop_colorcontrast_params_v1_t *o = old_params;
-        dt_iop_colorcontrast_params_v2_t *n = malloc(sizeof(dt_iop_colorcontrast_params_v2_t));
-
-        n->a_steepness = o->a_steepness;
-        n->a_offset = o->a_offset;
-        n->b_steepness = o->b_steepness;
-        n->b_offset = o->b_offset;
-        n->unbound = 0;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_colorcontrast_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 DT_OMP_DECLARE_SIMD(aligned(in, out : 64) aligned(slope, offset, low, high))
 static inline void clamped_scaling(float *const restrict out, const float *const restrict in,
                                    const dt_aligned_pixel_t slope, const dt_aligned_pixel_t offset,

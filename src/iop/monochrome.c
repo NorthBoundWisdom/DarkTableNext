@@ -99,39 +99,6 @@ const char **description(dt_iop_module_t *self)
                                   _("non-linear, Lab"), _("non-linear, Lab, display-referred"));
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_monochrome_params_v2_t
-    {
-        float a;
-        float b;
-        float size;
-        float highlights;
-    } dt_iop_monochrome_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_monochrome_params_v1_t
-        {
-            float a;
-            float b;
-            float size;
-        } dt_iop_monochrome_params_v1_t;
-
-        const dt_iop_monochrome_params_v1_t *o = (dt_iop_monochrome_params_v1_t *)old_params;
-        dt_iop_monochrome_params_v2_t *n = malloc(sizeof(dt_iop_monochrome_params_v2_t));
-        memcpy(n, o, sizeof(dt_iop_monochrome_params_v1_t));
-        n->highlights = 0.0f;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_monochrome_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 void init_presets(dt_iop_module_so_t *self)
 {
     dt_iop_monochrome_params_t p;

@@ -129,12 +129,6 @@ typedef struct dt_iop_rasterfile_gui_data_t
     GtkWidget *vectorize;
 } dt_iop_rasterfile_gui_data_t;
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    return 1;
-}
-
 void modify_roi_in(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
                    const dt_iop_roi_t *const roi_out, dt_iop_roi_t *roi_in)
 {

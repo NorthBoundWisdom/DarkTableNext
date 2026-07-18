@@ -95,45 +95,6 @@ const char **description(dt_iop_module_t *self)
                                   _("non-linear, Lab"), _("non-linear, Lab, display-referred"));
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_colorize_params_v2_t
-    {
-        float hue;
-        float saturation;
-        float source_lightness_mix;
-        float lightness;
-        int version;
-    } dt_iop_colorize_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_colorize_params_v1_t
-        {
-            float hue;
-            float saturation;
-            float source_lightness_mix;
-            float lightness;
-        } dt_iop_colorize_params_v1_t;
-
-        const dt_iop_colorize_params_v1_t *o = old_params;
-        dt_iop_colorize_params_v2_t *n = malloc(sizeof(dt_iop_colorize_params_v2_t));
-
-        n->hue = o->hue;
-        n->saturation = o->saturation;
-        n->source_lightness_mix = o->source_lightness_mix;
-        n->lightness = o->lightness;
-        n->version = 1;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_colorize_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *const ivoid,
              void *const ovoid, const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
 {

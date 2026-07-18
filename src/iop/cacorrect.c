@@ -98,29 +98,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_RAW;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_cacorrect_params_v2_t
-    {
-        gboolean avoidshift;
-        dt_iop_cacorrect_multi_t iterations;
-    } dt_iop_cacorrect_params_v2_t;
-
-    if (old_version == 1)
-    {
-        dt_iop_cacorrect_params_v2_t *n = malloc(sizeof(dt_iop_cacorrect_params_v2_t));
-        n->avoidshift = FALSE;
-        n->iterations = 1;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_cacorrect_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 /*==================================================================================
  * begin raw therapee code, hg initial checkout of march 09, 2016 branch master.
  * avoid colorshift code has been added later

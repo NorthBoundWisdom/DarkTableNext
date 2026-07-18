@@ -156,68 +156,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_RGB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_lut3d_params_v3_t
-    {
-        char filepath[DT_IOP_LUT3D_MAX_PATHNAME];
-        dt_iop_lut3d_colorspace_t colorspace;
-        dt_iop_lut3d_interpolation_t interpolation;
-        int nb_keypoints;
-        char c_clut[DT_IOP_LUT3D_MAX_KEYPOINTS * 2 * 3];
-        char lutname[DT_IOP_LUT3D_MAX_LUTNAME];
-    } dt_iop_lut3d_params_v3_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_lut3d_params_v1_t
-        {
-            char filepath[DT_IOP_LUT3D_MAX_PATHNAME];
-            int colorspace;
-            int interpolation;
-        } dt_iop_lut3d_params_v1_t;
-
-        const dt_iop_lut3d_params_v1_t *o = (dt_iop_lut3d_params_v1_t *)old_params;
-        dt_iop_lut3d_params_v3_t *n = calloc(1, sizeof(dt_iop_lut3d_params_v3_t));
-        g_strlcpy(n->filepath, o->filepath, sizeof(n->filepath));
-        n->colorspace = o->colorspace;
-        n->interpolation = o->interpolation;
-        n->nb_keypoints = 0;
-        memset(&n->c_clut, 0, sizeof(n->c_clut));
-        memset(&n->lutname, 0, sizeof(n->lutname));
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_lut3d_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-    if (old_version == 2)
-    {
-        typedef struct dt_iop_lut3d_params_v2_t
-        {
-            char filepath[DT_IOP_LUT3D_MAX_PATHNAME];
-            int colorspace;
-            int interpolation;
-            int nb_keypoints; // >0 indicates the presence of compressed lut
-            char c_clut[DT_IOP_LUT3D_MAX_KEYPOINTS * 2 * 3];
-            char lutname[DT_IOP_LUT3D_MAX_LUTNAME];
-            uint32_t gmic_version;
-        } dt_iop_lut3d_params_v2_t;
-
-        const dt_iop_lut3d_params_v2_t *o = (dt_iop_lut3d_params_v2_t *)old_params;
-        dt_iop_lut3d_params_v3_t *n = calloc(1, sizeof(dt_iop_lut3d_params_v3_t));
-        memcpy(n, o, sizeof(dt_iop_lut3d_params_v3_t)); // v3 is smaller
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_lut3d_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    return 1;
-}
-
 // From `HaldCLUT_correct.c' by Eskil Steenberg (http://www.quelsolaar.com) (BSD licensed)
 static void _correct_pixel_trilinear(const float *const in, float *const out, const size_t pixel_nb,
                                      const float *const restrict clut, const uint16_t level)

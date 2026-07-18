@@ -158,47 +158,6 @@ void init_presets(dt_iop_module_so_t *self)
                                sizeof(p), TRUE, DEVELOP_BLEND_CS_RGB_DISPLAY);
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_profilegamma_params_v2_t
-    {
-        dt_iop_profilegamma_mode_t mode;
-        float linear;
-        float gamma;
-        float dynamic_range;
-        float grey_point;
-        float shadows_range;
-        float security_factor;
-    } dt_iop_profilegamma_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_profilegamma_params_v1_t
-        {
-            float linear;
-            float gamma;
-        } dt_iop_profilegamma_params_v1_t;
-
-        const dt_iop_profilegamma_params_v1_t *o = old_params;
-        dt_iop_profilegamma_params_v2_t *n = malloc(sizeof(dt_iop_profilegamma_params_v2_t));
-
-        n->linear = o->linear;
-        n->gamma = o->gamma;
-        n->mode = PROFILEGAMMA_GAMMA;
-        n->dynamic_range = 10.0f;
-        n->grey_point = 18.0f;
-        n->shadows_range = -5.0f;
-        n->security_factor = 0.0f;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_profilegamma_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 #ifdef HAVE_OPENCL
 int process_cl(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem dev_in, cl_mem dev_out,
                const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)

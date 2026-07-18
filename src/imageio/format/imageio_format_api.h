@@ -52,10 +52,6 @@ REQUIRED(void, init, struct dt_imageio_module_format_t *self);
 /* construct widget above */
 REQUIRED(void, cleanup, struct dt_imageio_module_format_t *self);
 
-/* gets the current export parameters from gui/conf and stores in this struct for later use. */
-OPTIONAL(void *, legacy_params, struct dt_imageio_module_format_t *self,
-         const void *const old_params, const size_t old_params_size, const int old_version,
-         int *new_version, size_t *new_size);
 REQUIRED(size_t, params_size, struct dt_imageio_module_format_t *self);
 REQUIRED(void *, get_params, struct dt_imageio_module_format_t *self);
 REQUIRED(void, free_params, struct dt_imageio_module_format_t *self,

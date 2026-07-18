@@ -58,28 +58,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_RGB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_mask_manager_params_v2_t
-    {
-        int dummy;
-    } dt_iop_mask_manager_params_v2_t;
-
-    if (old_version == 1)
-    {
-        dt_iop_mask_manager_params_v2_t *n = malloc(sizeof(dt_iop_mask_manager_params_v2_t));
-
-        n->dummy = 0;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_mask_manager_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 void process(struct dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *const i,
              void *const o, const dt_iop_roi_t *const roi_in, const dt_iop_roi_t *const roi_out)
 {

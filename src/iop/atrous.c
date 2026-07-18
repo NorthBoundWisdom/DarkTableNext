@@ -147,41 +147,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_LAB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_atrous_params_v2_t
-    {
-        int32_t octaves;
-        float x[atrous_none][BANDS];
-        float y[atrous_none][BANDS];
-        float mix;
-    } dt_iop_atrous_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_atrous_params_v1_t
-        {
-            int32_t octaves; // $DEFAULT: 3
-            float x[atrous_none][BANDS];
-            float y[atrous_none][BANDS]; // $DEFAULT: 0.5
-        } dt_iop_atrous_params_v1_t;
-
-        const dt_iop_atrous_params_v1_t *o = (dt_iop_atrous_params_v1_t *)old_params;
-        dt_iop_atrous_params_v2_t *n = malloc(sizeof(dt_iop_atrous_params_v2_t));
-
-        memcpy(n, o, sizeof(dt_iop_atrous_params_v1_t));
-        n->mix = 1.0f;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_atrous_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-
-    return 1;
-}
-
 static int get_samples(float *t, const dt_iop_atrous_data_t *const d, const dt_iop_roi_t *roi_in,
                        const dt_dev_pixelpipe_iop_t *const piece)
 {

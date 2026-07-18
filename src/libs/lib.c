@@ -677,7 +677,7 @@ static int dt_lib_load_module(void *m, const char *libname, const char *module_n
 #include "libs/lib_api.h"
 
     if (((!module->get_params || !module->set_params) &&
-         (module->legacy_params || module->set_params || module->get_params)) ||
+         (module->set_params || module->get_params)) ||
         (!module->init_presets && module->manage_presets))
     {
         dt_print(DT_DEBUG_ALWAYS, "[dt_lib_load_module] illegal method combination in '%s'",
@@ -689,7 +689,6 @@ static int dt_lib_load_module(void *m, const char *libname, const char *module_n
         // need all at the same time, or none, note that in this case
         // all the presets for the corresponding module will be deleted.
         // see: dt_lib_init_presets.
-        module->legacy_params = NULL;
         module->set_params = NULL;
         module->get_params = NULL;
         module->manage_presets = NULL;
@@ -715,32 +714,6 @@ static int dt_lib_load_module(void *m, const char *libname, const char *module_n
     return 0;
 }
 
-static void *_update_params(dt_lib_module_t *module, const void *const old_params,
-                            size_t old_params_size, int old_version, const int target_version,
-                            size_t *new_size)
-{
-    // make a copy of the old params so we can free it in the loop
-    void *params = malloc(old_params_size);
-    if (params == NULL)
-        return NULL;
-    memcpy(params, old_params, old_params_size);
-    while (old_version < target_version)
-    {
-        size_t size;
-        int version;
-        void *new_params =
-            module->legacy_params(module, params, old_params_size, old_version, &version, &size);
-        free(params);
-        if (new_params == NULL)
-            return NULL;
-        params = new_params;
-        old_version = version;
-        old_params_size = size;
-    }
-    *new_size = old_params_size;
-    return params;
-}
-
 void dt_lib_init_presets(dt_lib_module_t *module)
 {
     // since lighttable presets can't end up in styles or any other
@@ -748,10 +721,8 @@ void dt_lib_init_presets(dt_lib_module_t *module)
     // that very table here and assume that everything is up to date
     // elsewhere.  the intended logic is as follows:
     // - no set_params -> delete all presets
-    // - op_version >= module_version -> done
-    // - op_version < module_version ->
-    //   - module has legacy_params -> try to update
-    //   - module doesn't have legacy_params -> delete it
+    // - op_version == module_version -> done
+    // - any other version -> delete it
 
     if (module->set_params == NULL)
     {
@@ -771,7 +742,7 @@ void dt_lib_init_presets(dt_lib_module_t *module)
         sqlite3_stmt *stmt;
         // clang-format off
     DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT rowid, op_version, op_params, name"
+                                "SELECT rowid, op_version, name"
                                 " FROM data.presets"
                                 " WHERE operation=?1",
                                 -1, &stmt, NULL);
@@ -781,61 +752,26 @@ void dt_lib_init_presets(dt_lib_module_t *module)
         {
             int rowid = sqlite3_column_int(stmt, 0);
             int op_version = sqlite3_column_int(stmt, 1);
-            void *op_params = (void *)sqlite3_column_blob(stmt, 2);
-            size_t op_params_size = sqlite3_column_bytes(stmt, 2);
-            const char *name = (char *)sqlite3_column_text(stmt, 3);
+            const char *name = (char *)sqlite3_column_text(stmt, 2);
 
             int version = module->version();
 
-            if (op_version < version)
+            if (op_version != version)
             {
-                size_t new_params_size = 0;
-                void *new_params = NULL;
-
-                if (module->legacy_params &&
-                    (new_params = _update_params(module, op_params, op_params_size, op_version,
-                                                 version, &new_params_size)))
-                {
-                    // write the updated preset back to db
-                    dt_print(DT_DEBUG_ALWAYS,
-                             "[lighttable_init_presets] updating '%s' preset '%s'"
-                             " from version %d to version %d",
-                             module->plugin_name, name, op_version, version);
-                    sqlite3_stmt *innerstmt;
-                    // clang-format off
-          DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                      "UPDATE data.presets"
-                                      " SET op_version=?1, op_params=?2"
-                                      " WHERE rowid=?3", -1,
-                                      &innerstmt, NULL);
-                    // clang-format on
-                    DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, version);
-                    DT_DEBUG_SQLITE3_BIND_BLOB(innerstmt, 2, new_params, new_params_size,
-                                               SQLITE_TRANSIENT);
-                    DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 3, rowid);
-                    sqlite3_step(innerstmt);
-                    sqlite3_finalize(innerstmt);
-                }
-                else
-                {
-                    // delete the preset
-                    dt_print(DT_DEBUG_ALWAYS,
-                             "[lighttable_init_presets] Can't upgrade '%s' preset '%s'"
-                             " from version %d to %d, "
-                             "no legacy_params() implemented or unable to update",
-                             module->plugin_name, name, op_version, version);
-                    sqlite3_stmt *innerstmt;
-                    // clang-format off
-          DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                      "DELETE FROM data.presets"
-                                      " WHERE rowid=?1", -1,
-                                      &innerstmt, NULL);
-                    // clang-format on
-                    DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, rowid);
-                    sqlite3_step(innerstmt);
-                    sqlite3_finalize(innerstmt);
-                }
-                free(new_params);
+                dt_print(
+                    DT_DEBUG_ALWAYS,
+                    "[lighttable_init_presets] dropping '%s' preset '%s': version %d is not %d",
+                    module->plugin_name, name, op_version, version);
+                sqlite3_stmt *innerstmt;
+                // clang-format off
+      DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                  "DELETE FROM data.presets"
+                                  " WHERE rowid=?1", -1,
+                                  &innerstmt, NULL);
+                // clang-format on
+                DT_DEBUG_SQLITE3_BIND_INT(innerstmt, 1, rowid);
+                sqlite3_step(innerstmt);
+                sqlite3_finalize(innerstmt);
             }
         }
         sqlite3_finalize(stmt);

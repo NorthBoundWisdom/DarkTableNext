@@ -135,53 +135,6 @@ void cleanup_pipe(dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe, dt_dev_pixelp
     piece->data = NULL;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_hazeremoval_params_v1_t
-        {
-            float strength;
-            float distance;
-        } dt_iop_hazeremoval_params_v1_t;
-        const dt_iop_hazeremoval_params_v1_t *o = old_params;
-
-        dt_iop_hazeremoval_params_t *n = malloc(sizeof(dt_iop_hazeremoval_params_t));
-        memcpy(n, o, sizeof(dt_iop_hazeremoval_params_v1_t));
-
-        n->compatibility_mode = TRUE;
-        n->adaptive = FALSE;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_hazeremoval_params_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    if (old_version == 2)
-    {
-        typedef struct dt_iop_hazeremoval_params_v2_t
-        {
-            float strength;
-            float distance;
-            gboolean compatibility_mode;
-        } dt_iop_hazeremoval_params_v2_t;
-        const dt_iop_hazeremoval_params_v2_t *o = old_params;
-
-        dt_iop_hazeremoval_params_t *n = malloc(sizeof(dt_iop_hazeremoval_params_t));
-        memcpy(n, o, sizeof(dt_iop_hazeremoval_params_v2_t));
-
-        n->adaptive = FALSE;
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_hazeremoval_params_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    return 1;
-}
-
 void init_global(dt_iop_module_so_t *self)
 {
     dt_iop_hazeremoval_global_data_t *gd = malloc(sizeof(*gd));

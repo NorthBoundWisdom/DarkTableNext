@@ -86,44 +86,6 @@ typedef struct dt_iop_rawdenoise_global_data_t
 {
 } dt_iop_rawdenoise_global_data_t;
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_rawdenoise_params_v2_t
-    {
-        float threshold;
-        float x[DT_RAWDENOISE_NONE][DT_IOP_RAWDENOISE_BANDS];
-        float y[DT_RAWDENOISE_NONE][DT_IOP_RAWDENOISE_BANDS];
-    } dt_iop_rawdenoise_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_rawdenoise_params_v1_t
-        {
-            float threshold;
-        } dt_iop_rawdenoise_params_v1_t;
-
-        const dt_iop_rawdenoise_params_v1_t *o = (dt_iop_rawdenoise_params_v1_t *)old_params;
-        dt_iop_rawdenoise_params_v2_t *n = malloc(sizeof(dt_iop_rawdenoise_params_v2_t));
-
-        n->threshold = o->threshold;
-        for (int k = 0; k < DT_IOP_RAWDENOISE_BANDS; k++)
-        {
-            for (int ch = 0; ch < DT_RAWDENOISE_NONE; ch++)
-            {
-                n->x[ch][k] = k / (DT_IOP_RAWDENOISE_BANDS - 1.0);
-                n->y[ch][k] = 0.5f;
-            }
-        }
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_rawdenoise_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 const char *name()
 {
     return _("raw denoise");

@@ -83,42 +83,6 @@ typedef struct dt_iop_grain_data_t
     float grain_lut[GRAIN_LUT_SIZE * GRAIN_LUT_SIZE];
 } dt_iop_grain_data_t;
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_grain_params_v2_t
-    {
-        _dt_iop_grain_channel_t channel;
-        float scale;
-        float strength;
-        float midtones_bias;
-    } dt_iop_grain_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_grain_params_v1_t
-        {
-            _dt_iop_grain_channel_t channel;
-            float scale;
-            float strength;
-        } dt_iop_grain_params_v1_t;
-
-        const dt_iop_grain_params_v1_t *o = old_params;
-        dt_iop_grain_params_v2_t *n = malloc(sizeof(dt_iop_grain_params_v2_t));
-
-        n->channel = o->channel;
-        n->scale = o->scale;
-        n->strength = o->strength;
-        n->midtones_bias = 0.0; // it produces the same results as the old version
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_grain_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 static const double grad3[12][3] = {{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0},
                                     {1, 0, 1}, {-1, 0, 1}, {1, 0, -1}, {-1, 0, -1},
                                     {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1}};

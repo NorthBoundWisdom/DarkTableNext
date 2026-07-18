@@ -118,66 +118,6 @@ typedef struct dt_iop_temperature_preset_data_t
     int max_ft_pos;
 } dt_iop_temperature_preset_data_t;
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_temperature_params_v3_t
-    {
-        float red;
-        float green;
-        float blue;
-        float various;
-    } dt_iop_temperature_params_v3_t;
-
-    typedef struct dt_iop_temperature_params_v4_t
-    {
-        float red;
-        float green;
-        float blue;
-        float various;
-        int preset;
-    } dt_iop_temperature_params_v4_t;
-
-    if (old_version == 2)
-    {
-        typedef struct dt_iop_temperature_params_v2_t
-        {
-            float temp_out;
-            float coeffs[3];
-        } dt_iop_temperature_params_v2_t;
-
-        const dt_iop_temperature_params_v2_t *o = (dt_iop_temperature_params_v2_t *)old_params;
-        dt_iop_temperature_params_v3_t *n = malloc(sizeof(dt_iop_temperature_params_v3_t));
-
-        n->red = o->coeffs[0];
-        n->green = o->coeffs[1];
-        n->blue = o->coeffs[2];
-        n->various = NAN;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_temperature_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    if (old_version == 3)
-    {
-        const dt_iop_temperature_params_v3_t *o = (dt_iop_temperature_params_v3_t *)old_params;
-        dt_iop_temperature_params_v4_t *n = malloc(sizeof(dt_iop_temperature_params_v4_t));
-
-        n->red = o->red;
-        n->green = o->green;
-        n->blue = o->blue;
-        n->various = NAN;
-        n->preset = DT_IOP_TEMP_UNKNOWN;
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_temperature_params_v4_t);
-        *new_version = 4;
-        return 0;
-    }
-    return 1;
-}
-
 static inline void _temp_params_from_array(dt_iop_temperature_params_t *p, const double a[4])
 {
     float *coeffs = (float *)p;

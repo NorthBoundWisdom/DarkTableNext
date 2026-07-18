@@ -182,42 +182,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
 // version to replicate a previous version might not be the optimal
 // default for a fresh image.
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef dt_iop_useless_params_v3_t
-    {
-        int checker_scale;
-        float factor;
-        int strength;
-    }
-
-    // do migration from 2 to 3 (one step at a time, this legacy_params
-    // update is incremental and will be done as many time as needed to
-    // bring the parameters to the latest version of the module.
-
-    if (old_version == 2)
-    {
-        typedef struct dt_iop_useless_params_v2_t
-        {
-            int checker_scale;
-            float factor;
-        } dt_iop_basecurve_params_v5_t;
-
-        dt_iop_useless_params_v2_t *o = (dt_iop_useless_params_v2_t *)old_params;
-        dt_iop_useless_params_v3_t *n = malloc(sizeof(dt_iop_useless_params_v3_t));
-        memcpy(n, o, sizeof(dt_iop_useless_params_v2_t));
-        n->strength = 1;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_useless_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    return 1;
-}
-
 static const dt_mask_id_t mask_id = NO_MASKID + 1; // key "0" is reserved for the pipe
 static const char *mask_name = "useless checkerboard";
 

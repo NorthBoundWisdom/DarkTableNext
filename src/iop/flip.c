@@ -136,41 +136,6 @@ static dt_image_orientation_t merge_two_orientations(dt_image_orientation_t raw_
     return raw_orientation_corrected ^ user_orientation;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_flip_params_v2_t
-    {
-        dt_image_orientation_t orientation;
-    } dt_iop_flip_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_flip_params_v1_t
-        {
-            int32_t orientation;
-        } dt_iop_flip_params_v1_t;
-
-        const dt_iop_flip_params_v1_t *o = (dt_iop_flip_params_v1_t *)old_params;
-        dt_iop_flip_params_v2_t *n = malloc(sizeof(dt_iop_flip_params_v2_t));
-
-        // we might be called from presets update infrastructure => there is no image
-        dt_image_orientation_t image_orientation = ORIENTATION_NONE;
-
-        if (self->dev)
-            image_orientation = dt_image_orientation(&self->dev->image_storage);
-
-        n->orientation =
-            merge_two_orientations(image_orientation, (dt_image_orientation_t)(o->orientation));
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_flip_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 static void backtransform(const int32_t *x, int32_t *o, const dt_image_orientation_t orientation,
                           int32_t iw, int32_t ih)
 {

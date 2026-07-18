@@ -144,59 +144,6 @@ typedef struct dt_storage_piwigo_params_t
     dt_variables_params_t *vp;
 } dt_storage_piwigo_params_t;
 
-void *legacy_params(dt_imageio_module_storage_t *self, const void *const old_params,
-                    const size_t old_params_size, const int old_version, int *new_version,
-                    size_t *new_size)
-{
-    if (old_version == 1)
-    {
-        // version 1 did not save any piwigo settings in the preset,
-        // so we only need to initialize the data struct here
-        typedef struct dt_storage_piwigo_preset_data_v2_t
-        {
-            char filename_pattern[DT_MAX_PATH_FOR_PARAMS];
-            dt_storage_piwigo_permissions_t privacy;
-            dt_storage_piwigo_conflict_actions_t conflict_action;
-        } dt_storage_piwigo_preset_data_v2_t;
-
-        dt_storage_piwigo_preset_data_v2_t *n = (dt_storage_piwigo_preset_data_v2_t *)g_malloc0(
-            sizeof(dt_storage_piwigo_preset_data_v2_t));
-
-        n->filename_pattern[0] = '\0';
-        n->privacy = DT_PIWIGO_PERMISSION_EVERYONE;
-        n->conflict_action = DT_PIWIGO_CONFLICT_SKIP;
-
-        *new_size = sizeof(dt_storage_piwigo_preset_data_v2_t);
-        *new_version = 2;
-
-        return n;
-    }
-    else if (old_version == 2)
-    {
-        // add server name to params
-        typedef struct dt_storage_piwigo_preset_data_v3_t
-        {
-            char filename_pattern[DT_MAX_PATH_FOR_PARAMS];
-            dt_storage_piwigo_permissions_t privacy;
-            dt_storage_piwigo_conflict_actions_t conflict_action;
-            char server[MAX_SERVER_NAME_SIZE];
-        } dt_storage_piwigo_preset_data_v3_t;
-
-        dt_storage_piwigo_preset_data_v3_t *n = (dt_storage_piwigo_preset_data_v3_t *)g_malloc0(
-            sizeof(dt_storage_piwigo_preset_data_v3_t));
-
-        memcpy(n, old_params, old_params_size);
-        n->server[0] = '\0';
-
-        *new_size = sizeof(dt_storage_piwigo_preset_data_v3_t);
-        *new_version = 3;
-
-        return n;
-    }
-
-    return NULL;
-}
-
 static char *_get_filename(const dt_image_t *img, dt_imageio_module_format_t *format,
                            dt_imageio_module_data_t *fdata)
 {

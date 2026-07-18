@@ -136,68 +136,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_LAB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_colorreconstruct_params_v3_t
-    {
-        float threshold;
-        float spatial;
-        float range;
-        float hue;
-        dt_iop_colorreconstruct_precedence_t precedence;
-    } dt_iop_colorreconstruct_params_v3_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_colorreconstruct_params_v1_t
-        {
-            float threshold;
-            float spatial;
-            float range;
-        } dt_iop_colorreconstruct_params_v1_t;
-
-        const dt_iop_colorreconstruct_params_v1_t *old = old_params;
-        dt_iop_colorreconstruct_params_v3_t *new =
-            malloc(sizeof(dt_iop_colorreconstruct_params_v3_t));
-        new->threshold = old->threshold;
-        new->spatial = old->spatial;
-        new->range = old->range;
-        new->precedence = COLORRECONSTRUCT_PRECEDENCE_NONE;
-        new->hue = 0.66f;
-
-        *new_params = new;
-        *new_params_size = sizeof(dt_iop_colorreconstruct_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-    else if (old_version == 2)
-    {
-        typedef struct dt_iop_colorreconstruct_params_v2_t
-        {
-            float threshold;
-            float spatial;
-            float range;
-            dt_iop_colorreconstruct_precedence_t precedence;
-        } dt_iop_colorreconstruct_params_v2_t;
-
-        const dt_iop_colorreconstruct_params_v2_t *old = old_params;
-        dt_iop_colorreconstruct_params_v3_t *new =
-            malloc(sizeof(dt_iop_colorreconstruct_params_v3_t));
-        new->threshold = old->threshold;
-        new->spatial = old->spatial;
-        new->range = old->range;
-        new->precedence = old->precedence;
-        new->hue = 0.66f;
-
-        *new_params = new;
-        *new_params_size = sizeof(dt_iop_colorreconstruct_params_v3_t);
-        *new_version = 3;
-        return 0;
-    }
-    return 1;
-}
-
 typedef struct dt_iop_colorreconstruct_bilateral_t
 {
     size_t size_x, size_y, size_z;

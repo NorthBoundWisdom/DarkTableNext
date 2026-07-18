@@ -133,35 +133,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return IOP_CS_RGB;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_dither_params_v1_t
-        {
-            dt_iop_dither_type_t dither_type;
-            int palette;
-            struct
-            {
-                float radius;
-                float range[4];
-                float damping;
-            } random;
-        } dt_iop_dither_params_v1_t;
-
-        const dt_iop_dither_params_v1_t *o = (dt_iop_dither_params_v1_t *)old_params;
-        dt_iop_dither_params_v1_t *n = malloc(sizeof(dt_iop_dither_params_v1_t));
-        memcpy(n, o, sizeof(dt_iop_dither_params_v1_t));
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_dither_params_v1_t);
-        *new_version = 2;
-        return 0;
-    }
-    return 1;
-}
-
 void init_presets(dt_iop_module_so_t *self)
 {
     dt_database_start_transaction(darktable.db);

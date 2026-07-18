@@ -118,46 +118,6 @@ dt_iop_colorspace_type_t default_colorspace(dt_iop_module_t *self, dt_dev_pixelp
     return (pipe && !dt_image_is_raw(&pipe->image)) ? IOP_CS_RGB : IOP_CS_RAW;
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    typedef struct dt_iop_rawprepare_params_v2_t
-    {
-        int32_t left;
-        int32_t top;
-        int32_t right;
-        int32_t bottom;
-        uint16_t raw_black_level_separate[4];
-        uint16_t raw_white_point;
-        dt_iop_rawprepare_flat_field_t flat_field;
-    } dt_iop_rawprepare_params_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_iop_rawprepare_params_v1_t
-        {
-            int32_t left;
-            int32_t top;
-            int32_t right;
-            int32_t bottom;
-            uint16_t raw_black_level_separate[4];
-            uint16_t raw_white_point;
-        } dt_iop_rawprepare_params_v1_t;
-
-        const dt_iop_rawprepare_params_v1_t *o = (dt_iop_rawprepare_params_v1_t *)old_params;
-        dt_iop_rawprepare_params_v2_t *n = malloc(sizeof(dt_iop_rawprepare_params_v2_t));
-        memcpy(n, o, sizeof *o);
-        n->flat_field = FLAT_FIELD_OFF;
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_rawprepare_params_v2_t);
-        *new_version = 2;
-        return 0;
-    }
-
-    return 1;
-}
-
 const char **description(dt_iop_module_t *self)
 {
     return dt_iop_set_description(self,

@@ -354,65 +354,6 @@ void tiling_callback(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
     }
 }
 
-int legacy_params(dt_iop_module_t *self, const void *const old_params, const int old_version,
-                  void **new_params, int32_t *new_params_size, int *new_version)
-{
-    if (old_version == 1)
-    {
-        const dt_iop_colorequal_params_t *o = old_params;
-        dt_iop_colorequal_params_t *n = malloc(sizeof(dt_iop_colorequal_params_t));
-
-        memcpy(n, o, sizeof(dt_iop_colorequal_params_t) - sizeof(float));
-        n->hue_shift = 0.0f;
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_colorequal_params_t);
-        *new_version = 2;
-        return 0;
-    }
-
-    if (old_version == 2)
-    {
-        const dt_iop_colorequal_params_t *o = old_params;
-        dt_iop_colorequal_params_t *n = malloc(sizeof(dt_iop_colorequal_params_t));
-
-        memcpy(n, o, sizeof(dt_iop_colorequal_params_t) - sizeof(float));
-        n->threshold = 0.024f; // in v1/2 we had an inflection point of 0.1
-
-        // brightness and saturation slider ranges have been expanded by 4:3 so we correct here
-        const float *sodata = &o->sat_red;
-        const float *bodata = &o->bright_red;
-        float *sndata = &n->sat_red;
-        float *bndata = &n->bright_red;
-        for (int i = 0; i < NODES; i++)
-        {
-            sndata[i] = 1.0f + 0.75f * (sodata[i] - 1.0f);
-            bndata[i] = 1.0f + 0.75f * (bodata[i] - 1.0f);
-        }
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_colorequal_params_t);
-        *new_version = 3;
-        return 0;
-    }
-
-    if (old_version == 3)
-    {
-        const dt_iop_colorequal_params_t *o = old_params;
-        dt_iop_colorequal_params_t *n = malloc(sizeof(dt_iop_colorequal_params_t));
-
-        memcpy(n, o, sizeof(dt_iop_colorequal_params_t) - sizeof(float));
-        n->threshold = o->threshold + 0.1f;
-        n->contrast = -5.0f * MAX(0.0f, o->threshold - 0.024f); // sort of magic from what we had
-
-        *new_params = n;
-        *new_params_size = sizeof(dt_iop_colorequal_params_t);
-        *new_version = 4;
-        return 0;
-    }
-
-    return 1;
-}
-
 // dt_gaussian_mean_blur() in common/gaussian.h replaces the former local dt_gaussian_mean_blur().
 
 // sRGB primary red records at 20° of hue in darktable UCS 22, so we offset the whole hue range

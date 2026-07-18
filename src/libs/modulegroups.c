@@ -1912,13 +1912,6 @@ static gchar *_presets_get_minimal(dt_lib_module_t *self)
 #undef SMG
 #undef AM
 
-void *legacy_params(dt_lib_module_t *self, const void *const old_params,
-                    const size_t old_params_size, const int old_version, int *new_version,
-                    size_t *new_size)
-{
-    return NULL;
-}
-
 void *get_params(dt_lib_module_t *self, int *size)
 {
     gchar *tx = _preset_to_string(self, FALSE);

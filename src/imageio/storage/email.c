@@ -56,54 +56,6 @@ const char *name(const struct dt_imageio_module_storage_t *self)
     return _("send as email");
 }
 
-void *legacy_params(dt_imageio_module_storage_t *self, const void *const old_params,
-                    const size_t old_params_size, const int old_version, int *new_version,
-                    size_t *new_size)
-{
-    typedef struct dt_imageio_email_v2_t
-    {
-        char filename[DT_MAX_PATH_FOR_PARAMS];
-        GList *images;
-    } dt_imageio_email_v2_t;
-
-    if (old_version == 1)
-    {
-        typedef struct dt_imageio_email_v1_t
-        {
-            char filename[1024];
-            GList *images;
-        } dt_imageio_email_v1_t;
-
-        const dt_imageio_email_v1_t *o = (dt_imageio_email_v1_t *)old_params;
-        dt_imageio_email_v2_t *n = malloc(sizeof(dt_imageio_email_v2_t));
-
-        g_strlcpy(n->filename, o->filename, sizeof(n->filename));
-
-        *new_version = 2;
-        *new_size = sizeof(dt_imageio_email_v2_t) - sizeof(GList *);
-        return n;
-    }
-
-    // incremental update supported:
-    /*
-  typedef struct dt_imageio_email_v3_t
-  {
-    ...
-  } dt_imageio_email_v3_t;
-
-  if(old_version == 2)
-  {
-    // let's update from 2 to 3
-
-    ...
-    *new_size = sizeof(dt_imageio_email_v3_t) - sizeof(GList *);
-    *new_version = 3;
-    return n;
-  }
-  */
-    return NULL;
-}
-
 int recommended_dimension(struct dt_imageio_module_storage_t *self, dt_imageio_module_data_t *data,
                           uint32_t *width, uint32_t *height)
 {

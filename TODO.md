@@ -97,7 +97,8 @@
   - 已完成 XMP 合同：0.9 写入并只读取 `Xmp.darktable.xmp_version = 6`；删除 v1–v5 history、遮罩和时间戳转换。无 darktable 编辑历史的通用 XMP 仍可读取基础元数据。
   - 已删除 Lightroom 旁路导入（`src/develop/lightroom.*`）及其在导入/暗房中的调用。
   - 已完成混合、遮罩、样式与预置的参数合同：逐版本转换函数、旧版内置预置及废弃的 blend enum 均已删除；历史版本或大小不匹配的参数直接拒绝。
-  - 待继续：从 IOP、格式、存储和 lib 插件 API 中移除遗留 `legacy_params` 回调及各模块仍残留的转换实现。
+  - 已完成插件参数合同：IOP、格式、存储及 lib 插件 ABI 不再暴露 `legacy_params`；所有残留的逐版本实现与仅供它们使用的辅助代码已删除。lib/export 预置仅保留当前精确版本与大小的参数块。
+  - 待继续：收敛 `iop_order` 的历史工作流枚举、顺序表与导入分支。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。
