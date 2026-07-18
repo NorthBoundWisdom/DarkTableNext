@@ -24,8 +24,14 @@ top-level directory of your darktable source hierarchy:
    src/tests/benchmark/darktable-bench
 
 This will then run the default sidecar (v3.6) on the default image
-(mire1.cr2 from the integration test suite) using the darktable-cli in
-the build directory, or the darktable-cli on your search path.
+(`mire1.cr2`) using the darktable-cli in the build directory, or the
+darktable-cli on your search path. The default image is an optional benchmark
+asset; materialize it once with:
+
+   python3 configs/benchmark_source_roots.py init-seeds
+   python3 configs/benchmark_source_roots.py materialize
+
+You can instead pass any raw image with `--image`.
 
 
 The following commandline options are available:
@@ -112,7 +118,7 @@ darktable-bench-null.xmp : a sidecar file with minimal processing,
 darktable-bench-3.6.xmp  : the default benchmarking sidecar
 darktable-bench-3.4.xmp  : alternate sidecar for older version
 
-../../../build/dependency_source_roots/darktable-tests/images/mire1.cr2 : the default benchmarking image
+build/dependency_source_roots/darktable-tests/images/mire1.cr2 : the optional default benchmarking image
 
 
 How to add a new benchmark
@@ -127,8 +133,8 @@ How to add a new benchmark
 
    darktable-bench -v XYZ
 
-   to apply your new sidecar to the standard image from the
-   FreeCM test source root (build/dependency_source_roots/darktable-tests/images/mire1.cr2).
+   to apply your new sidecar to the optional standard image. Set
+   `DARKTABLE_TESTS_SOURCE_ROOT` to use an externally managed asset root.
 
 
 Comparative Performance

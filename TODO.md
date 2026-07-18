@@ -14,33 +14,29 @@
 
 ## P0 — 可先做、收益明确
 
-- [ ] 删除 `UserDocs/`。
-  - 它是上游 `dtdocs` 的完整 Hugo 网站、PDF/EPUB 构建脚本、主题和翻译，而不是当前应用的构建输入。
-  - 删除前仅需确认不再发布或本地生成用户手册；同时删除其 README 中的上游部署说明。
-
-- [ ] 将根目录 `README.md` 重写为 DarkTableNext 的最小入口。
+- [x] 将根目录 `README.md` 重写为 DarkTableNext 的最小入口。
   - 保留：项目定位、0.9 支持范围、FreeCM 初始化/更新、CMake 预设、Clang/GCC + ccache、开发文档链接。
   - 删除：上游徽章和站点、5.6.0 下载链接、Linux/Windows 安装说明、已删除 `build.sh`/`packaging/` 引用、旧社区和贡献入口。
 
-- [ ] 把 `darktable-tests` 从默认 FreeCM 物化集合改为显式测试配置。
+- [x] 把 `darktable-tests` 从默认 FreeCM 物化集合改为显式测试配置。
   - 涉及：`source_roots.lock.jsonc.in`、`configs/source_roots.py`、`src/tests/benchmark/`。
   - 目标：普通 `--init`/`--update` 和应用构建不下载测试资产；需要集成/基准测试时使用单独 profile 或明确命令。
   - 前置验证：为基准和集成测试补一个可重复的 CTest/脚本入口，避免把测试资产变成无人使用的锁定依赖。
 
-- [ ] 删除 Linux 桌面集成与 AppStream 产物。
+- [x] 删除 Linux 桌面集成与 AppStream 产物。
   - 涉及：`data/org.darktable.darktable.desktop.in`、`data/org.darktable.darktable.appdata.xml.in`、`data/CMakeLists.txt` 的 desktop/appdata 分支，以及根 `CMakeLists.txt` 中的 `intltool-merge`、`desktop-file-validate`、`appstream-util` 探测。
   - 这些文件仍记录上游 5.6.0 发布历史、上游 URL 和 Linux MIME 关联；macOS 当前不消费它们。
   - 删除后复核：macOS `cmake --preset mac_clang_debug` 不再要求 `intltool-merge`。
 
-- [ ] 删除旧源码包/发布归档链。
+- [x] 删除旧源码包/发布归档链。
   - 涉及：`.gitattributes` 的 `export-subst`、根 `CMakeLists.txt` 的 `SOURCE_PACKAGE`/`git archive`/tarball 版本分支、`tools/release/`、`tools/get_git_version_string.sh` 中的 `release-*` 约定。
   - 目标：版本只来自 `PROJECT_VERSION`（当前由 FreeCM 预设提供）或一个明确的 0.9 版本文件；后续 macOS 发布流程另行设计。
 
-- [ ] 删除与 macOS 无关的安装资源：`data/darktable.bash`、`data/gdb_commands` 及其 `data/CMakeLists.txt` 安装规则。
+- [x] 删除与 macOS 无关的安装资源：`data/darktable.bash`、`data/gdb_commands` 及其 `data/CMakeLists.txt` 安装规则。
   - `gdb_commands` 仅被崩溃处理路径引用，而当前开发基线使用 Xcode/lldb；若仍需崩溃诊断，应先确定新的 macOS 调试方案。
   - Bash completion 只有在新的 CLI 分发方案中明确支持时才保留。
 
-- [ ] 清理当前已失效的忽略规则。
+- [x] 清理当前已失效的忽略规则。
   - `doc/usermanual/`、`doc/api/`、`tools/iop_deps.pdf`、KDevelop/Eclipse/旧 IDE 规则与已删除目录有关。
   - 先保留构建产物、FreeCM、本地锁文件和 macOS 常用编辑器规则；其余按团队实际工具链缩减。
 

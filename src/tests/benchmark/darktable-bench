@@ -52,20 +52,14 @@ def locate_program(program):
       loc = whereami()
       # are we in the source tree?
       if 'src/tests/benchmark' in loc:
-         # check if available in the build directory
-         build, _, __ = loc.partition('src/tests/benchmark')
-         build += 'build/bin/'
-         if os.path.exists(build+program):
-            return build+program
+         source_root, _, __ = loc.partition('src/tests/benchmark')
+         for preset in ('mac_clang_debug', 'mac_clang_release', 'mac_gcc_debug',
+                        'mac_gcc_release'):
+            candidate = source_root + 'build/' + preset + '/bin/' + program
+            if os.path.exists(candidate):
+               return candidate
          if VERBOSE:
-            print(f'  did not find {program} in build/bin')
-      # are we in a sibling of the source tree?
-      if os.path.exists('../darktable/src/tests/benchmark'):
-         build = '../darktable/build/bin/'
-         if os.path.exists(build+program):
-            return build+program
-         if VERBOSE:
-            print(f'  did not find {program} in {build}')
+            print('  did not find a darktable-cli executable in a macOS preset build directory')
       # last location: check if on search path
       onpath = which(program)
       if onpath:
@@ -102,25 +96,22 @@ def locate_image(image):
          return loc+image
       if VERBOSE:
          print(f'  did not find {image} in {loc}')
-      # third: script is in source dir, so look in the FreeCM test source root
+      # third: script is in source dir, so look in the optional benchmark source root
       if 'src/tests/benchmark' in loc:
-         repo, _, __ = loc.partition('src/tests/benchmark')
-         integ = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', repo + 'build/dependency_source_roots/darktable-tests') + '/images/'
+         integ = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', loc.rstrip('/\\') + '/build/dependency_source_roots/darktable-tests') + '/images/'
          if os.path.exists(integ+image):
             return integ+image
          if VERBOSE:
             print(f'  did not find {image} in {integ}')
       # fourth: script is not in source dir, but current dir is top of source tree
-      test_root = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', os.getcwd() + '/build/dependency_source_roots/darktable-tests')
+      test_root = os.environ.get('DARKTABLE_TESTS_SOURCE_ROOT', os.getcwd() + '/src/tests/benchmark/build/dependency_source_roots/darktable-tests')
       img = test_root + '/images/mire1.cr2'
       if os.path.exists(img):
          return img
-      # fifth: we are in a sibling of the source tree
-      candidate = os.getcwd() + '/../darktable/build/dependency_source_roots/darktable-tests/images/mire1.cr2'
-      if os.path.exists(candidate):
-         return candidate
    # finally: give up
-   print(f'Unable to locate {image}')
+   print(f'Unable to locate {image}. Provide --image or materialize benchmark assets with:\n'
+         'python3 configs/benchmark_source_roots.py init-seeds && '
+         'python3 configs/benchmark_source_roots.py materialize')
    exit(1)
 
 def locate_xmp(xmp,version):

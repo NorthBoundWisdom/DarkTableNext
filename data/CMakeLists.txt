@@ -33,100 +33,11 @@ install(FILES luarc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT
 endif(USE_LUA)
 
 #
-# Install (and generate when necessary) other system shares
-#
-if(NOT WIN32)
-  if("avif" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/avif)
-  endif()
-  if("cr3" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/x-canon-cr3)
-  endif()
-  if("exr" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/x-exr image/aces)
-  endif()
-  if("heif" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/heif image/heic)
-  endif()
-  if("hej2" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/hej2k)
-  endif()
-  if("avci" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/avci)
-  endif()
-  if("jp2" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/jp2)
-  endif()
-  if("jxl" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/jxl)
-  endif()
-  if("webp" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/webp)
-  endif()
-  if("qoi" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/qoi)
-  endif()
-  if("fits" IN_LIST DT_SUPPORTED_EXTENSIONS)
-    list(APPEND DESKTOP_MIME_TYPES image/fits)
-  endif()
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.desktop.in ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop.in)
-  file(GLOB PO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/../po/*.po")
-  add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop
-    COMMAND sh -c "${intltool_merge_BIN} --desktop-style \"${CMAKE_CURRENT_SOURCE_DIR}/../po\" \"${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop.in\" \"${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop\""
-    MAIN_DEPENDENCY ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop.in
-    DEPENDS ${PO_FILES}
-    )
-  add_custom_target(darktable.desktop_file ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop)
-  if(${VALIDATE_DESKTOP_FILE})
-    add_custom_target(
-      validate_darktable_desktop ALL
-      COMMAND ${desktop_file_validate_BIN} --warn-kde ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop
-      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
-      COMMENT "Checking validity of org.darktable.darktable.desktop"
-      )
-    add_dependencies(darktable.desktop_file validate_darktable_desktop)
-  endif()
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.darktable.darktable.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications COMPONENT DTApplication)
-
-  if(${VALIDATE_APPDATA_FILE})
-    add_custom_command(
-      OUTPUT ${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml
-      SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.appdata.xml.in
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${DARKTABLE_SHAREDIR}/metainfo
-      COMMAND sh -c "${intltool_merge_BIN} --xml-style \"${CMAKE_CURRENT_SOURCE_DIR}/../po\" \"${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.appdata.xml.in\" \"${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml\""
-      COMMAND ${appstream_util_BIN} validate --nonet ${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml
-      MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.appdata.xml.in
-      DEPENDS ${PO_FILES}
-    )
-  else()
-    add_custom_command(
-      OUTPUT ${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${DARKTABLE_SHAREDIR}/metainfo
-      COMMAND sh -c "${intltool_merge_BIN} --xml-style \"${CMAKE_CURRENT_SOURCE_DIR}/../po\" \"${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.appdata.xml.in\" \"${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml\""
-      MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/org.darktable.darktable.appdata.xml.in
-      DEPENDS ${PO_FILES}
-    )
-  endif()
-
-  add_custom_target(darktable.appdata_file ALL DEPENDS ${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml)
-
-  install(FILES ${DARKTABLE_SHAREDIR}/metainfo/org.darktable.darktable.appdata.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo COMPONENT DTApplication)
-endif(NOT WIN32)
-
-#
 # Install watermarks
 #
 FILE(GLOB WATERMARKS "watermarks/*.svg")
 FILE(COPY ${WATERMARKS} DESTINATION "${DARKTABLE_DATADIR}/watermarks")
 install(FILES ${WATERMARKS} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable/watermarks COMPONENT DTApplication)
-
-#
-# Install gdb command file for backtrace generation
-#
-FILE(COPY gdb_commands DESTINATION "${DARKTABLE_DATADIR}")
-install(FILES gdb_commands DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
 
 #
 # Install shortcutsrc with extra key+mouse combinations, and any localized versions of it
@@ -255,8 +166,3 @@ endif(USE_XMLLINT)
 # postinst script should copy this into users homedirectory
 # $HOME/.config/darktable/darktable.rc
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/darktablerc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
-
-#
-# Install bash completion file. users/packagers can symlink that to /etc/bash_completion.d/
-#
-install(FILES darktable.bash DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)

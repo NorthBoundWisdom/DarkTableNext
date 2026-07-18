@@ -27,8 +27,7 @@
     "OpenEXR": "",
     "inih": "",
     "LibRaw": "",
-    "lua-scripts": "",
-    "darktable-tests": ""
+    "lua-scripts": ""
   },
   "dependencies": {
     "rawspeed": {
@@ -80,11 +79,6 @@
       "repoName": "lua-scripts",
       "remote": "https://github.com/darktable-org/lua-scripts.git",
       "commit": "3ade2a8b4059b954ae2993b84bb29c65985f0deb"
-    },
-    "darktable-tests": {
-      "repoName": "darktable-tests",
-      "remote": "https://github.com/darktable-org/darktable-tests.git",
-      "commit": "271ecc5afce1ee142cd92c3d6569721c00ee5af1"
     }
   }
 }

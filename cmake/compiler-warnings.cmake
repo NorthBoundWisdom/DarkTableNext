@@ -43,10 +43,6 @@ math(EXPR WANTED_STACK_SIZE 512*4*1024)
 # see  $ getconf PAGESIZE
 math(EXPR WANTED_THREADS_STACK_SIZE 512*4*1024)
 
-if(SOURCE_PACKAGE)
-  add_definitions(-D_RELEASE)
-endif()
-
 ###### GTK+3 ######
 #
 #  Do not include individual headers

@@ -80,12 +80,6 @@ DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
         env_key="LUA_SCRIPTS_SOURCE_ROOT",
         required_relative_paths=("README.md",),
     ),
-    DependencyRootSpec(
-        dependency_name="darktable-tests",
-        repo_name="darktable-tests",
-        env_key="DARKTABLE_TESTS_SOURCE_ROOT",
-        required_relative_paths=("images/mire1.cr2",),
-    ),
 )
 
 

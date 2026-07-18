@@ -19,8 +19,7 @@ endif(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
 if(DEFINED PROJECT_VERSION)
   project(darktable VERSION ${PROJECT_VERSION} LANGUAGES CXX C)
 else()
-  # Actual version string will be generated from git later
-  project(darktable VERSION 0 LANGUAGES CXX C)
+  project(darktable VERSION 0.9.0 LANGUAGES CXX C)
 endif()
 
 if(NOT APPLE)
@@ -96,13 +95,6 @@ if (NOT CMAKE_USE_PTHREADS_INIT)
     message(FATAL_ERROR "POSIX threads: not found")
 endif()
 
-# Check if this is source package build
-if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git)
-  set(SOURCE_PACKAGE 1)
-else()
-  set(SOURCE_PACKAGE 0)
-endif()
-
 #
 # Set platform defaults...
 #
@@ -130,18 +122,10 @@ add_definitions("-DOS_OBJECT_USE_OBJC=0")
 #
 file(MAKE_DIRECTORY "${DARKTABLE_BINDIR}/") # the bin/ subdirectory won't exist yet
 
-# adds custom command to generate header containing version info.
-# takes 1 optional parameter - version override.
+# Adds a custom command to generate the version source from PROJECT_VERSION.
 function(generate_version_gen_c)
-  if(ARGC EQUAL 2)
-    # if a version override was specified, use it
-    set(_VERSION "${ARGV0}")
-    set(_TYPE "${ARGV1}")
-  else()
-    # else, the tool will autodetect the version
-    set(_VERSION "")
-    set(_TYPE "git checkout")
-  endif()
+  set(_VERSION "${ARGV0}")
+  set(_TYPE "${ARGV1}")
 
   add_custom_target(
     create_version_gen ALL
@@ -153,47 +137,7 @@ function(generate_version_gen_c)
   )
 endfunction(generate_version_gen_c)
 
-if(DEFINED PROJECT_VERSION AND PROJECT_VERSION VERSION_GREATER 0)
-  #project version is defined by -D on the cmake command line
-  # only use that value, do not update it at make time
-  generate_version_gen_c(${PROJECT_VERSION} "version override")
-else(DEFINED PROJECT_VERSION AND PROJECT_VERSION VERSION_GREATER 0)
-  if(NOT SOURCE_PACKAGE) # i.e., a git checkout
-    # this part is setting the corresponding CMake variable which gets used for example when creating a source package
-    execute_process(
-      COMMAND sh ${CMAKE_SOURCE_DIR}/tools/get_git_version_string.sh OUTPUT_STRIP_TRAILING_WHITESPACE
-      OUTPUT_VARIABLE PROJECT_VERSION
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    # FIXME: PROJECT_VERSION will not be updated automatically, until you rerun cmake
-    generate_version_gen_c()
-  else(NOT SOURCE_PACKAGE)
-    if(NOT EXISTS ${CMAKE_SOURCE_DIR}/src/version_gen.c)
-      # should be expanded by git archive due to export-subst in .gitattributes
-      set(PROJECT_VERSION "archive-3c17b2976793303c186a5f64e8c9635ecf8b15d3")
-      # but was it expanded?
-      if(PROJECT_VERSION MATCHES Format)
-        set(PROJECT_VERSION "unknown-version")
-      endif(PROJECT_VERSION MATCHES Format)
-      generate_version_gen_c(${PROJECT_VERSION} "source package")
-    else(NOT EXISTS ${CMAKE_SOURCE_DIR}/src/version_gen.c)
-      # no need to create version_gen.c if it's already shipped. that is for example the case with our release tarballs
-      execute_process(
-        COMMAND sh ${CMAKE_SOURCE_DIR}/tools/parse_version_c.sh ${CMAKE_SOURCE_DIR}/src/version_gen.c OUTPUT_STRIP_TRAILING_WHITESPACE
-        OUTPUT_VARIABLE PROJECT_VERSION
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      )
-      # FIXME: (irrelevant) PROJECT_VERSION will not be updated automatically, until you rerun cmake
-      # but generate_version target expects it to be in build dir, so we need to copy it
-      add_custom_target(
-        create_version_gen ALL
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/src/version_gen.c ${DARKTABLE_BINDIR}/version_gen.c
-        DEPENDS ${CMAKE_SOURCE_DIR}/src/version_gen.c
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Updating version string (source package) - ${PROJECT_VERSION}"
-      )
-    endif(NOT EXISTS ${CMAKE_SOURCE_DIR}/src/version_gen.c)
-  endif(NOT SOURCE_PACKAGE)
-endif(DEFINED PROJECT_VERSION AND PROJECT_VERSION VERSION_GREATER 0)
+generate_version_gen_c(${PROJECT_VERSION} "project version")
 
 # needed to make sure that version string is actually updated.
 add_custom_command(
@@ -216,10 +160,6 @@ if(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if(CMAKE_BUILD_TYPE MATCHES "^[Dd][Ee][Bb][Uu][Gg]$" AND SOURCE_PACKAGE)
-  message(FATAL_ERROR "ERROR: Debug build type most likely isn't what you want, use RelWithDebInfo instead. If you're absolutely sure that this is what you want then just comment out this line.")
-endif()
-
 include(compiler-warnings)
 
 # we need some external programs for building darktable
@@ -228,31 +168,6 @@ message(STATUS "Looking for external programs")
 # we need perl for introspection
 find_program(perl_BIN perl REQUIRED)
 message(STATUS "Found perl")
-
-# we need intltool-merge for org.darktable.darktable.desktop
-find_program(intltool_merge_BIN intltool-merge REQUIRED)
-message(STATUS "Found intltool-merge")
-
-# we need desktop-file-validate to check org.darktable.darktable.desktop
-find_program(desktop_file_validate_BIN desktop-file-validate)
-if(${desktop_file_validate_BIN} STREQUAL "desktop_file_validate_BIN-NOTFOUND")
-  message(STATUS "Missing desktop-file-validate, problems in org.darktable.darktable.desktop might go unnoticed")
-  set(VALIDATE_DESKTOP_FILE 0)
-else(${desktop_file_validate_BIN} STREQUAL "desktop_file_validate_BIN-NOTFOUND")
-  message(STATUS "Found desktop-file-validate")
-  set(VALIDATE_DESKTOP_FILE 1)
-endif(${desktop_file_validate_BIN} STREQUAL "desktop_file_validate_BIN-NOTFOUND")
-
-# we need appstream-util to check darktable.appdata.xml
-if(VALIDATE_APPDATA_FILE)
-  find_program(appstream_util_BIN appstream-util)
-  if(${appstream_util_BIN} STREQUAL "appstream_util_BIN-NOTFOUND")
-    message(STATUS "Missing appstream-util, problems in darktable.appdata.xml might go unnoticed")
-    set(VALIDATE_APPDATA_FILE OFF)
-  else(${appstream_util_BIN} STREQUAL "appstream_util_BIN-NOTFOUND")
-    message(STATUS "Found appstream-util")
-  endif(${appstream_util_BIN} STREQUAL "appstream_util_BIN-NOTFOUND")
-endif(VALIDATE_APPDATA_FILE)
 
 if(TESTBUILD_OPENCL_PROGRAMS)
   set(TESTBUILD_OPENCL_PROGRAMS OFF)

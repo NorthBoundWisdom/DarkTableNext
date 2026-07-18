@@ -734,9 +734,7 @@ find_package(Pugixml 1.5 REQUIRED)
 include_directories(SYSTEM ${Pugixml_INCLUDE_DIRS})
 list(APPEND LIBS ${Pugixml_LIBRARIES})
 
-if(NOT SOURCE_PACKAGE)
-  add_definitions(-Werror -Wfatal-errors )
-endif()
+add_definitions(-Werror -Wfatal-errors)
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-Wno-error=pass-failed" DT_CXX_HAS_NO_ERROR_PASS_FAILED)
