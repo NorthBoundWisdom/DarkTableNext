@@ -2678,34 +2678,14 @@ static void _import_extended_clicked(GtkButton *button, gpointer user_data)
 
     if (resp == GTK_RESPONSE_OK)
     {
-        // user asked to import the darktable system shortcuts file (localized, if available)
+        // User asked to import the system shortcuts file.
         char sharedir[PATH_MAX] = {0};
         dt_loc_get_sharedir(sharedir, sizeof(sharedir));
 
-        const char *langcode = g_getenv("LANGUAGE");
-        gboolean loaded = FALSE;
-        if (langcode && *langcode)
-        {
-            const char *underscore = strchr(langcode, '_');
-            const int lang_len = underscore ? underscore - langcode : strlen(langcode);
-            gchar *localized_file =
-                g_strdup_printf("darktable/shortcutsrc.%.*s", lang_len, langcode);
-            gchar *shortcuts_file = g_build_filename(sharedir, localized_file, NULL);
-            if (g_file_test(shortcuts_file, G_FILE_TEST_EXISTS))
-            {
-                dt_print(DT_DEBUG_PARAMS, "load localized shortcuts from %s", shortcuts_file);
-                dt_shortcuts_load(shortcuts_file, FALSE);
-                loaded = TRUE;
-            }
-            g_free(shortcuts_file);
-        }
-        if (!loaded)
-        {
-            gchar *shortcuts_file = g_build_filename(sharedir, "darktable/shortcutsrc", NULL);
-            dt_print(DT_DEBUG_PARAMS, "load default shortcuts from %s", shortcuts_file);
-            dt_shortcuts_load(shortcuts_file, FALSE);
-            g_free(shortcuts_file);
-        }
+        gchar *shortcuts_file = g_build_filename(sharedir, "darktable/shortcutsrc", NULL);
+        dt_print(DT_DEBUG_PARAMS, "load default shortcuts from %s", shortcuts_file);
+        dt_shortcuts_load(shortcuts_file, FALSE);
+        g_free(shortcuts_file);
         dt_shortcuts_save(NULL, FALSE);
     }
 }

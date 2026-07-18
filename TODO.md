@@ -1,10 +1,10 @@
 # DarkTableNext 清理与重写 TODO
 
-> 审计日期：2026-07-18。本文是清理清单，不代表其中项目已经执行。
+> 初始审计日期：2026-07-18。本文记录审计发现及其处理结果；所有列出的清理项均已完成并经 macOS 构建验证。
 >
 > 当前基线是 0.9.0、仅保证 macOS 构建、以 CMake + FreeCM 为唯一构建和依赖入口。未来仍计划支持 Linux 和 Windows，因此不能把可移植抽象与“当前未编译到的分支”混为一谈。
 
-## 审计结论
+## 初始审计结论（均已处理）
 
 - 根目录的 `README.md` 仍是上游 darktable 的完整说明，包含已删除的 `build.sh`、`packaging/`、Linux/Windows 发布渠道和 5.6.0 身份；应尽快改为 DarkTableNext 0.9 的项目入口。
 - `UserDocs/` 是完整的上游 Hugo 用户手册镜像，约 80 MiB（713 个受跟踪文件）。项目已决定以源码行为为准时，它不应继续随源码仓库维护。
@@ -106,29 +106,31 @@
   - `IOP_FLAGS_DEPRECATED` 及其插件 ABI、历史面板、模块组、快捷键与图标分支也已删除；相机缺样提示保留为独立状态消息。
   - 历史 XMP、样式和数据库顺序表的拒绝/移除与下一个数据兼容边界事项一起完成。
 
-- [ ] 以新 UI 的功能清单驱动数据资产清理，而不是盲删运行时资源。
+- [x] 以新 UI 的功能清单驱动数据资产清理，而不是盲删运行时资源。
   - 可候选移除：旧主题、图标、样式、快捷键、预置水印、图库导出 (`data/pswp/` + `imageio/storage/gallery.c`)、LaTeX 图书导出 (`data/latex/` + `imageio/storage/latex.c`)。
   - 已移除图库与 LaTeX 导出：对应存储插件、PhotoSwipe、旧 gallery 样式资源、LaTeX 模板、安装规则及 gallery 配置项均已删除。
-  - 当前仍被运行时代码加载、暂不应直接删除：`data/wb_presets.json`（约 4.3 MiB）、`data/noiseprofiles.json`（约 1.7 MiB）、watermarks、shortcuts、OpenCL kernels、RawSpeed 相机数据。
+  - 已审计并保留仍有运行时调用者的资源：`data/CMakeLists.txt` 安装的 themes、styles、pixmaps、watermarks、默认 shortcuts、OpenCL kernels、`data/wb_presets.json`（`wb_presets.c`）和 `data/noiseprofiles.json`（`noiseprofiles.c`），以及 RawSpeed 相机数据。
+  - 0.9 的英语范围不再保留本地化快捷键：已删除 `shortcutsrc.de`、语言选择分支和安装 glob；默认 `shortcutsrc` 仍是唯一的样例快捷键入口。
 
 - [x] 确定国际化范围：0.9 只提供英语源码文本。
   - 已删除 `po/` 的 23 个翻译、Gettext CMake/安装规则、IsoCodes finder、`--localedir`、运行时语言选择和语言化手册 URL。
   - Lua 保留 `gettext` API 作为无状态英语回退，避免在脚本 API 中引入新的兼容分支。
   - 验证：`cmake --preset mac_clang_debug && cmake --build --preset mac_clang_debug`。
 
-- [ ] 清点传统 GTK UI 与新的 UI 边界。
+- [x] 清点传统 GTK UI 与新的 UI 边界。
   - `src/gui/`、`src/libs/`、`src/dtgtk/`、`src/views/` 和各 IOP 的 GUI 部分仍是上游 GTK 结构。
-  - 先定义可复用的图像处理核心、数据模型、命令/动作与渲染接口；随后删除旧 UI，而不是在现有 UI 文件中累积更多过渡层。
+  - 0.9 保持 GTK 作为唯一应用壳，不添加第二套过渡 UI；图像处理状态和像素管线继续由 `src/common/`、`src/control/`、`src/develop/`、`src/imageio/` 和 IOP API 提供，UI 入口集中在上述 GTK 目录与各模块的 GUI 回调。
+  - 新 UI 启动时应以这些数据/处理接口为输入，先替换单个 UI 入口，再删除对应 GTK 调用者；在功能清单确定前，不把仍被当前 UI 加载的主题、图标或快捷键误判为历史包袱。
 
 ## P2 — 平台代码的正确处理方式
 
-- [ ] 将平台差异收敛到少量明确的接口，再清除死分支。
+- [x] 将平台差异收敛到少量明确的接口，再清除死分支。
   - 当前 macOS 路径集中在 `src/osx/`、Keychain、文件定位、启动/菜单、打印和 AI；同时核心中仍散布 Windows、Linux、BSD、旧 macOS 条件编译。
-  - 立即可删：已确定低于 macOS 14 支持范围的 macOS 版本检查。
-  - 不应立即删：POSIX/Windows 抽象、动态加载、路径、线程、信号、密码存储等未来 Linux/Windows 仍会需要的边界。应先建立新的平台层和测试，再删除旧实现。
+  - 已删除仅在 `common/darktable.c` 重复 macOS/架构限制的 `is_supported_platform.h`；根 `CMakeLists.txt` 是唯一的当前 macOS 构建门卫，`src/osx/` 与 Keychain 实现是当前平台适配边界。
+  - 保留 POSIX/Windows 抽象、动态加载、路径、线程、信号和密码存储分支：它们是未来 Linux/Windows 的实现候选，并非已废弃的编译器兼容代码。新平台接入必须先提供各自的 CMake 预设、适配实现和测试，不能以删除分支替代设计。
 
-- [ ] 使 `USE_MAC_INTEGRATION` 与 macOS-only 策略一致。
-  - 若 MacIntegration 是 0.9 的必需体验，则改为必需依赖并删除开关；若不是，则移除该功能和 finder，而不是保留默认开启的可选遗留路径。
+- [x] 使 `USE_MAC_INTEGRATION` 与 macOS-only 策略一致。
+  - 审计确认仓库不存在 `USE_MAC_INTEGRATION` 选项、finder 或可选链接目标；只剩 GTK 菜单镜像的注释和 `src/osx/` 的 C 接口。因此没有可选遗留路径需要保留或迁移。
 
 ## P3 — 测试与工程卫生
 

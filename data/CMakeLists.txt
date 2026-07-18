@@ -26,11 +26,10 @@ FILE(COPY ${WATERMARKS} DESTINATION "${DARKTABLE_DATADIR}/watermarks")
 install(FILES ${WATERMARKS} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable/watermarks COMPONENT DTApplication)
 
 #
-# Install shortcutsrc with extra key+mouse combinations, and any localized versions of it
+# Install the default shortcuts with extra key+mouse combinations.
 #
-FILE(GLOB LOCALIZED_SHORTCUTS "shortcutsrc.*")
-FILE(COPY shortcutsrc ${LOCALIZED_SHORTCUTS} DESTINATION "${DARKTABLE_DATADIR}")
-install(FILES shortcutsrc ${LOCALIZED_SHORTCUTS} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
+FILE(COPY shortcutsrc DESTINATION "${DARKTABLE_DATADIR}")
+install(FILES shortcutsrc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
 
 #
 # Install noiseprofiles
