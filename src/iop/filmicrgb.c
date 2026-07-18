@@ -62,7 +62,7 @@
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(1)
 
-DT_MODULE_INTROSPECTION(6, dt_iop_filmicrgb_params_t)
+DT_MODULE_INTROSPECTION(7, dt_iop_filmicrgb_params_t)
 
 /**
  * DOCUMENTATION
@@ -99,7 +99,6 @@ typedef enum dt_iop_filmicrgb_methods_type_t
     DT_FILMIC_METHOD_MAX_RGB = 1,           // $DESCRIPTION: "max RGB"
     DT_FILMIC_METHOD_LUMINANCE = 2,         // $DESCRIPTION: "luminance Y"
     DT_FILMIC_METHOD_POWER_NORM = 3,        // $DESCRIPTION: "RGB power norm"
-    DT_FILMIC_METHOD_EUCLIDEAN_NORM_V1 = 4, // $DESCRIPTION: "RGB euclidean norm (legacy)"
     DT_FILMIC_METHOD_EUCLIDEAN_NORM_V2 = 5, // $DESCRIPTION: "RGB euclidean norm"
 } dt_iop_filmicrgb_methods_type_t;
 
@@ -112,7 +111,6 @@ typedef enum dt_iop_filmicrgb_curve_type_t
 
 typedef enum dt_iop_filmicrgb_colorscience_type_t
 {
-    DT_FILMIC_COLORSCIENCE_V1 = 0, // $DESCRIPTION: "v3 (2019)"
     DT_FILMIC_COLORSCIENCE_V2 = 1, // $DESCRIPTION: "v4 (2020)"
     DT_FILMIC_COLORSCIENCE_V3 = 2, // $DESCRIPTION: "v5 (2021)"
     DT_FILMIC_COLORSCIENCE_V4 = 3, // $DESCRIPTION: "v6 (2022)"
@@ -388,7 +386,6 @@ static inline float get_pixel_norm(const dt_aligned_pixel_t pixel,
     // a newly added norm should satisfy the condition that it is linear with respect to grey pixels:
     // norm(R, G, B) = norm(x, x, x) = x
     // the desaturation code in chroma preservation mode relies on this assumption.
-    // DT_FILMIC_METHOD_EUCLIDEAN_NORM_V1 is an exception to this and is marked as legacy.
     // DT_FILMIC_METHOD_EUCLIDEAN_NORM_V2 takes the Euclidean norm and scales it such that
     // norm(1, 1, 1) = 1.
     switch (variant)
@@ -406,9 +403,6 @@ static inline float get_pixel_norm(const dt_aligned_pixel_t pixel,
     case (DT_FILMIC_METHOD_POWER_NORM):
         return pixel_rgb_norm_power(pixel);
 
-    case (DT_FILMIC_METHOD_EUCLIDEAN_NORM_V1):
-        return sqrtf(sqf(pixel[0]) + sqf(pixel[1]) + sqf(pixel[2]));
-
     case (DT_FILMIC_METHOD_EUCLIDEAN_NORM_V2):
         return sqrtf(sqf(pixel[0]) + sqf(pixel[1]) + sqf(pixel[2])) * INVERSE_SQRT_3;
 
@@ -419,14 +413,6 @@ static inline float get_pixel_norm(const dt_aligned_pixel_t pixel,
                                     work_profile->nonlinearlut) :
                                 dt_camera_rgb_luminance(pixel);
     }
-}
-
-DT_OMP_DECLARE_SIMD(uniform(grey, black, dynamic_range))
-static inline float log_tonemapping_v1(const float x, const float grey, const float black,
-                                       const float dynamic_range)
-{
-    const float temp = (log2f(x / grey) - black) / dynamic_range;
-    return CLAMP(temp, NORM_MIN, 1.0f);
 }
 
 static inline float log_tonemapping_v2_1ch(const float x, const float grey, const float black,
@@ -525,18 +511,6 @@ static inline float filmic_spline(const float x, const dt_aligned_pixel_t M1,
     }
 
     return result;
-}
-
-DT_OMP_DECLARE_SIMD(uniform(sigma_toe, sigma_shoulder))
-static inline float filmic_desaturate_v1(const float x, const float sigma_toe,
-                                         const float sigma_shoulder, const float saturation)
-{
-    const float radius_toe = x;
-    const float radius_shoulder = 1.0f - x;
-    const float key_toe = expf(-0.5f * radius_toe * radius_toe / sigma_toe);
-    const float key_shoulder = expf(-0.5f * radius_shoulder * radius_shoulder / sigma_shoulder);
-
-    return 1.0f - clamp_simd((key_toe + key_shoulder) / saturation);
 }
 
 DT_OMP_DECLARE_SIMD(uniform(sigma_toe, sigma_shoulder))
@@ -911,50 +885,6 @@ error:
     return success;
 }
 
-static inline void filmic_split_v1(const float *const restrict in, float *const restrict out,
-                                   const dt_iop_order_iccprofile_info_t *const work_profile,
-                                   const dt_iop_filmicrgb_data_t *const data,
-                                   const dt_iop_filmic_rgb_spline_t spline, const size_t width,
-                                   const size_t height)
-{
-    const dt_aligned_pixel_t output_power = {data->output_power, data->output_power,
-                                             data->output_power, data->output_power};
-
-    DT_OMP_FOR()
-    for (size_t k = 0; k < height * width * 4; k += 4)
-    {
-        const float *const restrict pix_in = in + k;
-        dt_aligned_pixel_t temp;
-
-        // Log tone-mapping
-        for (int c = 0; c < 3; c++)
-            temp[c] = log_tonemapping_v1(MAX(pix_in[c], NORM_MIN), data->grey_source,
-                                         data->black_source, data->dynamic_range);
-
-        // Get the desaturation coeff based on the log value
-        const float lum = (work_profile) ? dt_ioppr_get_rgb_matrix_luminance(
-                                               temp, work_profile->matrix_in, work_profile->lut_in,
-                                               work_profile->unbounded_coeffs_in,
-                                               work_profile->lutsize, work_profile->nonlinearlut) :
-                                           dt_camera_rgb_luminance(temp);
-        const float desaturation =
-            filmic_desaturate_v1(lum, data->sigma_toe, data->sigma_shoulder, data->saturation);
-
-        // Desaturate on the non-linear parts of the curve
-        // Filmic S curve on the max RGB
-        // Apply the transfer function of the display
-        dt_aligned_pixel_t pix_out = {0.0f, 0.0f, 0.0f, 0.0f};
-        for (int c = 0; c < 3; c++)
-            pix_out[c] = filmic_spline(linear_saturation(temp[c], lum, desaturation), spline.M1,
-                                       spline.M2, spline.M3, spline.M4, spline.M5,
-                                       spline.latitude_min, spline.latitude_max, spline.type);
-        dt_vector_clip(pix_out);
-        dt_vector_powf(pix_out, output_power, pix_out);
-        copy_pixel_nontemporal(out + k, pix_out);
-    }
-    dt_omploop_sfence(); // ensure that nontemporal writes complete before we attempt to read output
-}
-
 static inline void filmic_split_v2_v3(const float *const restrict in, float *const restrict out,
                                       const dt_iop_order_iccprofile_info_t *const work_profile,
                                       const dt_iop_filmicrgb_data_t *const data,
@@ -996,63 +926,6 @@ static inline void filmic_split_v2_v3(const float *const restrict in, float *con
         }
         dt_vector_clip(pix_out);
         dt_vector_powf(pix_out, output_power, pix_out);
-        copy_pixel_nontemporal(out + k, pix_out);
-    }
-    dt_omploop_sfence(); // ensure that nontemporal writes complete before we attempt to read output
-}
-
-static inline void filmic_chroma_v1(const float *const restrict in, float *const restrict out,
-                                    const dt_iop_order_iccprofile_info_t *const work_profile,
-                                    const dt_iop_filmicrgb_data_t *const data,
-                                    const dt_iop_filmic_rgb_spline_t spline, const int variant,
-                                    const size_t width, const size_t height)
-{
-    DT_OMP_FOR()
-    for (size_t k = 0; k < height * width * 4; k += 4)
-    {
-        const float *const restrict pix_in = in + k;
-
-        dt_aligned_pixel_t ratios = {0.0f, 0.0f, 0.0f, 0.0f};
-        float norm = MAX(get_pixel_norm(pix_in, variant, work_profile), NORM_MIN);
-
-        // Save the ratios
-        for_each_channel(c, aligned(pix_in)) ratios[c] = pix_in[c] / norm;
-
-        // Sanitize the ratios
-        const float min_ratios = MIN(MIN(ratios[0], ratios[1]), ratios[2]);
-        if (min_ratios < 0.0f)
-            for_each_channel(c) ratios[c] -= min_ratios;
-
-        // Log tone-mapping
-        norm = log_tonemapping_v1(norm, data->grey_source, data->black_source, data->dynamic_range);
-
-        // Get the desaturation value based on the log value
-        const float desaturation =
-            filmic_desaturate_v1(norm, data->sigma_toe, data->sigma_shoulder, data->saturation);
-
-        for_each_channel(c) ratios[c] *= norm;
-
-        const float lum = (work_profile) ?
-                              dt_ioppr_get_rgb_matrix_luminance(
-                                  ratios, work_profile->matrix_in, work_profile->lut_in,
-                                  work_profile->unbounded_coeffs_in, work_profile->lutsize,
-                                  work_profile->nonlinearlut) :
-                              dt_camera_rgb_luminance(ratios);
-
-        // Desaturate on the non-linear parts of the curve and save ratios
-        for_each_channel(c, aligned(ratios)) ratios[c] =
-            linear_saturation(ratios[c], lum, desaturation) / norm;
-
-        // Filmic S curve on the max RGB
-        // Apply the transfer function of the display
-        norm = powf(
-            clamp_simd(filmic_spline(norm, spline.M1, spline.M2, spline.M3, spline.M4, spline.M5,
-                                     spline.latitude_min, spline.latitude_max, spline.type)),
-            data->output_power);
-
-        // Re-apply ratios
-        dt_aligned_pixel_t pix_out;
-        for_each_channel(c, aligned(ratios, pix_out)) pix_out[c] = ratios[c] * norm;
         copy_pixel_nontemporal(out + k, pix_out);
     }
     dt_omploop_sfence(); // ensure that nontemporal writes complete before we attempt to read output
@@ -1655,7 +1528,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
                 for (int i = 0; i < data->high_quality_reconstruction; i++)
                 {
                     compute_ratios(reconstructed, norms, ratios, work_profile,
-                                   DT_FILMIC_METHOD_EUCLIDEAN_NORM_V1, roi_out->width,
+                                   DT_FILMIC_METHOD_EUCLIDEAN_NORM_V2, roi_out->width,
                                    roi_out->height);
                     success_2 = success_2 && reconstruct_highlights(ratios, mask, reconstructed,
                                                                     DT_FILMIC_RECONSTRUCT_RATIOS,
@@ -1687,11 +1560,8 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
         if (data->preserve_color == DT_FILMIC_METHOD_NONE)
         {
             // no chroma preservation
-            if (data->version == DT_FILMIC_COLORSCIENCE_V1)
-                filmic_split_v1(in, out, work_profile, data, data->spline, roi_out->width,
-                                roi_in->height);
-            else if (data->version == DT_FILMIC_COLORSCIENCE_V2 ||
-                     data->version == DT_FILMIC_COLORSCIENCE_V3)
+            if (data->version == DT_FILMIC_COLORSCIENCE_V2 ||
+                data->version == DT_FILMIC_COLORSCIENCE_V3)
                 filmic_split_v2_v3(in, out, work_profile, data, data->spline, roi_out->width,
                                    roi_in->height);
             else if (data->version == DT_FILMIC_COLORSCIENCE_V4)
@@ -1702,11 +1572,8 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
         else
         {
             // chroma preservation
-            if (data->version == DT_FILMIC_COLORSCIENCE_V1)
-                filmic_chroma_v1(in, out, work_profile, data, data->spline, data->preserve_color,
-                                 roi_out->width, roi_out->height);
-            else if (data->version == DT_FILMIC_COLORSCIENCE_V2 ||
-                     data->version == DT_FILMIC_COLORSCIENCE_V3)
+            if (data->version == DT_FILMIC_COLORSCIENCE_V2 ||
+                data->version == DT_FILMIC_COLORSCIENCE_V3)
                 filmic_chroma_v2_v3(in, out, work_profile, data, data->spline, data->preserve_color,
                                     roi_out->width, roi_out->height, data->version);
             else if (data->version == DT_FILMIC_COLORSCIENCE_V4)
@@ -3061,27 +2928,7 @@ static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_mo
                         g->graph_height + 2. * DT_PIXEL_APPLY_DPI(2.));
         cairo_clip(cr);
 
-        if (p->version == DT_FILMIC_COLORSCIENCE_V1)
-        {
-            cairo_move_to(
-                cr, 0,
-                g->graph_height *
-                    (1.0 - filmic_desaturate_v1(0.0f, sigma_toe, sigma_shoulder, saturation)));
-            for (int k = 1; k < 256; k++)
-            {
-                float x = k / 255.0;
-                const float y = filmic_desaturate_v1(x, sigma_toe, sigma_shoulder, saturation);
-
-                if (g->gui_mode == DT_FILMIC_GUI_BASECURVE)
-                    x = exp_tonemapping_v2(x, grey, p->black_point_source, DR);
-                else if (g->gui_mode == DT_FILMIC_GUI_BASECURVE_LOG)
-                    x = dt_log_scale_axis(exp_tonemapping_v2(x, grey, p->black_point_source, DR),
-                                          LOGBASE);
-
-                cairo_line_to(cr, x * g->graph_width, g->graph_height * (1.0 - y));
-            }
-        }
-        else if (p->version == DT_FILMIC_COLORSCIENCE_V2 || p->version == DT_FILMIC_COLORSCIENCE_V3)
+        if (p->version == DT_FILMIC_COLORSCIENCE_V2 || p->version == DT_FILMIC_COLORSCIENCE_V3)
         {
             cairo_move_to(
                 cr, 0,
@@ -4186,11 +4033,6 @@ void gui_init(dt_iop_module_t *self)
                                 _("ensure the original colors are preserved.\n"
                                   "may reinforce chromatic aberrations and chroma noise,\n"
                                   "so ensure they are properly corrected elsewhere."));
-    // hide legacy Euclidean norm by default
-    const int pos =
-        dt_bauhaus_combobox_get_from_value(g->preserve_color, DT_FILMIC_METHOD_EUCLIDEAN_NORM_V1);
-    dt_bauhaus_combobox_remove_at(g->preserve_color, pos);
-
     // Curve type
     g->highlights = dt_bauhaus_combobox_from_params(self, "highlights");
     gtk_widget_set_tooltip_text(
@@ -4294,7 +4136,7 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
 
     if (!w || w == g->version)
     {
-        if (p->version == DT_FILMIC_COLORSCIENCE_V1 || p->version == DT_FILMIC_COLORSCIENCE_V4)
+        if (p->version == DT_FILMIC_COLORSCIENCE_V4)
         {
             dt_bauhaus_widget_set_label(g->saturation, NULL, N_("extreme luminance saturation"));
             gtk_widget_set_tooltip_text(
