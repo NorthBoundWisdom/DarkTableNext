@@ -96,7 +96,8 @@
   - 已完成数据库合同：新建库直接创建最终 schema，`library.db`/`data.db` 均为版本 `1`；任何已有版本均明确拒绝。旧数据库升级、XDG 路径迁移和旧 mipmap 清理已删除。
   - 已完成 XMP 合同：0.9 写入并只读取 `Xmp.darktable.xmp_version = 6`；删除 v1–v5 history、遮罩和时间戳转换。无 darktable 编辑历史的通用 XMP 仍可读取基础元数据。
   - 已删除 Lightroom 旁路导入（`src/develop/lightroom.*`）及其在导入/暗房中的调用。
-  - 待继续：移除 IOP、混合、遮罩、样式与预置参数的逐版本转换实现，并让版本不匹配的内容直接拒绝。
+  - 已完成混合、遮罩、样式与预置的参数合同：逐版本转换函数、旧版内置预置及废弃的 blend enum 均已删除；历史版本或大小不匹配的参数直接拒绝。
+  - 待继续：从 IOP、格式、存储和 lib 插件 API 中移除遗留 `legacy_params` 回调及各模块仍残留的转换实现。
 
 - [x] 删除 17 个已标记 `IOP_FLAGS_DEPRECATED` 的模块。
   - 已删除：`basicadj`、`channelmixer`、`clahe`、`clipping`、`colisa`、`colortransfer`、`defringe`、`equalizer`、`filmic`、`globaltonemap`、`invert`、`levels`、`relight`、`spots`、`tonemap`、`vibrance`、`zonesystem`。

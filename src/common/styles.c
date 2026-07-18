@@ -683,7 +683,7 @@ void dt_styles_apply_style_item(dt_develop_t *dev, dt_style_item_t *style_item,
             g_strlcpy(module->multi_name, style_item->multi_name, sizeof(module->multi_name));
             module->multi_name_hand_edited = style_item->multi_name_hand_edited;
 
-            // TODO: this is copied from dt_dev_read_history_ext(), maybe do a helper with this?
+            // Styles use the same current parameter contract as image history.
             if (style_item->blendop_params &&
                 (style_item->blendop_version == dt_develop_blend_version()) &&
                 (style_item->blendop_params_size == sizeof(dt_develop_blend_params_t)))
@@ -691,70 +691,33 @@ void dt_styles_apply_style_item(dt_develop_t *dev, dt_style_item_t *style_item,
                 memcpy(module->blend_params, style_item->blendop_params,
                        sizeof(dt_develop_blend_params_t));
             }
-            else if (style_item->blendop_params &&
-                     dt_develop_blend_legacy_params(
-                         module, style_item->blendop_params, style_item->blendop_version,
-                         module->blend_params, dt_develop_blend_version(),
-                         style_item->blendop_params_size) == FALSE)
-            {
-                // do nothing
-            }
-            else
+            else if (!style_item->blendop_params)
             {
                 memcpy(module->blend_params, module->default_blendop_params,
                        sizeof(dt_develop_blend_params_t));
             }
-
-            gboolean autoinit = FALSE;
-
-            if (style_item->params_size != 0 && (module->version() != style_item->module_version ||
-                                                 module->params_size != style_item->params_size ||
-                                                 strcmp(style_item->operation, module->op)))
-            {
-                const int legacy_ret = dt_iop_legacy_params(
-                    module, style_item->params, style_item->params_size, style_item->module_version,
-                    &module->params, module->version());
-
-                if (legacy_ret == 1)
-                {
-                    dt_print(DT_DEBUG_ALWAYS,
-                             "[dt_styles_apply_style_item] module `%s' version mismatch:"
-                             " history is %d, darktable is %d",
-                             module->op, style_item->module_version, module->version());
-                    dt_control_log(_("module `%s' version mismatch: %d != %d"), module->op,
-                                   module->version(), style_item->module_version);
-
-                    do_merge = FALSE;
-                }
-                else if (legacy_ret == -1)
-                {
-                    // auto-init module
-                    autoinit = TRUE;
-                }
-                /*
-         * Fix for flip iop: previously it was not always needed, but it might be
-         * in history stack as "orientation (off)", but now we always want it
-         * by default, so if it is disabled, enable it, and replace params with
-         * default_params. if user want to, he can disable it.
-         */
-                if (dt_iop_module_is(module, "flip") && !module->enabled &&
-                    labs(style_item->module_version) == 1)
-                {
-                    memcpy(module->params, module->default_params, module->params_size);
-                    module->enabled = TRUE;
-                }
-            }
             else
             {
-                if (style_item->params_size == 0)
-                {
-                    /* an auto-init module, we cannot handle this here as we
-             don't have the image's default parameters. This parameter
-             must be set when loading history in the darkroom. */
-                    autoinit = TRUE;
-                }
-                else
-                    memcpy(module->params, style_item->params, style_item->params_size);
+                dt_print(DT_DEBUG_ALWAYS,
+                         "[dt_styles_apply_style_item] module `%s' has unsupported blend parameters",
+                         module->op);
+                do_merge = FALSE;
+            }
+
+            gboolean autoinit = style_item->params_size == 0;
+            if (style_item->params_size != 0 &&
+                (module->version() != style_item->module_version ||
+                 module->params_size != style_item->params_size ||
+                 strcmp(style_item->operation, module->op)))
+            {
+                dt_print(DT_DEBUG_ALWAYS,
+                         "[dt_styles_apply_style_item] module `%s' has unsupported parameters",
+                         module->op);
+                do_merge = FALSE;
+            }
+            else if (style_item->params_size != 0)
+            {
+                memcpy(module->params, style_item->params, style_item->params_size);
             }
 
             if (do_merge)

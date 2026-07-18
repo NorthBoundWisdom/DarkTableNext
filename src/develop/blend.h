@@ -43,8 +43,6 @@ typedef enum dt_develop_blend_colorspace_t
 
 typedef enum dt_develop_blend_mode_t
 {
-    DEVELOP_BLEND_DISABLED_OBSOLETE = 0x00, /* same as the new normal */
-    DEVELOP_BLEND_NORMAL_OBSOLETE = 0x01,   /* obsolete as it did clamping */
     DEVELOP_BLEND_LIGHTEN = 0x02,
     DEVELOP_BLEND_DARKEN = 0x03,
     DEVELOP_BLEND_MULTIPLY = 0x04,
@@ -63,8 +61,6 @@ typedef enum dt_develop_blend_mode_t
     DEVELOP_BLEND_CHROMATICITY = 0x11,
     DEVELOP_BLEND_HUE = 0x12,
     DEVELOP_BLEND_COLOR = 0x13,
-    DEVELOP_BLEND_INVERSE_OBSOLETE = 0x14,   /* obsolete */
-    DEVELOP_BLEND_UNBOUNDED_OBSOLETE = 0x15, /* obsolete as new normal takes over */
     DEVELOP_BLEND_COLORADJUST = 0x16,
     DEVELOP_BLEND_DIFFERENCE2 = 0x17,
     DEVELOP_BLEND_NORMAL2 = 0x18,
@@ -79,7 +75,6 @@ typedef enum dt_develop_blend_mode_t
     DEVELOP_BLEND_RGB_R = 0x21,
     DEVELOP_BLEND_RGB_G = 0x22,
     DEVELOP_BLEND_RGB_B = 0x23,
-    DEVELOP_BLEND_MULTIPLY_REVERSE_OBSOLETE = 0x24, /* obsoleted by MULTIPLY + REVERSE */
     DEVELOP_BLEND_SUBTRACT_INVERSE = 0x25,
     DEVELOP_BLEND_DIVIDE = 0x26,
     DEVELOP_BLEND_DIVIDE_INVERSE = 0x27,
@@ -384,15 +379,6 @@ void dt_develop_blend_init_blendif_parameters(dt_develop_blend_params_t *blend_p
 /** returns the color space for the given module */
 dt_iop_colorspace_type_t dt_develop_blend_colorspace(const dt_dev_pixelpipe_iop_t *const piece,
                                                      const dt_iop_colorspace_type_t cst);
-
-/** update blendop params to current version */
-gboolean dt_develop_blend_legacy_params(dt_iop_module_t *module, const void *const old_params,
-                                        const int old_version, void *new_params,
-                                        const int new_version, const int length);
-gboolean dt_develop_blend_legacy_params_from_so(dt_iop_module_so_t *module_so,
-                                                const void *const old_params, const int old_version,
-                                                void *new_params, const int new_version,
-                                                const int length);
 
 /** color blending utility functions */
 

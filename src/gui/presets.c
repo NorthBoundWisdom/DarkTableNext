@@ -1023,13 +1023,6 @@ void dt_gui_presets_apply_preset(const gchar *name, dt_iop_module_t *module)
         {
             dt_iop_commit_blend_params(module, blendop_params);
         }
-        else if (blendop_params &&
-                 dt_develop_blend_legacy_params(module, blendop_params, blendop_version,
-                                                module->blend_params, dt_develop_blend_version(),
-                                                bl_length) == FALSE)
-        {
-            // do nothing
-        }
         else
         {
             dt_iop_commit_blend_params(module, module->default_blendop_params);

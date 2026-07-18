@@ -2274,7 +2274,6 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
 
     int auto_apply_modules_count = 0;
     gboolean first_run = FALSE;
-    gboolean legacy_params = FALSE;
 
     dt_ioppr_set_default_iop_order(dev, imgid);
 
@@ -2545,28 +2544,27 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
         if (history_end_current > dev->history_end)
             hist->module->iop_order = hist->iop_order;
 
-        // Copy blending params if valid, else try to convert legacy params
+        // 0.9 accepts only its current blend-parameter representation.
         if (blendop_params && is_valid_blendop_version && is_valid_blendop_size)
         {
             memcpy(hist->blend_params, blendop_params, sizeof(dt_develop_blend_params_t));
         }
-        else if (blendop_params &&
-                 dt_develop_blend_legacy_params(hist->module, blendop_params, blendop_version,
-                                                hist->blend_params, dt_develop_blend_version(),
-                                                bl_length) == FALSE)
-        {
-            legacy_params = TRUE;
-        }
-        else
+        else if (!blendop_params)
         {
             memcpy(hist->blend_params, hist->module->default_blendop_params,
                    sizeof(dt_develop_blend_params_t));
         }
+        else
+        {
+            dt_print(DT_DEBUG_ALWAYS,
+                     "[dev_read_history] module `%s' has unsupported blend parameters", hist->module->op);
+            dt_dev_free_history_item(hist);
+            continue;
+        }
 
-        // Copy module params if valid, else try to convert legacy params
+        // 0.9 accepts only its current module-parameter representation.
         if (param_length == 0)
         {
-            // special case of auto-init presets being loaded in history
             memcpy(hist->params, hist->module->default_params, hist->module->params_size);
         }
         else if (is_valid_module_version && is_valid_params_size && is_valid_module_name)
@@ -2575,41 +2573,10 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
         }
         else
         {
-            if (dt_iop_legacy_params(hist->module, module_params, param_length, modversion,
-                                     &hist->params, hist->module->version()) == 1)
-            {
-                dt_print(DT_DEBUG_ALWAYS,
-                         "[dev_read_history] module `%s' version mismatch: history"
-                         " is %d, darktable is %d, image id=%d `%s'",
-                         hist->module->op, modversion, hist->module->version(), imgid,
-                         dev->image_storage.filename);
-
-                const char *fname =
-                    dev->image_storage.filename + strlen(dev->image_storage.filename);
-                while (fname > dev->image_storage.filename && *fname != '/')
-                    fname--;
-
-                if (fname > dev->image_storage.filename)
-                    fname++;
-                dt_control_log(_("%s: module `%s' version mismatch: %d != %d"), fname,
-                               hist->module->op, hist->module->version(), modversion);
-                dt_dev_free_history_item(hist);
-                continue;
-            }
-            else
-                legacy_params = TRUE;
-
-            /*
-       * Fix for flip iop: previously it was not always needed, but it might be
-       * in history stack as "orientation (off)", but now we always want it
-       * by default, so if it is disabled, enable it, and replace params with
-       * default_params. if user want to, he can disable it.
-       */
-            if (dt_iop_module_is(hist->module, "flip") && !hist->enabled && labs(modversion) == 1)
-            {
-                memcpy(hist->params, hist->module->default_params, hist->module->params_size);
-                hist->enabled = TRUE;
-            }
+            dt_print(DT_DEBUG_ALWAYS,
+                     "[dev_read_history] module `%s' has unsupported parameters", hist->module->op);
+            dt_dev_free_history_item(hist);
+            continue;
         }
 
         // make sure that always-on modules are always on. duh.
@@ -2685,16 +2652,6 @@ void dt_dev_read_history_ext(dt_develop_t *dev, const dt_imgid_t imgid, const gb
         // depending on the xmp_writing mode we either us safe or relaxed
         const gboolean always = (dt_image_get_xmp_mode() == DT_WRITE_XMP_ALWAYS);
         dt_image_cache_write_release(image, always ? DT_IMAGE_CACHE_SAFE : DT_IMAGE_CACHE_RELAXED);
-    }
-    else if (legacy_params)
-    {
-        const dt_history_hash_t hash_status = dt_history_hash_get_status(imgid);
-        if (hash_status & (DT_HISTORY_HASH_BASIC | DT_HISTORY_HASH_AUTO))
-        {
-            // if image not altered keep the current status
-            flags = flags | hash_status;
-        }
-        dt_history_hash_write_from_history(imgid, flags);
     }
     else
     {
