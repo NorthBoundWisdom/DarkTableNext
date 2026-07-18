@@ -31,9 +31,8 @@ typedef enum _module_order_type_t
 {
     _MORDER_ALL = 0,
     _MORDER_CUSTOM,
-    _MORDER_LEGACY,
-    _MORDER_V30,
-    _MORDER_V30_JPG
+    _MORDER_RAW,
+    _MORDER_JPEG
 } _module_order_type_t;
 
 static char **_module_order_names = NULL;
@@ -63,11 +62,9 @@ static void _module_order_decode(const gchar *txt, int *val)
     if (!g_strcmp0(txt, "$0"))
         *val = _MORDER_CUSTOM;
     else if (!g_strcmp0(txt, "$1"))
-        *val = _MORDER_LEGACY;
+        *val = _MORDER_RAW;
     else if (!g_strcmp0(txt, "$2"))
-        *val = _MORDER_V30;
-    else if (!g_strcmp0(txt, "$3"))
-        *val = _MORDER_V30_JPG;
+        *val = _MORDER_JPEG;
     else
         *val = _MORDER_ALL;
 }
@@ -84,14 +81,11 @@ static void _module_order_changed(GtkWidget *widget, gpointer user_data)
     case _MORDER_CUSTOM:
         _rule_set_raw_text(module_order->rule, "$0", TRUE);
         break;
-    case _MORDER_LEGACY:
+    case _MORDER_RAW:
         _rule_set_raw_text(module_order->rule, "$1", TRUE);
         break;
-    case _MORDER_V30:
+    case _MORDER_JPEG:
         _rule_set_raw_text(module_order->rule, "$2", TRUE);
-        break;
-    case _MORDER_V30_JPG:
-        _rule_set_raw_text(module_order->rule, "$3", TRUE);
         break;
     case _MORDER_ALL:
         _rule_set_raw_text(module_order->rule, "", TRUE);

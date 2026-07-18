@@ -1327,7 +1327,7 @@ static dt_imgid_t _image_duplicate_with_version_ext(const dt_imgid_t imgid,
      "  (id, group_id, film_id, width, height, filename,"
      "   maker_id, model_id, camera_id, lens_id, exposure,"
      "   aperture, iso, focal_length, focus_distance, datetime_taken, flags,"
-     "   output_width, output_height, crop, raw_parameters, raw_black, raw_maximum,"
+     "   output_width, output_height, crop, raw_black, raw_maximum,"
      "   orientation, longitude, latitude, altitude, color_matrix,"
      "   colorspace, version, max_version,"
      "   history_end, position, aspect_ratio, exposure_bias, import_timestamp,"
@@ -1335,8 +1335,7 @@ static dt_imgid_t _image_duplicate_with_version_ext(const dt_imgid_t imgid,
      " SELECT NULL, group_id, film_id, width, height, filename,"
      "        maker_id, model_id, camera_id, lens_id,"
      "        exposure, aperture, iso, focal_length, focus_distance, datetime_taken,"
-     "        flags, output_width, output_height, crop, raw_parameters,"
-     "        raw_black, raw_maximum, orientation,"
+     "        flags, output_width, output_height, crop, raw_black, raw_maximum, orientation,"
      "        longitude, latitude, altitude, color_matrix, colorspace, NULL, NULL, 0, ?1,"
      "        aspect_ratio, exposure_bias, import_timestamp,"
      "        whitebalance_id, flash_id, exposure_program_id, metering_mode_id, flash_tagvalue"
@@ -1818,9 +1817,7 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
     }
 
     dt_set_backthumb_time(0.0);
-    // also need to set the no-legacy bit, to make sure we get the right presets (new ones)
     uint32_t flags = dt_conf_get_int("ui_last/import_initial_rating");
-    flags |= DT_IMAGE_NO_LEGACY_PRESETS;
     // and we set the type of image flag (from extension for now)
     gchar *extension = g_strrstr(imgfname, ".");
     flags |= dt_imageio_get_type_from_extension(extension);
@@ -2102,9 +2099,6 @@ void dt_image_init(dt_image_t *img)
     img->print_timestamp = 0;
 
     dt_color_harmony_init(&img->color_harmony_guide);
-
-    img->legacy_flip.legacy = 0;
-    img->legacy_flip.user_flip = 0;
 
     img->buf_dsc.filters = 0u;
     img->buf_dsc = (dt_iop_buffer_dsc_t){.channels = 0, .datatype = TYPE_UNKNOWN};
@@ -2524,15 +2518,14 @@ dt_imgid_t dt_image_copy_rename(const dt_imgid_t imgid, const dt_filmid_t filmid
          "  (id, group_id, film_id, width, height, filename,"
          "   maker_id, model_id, lens_id, exposure,"
          "   aperture, iso, focal_length, focus_distance, datetime_taken, flags,"
-         "   output_width, output_height, crop, raw_parameters,"
-         "   raw_black, raw_maximum, orientation,"
+     "   output_width, output_height, crop, raw_black, raw_maximum, orientation,"
          "   longitude, latitude, altitude, color_matrix, colorspace, version, max_version,"
          "   position, aspect_ratio, exposure_bias,"
          "   whitebalance_id, flash_id, exposure_program_id, metering_mode_id, flash_tagvalue)"
          " SELECT NULL, group_id, ?1 as film_id, width, height, ?2 as filename,"
          "        maker_id, model_id, lens_id,"
          "        exposure, aperture, iso, focal_length, focus_distance, datetime_taken,"
-         "        flags, width, height, crop, raw_parameters, raw_black, raw_maximum,"
+     "        flags, width, height, crop, raw_black, raw_maximum,"
          "        orientation, longitude, latitude, altitude,"
          "        color_matrix, colorspace, -1, -1,"
          "        ?3, aspect_ratio, exposure_bias,"

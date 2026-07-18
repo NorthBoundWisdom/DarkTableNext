@@ -43,7 +43,7 @@ static void _image_cache_allocate(void *data, dt_cache_entry_t *entry)
       "SELECT mi.id, group_id, film_id, width, height, filename,"
       "       mk.name, md.name, ln.name,"
       "       exposure, aperture, iso, focal_length, datetime_taken, flags,"
-      "       crop, orientation, focus_distance, raw_parameters,"
+      "       crop, orientation, focus_distance,"
       "       longitude, latitude, altitude, color_matrix, colorspace, version,"
       "       raw_black, raw_maximum, aspect_ratio, exposure_bias,"
       "       import_timestamp, change_timestamp, export_timestamp, print_timestamp,"
@@ -98,21 +98,19 @@ static void _image_cache_allocate(void *data, dt_cache_entry_t *entry)
         img->exif_focus_distance = sqlite3_column_double(stmt, 17);
         if (img->exif_focus_distance >= 0 && img->orientation >= 0)
             img->exif_inited = TRUE;
-        uint32_t tmp = sqlite3_column_int(stmt, 18);
-        memcpy(&img->legacy_flip, &tmp, sizeof(dt_image_raw_parameters_t));
-        if (sqlite3_column_type(stmt, 19) == SQLITE_FLOAT)
-            img->geoloc.longitude = sqlite3_column_double(stmt, 19);
+        if (sqlite3_column_type(stmt, 18) == SQLITE_FLOAT)
+            img->geoloc.longitude = sqlite3_column_double(stmt, 18);
         else
             img->geoloc.longitude = NAN;
-        if (sqlite3_column_type(stmt, 20) == SQLITE_FLOAT)
-            img->geoloc.latitude = sqlite3_column_double(stmt, 20);
+        if (sqlite3_column_type(stmt, 19) == SQLITE_FLOAT)
+            img->geoloc.latitude = sqlite3_column_double(stmt, 19);
         else
             img->geoloc.latitude = NAN;
-        if (sqlite3_column_type(stmt, 21) == SQLITE_FLOAT)
-            img->geoloc.elevation = sqlite3_column_double(stmt, 21);
+        if (sqlite3_column_type(stmt, 20) == SQLITE_FLOAT)
+            img->geoloc.elevation = sqlite3_column_double(stmt, 20);
         else
             img->geoloc.elevation = NAN;
-        const void *color_matrix = sqlite3_column_blob(stmt, 22);
+        const void *color_matrix = sqlite3_column_blob(stmt, 21);
         if (color_matrix)
             memcpy(img->d65_color_matrix, color_matrix, sizeof(img->d65_color_matrix));
         else
@@ -120,53 +118,53 @@ static void _image_cache_allocate(void *data, dt_cache_entry_t *entry)
         g_free(img->profile);
         img->profile = NULL;
         img->profile_size = 0;
-        img->colorspace = sqlite3_column_int(stmt, 23);
-        img->version = sqlite3_column_int(stmt, 24);
-        img->raw_black_level = sqlite3_column_int(stmt, 25);
+        img->colorspace = sqlite3_column_int(stmt, 22);
+        img->version = sqlite3_column_int(stmt, 23);
+        img->raw_black_level = sqlite3_column_int(stmt, 24);
         for (uint8_t i = 0; i < 4; i++)
             img->raw_black_level_separate[i] = 0;
-        img->raw_white_point = sqlite3_column_int(stmt, 26);
-        if (sqlite3_column_type(stmt, 27) == SQLITE_FLOAT)
-            img->aspect_ratio = sqlite3_column_double(stmt, 27);
+        img->raw_white_point = sqlite3_column_int(stmt, 25);
+        if (sqlite3_column_type(stmt, 26) == SQLITE_FLOAT)
+            img->aspect_ratio = sqlite3_column_double(stmt, 26);
         else
             img->aspect_ratio = 0.0;
-        if (sqlite3_column_type(stmt, 28) == SQLITE_FLOAT)
-            img->exif_exposure_bias = sqlite3_column_double(stmt, 28);
+        if (sqlite3_column_type(stmt, 27) == SQLITE_FLOAT)
+            img->exif_exposure_bias = sqlite3_column_double(stmt, 27);
         else
             img->exif_exposure_bias = DT_EXIF_TAG_UNINITIALIZED;
-        img->import_timestamp = sqlite3_column_int64(stmt, 29);
-        img->change_timestamp = sqlite3_column_int64(stmt, 30);
-        img->export_timestamp = sqlite3_column_int64(stmt, 31);
-        img->print_timestamp = sqlite3_column_int64(stmt, 32);
-        img->final_width = sqlite3_column_int(stmt, 33);
-        img->final_height = sqlite3_column_int(stmt, 34);
+        img->import_timestamp = sqlite3_column_int64(stmt, 28);
+        img->change_timestamp = sqlite3_column_int64(stmt, 29);
+        img->export_timestamp = sqlite3_column_int64(stmt, 30);
+        img->print_timestamp = sqlite3_column_int64(stmt, 31);
+        img->final_width = sqlite3_column_int(stmt, 32);
+        img->final_height = sqlite3_column_int(stmt, 33);
 
         // normalized camera names
-        str = (char *)sqlite3_column_text(stmt, 35);
+        str = (char *)sqlite3_column_text(stmt, 34);
         if (str)
             g_strlcpy(img->camera_maker, str, sizeof(img->camera_maker));
-        char *str2 = (char *)sqlite3_column_text(stmt, 36);
+        char *str2 = (char *)sqlite3_column_text(stmt, 35);
         if (str2)
             g_strlcpy(img->camera_model, str2, sizeof(img->camera_model));
         g_snprintf(img->camera_makermodel, sizeof(img->camera_makermodel), "%s %s", str, str2);
-        str = (char *)sqlite3_column_text(stmt, 37);
+        str = (char *)sqlite3_column_text(stmt, 36);
         if (str)
             g_strlcpy(img->camera_alias, str, sizeof(img->camera_alias));
 
-        str = (char *)sqlite3_column_text(stmt, 38);
+        str = (char *)sqlite3_column_text(stmt, 37);
         if (str)
             g_strlcpy(img->exif_whitebalance, str, sizeof(img->exif_whitebalance));
-        str = (char *)sqlite3_column_text(stmt, 39);
+        str = (char *)sqlite3_column_text(stmt, 38);
         if (str)
             g_strlcpy(img->exif_flash, str, sizeof(img->exif_flash));
-        str = (char *)sqlite3_column_text(stmt, 40);
+        str = (char *)sqlite3_column_text(stmt, 39);
         if (str)
             g_strlcpy(img->exif_exposure_program, str, sizeof(img->exif_exposure_program));
-        str = (char *)sqlite3_column_text(stmt, 41);
+        str = (char *)sqlite3_column_text(stmt, 40);
         if (str)
             g_strlcpy(img->exif_metering_mode, str, sizeof(img->exif_metering_mode));
 
-        img->exif_flash_tagvalue = sqlite3_column_int(stmt, 42);
+        img->exif_flash_tagvalue = sqlite3_column_int(stmt, 41);
 
         dt_color_harmony_get(entry->key, &img->color_harmony_guide);
 
@@ -326,12 +324,6 @@ void dt_image_cache_write_release_info(dt_image_t *img, const dt_image_cache_wri
     }
 
     const double start = dt_get_debug_wtime();
-    union
-    {
-        struct dt_image_raw_parameters_t s;
-        uint32_t u;
-    } flip;
-
     if (img->aspect_ratio < .0001)
     {
         if (img->orientation < ORIENTATION_SWAP_XY)
@@ -351,7 +343,7 @@ void dt_image_cache_write_release_info(dt_image_t *img, const dt_image_cache_wri
      "     maker_id = ?4, model_id = ?5, lens_id = ?6, camera_id = ?35,"
      "     exposure = ?7, aperture = ?8, iso = ?9, focal_length = ?10,"
      "     focus_distance = ?11, film_id = ?12, datetime_taken = ?13, flags = ?14,"
-     "     crop = ?15, orientation = ?16, raw_parameters = ?17, group_id = ?18,"
+     "     crop = ?15, orientation = ?16, group_id = ?18,"
      "     longitude = ?19, latitude = ?20, altitude = ?21, color_matrix = ?22,"
      "     colorspace = ?23, raw_black = ?24, raw_maximum = ?25,"
      "     aspect_ratio = ?26, exposure_bias = ?27,"
@@ -396,8 +388,6 @@ void dt_image_cache_write_release_info(dt_image_t *img, const dt_image_cache_wri
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 14, img->flags);
     DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 15, img->exif_crop);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 16, img->orientation);
-    flip.s = img->legacy_flip;
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 17, flip.u);
     DT_DEBUG_SQLITE3_BIND_INT(stmt, 18, img->group_id);
     DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 19, img->geoloc.longitude);
     DT_DEBUG_SQLITE3_BIND_DOUBLE(stmt, 20, img->geoloc.latitude);

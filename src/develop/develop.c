@@ -2100,7 +2100,7 @@ static gboolean _dev_auto_apply_presets(dt_develop_t *dev)
         sqlite3_finalize(stmt);
     }
 
-    image->flags |= DT_IMAGE_AUTO_PRESETS_APPLIED | DT_IMAGE_NO_LEGACY_PRESETS;
+    image->flags |= DT_IMAGE_AUTO_PRESETS_APPLIED;
 
     // make sure these end up in the image_cache; as the history is not correct right now
     // we don't write the sidecar here but later in dt_dev_read_history_ext

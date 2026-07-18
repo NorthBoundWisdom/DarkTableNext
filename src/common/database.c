@@ -193,7 +193,7 @@ static void _create_library_schema(dt_database_t *db)
       "  exposure REAL, aperture REAL, iso REAL, focal_length REAL,"
       "  focus_distance REAL, datetime_taken INTEGER, flags INTEGER,"
       "  output_width INTEGER, output_height INTEGER, crop REAL,"
-      "  raw_parameters INTEGER, raw_black INTEGER, raw_maximum INTEGER,"
+      "  raw_black INTEGER, raw_maximum INTEGER,"
       "  orientation INTEGER, longitude REAL,"
       "  latitude REAL, altitude REAL, color_matrix BLOB, colorspace INTEGER,"
       "  version INTEGER, max_version INTEGER, write_timestamp INTEGER,"

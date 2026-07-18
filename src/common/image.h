@@ -78,8 +78,6 @@ typedef enum
     DT_IMAGE_REMOVE = 256,
     // set when auto-applying presets have been applied to this image.
     DT_IMAGE_AUTO_PRESETS_APPLIED = 512,
-    // legacy flag. is set for all new images. i hate to waste a bit on this :(
-    DT_IMAGE_NO_LEGACY_PRESETS = 1024,
     // local copy status
     DT_IMAGE_LOCAL_COPY = 2048,
     // image has an associated .txt file for overlay
@@ -110,12 +108,6 @@ typedef enum dt_image_colorspace_t
     DT_IMAGE_COLORSPACE_ADOBE_RGB,
     DT_IMAGE_COLORSPACE_USER_RGB
 } dt_image_colorspace_t;
-
-typedef struct dt_image_raw_parameters_t
-{
-    unsigned legacy : 24;
-    unsigned user_flip : 8; // +8 = 32 bits.
-} dt_image_raw_parameters_t;
 
 typedef enum dt_exif_image_orientation_t
 {
@@ -308,10 +300,6 @@ typedef struct dt_image_t
     dt_image_colorspace_t colorspace; // the colorspace that is
                                       // specified in exif. mostly used
                                       // for jpeg files
-
-    dt_image_raw_parameters_t legacy_flip; // unfortunately needed to
-                                           // convert old bits to new
-                                           // flip module.
 
     /* gps coords */
     dt_image_geoloc_t geoloc;

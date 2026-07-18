@@ -107,35 +107,6 @@ const char **description(dt_iop_module_t *self)
                                   _("geometric, RGB"), _("linear, RGB, scene-referred"));
 }
 
-static dt_image_orientation_t merge_two_orientations(dt_image_orientation_t raw_orientation,
-                                                     dt_image_orientation_t user_orientation)
-{
-    dt_image_orientation_t raw_orientation_corrected = raw_orientation;
-    /*
-   * if user-specified orientation has ORIENTATION_SWAP_XY set, then we need
-   * to swap ORIENTATION_FLIP_Y and ORIENTATION_FLIP_X bits
-   * in raw orientation
-   */
-    if ((user_orientation & ORIENTATION_SWAP_XY) == ORIENTATION_SWAP_XY)
-    {
-        if ((raw_orientation & ORIENTATION_FLIP_Y) == ORIENTATION_FLIP_Y)
-            raw_orientation_corrected |= ORIENTATION_FLIP_X;
-        else
-            raw_orientation_corrected &= ~ORIENTATION_FLIP_X;
-
-        if ((raw_orientation & ORIENTATION_FLIP_X) == ORIENTATION_FLIP_X)
-            raw_orientation_corrected |= ORIENTATION_FLIP_Y;
-        else
-            raw_orientation_corrected &= ~ORIENTATION_FLIP_Y;
-
-        if ((raw_orientation & ORIENTATION_SWAP_XY) == ORIENTATION_SWAP_XY)
-            raw_orientation_corrected |= ORIENTATION_SWAP_XY;
-    }
-
-    // and now we can automagically compute new flip
-    return raw_orientation_corrected ^ user_orientation;
-}
-
 static void backtransform(const int32_t *x, int32_t *o, const dt_image_orientation_t orientation,
                           int32_t iw, int32_t ih)
 {
@@ -411,26 +382,6 @@ void reload_defaults(dt_iop_module_t *self)
 
     self->default_enabled = TRUE;
 
-    if (self->dev->image_storage.legacy_flip.user_flip != 0 &&
-        self->dev->image_storage.legacy_flip.user_flip != 0xff)
-    {
-        sqlite3_stmt *stmt;
-        DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                    "SELECT imgid"
-                                    " FROM main.history"
-                                    " WHERE imgid = ?1 AND operation = 'flip'",
-                                    -1, &stmt, NULL);
-        DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, self->dev->image_storage.id);
-
-        if (sqlite3_step(stmt) != SQLITE_ROW)
-        {
-            // convert the old legacy flip bits to a proper parameter set:
-            d->orientation = merge_two_orientations(
-                dt_image_orientation(&self->dev->image_storage),
-                (dt_image_orientation_t)(self->dev->image_storage.legacy_flip.user_flip));
-        }
-        sqlite3_finalize(stmt);
-    }
 }
 
 static void _crop_callback(dt_iop_module_t *self, const dt_image_orientation_t mode)

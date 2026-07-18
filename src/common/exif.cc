@@ -485,7 +485,6 @@ const char *dt_xmp_keys[] = {"Xmp.dc.subject",
                              "Xmp.darktable.multi_name_hand_edited",
                              "Xmp.darktable.iop_order",
                              "Xmp.darktable.xmp_version",
-                             "Xmp.darktable.raw_params",
                              "Xmp.darktable.auto_presets_applied",
                              "Xmp.darktable.mask_id",
                              "Xmp.darktable.mask_type",
@@ -3632,7 +3631,6 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
 
             if (!history_only)
                 _exif_decode_xmp_data(img, xmpData, -1, false);
-            img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
             img->flags &= ~DT_IMAGE_REMOVE;
             return FALSE;
         }
@@ -3648,20 +3646,7 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
 
         if (!history_only)
             _exif_decode_xmp_data(img, xmpData, DT_XMP_EXIF_VERSION, false);
-        img->flags |= DT_IMAGE_NO_LEGACY_PRESETS;
         img->flags &= ~DT_IMAGE_REMOVE;
-
-        if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.raw_params"))) != xmpData.end())
-        {
-            union
-            {
-                int32_t in;
-                dt_image_raw_parameters_t out;
-            } raw_params;
-            raw_params.in = pos->toLong();
-            img->legacy_flip.user_flip = raw_params.out.user_flip;
-            img->legacy_flip.legacy = 0;
-        }
 
         int32_t preset_applied = 0;
         if ((pos = xmpData.findKey(Exiv2::XmpKey("Xmp.darktable.auto_presets_applied"))) !=
@@ -4239,7 +4224,7 @@ static void _exif_xmp_read_data(Exiv2::XmpData &xmpData, const dt_imgid_t imgid,
 {
     const double start = dt_get_debug_wtime();
     const int xmp_version = DT_XMP_EXIF_VERSION;
-    int stars = 1, raw_params = 0, history_end = -1;
+    int stars = 1, history_end = -1;
     double longitude = NAN, latitude = NAN, altitude = NAN;
     gchar *filename = NULL;
     gchar *iop_order_list = NULL;
@@ -4250,8 +4235,7 @@ static void _exif_xmp_read_data(Exiv2::XmpData &xmpData, const dt_imgid_t imgid,
     // clang-format off
   DT_DEBUG_SQLITE3_PREPARE_V2
     (dt_database_get(darktable.db),
-     "SELECT filename, flags, raw_parameters, "
-     "       longitude, latitude, altitude, history_end, datetime_taken"
+     "SELECT filename, flags, longitude, latitude, altitude, history_end, datetime_taken"
      " FROM main.images"
      " WHERE id = ?1",
      -1, &stmt, NULL);
@@ -4261,15 +4245,14 @@ static void _exif_xmp_read_data(Exiv2::XmpData &xmpData, const dt_imgid_t imgid,
     {
         filename = (gchar *)sqlite3_column_text(stmt, 0);
         stars = sqlite3_column_int(stmt, 1);
-        raw_params = sqlite3_column_int(stmt, 2);
+        if (sqlite3_column_type(stmt, 2) == SQLITE_FLOAT)
+            longitude = sqlite3_column_double(stmt, 2);
         if (sqlite3_column_type(stmt, 3) == SQLITE_FLOAT)
-            longitude = sqlite3_column_double(stmt, 3);
+            latitude = sqlite3_column_double(stmt, 3);
         if (sqlite3_column_type(stmt, 4) == SQLITE_FLOAT)
-            latitude = sqlite3_column_double(stmt, 4);
-        if (sqlite3_column_type(stmt, 5) == SQLITE_FLOAT)
-            altitude = sqlite3_column_double(stmt, 5);
-        history_end = sqlite3_column_int(stmt, 6);
-        gts = sqlite3_column_int64(stmt, 7);
+            altitude = sqlite3_column_double(stmt, 4);
+        history_end = sqlite3_column_int(stmt, 5);
+        gts = sqlite3_column_int64(stmt, 6);
     }
 
     // Get iop-order list
@@ -4334,7 +4317,6 @@ static void _exif_xmp_read_data(Exiv2::XmpData &xmpData, const dt_imgid_t imgid,
     // TODO: Add tags to IPTC namespace as well.
 
     xmpData["Xmp.darktable.xmp_version"] = xmp_version;
-    xmpData["Xmp.darktable.raw_params"] = raw_params;
     if (stars & DT_IMAGE_AUTO_PRESETS_APPLIED)
         xmpData["Xmp.darktable.auto_presets_applied"] = 1;
     else
@@ -4386,7 +4368,7 @@ static void _exif_xmp_read_data_export(Exiv2::XmpData &xmpData, const dt_imgid_t
                                        dt_export_metadata_t *metadata)
 {
     const int xmp_version = DT_XMP_EXIF_VERSION;
-    int stars = 1, raw_params = 0, history_end = -1;
+    int stars = 1, history_end = -1;
     double longitude = NAN, latitude = NAN, altitude = NAN;
     gchar *filename = NULL;
     GTimeSpan gts = 0;
@@ -4397,8 +4379,7 @@ static void _exif_xmp_read_data_export(Exiv2::XmpData &xmpData, const dt_imgid_t
     // clang-format off
   DT_DEBUG_SQLITE3_PREPARE_V2
     (dt_database_get(darktable.db),
-     "SELECT filename, flags, raw_parameters, "
-     "       longitude, latitude, altitude, history_end, datetime_taken"
+     "SELECT filename, flags, longitude, latitude, altitude, history_end, datetime_taken"
      " FROM main.images"
      " WHERE id = ?1",
      -1, &stmt, NULL);
@@ -4408,15 +4389,14 @@ static void _exif_xmp_read_data_export(Exiv2::XmpData &xmpData, const dt_imgid_t
     {
         filename = (gchar *)sqlite3_column_text(stmt, 0);
         stars = sqlite3_column_int(stmt, 1);
-        raw_params = sqlite3_column_int(stmt, 2);
+        if (sqlite3_column_type(stmt, 2) == SQLITE_FLOAT)
+            longitude = sqlite3_column_double(stmt, 2);
         if (sqlite3_column_type(stmt, 3) == SQLITE_FLOAT)
-            longitude = sqlite3_column_double(stmt, 3);
+            latitude = sqlite3_column_double(stmt, 3);
         if (sqlite3_column_type(stmt, 4) == SQLITE_FLOAT)
-            latitude = sqlite3_column_double(stmt, 4);
-        if (sqlite3_column_type(stmt, 5) == SQLITE_FLOAT)
-            altitude = sqlite3_column_double(stmt, 5);
-        history_end = sqlite3_column_int(stmt, 6);
-        gts = sqlite3_column_int64(stmt, 7);
+            altitude = sqlite3_column_double(stmt, 4);
+        history_end = sqlite3_column_int(stmt, 5);
+        gts = sqlite3_column_int64(stmt, 6);
     }
 
     // Get iop-order list
@@ -4492,7 +4472,6 @@ static void _exif_xmp_read_data_export(Exiv2::XmpData &xmpData, const dt_imgid_t
     if (metadata->flags & DT_META_DT_HISTORY)
     {
         xmpData["Xmp.darktable.xmp_version"] = xmp_version;
-        xmpData["Xmp.darktable.raw_params"] = raw_params;
         if (stars & DT_IMAGE_AUTO_PRESETS_APPLIED)
             xmpData["Xmp.darktable.auto_presets_applied"] = 1;
         else
