@@ -85,13 +85,6 @@ const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_names[] = {
     {NC_("blendmode", "color"), DEVELOP_BLEND_COLOR},
     {NC_("blendmode", "coloradjustment"), DEVELOP_BLEND_COLORADJUST},
 
-    /** deprecated blend modes: make them available as legacy
-         * history stacks might want them */
-
-    {NC_("blendmode", "difference (deprecated)"), DEVELOP_BLEND_DIFFERENCE},
-    {NC_("blendmode", "subtract inverse (deprecated)"), DEVELOP_BLEND_SUBTRACT_INVERSE},
-    {NC_("blendmode", "divide inverse (deprecated)"), DEVELOP_BLEND_DIVIDE_INVERSE},
-    {NC_("blendmode", "Lab L-channel (deprecated)"), DEVELOP_BLEND_LAB_L},
     {}};
 
 const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_flag_names[] = {
@@ -304,9 +297,7 @@ static gboolean _blendif_blend_parameter_enabled(dt_develop_blend_colorspace_t c
         case DEVELOP_BLEND_ADD:
         case DEVELOP_BLEND_MULTIPLY:
         case DEVELOP_BLEND_SUBTRACT:
-        case DEVELOP_BLEND_SUBTRACT_INVERSE:
         case DEVELOP_BLEND_DIVIDE:
-        case DEVELOP_BLEND_DIVIDE_INVERSE:
         case DEVELOP_BLEND_RGB_R:
         case DEVELOP_BLEND_RGB_G:
         case DEVELOP_BLEND_RGB_B:
@@ -3082,16 +3073,10 @@ void dt_iop_gui_update_blending(dt_iop_module_t *module)
 
     if (!dt_bauhaus_combobox_set_from_value(bd->blend_modes_combo, blend_mode))
     {
-        // add deprecated blend mode
-        dt_bauhaus_combobox_add_section(bd->blend_modes_combo, _("deprecated"));
-        if (!_add_blendmode_combo(bd->blend_modes_combo, blend_mode, blend_mode))
-        {
-            // should never happen: unknown blend mode
-            dt_control_log(_("unknown blend mode '%d' in module '%s'"), blend_mode, module->op);
-            bp->blend_mode = DEVELOP_BLEND_NORMAL2;
-            blend_mode = DEVELOP_BLEND_NORMAL2;
-        }
-
+        dt_control_log(_("unsupported blend mode '%d' in module '%s'; using normal"), blend_mode,
+                       module->op);
+        bp->blend_mode = DEVELOP_BLEND_NORMAL2;
+        blend_mode = DEVELOP_BLEND_NORMAL2;
         dt_bauhaus_combobox_set_from_value(bd->blend_modes_combo, blend_mode);
     }
 

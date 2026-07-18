@@ -460,23 +460,6 @@ _BLEND_FUNC _blend_subtract(const float *const a, const float *const b, const fl
     }
 }
 
-/* subtract inverse */
-_BLEND_FUNC _blend_subtract_inverse(const float *const a, const float *const b, const float p,
-                                    float *const out, const float *const restrict mask,
-                                    const size_t stride)
-{
-    for (size_t i = 0, j = 0; i < stride; i++, j += DT_BLENDIF_RGB_CH)
-    {
-        const float local_opacity = mask[i];
-        for (int k = 0; k < DT_BLENDIF_RGB_BCH; k++)
-        {
-            out[j + k] = a[j + k] * (1.0f - local_opacity) +
-                         fmaxf(b[j + k] - p * a[j + k], 0.0f) * local_opacity;
-        }
-        out[j + 3] = local_opacity;
-    }
-}
-
 /* difference */
 _BLEND_FUNC _blend_difference(const float *const a, const float *const b, const float p,
                               float *const out, const float *const restrict mask,
@@ -505,23 +488,6 @@ _BLEND_FUNC _blend_divide(const float *const a, const float *const b, const floa
         {
             out[j + k] = a[j + k] * (1.0f - local_opacity) +
                          a[j + k] / fmaxf(p * b[j + k], 1e-6f) * local_opacity;
-        }
-        out[j + DT_BLENDIF_RGB_BCH] = local_opacity;
-    }
-}
-
-/* divide inverse */
-_BLEND_FUNC _blend_divide_inverse(const float *const a, const float *const b, const float p,
-                                  float *const out, const float *const restrict mask,
-                                  const size_t stride)
-{
-    for (size_t i = 0, j = 0; i < stride; i++, j += DT_BLENDIF_RGB_CH)
-    {
-        const float local_opacity = mask[i];
-        for (int k = 0; k < DT_BLENDIF_RGB_BCH; k++)
-        {
-            out[j + k] = a[j + k] * (1.0f - local_opacity) +
-                         b[j + k] / fmaxf(p * a[j + k], 1e-6f) * local_opacity;
         }
         out[j + DT_BLENDIF_RGB_BCH] = local_opacity;
     }
@@ -678,18 +644,11 @@ static _blend_row_func *_choose_blend_func(const unsigned int blend_mode)
     case DEVELOP_BLEND_SUBTRACT:
         blend = _blend_subtract;
         break;
-    case DEVELOP_BLEND_SUBTRACT_INVERSE:
-        blend = _blend_subtract_inverse;
-        break;
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
         blend = _blend_difference;
         break;
     case DEVELOP_BLEND_DIVIDE:
         blend = _blend_divide;
-        break;
-    case DEVELOP_BLEND_DIVIDE_INVERSE:
-        blend = _blend_divide_inverse;
         break;
     case DEVELOP_BLEND_LIGHTNESS:
         blend = _blend_luminance;

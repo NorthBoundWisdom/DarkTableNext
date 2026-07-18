@@ -322,7 +322,6 @@ static _blend_row_func *_choose_blend_func(const unsigned int blend_mode)
     case DEVELOP_BLEND_SUBTRACT:
         blend = _blend_subtract;
         break;
-    case DEVELOP_BLEND_DIFFERENCE:
     case DEVELOP_BLEND_DIFFERENCE2:
         blend = _blend_difference;
         break;

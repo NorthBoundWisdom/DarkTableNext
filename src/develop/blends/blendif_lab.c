@@ -534,36 +534,7 @@ _BLEND_FUNC _blend_subtract(const float *const a, const float *const b, float *c
     }
 }
 
-/* difference (deprecated) */
-_BLEND_FUNC _blend_difference(const float *const a, const float *const b, float *const out,
-                              const float *const restrict mask, const size_t stride,
-                              const dt_aligned_pixel_t min, const dt_aligned_pixel_t max)
-{
-    for (size_t i = 0, j = 0; i < stride; i++, j += DT_BLENDIF_LAB_CH)
-    {
-        const float local_opacity = mask[i];
-        dt_aligned_pixel_t ta, tb;
-
-        _blend_Lab_scale(a + j, ta);
-        _blend_Lab_scale(b + j, tb);
-
-        const float lmin = 0.0f;
-        for (size_t x = 0; x < 3; x++)
-        {
-            float lmax = max[x] + fabsf(min[x]);
-            float la = _CLAMP(ta[x] + fabsf(min[x]), lmin, lmax);
-            float lb = _CLAMP(tb[x] + fabsf(min[x]), lmin, lmax);
-            tb[x] =
-                _CLAMP(la * (1.0f - local_opacity) + fabsf(la - lb) * local_opacity, lmin, lmax) -
-                fabsf(min[x]);
-        }
-
-        _blend_Lab_rescale(tb, out + j);
-        out[j + DT_BLENDIF_LAB_BCH] = local_opacity;
-    }
-}
-
-/* difference 2 (new) */
+/* difference */
 _BLEND_FUNC _blend_difference2(const float *const a, const float *const b, float *const out,
                                const float *const restrict mask, const size_t stride,
                                const dt_aligned_pixel_t min, const dt_aligned_pixel_t max)
@@ -1131,9 +1102,6 @@ static _blend_row_func *_choose_blend_func(const unsigned int blend_mode)
     case DEVELOP_BLEND_SUBTRACT:
         blend = _blend_subtract;
         break;
-    case DEVELOP_BLEND_DIFFERENCE:
-        blend = _blend_difference;
-        break;
     case DEVELOP_BLEND_DIFFERENCE2:
         blend = _blend_difference2;
         break;
@@ -1177,7 +1145,6 @@ static _blend_row_func *_choose_blend_func(const unsigned int blend_mode)
         blend = _blend_coloradjust;
         break;
     case DEVELOP_BLEND_LAB_LIGHTNESS:
-    case DEVELOP_BLEND_LAB_L:
         blend = _blend_Lab_lightness;
         break;
     case DEVELOP_BLEND_LAB_A:
