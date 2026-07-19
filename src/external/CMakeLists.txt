@@ -95,10 +95,18 @@ set(BUILD_BENCHMARKING OFF CACHE BOOL "" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
 set(WITH_OPENMP ON CACHE BOOL "" FORCE)
 # RawSpeed's own warnings are useful upstream, but they are not part of the
-# application's warning contract. In particular, its GCC-only stack-size
-# probes are intentionally unavailable in Apple Clang.
+# application's warning contract.
 set(RAWSPEED_ENABLE_WERROR OFF CACHE BOOL "" FORCE)
 set(RAWSPEED_ENABLE_CLANG_TIDY_WERROR OFF CACHE BOOL "" FORCE)
+
+# RawSpeed probes warning flags while -w is active. Clang therefore reports
+# GCC's -Wstack-usage as supported, then warns about it for every source file
+# once normal diagnostics are restored. Seed the probe result to its real
+# value; the other stack-size warnings used by RawSpeed are supported by Clang.
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang)$")
+  set(RAWSPEED_HAVE_CXX_FLAG_WSTACK_USAGE_4096 OFF CACHE INTERNAL
+      "Clang does not support -Wstack-usage=4096" FORCE)
+endif()
 
 set(RAWSPEED_BINARY_PREFIX "darktable")
 

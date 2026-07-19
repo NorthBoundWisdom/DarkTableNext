@@ -16,7 +16,7 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*** This has been tested with GTK 3.24 on Gnome ***/
+/*** Base stylesheet shared by the bundled theme. ***/
 
 /*----------------------------------------------------------
   - Perceptually uniform grey gradient on LCH color space. -

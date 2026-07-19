@@ -3461,11 +3461,10 @@ void dt_gui_load_theme(const char *theme)
         path = g_build_filename(datadir, "themes", theme_css, NULL);
         if (!g_file_test(path, G_FILE_TEST_EXISTS))
         {
-            // fallback to default theme
+            // fallback to the only bundled theme
             g_free(path);
-            // NOTE: When changing the default theme, don't forget to change it here!
-            path = g_build_filename(datadir, "themes", "darktable-elegant-grey.css", NULL);
-            dt_conf_set_string("ui_last/theme", "darktable-elegant-grey");
+            path = g_build_filename(datadir, "themes", "darktable-elegant-darker.css", NULL);
+            dt_conf_set_string("ui_last/theme", "darktable-elegant-darker");
         }
         else
             dt_conf_set_string("ui_last/theme", theme);

@@ -18,6 +18,7 @@
 
 #include "common/atomic.h"
 #include "common/database.h"
+#include "common/database_schema.h"
 #include "common/darktable.h"
 #include "common/datetime.h"
 #include "common/debug.h"
@@ -41,11 +42,6 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-// 0.9 starts a new on-disk contract. Existing darktable databases are not
-// imported or upgraded by the application.
-#define CURRENT_DATABASE_VERSION_LIBRARY 1
-#define CURRENT_DATABASE_VERSION_DATA 1
 
 #define USE_NESTED_TRANSACTIONS
 #define MAX_NESTED_TRANSACTIONS 5
@@ -87,7 +83,7 @@ static void _create_library_schema(dt_database_t *db)
     (db->handle, "INSERT OR REPLACE INTO main.db_info (key, value) VALUES ('version', ?1)",
      -1, &stmt, NULL);
     // clang-format on
-    sqlite3_bind_int(stmt, 1, CURRENT_DATABASE_VERSION_LIBRARY);
+    sqlite3_bind_int(stmt, 1, DT_DATABASE_SCHEMA_VERSION_LIBRARY);
     sqlite3_step(stmt);
     sqlite3_finalize(stmt);
     ////////////////////////////// film_rolls
@@ -394,7 +390,7 @@ static void _create_data_schema(dt_database_t *db)
   sqlite3_prepare_v2
     (db->handle, "INSERT OR REPLACE INTO data.db_info (key, value) VALUES ('version', ?1)",
      -1, &stmt, NULL);
-  sqlite3_bind_int(stmt, 1, CURRENT_DATABASE_VERSION_DATA);
+  sqlite3_bind_int(stmt, 1, DT_DATABASE_SCHEMA_VERSION_DATA);
   sqlite3_step(stmt);
   sqlite3_finalize(stmt);
   ////////////////////////////// tags
@@ -900,66 +896,63 @@ static gboolean _upgrade_camera_table(const dt_database_t *db)
     return res;
 }
 
-static void _unsupported_db_version(const gchar *dbname, const gboolean has_gui)
+static gboolean _database_schema_is_compatible(const gchar *filename,
+                                                const dt_database_schema_t schema,
+                                                const int stored_version,
+                                                const gboolean has_gui)
 {
+    const int current_version = dt_database_schema_current_version(schema);
+    const dt_database_schema_compatibility_t compatibility =
+        dt_database_schema_check(schema, stored_version);
+    if (compatibility == DT_DATABASE_SCHEMA_COMPATIBLE)
+        return TRUE;
+
+    dt_print(DT_DEBUG_ALWAYS,
+             "[init] %s database `%s' uses schema version %d; supported schema version is %d",
+             dt_database_schema_name(schema), filename, stored_version, current_version);
+
     if (!has_gui)
-        exit(1);
+        return FALSE;
 
     char *label_text = g_markup_printf_escaped(
-        _("the database schema version of\n"
+        _("the %s database\n"
           "\n"
           "<span style='italic'>%s</span>\n"
           "\n"
-          "is not compatible with DarkTableNext 0.9.\n"
-          "Please export the data with its original application before creating a new 0.9 library.\n"),
-        dbname);
+          "uses schema version %d, but this build supports schema version %d.\n"
+          "Application releases do not change this requirement; only database schema changes do.\n"),
+        dt_database_schema_name(schema), filename, stored_version, current_version);
     dt_gui_show_standalone_yes_no_dialog(_("DarkTableNext - unsupported database"), label_text,
                                          _("_quit darktable"), NULL);
     g_free(label_text);
+
+    return FALSE;
 }
 
-void dt_database_backup(const char *filename)
+static void _database_backup_for_schema(const char *filename,
+                                        const dt_database_schema_t schema)
 {
-    char *version = g_strdup(darktable_package_version);
-    int k = 0;
-    // get plain version (no commit id)
-    while (version[k])
-    {
-        if ((version[k] < '0' || version[k] > '9') && (version[k] != '.'))
-        {
-            version[k] = '\0';
-            break;
-        }
-        k++;
-    }
+    if (!g_file_test(filename, G_FILE_TEST_EXISTS))
+        return;
 
-    gchar *backup = g_strdup_printf("%s-pre-%s", filename, version);
+    const int schema_version = dt_database_schema_current_version(schema);
+    gchar *backup = g_strdup_printf("%s-pre-schema-%d", filename, schema_version);
 
     GError *gerror = NULL;
     if (!g_file_test(backup, G_FILE_TEST_EXISTS))
     {
         GFile *src = g_file_new_for_path(filename);
         GFile *dest = g_file_new_for_path(backup);
-        gboolean copy_status = TRUE;
-        if (g_file_test(filename, G_FILE_TEST_EXISTS))
-        {
-            copy_status = g_file_copy(src, dest, G_FILE_COPY_NONE, NULL, NULL, NULL, &gerror);
-        }
-        else
-        {
-            // there is nothing to backup, create an empty file to prevent further backup attempts
-            const int fd = g_open(backup, O_CREAT, S_IWUSR | S_IRUSR);
-            if (fd < 0 || !g_close(fd, &gerror))
-                copy_status = FALSE;
-        }
+        const gboolean copy_status =
+            g_file_copy(src, dest, G_FILE_COPY_NONE, NULL, NULL, NULL, &gerror);
         if (!copy_status)
             dt_print(DT_DEBUG_ALWAYS, "[backup failed] %s -> %s", filename, backup);
 
         g_object_unref(src);
         g_object_unref(dest);
+        g_clear_error(&gerror);
     }
 
-    g_free(version);
     g_free(backup);
 }
 
@@ -1090,14 +1083,14 @@ start:;
         char *data_path = g_path_get_dirname(dbfilename_data);
         g_mkdir_with_parents(data_path, 0750);
         g_free(data_path);
-        dt_database_backup(dbfilename_data);
+        _database_backup_for_schema(dbfilename_data, DT_DATABASE_SCHEMA_DATA);
     }
     if (g_strcmp0(dbfilename_library, ":memory:"))
     {
         char *library_path = g_path_get_dirname(dbfilename_library);
         g_mkdir_with_parents(library_path, 0750);
         g_free(library_path);
-        dt_database_backup(dbfilename_library);
+        _database_backup_for_schema(dbfilename_library, DT_DATABASE_SCHEMA_LIBRARY);
     }
 
     dt_print(DT_DEBUG_SQL, "[init sql] library: %s, data: %s", dbfilename_library, dbfilename_data);
@@ -1180,16 +1173,12 @@ start:;
         if (!g_strcmp0(data_status, "ok") && rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW)
         {
             g_free(data_status); // status is OK and we don't need to care :)
-            // compare the version of the db with what is current for this executable
+            // Schema compatibility is independent from the application version.
             const int db_version = sqlite3_column_int(stmt, 0);
             sqlite3_finalize(stmt);
-            if (db_version != CURRENT_DATABASE_VERSION_DATA)
+            if (!_database_schema_is_compatible(dbfilename_data, DT_DATABASE_SCHEMA_DATA,
+                                                db_version, has_gui))
             {
-                _unsupported_db_version(dbfilename_data, has_gui);
-                dt_print(
-                    DT_DEBUG_ALWAYS,
-                    "[init] database `%s' has unsupported schema version %d. aborting",
-                    dbfilename_data, db_version);
                 dt_database_destroy(db);
                 db = NULL;
                 goto error;
@@ -1329,17 +1318,13 @@ start:;
     {
         g_free(libdb_status); //it's ok :)
 
-        // compare the version of the db with what is current for this executable
+        // Schema compatibility is independent from the application version.
         const int db_version = sqlite3_column_int(stmt, 0);
 
         sqlite3_finalize(stmt);
-        if (db_version != CURRENT_DATABASE_VERSION_LIBRARY)
+        if (!_database_schema_is_compatible(dbfilename_library, DT_DATABASE_SCHEMA_LIBRARY,
+                                            db_version, has_gui))
         {
-            _unsupported_db_version(dbfilename_library, has_gui);
-            dt_print(
-                DT_DEBUG_ALWAYS,
-                "[init] database `%s' has unsupported schema version %d. aborting", dbname,
-                db_version);
             dt_database_destroy(db);
             db = NULL;
             goto error;
@@ -1471,15 +1456,16 @@ start:;
     }
     else
     {
-        // A database without the 0.9 db_info contract is not imported.
+        // A legacy database without explicit schema metadata is not imported.
         sqlite3_finalize(stmt);
         rc = sqlite3_prepare_v2(db->handle, "SELECT settings FROM main.settings", -1, &stmt, NULL);
         if (rc == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW)
         {
             sqlite3_finalize(stmt);
-            _unsupported_db_version(dbfilename_library, has_gui);
+            _database_schema_is_compatible(dbfilename_library, DT_DATABASE_SCHEMA_LIBRARY, 0,
+                                           has_gui);
             dt_print(DT_DEBUG_ALWAYS,
-                     "[init] database `%s' uses a pre-0.9 schema. aborting", dbname);
+                     "[init] database `%s' has no supported schema version. aborting", dbname);
             dt_database_destroy(db);
             db = NULL;
             goto error;
@@ -1520,39 +1506,47 @@ error:
 
 void dt_upgrade_maker_model(const dt_database_t *db)
 {
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt = NULL;
+    int mapping_version = 0;
 
-    // check if updating the camera table is needed (done for each new darktable version)
-
-    sqlite3_prepare_v2(db->handle,
-                       "SELECT value"
-                       " FROM main.db_info"
-                       " WHERE key = 'dt_version'",
-                       -1, &stmt, NULL);
-    char *dt_version = NULL;
-    if (sqlite3_step(stmt) == SQLITE_ROW)
+    if (sqlite3_prepare_v2(db->handle,
+                           "SELECT value"
+                           " FROM main.db_info"
+                           " WHERE key = 'camera_mapping_version'",
+                           -1, &stmt, NULL) != SQLITE_OK)
     {
-        dt_version = (char *)sqlite3_column_text(stmt, 0);
+        dt_print(DT_DEBUG_ALWAYS, "[init] can't read camera mapping version: %s",
+                 sqlite3_errmsg(db->handle));
+        return;
     }
 
-    if (!dt_version || strcmp(dt_version, darktable_package_version))
-    {
-        _upgrade_camera_table(db);
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+        mapping_version = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
 
-        sqlite3_finalize(stmt);
+    // This maintenance epoch changes only when camera-id reconciliation does,
+    // never merely because the application version changed.
+    if (mapping_version >= DT_DATABASE_CAMERA_MAPPING_VERSION)
+        return;
 
-        sqlite3_prepare_v2(db->handle,
+    if (!_upgrade_camera_table(db))
+        return;
+
+    if (sqlite3_prepare_v2(db->handle,
                            "INSERT OR REPLACE"
                            " INTO main.db_info (key, value)"
-                           " VALUES ('dt_version', ?1)",
-                           -1, &stmt, NULL);
-        sqlite3_bind_text(stmt, 1, darktable_package_version, -1, SQLITE_TRANSIENT);
-        if (sqlite3_step(stmt) != SQLITE_DONE)
-        {
-            dt_print(DT_DEBUG_ALWAYS, "[init] can't insert/update new dt_version");
-        }
+                           " VALUES ('camera_mapping_version', ?1)",
+                           -1, &stmt, NULL) != SQLITE_OK)
+    {
+        dt_print(DT_DEBUG_ALWAYS, "[init] can't store camera mapping version: %s",
+                 sqlite3_errmsg(db->handle));
+        return;
     }
 
+    sqlite3_bind_int(stmt, 1, DT_DATABASE_CAMERA_MAPPING_VERSION);
+    if (sqlite3_step(stmt) != SQLITE_DONE)
+        dt_print(DT_DEBUG_ALWAYS, "[init] can't update camera mapping version: %s",
+                 sqlite3_errmsg(db->handle));
     sqlite3_finalize(stmt);
 }
 

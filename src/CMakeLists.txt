@@ -27,6 +27,7 @@ FILE(GLOB SOURCE_FILES
   "common/custom_primaries.c"
   "common/darktable.c"
   "common/database.c"
+  "common/database_schema.c"
   "common/datetime.c"
   "common/dbus.c"
   "common/distance_transform.c"
@@ -188,8 +189,11 @@ endif()
 # Append thread flags/libraries to LIBS
 list(APPEND LIBS "${CMAKE_THREAD_LIBS_INIT}")
 
-# Need to explicitly link against math library.
-list(APPEND LIBS "-lm")
+# libm is part of libSystem on macOS. Other platforms may still require an
+# explicit math library when this build logic is reused.
+if(NOT APPLE)
+  list(APPEND LIBS "-lm")
+endif()
 
 if(OpenMP_C_FLAGS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -351,13 +355,21 @@ include(march-mtune)
 # -g is kept in every build so crash reports retain useful symbols.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math -fno-finite-math-only")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+
+# These are compilation semantics, not linker options. Keeping them out of
+# CMAKE_<LANG>_FLAGS_RELEASE prevents Clang from warning about
+# -fno-finite-math-only on every macOS link command.
+add_compile_options(
+  "$<$<CONFIG:Release>:-ffast-math>"
+  "$<$<CONFIG:Release>:-fno-finite-math-only>"
+)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
@@ -379,10 +391,18 @@ list(APPEND LIBS ${Pugixml_LIBRARIES})
 
 add_definitions(-Werror -Wfatal-errors)
 
+# Clang reports declined OpenMP SIMD optimization requests through
+# -Wpass-failed. They are useful in a dedicated vectorization report, but are
+# not correctness diagnostics and otherwise make routine Release builds noisy.
+include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-Wno-error=pass-failed" DT_CXX_HAS_NO_ERROR_PASS_FAILED)
-if(DT_CXX_HAS_NO_ERROR_PASS_FAILED)
-  add_definitions("-Wno-error=pass-failed")
+check_c_compiler_flag("-Wno-pass-failed" DT_C_HAS_NO_PASS_FAILED)
+check_cxx_compiler_flag("-Wno-pass-failed" DT_CXX_HAS_NO_PASS_FAILED)
+if(DT_C_HAS_NO_PASS_FAILED)
+  add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-pass-failed>")
+endif()
+if(DT_CXX_HAS_NO_PASS_FAILED)
+  add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>")
 endif()
 
 # macOS system headers are supplied by the compiler sysroot. Third-party CMake

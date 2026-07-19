@@ -16,7 +16,7 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-@import url("darktable.css");
+@import url("chunk-base.css");
 
 /* This has been tested with GTK 3.24 on Gnome */
 
