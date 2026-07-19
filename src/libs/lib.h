@@ -27,9 +27,6 @@
 #include "views/view.h"
 #include "gui/presets.h"
 
-#ifdef USE_LUA
-#include "lua/lib.h"
-#endif
 
 struct dt_lib_module_t;
 struct dt_colorpicker_sample_t;

@@ -4694,8 +4694,7 @@ void dt_gui_cursor_clear_busy()
 
 void dt_gui_process_events()
 {
-    // process pending Gtk/GDK events; we need to limit the total calls because once the LUA
-    // interpreeter starts the script installer we would end up in an infinite loop
+    // Process a bounded number of pending Gtk/GDK events to avoid event-loop starvation.
     unsigned max_iter = 1000;
     while (g_main_context_iteration(NULL, FALSE) && --max_iter > 0)
         continue;

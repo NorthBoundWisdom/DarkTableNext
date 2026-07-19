@@ -91,9 +91,6 @@
 #include <string.h>
 #include <strings.h>
 
-#ifdef USE_LUA
-#include "lua/image.h"
-#endif
 
 typedef enum
 {
@@ -1607,27 +1604,6 @@ gboolean dt_imageio_export_with_flags(
     if (!thumbnail_export && strcmp(format->mime(format_params), "memory") &&
         !(format->flags(format_params) & FORMAT_FLAGS_NO_TMPFILE))
     {
-#ifdef USE_LUA
-        //Synchronous calling of lua intermediate-export-image events
-        dt_lua_lock();
-
-        lua_State *L = darktable.lua_state.state;
-
-        luaA_push(L, dt_lua_image_t, &imgid);
-
-        lua_pushstring(L, filename);
-
-        luaA_push_type(L, format->parameter_lua_type, format_params);
-
-        if (storage)
-            luaA_push_type(L, storage->parameter_lua_type, storage_params);
-        else
-            lua_pushnil(L);
-
-        dt_lua_event_trigger(L, "intermediate-export-image", 4);
-
-        dt_lua_unlock();
-#endif
 
         DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_IMAGE_EXPORT_TMPFILE, imgid, filename, format,
                                 format_params, storage, storage_params);

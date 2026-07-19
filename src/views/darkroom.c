@@ -62,9 +62,6 @@
 #include "osx/osx.h"
 #endif
 
-#ifdef USE_LUA
-#include "lua/image.h"
-#endif
 
 #include <gdk/gdkkeysyms.h>
 #include <glib.h>
@@ -109,27 +106,6 @@ const char *name(const dt_view_t *self)
     return _("darkroom");
 }
 
-#ifdef USE_LUA
-
-static int display_image_cb(lua_State *L)
-{
-    dt_develop_t *dev = darktable.develop;
-    dt_lua_image_t imgid = NO_IMGID;
-    if (luaL_testudata(L, 1, "dt_lua_image_t"))
-    {
-        luaA_to(L, dt_lua_image_t, &imgid, 1);
-        _dev_change_image(dev, imgid);
-    }
-    else
-    {
-        // ensure the image infos in db is up to date
-        dt_dev_write_history(dev);
-    }
-    luaA_push(L, dt_lua_image_t, &dev->image_storage.id);
-    return 1;
-}
-
-#endif
 
 // helpers to let us get the pointer's zoom position only when actually
 // used, while only calling the underlying function once per GUI
@@ -210,15 +186,6 @@ void init(dt_view_t *self)
     self->data = darktable.develop;
     darktable.view_manager->proxy.darkroom.view = self;
 
-#ifdef USE_LUA
-    lua_State *L = darktable.lua_state.state;
-    const int my_type = dt_lua_module_entry_get_type(L, "view", self->module_name);
-    lua_pushlightuserdata(L, self);
-    lua_pushcclosure(L, display_image_cb, 1);
-    dt_lua_gtk_wrap(L);
-    lua_pushcclosure(L, dt_lua_type_member_common, 1);
-    dt_lua_type_register_const_type(L, my_type, "display_image");
-#endif
 }
 
 uint32_t view(const dt_view_t *self)
@@ -991,17 +958,6 @@ gboolean try_enter(dt_view_t *self)
     return FALSE;
 }
 
-#ifdef USE_LUA
-
-static void _fire_darkroom_image_loaded_event(const bool clean, const dt_imgid_t imgid)
-{
-    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "const char*", "darkroom-image-loaded", LUA_ASYNC_TYPENAME, "bool",
-                            clean, LUA_ASYNC_TYPENAME, "dt_lua_image_t", GINT_TO_POINTER(imgid),
-                            LUA_ASYNC_DONE);
-}
-
-#endif
 
 static gboolean _dev_load_requested_image(gpointer user_data);
 
@@ -1121,22 +1077,12 @@ static gboolean _dev_load_requested_image(gpointer user_data)
     // worst case, it'll drop some change image events. sorry.
     if (dt_pthread_mutex_BAD_trylock(&dev->preview_pipe->mutex))
     {
-#ifdef USE_LUA
-
-        _fire_darkroom_image_loaded_event(FALSE, imgid);
-
-#endif
         return G_SOURCE_CONTINUE;
     }
     if (dt_pthread_mutex_BAD_trylock(&dev->full.pipe->mutex))
     {
         dt_pthread_mutex_BAD_unlock(&dev->preview_pipe->mutex);
 
-#ifdef USE_LUA
-
-        _fire_darkroom_image_loaded_event(FALSE, imgid);
-
-#endif
 
         return G_SOURCE_CONTINUE;
     }
@@ -1145,11 +1091,6 @@ static gboolean _dev_load_requested_image(gpointer user_data)
         dt_pthread_mutex_BAD_unlock(&dev->full.pipe->mutex);
         dt_pthread_mutex_BAD_unlock(&dev->preview_pipe->mutex);
 
-#ifdef USE_LUA
-
-        _fire_darkroom_image_loaded_event(FALSE, imgid);
-
-#endif
 
         return G_SOURCE_CONTINUE;
     }
@@ -1165,11 +1106,6 @@ static gboolean _dev_load_requested_image(gpointer user_data)
         dt_image_update_final_size(old_imgid);
         dt_image_synch_xmp(old_imgid);
         dt_history_hash_set_mipmap(old_imgid);
-#ifdef USE_LUA
-        dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                                "const char*", "darkroom-image-history-changed", LUA_ASYNC_TYPENAME,
-                                "dt_lua_image_t", GINT_TO_POINTER(old_imgid), LUA_ASYNC_DONE);
-#endif
         // update the lighttable metadata_view with any changes
         DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_METADATA_CHANGED);
     }
@@ -1366,11 +1302,6 @@ static gboolean _dev_load_requested_image(gpointer user_data)
 
     dt_image_check_camera_missing_sample(&dev->image_storage);
 
-#ifdef USE_LUA
-
-    _fire_darkroom_image_loaded_event(TRUE, imgid);
-
-#endif
 
     return G_SOURCE_REMOVE;
 }
@@ -1575,8 +1506,6 @@ static gboolean _darkroom_ui_apply_style_button_callback(GtkMenuItem *menuitem,
 {
     if (event->button == GDK_BUTTON_PRIMARY)
         dt_styles_apply_to_dev(menu_data->name, darktable.develop->image_storage.id);
-    else
-        dt_shortcut_copy_lua(NULL, menu_data->name);
 
     return FALSE;
 }
@@ -3424,11 +3353,6 @@ void enter(dt_view_t *self)
 
     dt_image_check_camera_missing_sample(&dev->image_storage);
 
-#ifdef USE_LUA
-
-    _fire_darkroom_image_loaded_event(TRUE, dev->image_storage.id);
-
-#endif
 }
 
 void leave(dt_view_t *self)
@@ -3504,11 +3428,6 @@ void leave(dt_view_t *self)
         dt_image_update_final_size(imgid);
         dt_image_synch_xmp(imgid);
         dt_history_hash_set_mipmap(imgid);
-#ifdef USE_LUA
-        dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                                "const char*", "darkroom-image-history-changed", LUA_ASYNC_TYPENAME,
-                                "dt_lua_image_t", GINT_TO_POINTER(imgid), LUA_ASYNC_DONE);
-#endif
         // update the lighttable metadata_view with any changes
         DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_METADATA_CHANGED);
     }

@@ -138,15 +138,11 @@ void dt_control_init(const gboolean withgui)
 
     s->actions_iops =
         (dt_action_t){DT_ACTION_TYPE_CATEGORY,     "iop",         C_("accel", "processing modules"),
-                      .target = &s->actions_blend, .owner = NULL, .next = &s->actions_lua};
+                      .target = &s->actions_blend, .owner = NULL, .next = &s->actions_fallbacks};
 
     s->actions_blend = (dt_action_t){DT_ACTION_TYPE_BLEND,      "blend",
                                      C_("accel", "<blending>"), .target = NULL,
                                      .owner = &s->actions_iops, .next = NULL};
-
-    s->actions_lua =
-        (dt_action_t){DT_ACTION_TYPE_CATEGORY, "lua",         C_("accel", "Lua scripts"),
-                      .target = NULL,          .owner = NULL, .next = &s->actions_fallbacks};
 
     s->actions_fallbacks = (dt_action_t){
         DT_ACTION_TYPE_CATEGORY, "fallbacks", C_("accel", "fallbacks"), NULL, NULL, NULL};
@@ -311,7 +307,7 @@ void dt_control_change_cursor(const char *cursor_name)
 
   dt_control_quit() is called whenever we want to close darktable.
     It is triggered either by callbacks from the gui frontend (ctrl-q or click on close button)
-    or from lua.
+    or from an external control request.
     By setting control->running to DT_CONTROL_STATE_CLEANUP here we
       a) make sure the system recognizes this a not running any more and
       b) leave a note about pending cleanup

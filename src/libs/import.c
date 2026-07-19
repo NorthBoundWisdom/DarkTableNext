@@ -46,9 +46,6 @@
 #include <librsvg/rsvg-cairo.h>
 #endif
 
-#ifdef USE_LUA
-#include "lua/widget/widget.h"
-#endif
 DT_MODULE(1)
 
 static void _import_from_dialog_new(dt_lib_module_t *self);
@@ -164,9 +161,6 @@ typedef struct dt_lib_import_t
     gboolean is_importing;
     GList *to_be_visited;
 
-#ifdef USE_LUA
-    GtkWidget *extra_lua_widgets;
-#endif
 } dt_lib_import_t;
 
 const char *name(dt_lib_module_t *self)
@@ -380,21 +374,6 @@ static guint _import_from_camera_set_file_list(dt_lib_module_t *self)
 
 #endif // HAVE_GPHOTO2
 
-#ifdef USE_LUA
-static void reset_child(GtkWidget *child, gpointer user_data)
-{
-    dt_lua_async_call_alien(dt_lua_widget_trigger_callback, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "lua_widget", child, // the GtkWidget is an alias for the lua_widget
-                            LUA_ASYNC_TYPENAME, "const char*", "reset", LUA_ASYNC_DONE);
-}
-
-// remove the extra portion from the filechooser before destroying it
-static void detach_lua_widgets(GtkWidget *extra_lua_widgets)
-{
-    GtkWidget *parent = gtk_widget_get_parent(extra_lua_widgets);
-    gtk_container_remove(GTK_CONTAINER(parent), extra_lua_widgets);
-}
-#endif
 
 // maybe this should be (partly) in imageio/imageio.[c|h]?
 static GdkPixbuf *_import_get_thumbnail(const gchar *filename)
@@ -2217,29 +2196,6 @@ static void _camera_detected(gpointer instance, gpointer self)
     dt_lib_gui_queue_update(self);
 }
 #endif
-#ifdef USE_LUA
-static int lua_register_widget(lua_State *L)
-{
-    dt_lib_module_t *self = lua_touserdata(L, lua_upvalueindex(1));
-    dt_lib_import_t *d = self->data;
-    lua_widget widget;
-    luaA_to(L, lua_widget, &widget, 1);
-    dt_lua_widget_bind(L, widget);
-    gtk_box_pack_start(GTK_BOX(d->extra_lua_widgets), widget->widget, TRUE, TRUE, 0);
-    return 0;
-}
-
-void init(dt_lib_module_t *self)
-{
-    lua_State *L = darktable.lua_state.state;
-    int my_type = dt_lua_module_entry_get_type(L, "lib", self->plugin_name);
-    lua_pushlightuserdata(L, self);
-    lua_pushcclosure(L, lua_register_widget, 1);
-    dt_lua_gtk_wrap(L);
-    lua_pushcclosure(L, dt_lua_type_member_common, 1);
-    dt_lua_type_register_const_type(L, my_type, "register_widget");
-}
-#endif
 
 void gui_init(dt_lib_module_t *self)
 {
@@ -2296,13 +2252,6 @@ void gui_init(dt_lib_module_t *self)
     d->metadata.box = GTK_WIDGET(d->cs.container);
     dt_import_metadata_init(&d->metadata);
 
-#ifdef USE_LUA
-    /* initialize the lua area and make sure it survives its parent's destruction*/
-    d->extra_lua_widgets = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    g_object_ref_sink(d->extra_lua_widgets);
-    dt_gui_box_add(d->cs.container, d->extra_lua_widgets);
-    gtk_container_foreach(GTK_CONTAINER(d->extra_lua_widgets), reset_child, NULL);
-#endif
 
     gtk_widget_show_all(self->widget);
     gtk_widget_set_no_show_all(self->widget, TRUE);
@@ -2313,9 +2262,6 @@ void gui_init(dt_lib_module_t *self)
 void gui_cleanup(dt_lib_module_t *self)
 {
     dt_lib_import_t *d = self->data;
-#ifdef USE_LUA
-    detach_lua_widgets(d->extra_lua_widgets);
-#endif
     dt_import_metadata_cleanup(&d->metadata);
     /* cleanup mem */
     g_free(self->data);

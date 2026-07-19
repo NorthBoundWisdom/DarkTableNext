@@ -43,7 +43,6 @@
 #include <glib/gi18n.h>
 #include <inttypes.h>
 #include <json-glib/json-glib.h>
-#include <lua/lua.h>
 #include <math.h>
 #include <sqlite3.h>
 #include <stdio.h>
@@ -328,7 +327,6 @@ typedef enum dt_debug_thread_t
     DT_DEBUG_LIGHTTABLE = 1 << 10,
     DT_DEBUG_NAN = 1 << 11,
     DT_DEBUG_MASKS = 1 << 12,
-    DT_DEBUG_LUA = 1 << 13,
     DT_DEBUG_INPUT = 1 << 14,
     DT_DEBUG_PRINT = 1 << 15,
     DT_DEBUG_CAMERA_SUPPORT = 1 << 16,
@@ -346,7 +344,7 @@ typedef enum dt_debug_thread_t
     DT_DEBUG_AI = 1 << 28,
     DT_DEBUG_ALL = 0xffffffff & ~DT_DEBUG_VERBOSE,
     DT_DEBUG_COMMON = DT_DEBUG_OPENCL | DT_DEBUG_PARAMS | DT_DEBUG_IMAGEIO | DT_DEBUG_PIPE |
-                      DT_DEBUG_LUA | DT_DEBUG_AI,
+                      DT_DEBUG_AI,
     DT_DEBUG_RESTRICT = DT_DEBUG_VERBOSE | DT_DEBUG_PERF,
 } dt_debug_thread_t;
 
@@ -441,7 +439,6 @@ typedef struct darktable_t
     char *dump_diff_pipe;
     char *tmp_directory;
     char *bench_module;
-    dt_lua_state_t lua_state;
     GList *guides;
     double start_wtime;
     GList *themes;
@@ -470,8 +467,7 @@ typedef struct
 
 extern darktable_t darktable;
 
-int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load_data,
-            lua_State *L);
+int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load_data);
 
 void dt_get_sysresource_level();
 void dt_cleanup();

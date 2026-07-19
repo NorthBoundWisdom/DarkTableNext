@@ -1208,9 +1208,7 @@ static gboolean _menuitem_button_preset(GtkMenuItem *menuitem, GdkEventButton *e
     else if (event->button == GDK_BUTTON_SECONDARY && event->type == GDK_BUTTON_RELEASE &&
              _click_time)
     {
-        if (long_click || (module->flags() & IOP_FLAGS_ONE_INSTANCE))
-            dt_shortcut_copy_lua((dt_action_t *)module, name);
-        else
+        if (!(long_click || (module->flags() & IOP_FLAGS_ONE_INSTANCE)))
         {
             dt_iop_module_t *new_module = dt_iop_gui_duplicate(module, FALSE);
             if (new_module)

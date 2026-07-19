@@ -29,8 +29,7 @@
     "Imath": "",
     "OpenEXR": "",
     "inih": "",
-    "LibRaw": "",
-    "lua-scripts": ""
+    "LibRaw": ""
   },
   "dependencies": {
     "rawspeed": {
@@ -77,11 +76,6 @@
       "repoName": "LibRaw",
       "remote": "https://github.com/LibRaw/LibRaw.git",
       "commit": "87241b45d8c8178247faca4aa8e6a1896b0b1eeb"
-    },
-    "lua-scripts": {
-      "repoName": "lua-scripts",
-      "remote": "https://github.com/darktable-org/lua-scripts.git",
-      "commit": "3ade2a8b4059b954ae2993b84bb29c65985f0deb"
     }
   }
 }

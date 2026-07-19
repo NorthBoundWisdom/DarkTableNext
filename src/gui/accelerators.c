@@ -849,99 +849,6 @@ static gboolean _find_relative_instance(dt_action_t *action, GtkWidget *widget, 
     return TRUE;
 }
 
-static gchar *_shortcut_lua_command(GtkWidget *widget, dt_shortcut_t *s)
-{
-    const dt_action_element_def_t *elements = _action_find_elements(s->action);
-
-    if (!s->action || s->action->owner == &darktable.control->actions_fallbacks ||
-        !(elements || s->action->type == DT_ACTION_TYPE_COMMAND ||
-          s->action->type == DT_ACTION_TYPE_PRESET))
-        return NULL;
-
-    gchar instance_string[5] = ""; // longest is ", -9"
-    if (_find_relative_instance(s->action, widget, &s->instance))
-        g_snprintf(instance_string, sizeof(instance_string), ", %d", s->instance);
-
-    int elem = 0;
-    while (elements && elements[0].name && elem < s->element && elements[elem + 1].name)
-        elem++;
-
-    if (DT_IS_BAUHAUS_WIDGET(widget) && s->element == DT_ACTION_ELEMENT_DEFAULT)
-    {
-        if (dt_bauhaus_widget_get_type(widget) == DT_BAUHAUS_COMBOBOX)
-        {
-            int value = GPOINTER_TO_INT(dt_bauhaus_combobox_get_data(widget));
-            dt_introspection_type_enum_tuple_t *values =
-                g_hash_table_lookup(darktable.bauhaus->combo_introspection, s->action);
-            for (int i = 0; values && values->name; values++, i++)
-            {
-                if (values->value == value)
-                {
-                    value = i;
-                    break;
-                }
-            }
-            s->effect = DT_ACTION_EFFECT_COMBO_SEPARATOR + 1 + value;
-        }
-        else
-        {
-            s->effect = DT_ACTION_EFFECT_SET;
-            s->speed = dt_bauhaus_slider_get(widget);
-        }
-    }
-
-    const gchar *cef =
-        elements ? _action_find_effect_combo(s->action, &elements[elem], s->effect) : NULL;
-    const gchar *el = elements ? elements[elem].name : NULL;
-    const gchar **ef = elements && s->effect >= 0 ? elements[elem].effects : NULL;
-    const gchar *quo = elements ? "\", \"" : "";
-
-    return g_strdup_printf("dt.gui.action(\"%s%s%s%s%s%s\", %.3f%s)\n", _action_full_id(s->action),
-                           quo, el ? el : "", quo, cef ? "item:" : "",
-                           cef ? NQ_(cef) :
-                           ef  ? NQ_(ef[s->effect]) :
-                                 "",
-                           s->speed, instance_string);
-}
-
-void _shortcut_copy_lua(GtkWidget *widget, dt_shortcut_t *shortcut, gchar *preset_name)
-{
-    gchar *lua_command = _shortcut_lua_command(widget, shortcut);
-    if (!lua_command)
-        return;
-    gtk_clipboard_set_text(gtk_clipboard_get_default(gdk_display_get_default()), lua_command, -1);
-    dt_control_log(_("Lua script command copied to clipboard:\n\n<tt>%s</tt>"), lua_command);
-    g_free(lua_command);
-}
-
-void dt_shortcut_copy_lua(dt_action_t *action, gchar *preset_name)
-{
-    GtkWidget *widget = NULL;
-    dt_shortcut_t shortcut = {.speed = 1.0};
-
-    if (!action)
-    {
-        if (preset_name)
-            shortcut.action =
-                dt_action_locate(&darktable.control->actions_global,
-                                 (gchar *[]){"styles", (gchar *)preset_name, NULL}, FALSE);
-        else
-        {
-            widget = darktable.control->mapping_widget;
-            shortcut.action = dt_action_widget(widget);
-            shortcut.element = darktable.control->element;
-        }
-    }
-    else
-    {
-        if (action->type == DT_ACTION_TYPE_IOP_INSTANCE)
-            action = &((dt_iop_module_t *)action)->so->actions;
-        shortcut.action = dt_action_locate(action, (gchar *[]){"preset", preset_name, NULL}, FALSE);
-    }
-
-    _shortcut_copy_lua(widget, &shortcut, preset_name);
-}
-
 static void _tooltip_reposition(GtkWidget *widget, GdkRectangle *allocation, gpointer user_data)
 {
     GdkWindow *window = gtk_widget_get_window(gtk_widget_get_toplevel(widget));
@@ -978,7 +885,7 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
     dt_action_t *action = NULL;
     dt_action_def_t const *def = NULL;
     int show_element = 0;
-    dt_shortcut_t lua_shortcut = {.speed = 1.0};
+    dt_shortcut_t tooltip_shortcut = {.speed = 1.0};
 
     gchar *original_markup = dt_bauhaus_widget_get_tooltip_markup(widget, x, y);
     const gchar *widget_name = gtk_widget_get_name(widget);
@@ -1016,7 +923,7 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
                                                        _("\ndouble-click to add new shortcut"));
 
             if (!_is_shortcut_category(shortcut_iter))
-                lua_shortcut = *(dt_shortcut_t *)g_sequence_get(shortcut_iter);
+                tooltip_shortcut = *(dt_shortcut_t *)g_sequence_get(shortcut_iter);
         }
         else
         {
@@ -1053,7 +960,7 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
         }
 
         if (darktable.control->element > 0)
-            lua_shortcut.element = darktable.control->element;
+            tooltip_shortcut.element = darktable.control->element;
 
         if (darktable.control->mapping_widget == widget)
         {
@@ -1082,13 +989,13 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
     const gchar *element_name = NULL;
     if (def)
     {
-        for (int i = 0; i <= lua_shortcut.element; i++)
+        for (int i = 0; i <= tooltip_shortcut.element; i++)
         {
             element_name = def->elements[i].name;
             if (!element_name)
                 break;
         }
-        if (element_name && (lua_shortcut.element || !has_fallbacks) && show_element == 0 &&
+        if (element_name && (tooltip_shortcut.element || !has_fallbacks) && show_element == 0 &&
             darktable.control->element != -1)
             description = g_markup_escape_text(_(element_name), -1);
     }
@@ -1121,23 +1028,6 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
     if (!num_shortcuts && original_markup && darktable.control->mapping_widget != widget)
         g_clear_pointer(&description, g_free);
 
-#ifdef USE_LUA
-    if (markup_text)
-    {
-        if (action)
-            lua_shortcut.action = action;
-        gchar *lua_command = _shortcut_lua_command(widget, &lua_shortcut);
-        if (lua_command)
-        {
-            gchar *lua_escaped = g_markup_printf_escaped(
-                "\n\nLua: <tt>%s</tt>%s %s", lua_command,
-                show_element == 1 ? _("ctrl+v") : _("right long click"), _("to copy Lua command"));
-            dt_util_str_cat(&markup_text, "%s", lua_escaped);
-            g_free(lua_escaped);
-            g_free(lua_command);
-        }
-    }
-#endif
 
     if (description || original_markup || markup_text)
     {
@@ -1204,8 +1094,6 @@ static dt_view_type_flags_t _find_views(dt_action_t *action)
         case DT_ACTION_TYPE_CATEGORY:
             if (owner == &darktable.control->actions_fallbacks)
                 vws = DT_VIEW_FALLBACK;
-            else if (owner == &darktable.control->actions_lua)
-                vws = DT_VIEW_ALL;
             else if (owner == &darktable.control->actions_thumb)
             {
                 vws = DT_VIEW_DARKROOM | DT_VIEW_MAP | DT_VIEW_TETHERING | DT_VIEW_PRINT;
@@ -1574,7 +1462,7 @@ static void _fill_shortcut_fields(GtkTreeViewColumn *column, GtkCellRenderer *ce
                 field_text = _action_full_label(s->action);
             break;
         case SHORTCUT_VIEW_ELEMENT:
-            if (owner == &darktable.control->actions_lua || _shortcut_is_speed(s))
+            if (_shortcut_is_speed(s))
                 break;
             elements = _action_find_elements(s->action);
             if (elements && elements->name)
@@ -1587,7 +1475,7 @@ static void _fill_shortcut_fields(GtkTreeViewColumn *column, GtkCellRenderer *ce
             }
             break;
         case SHORTCUT_VIEW_EFFECT:
-            if (owner == &darktable.control->actions_lua || _shortcut_is_speed(s))
+            if (_shortcut_is_speed(s))
                 break;
             elements = _action_find_elements(s->action);
             if (elements)
@@ -1898,18 +1786,7 @@ static gboolean _view_key_pressed(GtkWidget *widget, GdkEventKey *event, gpointe
     GtkTreeModel *model = NULL;
     if (gtk_tree_selection_get_selected(selection, &model, &iter))
     {
-        if (!strcmp(gtk_widget_get_name(widget), "actions_view"))
-        {
-            // if control key pressed, copy lua command to clipboard (CTRL+C will work)
-            if (dt_modifier_is(event->state, GDK_CONTROL_MASK))
-            {
-                dt_shortcut_t shortcut = {.speed = 1.0};
-                gtk_tree_model_get(model, &iter, 0, &shortcut.action, -1);
-
-                _shortcut_copy_lua(NULL, &shortcut, NULL);
-            }
-        }
-        else
+        if (strcmp(gtk_widget_get_name(widget), "actions_view"))
         {
             GSequenceIter *shortcut_iter = NULL;
             gtk_tree_model_get(model, &iter, 0, &shortcut_iter, -1);
@@ -1917,12 +1794,6 @@ static gboolean _view_key_pressed(GtkWidget *widget, GdkEventKey *event, gpointe
             if (!_is_shortcut_category(shortcut_iter))
             {
                 dt_shortcut_t *s = g_sequence_get(shortcut_iter);
-
-                // if control key pressed, copy lua command to clipboard (CTRL+C will work)
-                if (dt_modifier_is(event->state, GDK_CONTROL_MASK) && s->views)
-                {
-                    _shortcut_copy_lua(NULL, s, NULL);
-                }
 
                 // GDK_KEY_BackSpace moves to parent in tree
                 if (event->keyval == GDK_KEY_Delete || event->keyval == GDK_KEY_KP_Delete)
@@ -3804,43 +3675,6 @@ static float _process_action(dt_action_t *action, int instance, dt_action_elemen
             }
             return_value = definition->process(action_target, element, effect, move_size);
         }
-#ifdef USE_LUA
-        else if (owner == &darktable.control->actions_lua && definition)
-        {
-            dt_lua_lock();
-
-            lua_State *L = darktable.lua_state.state;
-
-            lua_getfield(L, LUA_REGISTRYINDEX, "dt_lua_mimic_list");
-            int stacknum = 1;
-            if (lua_isnil(L, -1))
-                goto lua_end;
-
-            lua_getfield(L, -1, action->id);
-            ++stacknum;
-            if (lua_isnil(L, -1))
-                goto lua_end;
-
-            if (!DT_PERFORM_ACTION(move_size))
-                move_size = NAN;
-
-            lua_pushstring(L, action->label);
-            lua_pushstring(L, definition->elements[element].name);
-            lua_pushstring(L, definition->elements[element].effects[effect]);
-            lua_pushnumber(L, move_size);
-
-            lua_pcall(L, 4, 1, 0);
-
-            return_value = lua_tonumber(L, -1);
-
-            if (dt_isnan(return_value))
-                return_value = DT_ACTION_NOT_VALID;
-
-        lua_end:
-            lua_pop(L, stacknum);
-            dt_lua_unlock();
-        }
-#endif
         else if (DT_PERFORM_ACTION(move_size))
             dt_action_widget_toast(action, action_target, "not active");
     }
@@ -3941,12 +3775,6 @@ float dt_action_process(const gchar *action, int instance, const gchar *element,
     if (!ac)
     {
         dt_print(DT_DEBUG_ALWAYS, "[dt_action_process] action path '%s' not found", action);
-        return DT_ACTION_NOT_VALID;
-    }
-
-    if (ac->owner == &darktable.control->actions_lua)
-    {
-        dt_print(DT_DEBUG_ALWAYS, "[dt_action_process] lua action '%s' triggered from lua", action);
         return DT_ACTION_NOT_VALID;
     }
 
@@ -4646,9 +4474,6 @@ dt_action_t *dt_action_locate(dt_action_t *owner, gchar **path, gboolean create)
     dt_action_t *action = owner ? owner->target : darktable.control->actions;
     while (*path)
     {
-        if (owner == &darktable.control->actions_lua)
-            create = TRUE;
-
         const gboolean style_or_preset =
             owner && owner->type == DT_ACTION_TYPE_SECTION &&
             (!strcmp(owner->id, "styles") || !strcmp(owner->id, "preset"));

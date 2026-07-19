@@ -4,11 +4,10 @@ The **introspection system** in DarkTableNext allows the application to understa
 
 ## Purpose
 
-Introspection serves three main purposes:
+Introspection serves two main purposes:
 
 1.  **Database Storage**: It allows module parameters (which are just C structs) to be serialized to and deserialized from the database as binary blobs with an explicit version and size.
 2.  **GUI Generation**: The GUI logic (`DT_BAUHAUS_WIDGET` macros and functions) uses introspection data to automatically create sliders, comboboxes, and toggle buttons with the correct ranges, defaults, and labels.
-3.  **Lua API**: It allows the Lua scripting interface to access and modify module parameters dynamically without writing explicit binding code for every field.
 
 ## Defining Introspection
 

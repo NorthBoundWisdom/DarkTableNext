@@ -112,13 +112,6 @@ static void _overlays_toggle_button(GtkWidget *w, dt_lib_module_t *self)
     if (over != DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK)
         gtk_widget_hide(d->over_popup);
 
-#ifdef USE_LUA
-    gboolean show = (over == DT_THUMBNAIL_OVERLAYS_ALWAYS_NORMAL ||
-                     over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED);
-    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "const char*", "global_toolbox-overlay_toggle", LUA_ASYNC_TYPENAME,
-                            "bool", show, LUA_ASYNC_DONE);
-#endif // USE_LUA
 }
 
 static void _overlays_toggle_culling_button(GtkWidget *w, dt_lib_module_t *self)
@@ -153,13 +146,6 @@ static void _overlays_toggle_culling_button(GtkWidget *w, dt_lib_module_t *self)
     if (over != DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK)
         gtk_widget_hide(d->over_popup);
 
-#ifdef USE_LUA
-    gboolean show = (over == DT_THUMBNAIL_OVERLAYS_ALWAYS_NORMAL ||
-                     over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED);
-    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "const char*", "global_toolbox-overlay_toggle", LUA_ASYNC_TYPENAME,
-                            "bool", show, LUA_ASYNC_DONE);
-#endif // USE_LUA
 }
 
 static void _overlays_timeout_changed(GtkWidget *w, dt_lib_module_t *self)
@@ -549,7 +535,6 @@ void gui_init(dt_lib_module_t *self)
                      G_CALLBACK(_lib_keymap_button_press_release), d);
 
     // the rest of these is added in reverse order as they are always put at the end of the container.
-    // that's done so that buttons added via Lua will come first.
 
     /* create the preference button */
     d->preferences_button = dtgtk_button_new(dtgtk_cairo_paint_preferences, 0, NULL);
@@ -589,11 +574,6 @@ static void _lib_filter_grouping_button_clicked(GtkWidget *widget, gpointer user
     dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
                                DT_COLLECTION_PROP_UNDEF, NULL);
 
-#ifdef USE_LUA
-    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "const char*", "global_toolbox-grouping_toggle", LUA_ASYNC_TYPENAME,
-                            "bool", darktable.gui->grouping, LUA_ASYNC_DONE);
-#endif // USE_LUA
 }
 
 static void _main_do_event_help(GdkEvent *event, gpointer data)
@@ -738,7 +718,6 @@ static void _main_do_event_keymap(GdkEvent *event, gpointer data)
 {
     dt_lib_tool_preferences_t *d = data;
     GtkWidget *event_widget = gtk_get_event_widget(event);
-    static guint click_time = 0;
 
     switch (event->type)
     {
@@ -769,9 +748,7 @@ static void _main_do_event_keymap(GdkEvent *event, gpointer data)
         if (GTK_IS_ENTRY(event_widget))
             break;
 
-        if (event->button.button == GDK_BUTTON_SECONDARY)
-            click_time = event->button.time;
-        else if (event->button.button == GDK_BUTTON_MIDDLE)
+        if (event->button.button == GDK_BUTTON_MIDDLE)
             dt_shortcut_dispatcher(event_widget, event, data);
         else if (event->button.button > 7)
             break;
@@ -800,10 +777,7 @@ static void _main_do_event_keymap(GdkEvent *event, gpointer data)
         if (event->button.button != GDK_BUTTON_SECONDARY)
             break;
 
-        if (dt_gui_long_click(event->button.time, click_time))
-            dt_shortcut_copy_lua(NULL, NULL);
-        else
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->keymap_button), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->keymap_button), FALSE);
 
         return;
     default:
@@ -868,70 +842,3 @@ static gboolean _lib_keymap_button_press_release(GtkWidget *button, GdkEventButt
         return FALSE;
     }
 }
-
-#ifdef USE_LUA
-
-static int grouping_member(lua_State *L)
-{
-    dt_lib_module_t *self = *(dt_lib_module_t **)lua_touserdata(L, 1);
-    dt_lib_tool_preferences_t *d = self->data;
-    if (lua_gettop(L) != 3)
-    {
-        lua_pushboolean(L, darktable.gui->grouping);
-        return 1;
-    }
-    else
-    {
-        gboolean value = lua_toboolean(L, 3);
-        if (darktable.gui->grouping != value)
-        {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->grouping_button), value);
-        }
-    }
-    return 0;
-}
-
-static int show_overlays_member(lua_State *L)
-{
-    dt_lib_module_t *self = *(dt_lib_module_t **)lua_touserdata(L, 1);
-    dt_lib_tool_preferences_t *d = self->data;
-    if (lua_gettop(L) != 3)
-    {
-        lua_pushboolean(L, darktable.gui->show_overlays);
-        return 1;
-    }
-    else
-    {
-        gboolean value = lua_toboolean(L, 3);
-        if (darktable.gui->show_overlays != value)
-        {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->overlays_button), value);
-        }
-    }
-    return 0;
-}
-
-void init(struct dt_lib_module_t *self)
-{
-    lua_State *L = darktable.lua_state.state;
-    int my_type = dt_lua_module_entry_get_type(L, "lib", self->plugin_name);
-
-    lua_pushcfunction(L, grouping_member);
-    dt_lua_gtk_wrap(L);
-    dt_lua_type_register_type(L, my_type, "grouping");
-    lua_pushcfunction(L, show_overlays_member);
-    dt_lua_gtk_wrap(L);
-    dt_lua_type_register_type(L, my_type, "show_overlays");
-
-    lua_pushcfunction(L, dt_lua_event_multiinstance_register);
-    lua_pushcfunction(L, dt_lua_event_multiinstance_destroy);
-    lua_pushcfunction(L, dt_lua_event_multiinstance_trigger);
-    dt_lua_event_add(L, "global_toolbox-grouping_toggle");
-
-    lua_pushcfunction(L, dt_lua_event_multiinstance_register);
-    lua_pushcfunction(L, dt_lua_event_multiinstance_destroy);
-    lua_pushcfunction(L, dt_lua_event_multiinstance_trigger);
-    dt_lua_event_add(L, "global_toolbox-overlay_toggle");
-}
-
-#endif // USE_LUA

@@ -430,12 +430,7 @@ static void _menuitem_activate_preset(GtkMenuItem *menuitem, dt_lib_module_info_
 static gboolean _menuitem_button_preset(GtkMenuItem *menuitem, GdkEventButton *event,
                                         dt_lib_module_info_t *minfo)
 {
-    if (event->button == GDK_BUTTON_PRIMARY)
-        return FALSE;
-
-    dt_shortcut_copy_lua((dt_action_t *)minfo->module,
-                         g_object_get_data(G_OBJECT(menuitem), "dt-preset-name"));
-    return TRUE;
+    return event->button != GDK_BUTTON_PRIMARY;
 }
 
 static void _free_module_info(GtkWidget *widget, gpointer user_data)
@@ -704,9 +699,6 @@ static int dt_lib_load_module(void *m, const char *libname, const char *module_n
     module->actions = (dt_action_t){DT_ACTION_TYPE_LIB, module->plugin_name, module->name(module)};
 
     dt_action_insert_sorted(&darktable.control->actions_libs, &module->actions);
-#ifdef USE_LUA
-    dt_lua_lib_register(darktable.lua_state.state, module);
-#endif
 
     if (module->init)
         module->init(module);

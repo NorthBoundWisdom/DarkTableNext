@@ -69,26 +69,6 @@ void init(dt_imageio_module_format_t *self)
     // We could add check if libheif we link against supports encoding and if not
     // heif export can be disabled with "self->ready = FALSE". See avif exporter
     // for example.
-#ifdef USE_LUA
-    luaA_struct(darktable.lua_state.state, dt_imageio_heif_t);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_heif_t, bit_depth,
-                                  int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_heif_t, quality, int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_heif_t,
-                                  compression_type, int);
-
-    // subsample
-    luaA_enum(darktable.lua_state.state, enum dt_imageio_heif_subsample_t);
-    luaA_enum_value(darktable.lua_state.state, enum dt_imageio_heif_subsample_t, DT_SUBSAMPLE_AUTO);
-    luaA_enum_value(darktable.lua_state.state, enum dt_imageio_heif_subsample_t, DT_SUBSAMPLE_444);
-    luaA_enum_value(darktable.lua_state.state, enum dt_imageio_heif_subsample_t, DT_SUBSAMPLE_422);
-    luaA_enum_value(darktable.lua_state.state, enum dt_imageio_heif_subsample_t, DT_SUBSAMPLE_420);
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_heif_t, subsample,
-                                  enum dt_imageio_heif_subsample_t);
-#endif
 }
 
 void cleanup(dt_imageio_module_format_t *self)

@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 {
     dt_osx_prepare_environment();
 
-    if (dt_init(argc, argv, TRUE, TRUE, NULL))
+    if (dt_init(argc, argv, TRUE, TRUE))
     {
         if (dt_gimpmode())
             printf("\n<<<gimp\nerror\ngimp>>>\n");

@@ -72,7 +72,6 @@
 #include "gui/welcome.h"
 #include "imageio/imageio_module.h"
 #include "libs/lib.h"
-#include "lua/init.h"
 #include "views/view.h"
 #include "conf_gen.h"
 
@@ -120,9 +119,6 @@
 #include <omp.h>
 #endif
 
-#ifdef USE_LUA
-#include "lua/configuration.h"
-#endif
 
 darktable_t darktable;
 
@@ -192,14 +188,6 @@ static int usage(const char *argv0)
          "    :memory: -> Use this option as FILE to keep the database in system memory,\n"
          "    discarding changes on darktable termination.\n"
          "\n"
-#ifdef USE_LUA
-         "--luacmd COMMAND\n"
-         "    A string containing lua commands to execute after lua\n"
-         "    initialization. These commands will be run after your “luarc”\n"
-         "    file. If lua is not compiled-in, this option will be accepted\n"
-         "    but won't do anything.\n"
-         "\n"
-#endif
          "--moduledir DIR\n"
          "    darktable has a modular structure and organizes its modules as\n"
          "    shared libraries for loading at runtime.\n"
@@ -256,14 +244,14 @@ static int usage(const char *argv0)
          "    Enable debug output to the terminal (or to the log file if on Windows).\n"
          "    Valid channels are:\n\n"
          "    act_on, ai, cache, camctl, camsupport, control, dev, expose,\n"
-         "    imageio, input, ioporder, lighttable, lua, masks, memory,\n"
+         "    imageio, input, ioporder, lighttable, masks, memory,\n"
          "    nan, opencl, params, perf, pipe, print, pwstorage, signal,\n"
          "    sql, tiling, picker, undo\n"
          "\n"
          "    It is also possible to specify names that activate all channels\n"
          "    or a certain subset, as well as increase verbosity:\n"
          "    all     -> to debug all channels\n"
-         "    common  -> to debug imageio, opencl, params, pipe, lua and ai\n"
+         "    common  -> to debug imageio, opencl, params, pipe and ai\n"
          "    verbose -> when combined with debug options like '-d opencl'\n"
          "               provides more detailed output. To activate verbosity,\n"
          "               use the additional option '-d verbose'\n"
@@ -771,160 +759,133 @@ void dt_stop_backthumbs_crawler(const gboolean wait)
 
 static char *_get_version_string(void)
 {
-    const char *exiv2_version = EXV_PACKAGE_VERSION "\n";
+    GString *version = g_string_new(NULL);
+    g_string_append_printf(version,
+                           "darktable %s\n"
+                           "Copyright (C) 2012-%s Johannes Hanika and other contributors.\n\n"
+                           "Compile options:\n"
+                           "  Bit depth              -> %zu bit\n"
+                           "  Exiv2                  -> %s\n"
+                           "  Lensfun                -> %d.%d.%d\n",
+                           darktable_package_version, darktable_last_commit_year,
+                           CHAR_BIT * sizeof(void *), EXV_PACKAGE_VERSION, LF_VERSION_MAJOR,
+                           LF_VERSION_MINOR, LF_VERSION_MICRO);
 
-    const char *liblensfun_version =
-        g_strdup_printf("%d.%d.%d\n", LF_VERSION_MAJOR, LF_VERSION_MINOR, LF_VERSION_MICRO);
-
-#ifdef HAVE_LIBRAW
-    const char *libraw_version = LIBRAW_VERSION_STR "\n";
-#endif
-
-#ifdef USE_LUA
-    const char *lua_api_version =
-        strcmp(LUA_API_VERSION_SUFFIX, "") ?
-            STR(LUA_API_VERSION_MAJOR) "." STR(LUA_API_VERSION_MINOR) "." STR(
-                LUA_API_VERSION_PATCH) "-" LUA_API_VERSION_SUFFIX :
-            STR(LUA_API_VERSION_MAJOR) "." STR(LUA_API_VERSION_MINOR) "." STR(
-                LUA_API_VERSION_PATCH) "\n";
-#endif
-
-    char *version = g_strdup_printf(
-        "darktable %s\n"
-        "Copyright (C) 2012-%s Johannes Hanika and other contributors.\n\n"
-        "Compile options:\n"
-        "  Bit depth              -> %zu bit\n"
-        "%s%s%s%s%s%s%s%s%s\n"
-        "See %s for detailed documentation.\n"
-        "See %s to report bugs.\n",
-        darktable_package_version, darktable_last_commit_year, CHAR_BIT * sizeof(void *),
-
-        "  Exiv2                  -> ", exiv2_version, "  Lensfun                -> ",
-        liblensfun_version,
 #ifdef _DEBUG
-        "  Debug                  -> ENABLED\n"
+    g_string_append(version, "  Debug                  -> ENABLED\n");
 #else
-        "  Debug                  -> DISABLED\n"
+    g_string_append(version, "  Debug                  -> DISABLED\n");
 #endif
 
 #if defined(__SSE2__) && defined(__SSE__)
-        "  SSE2 optimizations     -> ENABLED\n"
+    g_string_append(version, "  SSE2 optimizations     -> ENABLED\n");
 #else
-        "  SSE2 optimizations     -> DISABLED\n"
+    g_string_append(version, "  SSE2 optimizations     -> DISABLED\n");
 #endif
 
 #ifdef _OPENMP
-        "  OpenMP                 -> ENABLED\n"
+    g_string_append(version, "  OpenMP                 -> ENABLED\n");
 #else
-        "  OpenMP                 -> DISABLED\n"
+    g_string_append(version, "  OpenMP                 -> DISABLED\n");
 #endif
 
 #ifdef HAVE_OPENCL
-        "  OpenCL                 -> ENABLED\n"
+    g_string_append(version, "  OpenCL                 -> ENABLED\n");
 #else
-        "  OpenCL                 -> DISABLED - GPU acceleration is NOT available\n"
-#endif
-
-#ifdef USE_LUA
-        "  Lua                    -> ENABLED  - API version ",
-        lua_api_version,
-#else
-        "  Lua                    -> DISABLED",
-        "\n",
+    g_string_append(version, "  OpenCL                 -> DISABLED - GPU acceleration is NOT available\n");
 #endif
 
 #ifdef USE_COLORDGTK
-        "  Colord                 -> ENABLED\n"
+    g_string_append(version, "  Colord                 -> ENABLED\n");
 #else
-        "  Colord                 -> DISABLED\n"
+    g_string_append(version, "  Colord                 -> DISABLED\n");
 #endif
 
 #ifdef HAVE_GPHOTO2
-        "  gPhoto2                -> ENABLED  - Camera tethering is available\n"
+    g_string_append(version, "  gPhoto2                -> ENABLED  - Camera tethering is available\n");
 #else
-        "  gPhoto2                -> DISABLED - Camera tethering is NOT available\n"
+    g_string_append(version, "  gPhoto2                -> DISABLED - Camera tethering is NOT available\n");
 #endif
 
 #ifdef HAVE_MAP
-        "  OSMGpsMap              -> ENABLED  - Map view is available\n"
+    g_string_append(version, "  OSMGpsMap              -> ENABLED  - Map view is available\n");
 #else
-        "  OSMGpsMap              -> DISABLED - Map view is NOT available\n"
+    g_string_append(version, "  OSMGpsMap              -> DISABLED - Map view is NOT available\n");
 #endif
 
 #ifdef HAVE_GMIC
-        "  GMIC                   -> ENABLED  - Compressed LUTs are supported\n"
+    g_string_append(version, "  GMIC                   -> ENABLED  - Compressed LUTs are supported\n");
 #else
-        "  GMIC                   -> DISABLED - Compressed LUTs are NOT supported\n"
+    g_string_append(version, "  GMIC                   -> DISABLED - Compressed LUTs are NOT supported\n");
 #endif
 
 #ifdef HAVE_GRAPHICSMAGICK
-        "  GraphicsMagick         -> ENABLED\n"
+    g_string_append(version, "  GraphicsMagick         -> ENABLED\n");
 #else
-        "  GraphicsMagick         -> DISABLED\n"
+    g_string_append(version, "  GraphicsMagick         -> DISABLED\n");
 #endif
 
 #ifdef HAVE_IMAGEMAGICK
-        "  ImageMagick            -> ENABLED\n"
+    g_string_append(version, "  ImageMagick            -> ENABLED\n");
 #else
-        "  ImageMagick            -> DISABLED\n"
+    g_string_append(version, "  ImageMagick            -> DISABLED\n");
 #endif
 
 #ifdef HAVE_LIBAVIF
-        "  libavif                -> ENABLED\n"
+    g_string_append(version, "  libavif                -> ENABLED\n");
 #else
-        "  libavif                -> DISABLED\n"
+    g_string_append(version, "  libavif                -> DISABLED\n");
 #endif
 
 #ifdef HAVE_LIBHEIF
-        "  libheif                -> ENABLED\n"
+    g_string_append(version, "  libheif                -> ENABLED\n");
 #else
-        "  libheif                -> DISABLED\n"
+    g_string_append(version, "  libheif                -> DISABLED\n");
 #endif
 
 #ifdef HAVE_LIBJXL
-        "  libjxl                 -> ENABLED\n"
+    g_string_append(version, "  libjxl                 -> ENABLED\n");
 #else
-        "  libjxl                 -> DISABLED\n"
+    g_string_append(version, "  libjxl                 -> DISABLED\n");
 #endif
 
 #ifdef HAVE_LIBRAW
-        "  LibRaw                 -> ENABLED  - Version ",
-        libraw_version,
+    g_string_append_printf(version, "  LibRaw                 -> ENABLED  - Version %s\n",
+                           LIBRAW_VERSION_STR);
 #else
-        "  LibRaw                 -> DISABLED",
-        "\n",
+    g_string_append(version, "  LibRaw                 -> DISABLED\n");
 #endif
 
 #ifdef HAVE_OPENJPEG
-        "  OpenJPEG               -> ENABLED\n"
+    g_string_append(version, "  OpenJPEG               -> ENABLED\n");
 #else
-        "  OpenJPEG               -> DISABLED\n"
+    g_string_append(version, "  OpenJPEG               -> DISABLED\n");
 #endif
 
 #ifdef HAVE_OPENEXR
-        "  OpenEXR                -> ENABLED\n"
+    g_string_append(version, "  OpenEXR                -> ENABLED\n");
 #else
-        "  OpenEXR                -> DISABLED\n"
+    g_string_append(version, "  OpenEXR                -> DISABLED\n");
 #endif
 
 #ifdef HAVE_WEBP
-        "  WebP                   -> ENABLED\n"
+    g_string_append(version, "  WebP                   -> ENABLED\n");
 #else
-        "  WebP                   -> DISABLED\n"
+    g_string_append(version, "  WebP                   -> DISABLED\n");
 #endif
 
 #ifdef HAVE_AI
-        "  AI                     -> ENABLED\n",
+    g_string_append(version, "  AI                     -> ENABLED\n");
 #else
-        "  AI                     -> DISABLED\n",
+    g_string_append(version, "  AI                     -> DISABLED\n");
 #endif
 
-        PACKAGE_DOCS, PACKAGE_BUGREPORT);
-
-    return version;
+    g_string_append_printf(version, "See %s for detailed documentation.\nSee %s to report bugs.\n",
+                           PACKAGE_DOCS, PACKAGE_BUGREPORT);
+    return g_string_free(version, FALSE);
 }
 
-int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load_data, lua_State *L)
+int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load_data)
 {
     const double start_wtime = dt_get_wtime();
 
@@ -994,9 +955,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     print_statistics = (strstr(argv[0], "darktable-cltest") == NULL);
 #endif
 
-#ifdef USE_LUA
-    char *lua_command = NULL;
-#endif
 
     darktable.num_openmp_threads = dt_get_num_procs();
     darktable.pipe_cache = TRUE;
@@ -1116,7 +1074,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
           !strcmp(darg, "lighttable") ? DT_DEBUG_LIGHTTABLE : // lighttable related stuff.
           !strcmp(darg, "nan") ? DT_DEBUG_NAN : // check for NANs when processing the pipe.
           !strcmp(darg, "masks") ? DT_DEBUG_MASKS : // masks related stuff.
-          !strcmp(darg, "lua") ? DT_DEBUG_LUA : // lua errors are reported on console
           !strcmp(darg, "print") ? DT_DEBUG_PRINT : // print errors are reported on console
           !strcmp(darg, "camsupport") ? DT_DEBUG_CAMERA_SUPPORT : // camera support warnings are reported on console
           !strcmp(darg, "ioporder") ? DT_DEBUG_IOPORDER : // iop order information are reported on console
@@ -1286,16 +1243,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
             else if (!strcmp(argv[k], "--noiseprofiles") && argc > k + 1)
             {
                 noiseprofiles_from_command = argv[++k];
-                argv[k - 1] = NULL;
-                argv[k] = NULL;
-            }
-            else if (!strcmp(argv[k], "--luacmd") && argc > k + 1)
-            {
-#ifdef USE_LUA
-                lua_command = argv[++k];
-#else
-                ++k;
-#endif
                 argv[k - 1] = NULL;
                 argv[k] = NULL;
             }
@@ -1521,9 +1468,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     omp_set_dynamic(FALSE);
 #endif
 
-#ifdef USE_LUA
-    dt_lua_init_early(L);
-#endif
 
     // thread-safe init:
     dt_exif_init();
@@ -1742,7 +1686,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         dt_film_set_folder_status();
     }
 
-    // the update crawl needs to run after db and conf are up, but before LUA
+    // the update crawl needs to run after db and conf are up, before background jobs begin
     // starts any scripts
     GList *changed_xmp_files = NULL;
     if (init_gui)
@@ -1965,12 +1909,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         dt_lib_init(darktable.lib);
     }
 
-/* init lua last, since it's user made stuff it must be in the real environment */
-#ifdef USE_LUA
-    dt_splash_screen_set_progress(_("initializing Lua"));
-    dt_lua_init(darktable.lua_state.state, lua_command);
-#endif
-
     if (init_gui)
     {
         dt_ctl_switch_mode_to("lighttable");
@@ -1991,8 +1929,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         g_signal_connect(dt_ui_main_window(darktable.gui->ui), "event",
                          G_CALLBACK(dt_shortcut_dispatcher), NULL);
 
-        // load image(s) specified on cmdline.  this has to happen after
-        // lua is initialized as image import can run lua code
+        // load image(s) specified on cmdline after the user interface is ready
         if (argc == 2 && !_is_directory(argv[1]))
         {
             // If only one image is listed, attempt to load it in darkroom
@@ -2139,10 +2076,6 @@ void dt_cleanup()
         dt_gui_process_events();
 #endif
 
-#ifdef USE_LUA
-    // send the exit event to all the running scripts letting them know that darktable is ending
-    dt_lua_finalize_early();
-#endif
 
     // anything that asks user for input should be placed before this line
 
@@ -2171,16 +2104,11 @@ void dt_cleanup()
         processing the pixelpipe and full access to all images.
    2) The pipeline processing uses access to gui related data - focus, active module ...
         so make sure to avoid those too.
-   3) As lua events might be fired by the backthreads it's state mutex must still be unlocked.
-
-5. After dt_control_shutdown() has finished we are sure there are no background threads running any
+After dt_control_shutdown() has finished we are sure there are no background threads running any
      more so we can safely close all mentioned subsystems and continue.
 */
         dt_control_shutdown();
     }
-#ifdef USE_LUA
-    dt_lua_finalize();
-#endif
 
     if (init_gui)
     {

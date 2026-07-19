@@ -36,7 +36,7 @@ int main(int argc, char *arg[])
     for (int i = 0; i < m_argc; i++)
         argv[argc + i] = m_arg[i];
     argc += m_argc;
-    if (dt_init(argc, argv, FALSE, FALSE, NULL))
+    if (dt_init(argc, argv, FALSE, FALSE))
         goto end;
     dt_cleanup();
     free(argv);

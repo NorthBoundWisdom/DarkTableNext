@@ -79,7 +79,7 @@ void dt_metadata_init();
 
 /** Set metadata for a specific image, or all selected for an invalid id */
 void dt_metadata_set(const dt_imgid_t imgid, const char *key, const char *value,
-                     const gboolean undo_on); // duplicate.c, lua/image.c
+                     const gboolean undo_on); // duplicate.c
 
 /** Set imported metadata for a specific image (with mutex lock) */
 void dt_metadata_set_import_lock(const dt_imgid_t imgid, const char *key, const char *value);

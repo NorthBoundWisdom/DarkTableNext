@@ -45,9 +45,6 @@
 #include "gui/presets.h"
 #include "imageio/imageio_common.h"
 
-#ifdef USE_LUA
-#include "lua/call.h"
-#endif
 
 #define DT_DEV_AVERAGE_DELAY_COUNT 5
 
@@ -892,12 +889,6 @@ restart:
 
     dev->gui_previous_pipe_time = dt_get_wtime();
 
-#ifdef USE_LUA
-    dt_lua_async_call_alien(dt_lua_event_trigger_wrapper, 0, NULL, NULL, LUA_ASYNC_TYPENAME,
-                            "const char*", "pixelpipe-processing-complete", LUA_ASYNC_TYPENAME,
-                            "dt_lua_image_t", GINT_TO_POINTER(dev->image_storage.id),
-                            LUA_ASYNC_DONE);
-#endif
 }
 
 static inline void _dt_dev_load_pipeline_defaults(dt_develop_t *dev)

@@ -138,48 +138,6 @@ void init(dt_imageio_module_format_t *self)
         return;
     }
 
-#ifdef USE_LUA
-    /* bit depth */
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t, bit_depth,
-                                  int);
-
-    /* color mode */
-    luaA_enum(darktable.lua_state.state, enum avif_color_mode_e);
-    luaA_enum_value(darktable.lua_state.state, enum avif_color_mode_e, AVIF_COLOR_MODE_RGB);
-    luaA_enum_value(darktable.lua_state.state, enum avif_color_mode_e, AVIF_COLOR_MODE_GRAYSCALE);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t, color_mode,
-                                  enum avif_color_mode_e);
-
-    /* tiling */
-    luaA_enum(darktable.lua_state.state, enum avif_tiling_e);
-    luaA_enum_value(darktable.lua_state.state, enum avif_tiling_e, AVIF_TILING_ON);
-    luaA_enum_value(darktable.lua_state.state, enum avif_tiling_e, AVIF_TILING_OFF);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t, tiling,
-                                  enum avif_tiling_e);
-
-    /* compression type */
-    luaA_enum(darktable.lua_state.state, enum avif_compression_type_e);
-    luaA_enum_value(darktable.lua_state.state, enum avif_compression_type_e, AVIF_COMP_LOSSLESS);
-    luaA_enum_value(darktable.lua_state.state, enum avif_compression_type_e, AVIF_COMP_LOSSY);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t,
-                                  compression_type, enum avif_compression_type_e);
-
-    /* quality */
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t, quality, int);
-
-    /* subsample */
-    luaA_enum(darktable.lua_state.state, enum avif_subsample_e);
-    luaA_enum_value(darktable.lua_state.state, enum avif_subsample_e, AVIF_SUBSAMPLE_AUTO);
-    luaA_enum_value(darktable.lua_state.state, enum avif_subsample_e, AVIF_SUBSAMPLE_444);
-    luaA_enum_value(darktable.lua_state.state, enum avif_subsample_e, AVIF_SUBSAMPLE_422);
-    luaA_enum_value(darktable.lua_state.state, enum avif_subsample_e, AVIF_SUBSAMPLE_420);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_avif_t, subsample,
-                                  enum avif_subsample_e);
-#endif
 }
 
 void cleanup(dt_imageio_module_format_t *self)

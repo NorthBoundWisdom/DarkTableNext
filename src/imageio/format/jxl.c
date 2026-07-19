@@ -59,20 +59,6 @@ typedef struct dt_imageio_jxl_gui_data_t
 
 void init(dt_imageio_module_format_t *self)
 {
-#ifdef USE_LUA
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, bpp, int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, pixel_type,
-                                  int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, quality, int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, original, int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, effort, int);
-
-    dt_lua_register_module_member(darktable.lua_state.state, self, dt_imageio_jxl_t, tier, int);
-#endif
 }
 
 void cleanup(dt_imageio_module_format_t *self)

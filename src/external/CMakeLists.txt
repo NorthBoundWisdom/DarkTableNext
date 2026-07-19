@@ -147,23 +147,3 @@ set(CMAKE_INSTALL_DATAROOTDIR "${CMAKE_INSTALL_DATAROOTDIR_SAVE}")
 
 set(BUILD_TESTING "${BUILD_TESTING_SAVE}" CACHE BOOL "" FORCE)
 set(BUILD_BENCHMARKING "${BUILD_BENCHMARKING_SAVE}" CACHE BOOL "" FORCE)
-
-###############################################################################
-# lua-scripts section
-
-if(USE_LUA)
-#
-# lua system scripts
-#
-dt_resolve_freecm_source_root(LUA_SCRIPTS_PATH LUA_SCRIPTS_SOURCE_ROOT LUA_SCRIPTS_SOURCE_ROOT lua-scripts README.md)
-
-file(COPY "${LUA_SCRIPTS_PATH}" DESTINATION "${DARKTABLE_DATADIR}")
-install(
-  DIRECTORY "${LUA_SCRIPTS_PATH}/"
-  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/darktable/lua-scripts"
-  COMPONENT DTApplication
-  PATTERN ".git/*" EXCLUDE
-  PATTERN ".git" EXCLUDE
-  PATTERN ".gitignore" EXCLUDE
-)
-endif(USE_LUA)

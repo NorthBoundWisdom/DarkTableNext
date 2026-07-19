@@ -9,15 +9,6 @@ FILE(GLOB THEME_FILES "themes/*.css")
 FILE(COPY ${THEME_FILES} DESTINATION "${DARKTABLE_DATADIR}/themes")
 install(FILES ${THEME_FILES} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable/themes COMPONENT DTApplication)
 
-if(USE_LUA)
-#
-# lua system scripts
-#
-FILE(COPY lua luarc DESTINATION "${DARKTABLE_DATADIR}")
-install(DIRECTORY "lua" DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
-install(FILES luarc DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
-endif(USE_LUA)
-
 #
 # Install watermarks
 #

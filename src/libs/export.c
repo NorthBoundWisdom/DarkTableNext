@@ -1150,10 +1150,6 @@ static gboolean _apply_style_button_callback(GtkMenuItem *menuitem, GdkEventButt
     {
         _update_style(menu_data);
     }
-    else
-    {
-        //??? dt_shortcut_copy_lua(NULL, name);
-    }
     return FALSE;
 }
 

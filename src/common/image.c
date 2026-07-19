@@ -40,9 +40,6 @@
 #include "imageio/imageio_common.h"
 #include "imageio/imageio_rawspeed.h"
 #include "imageio/imageio_libraw.h"
-#ifdef USE_LUA
-#include "lua/image.h"
-#endif
 #include <assert.h>
 #include <ctype.h>
 #include <math.h>
@@ -1740,7 +1737,7 @@ static int _image_read_duplicates(const uint32_t id, const char *filename,
 
 static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *filename,
                                          const gboolean override_ignore_nonraws,
-                                         const gboolean lua_locking, const gboolean raise_signals)
+                                         const gboolean raise_signals)
 {
     char *normalized_filename = dt_util_normalize_path(filename);
     if (!normalized_filename || !dt_util_test_image_file(normalized_filename))
@@ -1992,19 +1989,6 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
     g_free(sql_pattern);
     g_free(normalized_filename);
 
-#ifdef USE_LUA
-    //Synchronous calling of lua post-import-image events
-    if (lua_locking)
-        dt_lua_lock();
-
-    lua_State *L = darktable.lua_state.state;
-
-    luaA_push(L, dt_lua_image_t, &id);
-    dt_lua_event_trigger(L, "post-import-image", 1);
-
-    if (lua_locking)
-        dt_lua_unlock();
-#endif
 
     if (raise_signals)
     {
@@ -2066,13 +2050,7 @@ dt_imgid_t dt_image_get_id(const dt_filmid_t film_id, const gchar *filename)
 dt_imgid_t dt_image_import(const dt_filmid_t film_id, const char *filename,
                            const gboolean override_ignore_nonraws, const gboolean raise_signals)
 {
-    return _image_import_internal(film_id, filename, override_ignore_nonraws, TRUE, raise_signals);
-}
-
-dt_imgid_t dt_image_import_lua(const dt_filmid_t film_id, const char *filename,
-                               const gboolean override_ignore_nonraws)
-{
-    return _image_import_internal(film_id, filename, override_ignore_nonraws, FALSE, TRUE);
+    return _image_import_internal(film_id, filename, override_ignore_nonraws, raise_signals);
 }
 
 void dt_image_init(dt_image_t *img)

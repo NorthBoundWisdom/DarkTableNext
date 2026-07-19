@@ -36,9 +36,6 @@
 #include "gui/presets.h"
 #include "libs/lib.h"
 #include "preferences_gen.h"
-#ifdef USE_LUA
-#include "lua/preferences.h"
-#endif
 #ifdef GDK_WINDOWING_QUARTZ
 #include "osx/osx.h"
 #endif
@@ -513,9 +510,6 @@ void dt_gui_preferences_show()
 #ifdef HAVE_AI
     init_tab_ai(_preferences_dialog, stack);
 #endif
-#ifdef USE_LUA
-    init_tab_lua(_preferences_dialog, stack);
-#endif
 
     gtk_widget_show_all(_preferences_dialog);
 
@@ -530,9 +524,6 @@ void dt_gui_preferences_show()
 
     (void)gtk_dialog_run(GTK_DIALOG(_preferences_dialog));
 
-#ifdef USE_LUA
-    destroy_tab_lua();
-#endif
 
     free(tweak_widgets);
     gtk_widget_destroy(_preferences_dialog);

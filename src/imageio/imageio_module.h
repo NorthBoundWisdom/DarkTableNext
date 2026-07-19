@@ -25,14 +25,6 @@
 #include <gmodule.h>
 #include <gtk/gtk.h>
 #include <inttypes.h>
-#ifdef USE_LUA
-#include "lua/call.h"
-#include "lua/events.h"
-#include "lua/format.h"
-#include "lua/modules.h"
-#include "lua/storage.h"
-#include "lua/types.h"
-#endif
 
 G_BEGIN_DECLS
 
@@ -85,8 +77,6 @@ typedef struct dt_imageio_module_format_t
     // data for you to initialize
     void *gui_data;
 
-    luaA_Type parameter_lua_type;
-
     gboolean ready;
 } dt_imageio_module_format_t;
 
@@ -108,7 +98,6 @@ typedef struct dt_imageio_module_storage_t
     // data for you to initialize
     void *gui_data;
 
-    luaA_Type parameter_lua_type;
 } dt_imageio_module_storage_t;
 
 /* main struct */
