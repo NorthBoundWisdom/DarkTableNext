@@ -76,6 +76,8 @@
 #define DT_UI_PANEL_MODULE_SPACING 0
 #define DT_UI_PANEL_BOTTOM_DEFAULT_SIZE 120
 #define DT_UI_SCROLL_SMOOTH_DELTA_SCALE 50.0
+#define DT_UI_DEFAULT_WINDOW_WIDTH 900
+#define DT_UI_DEFAULT_WINDOW_HEIGHT 500
 
 #ifdef GDK_WINDOWING_QUARTZ
 // macOS has a fixed DPI of 72
@@ -922,24 +924,51 @@ gboolean _valid_window_placement(const gint saved_x, const gint saved_y, const g
 int dt_gui_gtk_load_config()
 {
     GtkWidget *widget = dt_ui_main_window(darktable.gui->ui);
-    const int width = dt_conf_get_int("ui_last/window_w");
-    const int height = dt_conf_get_int("ui_last/window_h");
+    int width = dt_conf_get_int("ui_last/window_w");
+    int height = dt_conf_get_int("ui_last/window_h");
     const gint x = MAX(0, dt_conf_get_int("ui_last/window_x"));
     const gint y = MAX(0, dt_conf_get_int("ui_last/window_y"));
+    const gboolean fullscreen = dt_conf_get_bool("ui_last/fullscreen");
+    const gboolean maximized = dt_conf_get_bool("ui_last/maximized");
+
+#ifdef GDK_WINDOWING_QUARTZ
+    // Older builds could persist the maximized Quartz allocation as the
+    // normal window geometry. Restoring that full-screen-sized allocation and
+    // then maximizing it again makes GTK initialize its controls at the wrong
+    // scale. Migrate only this invalid legacy combination; ordinary custom
+    // window sizes remain untouched.
+    if (maximized || fullscreen)
+    {
+        GdkDisplay *display = gdk_display_get_default();
+        GdkMonitor *monitor = gdk_display_get_monitor_at_point(display, x, y);
+        if (!monitor)
+            monitor = gdk_display_get_primary_monitor(display);
+
+        if (monitor)
+        {
+            GdkRectangle workarea;
+            gdk_monitor_get_workarea(monitor, &workarea);
+            if (width >= workarea.width || height >= workarea.height)
+            {
+                width = DT_UI_DEFAULT_WINDOW_WIDTH;
+                height = DT_UI_DEFAULT_WINDOW_HEIGHT;
+                dt_conf_set_int("ui_last/window_w", width);
+                dt_conf_set_int("ui_last/window_h", height);
+            }
+        }
+    }
+#endif
 
     gtk_window_resize(GTK_WINDOW(widget), width, height);
     if (_valid_window_placement(x, y, width, height, 24))
         gtk_window_move(GTK_WINDOW(widget), x, y);
     else
         gtk_window_move(GTK_WINDOW(widget), 0, 0);
-    const gboolean fullscreen = dt_conf_get_bool("ui_last/fullscreen");
-
     if (fullscreen)
         gtk_window_fullscreen(GTK_WINDOW(widget));
     else
     {
         gtk_window_unfullscreen(GTK_WINDOW(widget));
-        const gboolean maximized = dt_conf_get_bool("ui_last/maximized");
         if (maximized)
             gtk_window_maximize(GTK_WINDOW(widget));
         else
@@ -957,21 +986,27 @@ int dt_gui_gtk_load_config()
 int dt_gui_gtk_write_config()
 {
     GtkWidget *widget = dt_ui_main_window(darktable.gui->ui);
-    gint x, y, width, height;
-    // Use gtk_window_get_size() instead of gtk_widget_get_allocation() to get
-    // the content size without window decorations. This is especially important
-    // on Wayland where CSD (Client-Side Decorations) are included in allocation
-    // but not in the size set by gtk_window_resize().
-    gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
-    gtk_window_get_position(GTK_WINDOW(widget), &x, &y);
-    dt_conf_set_int("ui_last/window_x", x);
-    dt_conf_set_int("ui_last/window_y", y);
-    dt_conf_set_int("ui_last/window_w", width);
-    dt_conf_set_int("ui_last/window_h", height);
-    dt_conf_set_bool("ui_last/maximized", (gdk_window_get_state(gtk_widget_get_window(widget)) &
-                                           GDK_WINDOW_STATE_MAXIMIZED));
-    dt_conf_set_bool("ui_last/fullscreen", (gdk_window_get_state(gtk_widget_get_window(widget)) &
-                                            GDK_WINDOW_STATE_FULLSCREEN));
+    const GdkWindowState state = gdk_window_get_state(gtk_widget_get_window(widget));
+    const gboolean maximized = state & GDK_WINDOW_STATE_MAXIMIZED;
+    const gboolean fullscreen = state & GDK_WINDOW_STATE_FULLSCREEN;
+
+    // A maximized/fullscreen allocation is not the normal window geometry.
+    // Keeping the last normal size also makes unmaximize restore correctly.
+    if (!maximized && !fullscreen)
+    {
+        gint x, y, width, height;
+        // Use gtk_window_get_size() instead of gtk_widget_get_allocation() to
+        // exclude client-side decorations where applicable.
+        gtk_window_get_size(GTK_WINDOW(widget), &width, &height);
+        gtk_window_get_position(GTK_WINDOW(widget), &x, &y);
+        dt_conf_set_int("ui_last/window_x", x);
+        dt_conf_set_int("ui_last/window_y", y);
+        dt_conf_set_int("ui_last/window_w", width);
+        dt_conf_set_int("ui_last/window_h", height);
+    }
+
+    dt_conf_set_bool("ui_last/maximized", maximized);
+    dt_conf_set_bool("ui_last/fullscreen", fullscreen);
     dt_conf_set_bool("ui/show_focus_peaking", darktable.gui->show_focus_peaking);
 
     return 0;
@@ -1823,8 +1858,9 @@ static void _init_widgets(dt_gui_gtk_t *gui)
 
     dt_configure_ppd_dpi(gui);
 
-    gtk_window_set_default_size(GTK_WINDOW(widget), DT_PIXEL_APPLY_DPI(900),
-                                DT_PIXEL_APPLY_DPI(500));
+    gtk_window_set_default_size(GTK_WINDOW(widget),
+                                DT_PIXEL_APPLY_DPI(DT_UI_DEFAULT_WINDOW_WIDTH),
+                                DT_PIXEL_APPLY_DPI(DT_UI_DEFAULT_WINDOW_HEIGHT));
     // allows for proper window resizing
     gtk_window_set_type_hint(GTK_WINDOW(widget), GDK_WINDOW_TYPE_HINT_NORMAL);
 

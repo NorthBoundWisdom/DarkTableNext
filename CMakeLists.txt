@@ -27,10 +27,6 @@ endif()
 # or assets into a normal configure/build.
 option(BUILD_TESTING "Build DarkTableNext tests" OFF)
 
-# The Qt/QML shell is intentionally separate from the retained GTK baseline.
-# Enable it explicitly while the new frontend is developed as vertical slices.
-option(DARKTABLENEXT_BUILD_QML_SHELL "Build the experimental Qt/QML application shell" OFF)
-
 if(NOT APPLE)
   message(FATAL_ERROR "DarkTableNext supports macOS only.")
 endif()
@@ -248,10 +244,6 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME DTApplication)
 include(data/supported_extensions.cmake) # this file needs to be included first as it gets amended in bin/
 add_subdirectory(src "${DARKTABLE_BINDIR}") # directory needs to be there before data directory so that the correct CSS file gets installed
 add_subdirectory(data "${DARKTABLE_DATADIR}")
-
-if(DARKTABLENEXT_BUILD_QML_SHELL)
-  add_subdirectory(DarkTableNext)
-endif()
 
 # This contains fixup_bundle
 # And adding a separate subderectory as a last one will make sure

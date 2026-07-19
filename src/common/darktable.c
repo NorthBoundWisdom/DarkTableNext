@@ -1647,9 +1647,11 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
             }
         }
 
-        // show the main window and restore its geometry to that saved in the config file
-        gtk_widget_show_all(dt_ui_main_window(darktable.gui->ui));
+        // Restore the final geometry before mapping the Quartz window. Showing
+        // the default-sized window first causes a visibly mis-scaled frame and
+        // can leave GTK with an incorrect control scale after maximizing.
         dt_gui_gtk_load_config();
+        gtk_widget_show_all(dt_ui_main_window(darktable.gui->ui));
         dt_gui_process_events();
         dt_splash_screen_destroy();
         dt_welcome_screen_run_if_needed();

@@ -1,6 +1,6 @@
 ---
 name: review-and-commit
-description: Review all DarkTableNext working-tree changes, run risk-proportional validation, and create an intentional Git commit when explicitly requested. Use for requests to inspect the complete diff, commit all relevant changes, prepare a clean checkpoint, or coordinate commits that also change GeoControls.
+description: Review all DarkTableNext working-tree changes, run risk-proportional validation, and create an intentional Git commit when explicitly requested. Use for requests to inspect the complete diff, commit all relevant changes, or prepare a clean checkpoint.
 ---
 
 # Review and Commit
@@ -47,16 +47,10 @@ Use `$build-repo` for build and test details. At minimum:
 - Markdown or agent workflow: validate frontmatter/links and run `git diff --check`;
 - CMake/dependency changes: regenerate local state, configure, and build an affected target;
 - C/C++ behavior: build and run focused or complete unit tests;
-- QML/GeoControls: validate both repositories and a host vertical slice;
+- GTK/UI: build the application and verify the affected interaction path;
 - GPU/image changes: apply the documented CPU-correctness and benchmark gates.
 
 Record commands and results. Do not translate “not run” into “passed.”
-
-## Coordinate GeoControls changes
-
-GeoControls and DarkTableNext remain separate repositories even during linked development.
-Review and commit GeoControls first, push it, then pin the reachable commit in the host lock
-template. Never stage a nested checkout as host content or commit a manual active-lock path.
 
 ## Create the commit
 

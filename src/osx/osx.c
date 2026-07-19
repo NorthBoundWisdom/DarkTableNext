@@ -13,7 +13,19 @@
 
 float dt_osx_get_ppd()
 {
-    return 1.0f;
+    GdkDisplay *display = gdk_display_get_default();
+    if (!display)
+        return 1.0f;
+
+    GdkMonitor *monitor = gdk_display_get_primary_monitor(display);
+    if (!monitor && gdk_display_get_n_monitors(display) > 0)
+        monitor = gdk_display_get_monitor(display, 0);
+
+    if (!monitor)
+        return 1.0f;
+
+    const int scale = gdk_monitor_get_scale_factor(monitor);
+    return scale > 0 ? (float)scale : 1.0f;
 }
 
 void dt_osx_disallow_fullscreen(GtkWidget *widget)

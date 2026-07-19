@@ -201,6 +201,8 @@ static void _lib_viewswitcher_view_cannot_change_callback(gpointer instance, dt_
                                                           dt_lib_module_t *self)
 {
     dt_lib_viewswitcher_t *d = self->data;
+    if (!d || !d->dropdown)
+        return;
 
     g_signal_handlers_block_by_func(d->dropdown, _dropdown_changed, d);
     gtk_combo_box_set_active(GTK_COMBO_BOX(d->dropdown), 0);
@@ -213,6 +215,8 @@ static void _lib_viewswitcher_view_changed_callback(gpointer instance, dt_view_t
                                                     dt_view_t *new_view, dt_lib_module_t *self)
 {
     dt_lib_viewswitcher_t *d = self->data;
+    if (!d)
+        return;
 
     const char *name = dt_view_manager_name(darktable.view_manager);
     gboolean found = FALSE;
@@ -228,6 +232,11 @@ static void _lib_viewswitcher_view_changed_callback(gpointer instance, dt_view_t
         else
             gtk_widget_set_state_flags(label, GTK_STATE_FLAG_NORMAL, TRUE);
     }
+
+    // The reduced product only exposes lighttable and darkroom, so gui_init()
+    // intentionally does not create an "other views" dropdown in that case.
+    if (!d->dropdown)
+        return;
 
     g_signal_handlers_block_by_func(d->dropdown, _dropdown_changed, d);
 

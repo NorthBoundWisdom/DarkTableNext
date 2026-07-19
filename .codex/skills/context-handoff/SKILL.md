@@ -1,6 +1,6 @@
 ---
 name: context-handoff
-description: Capture a durable, evidence-based continuation note for an unfinished DarkTableNext refactor or investigation. Use when pausing a long task, moving work to another session or agent, documenting a blocker, or preserving exact two-repository GeoControls state and next actions.
+description: Capture a durable, evidence-based continuation note for an unfinished DarkTableNext maintenance task or investigation. Use when pausing a long task, moving work to another session or agent, documenting a blocker, or preserving exact repository state and next actions.
 ---
 
 # Context Handoff
@@ -21,8 +21,8 @@ git diff --cached
 ```
 
 Record the current goal, relevant product boundary documents, files actually changed, and the
-latest build/test output. If GeoControls is involved, collect the same Git state in its real
-checkout plus the host dependency mode, path, pinned commit, and whether that commit was pushed.
+latest build/test output. If a linked dependency checkout is involved, collect its Git state,
+the active dependency mode, path, pinned commit, and whether that commit was pushed.
 
 Do not include secrets, tokens, private URLs, huge patches, or generated build output.
 

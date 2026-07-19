@@ -27,8 +27,7 @@
     "exiv2": "",
     "Imath": "",
     "inih": "",
-    "LibRaw": "",
-    "GeoControls": ""
+    "LibRaw": ""
   },
   "dependencies": {
     "rawspeed": {
@@ -65,11 +64,6 @@
       "repoName": "LibRaw",
       "remote": "https://github.com/LibRaw/LibRaw.git",
       "commit": "87241b45d8c8178247faca4aa8e6a1896b0b1eeb"
-    },
-    "GeoControls": {
-      "repoName": "GeoControls",
-      "remote": "git@github.com:NorthBoundWisdom/GeoControls.git",
-      "commit": "ce98b471bb18a19568f13e36d7140d8eb294d3f6"
     }
   }
 }
