@@ -1,7 +1,7 @@
 # GeoControls 联调与代码边界
 
-本文定义 DarkTableNext 未来接入 GeoControls 时的职责边界、依赖方式和双仓开发
-流程。它是目标架构约定，不表示 Qt/QML 已经接入当前主构建。
+本文定义 DarkTableNext 接入 GeoControls 时的职责边界、依赖方式和双仓开发流程。
+当前主构建可显式启用一个最小 Qt/QML 壳；它不连接图像核心，也不表示产品迁移已经完成。
 
 参考的 GeoControls checkout 当前要求 Qt 6.8+、C++20，并提供 `GeoControls 1.0`
 和 `GeoControls.AppShell 1.0` 两个 QML 模块。接入时应以实际拉取版本的 CMake 与
@@ -126,9 +126,9 @@ DarkTableNext repository
 ## 首次接入 GeoControls
 
 当前工作树的 `source_roots.lock.jsonc.in` 和 `configs/source_roots.py` 已登记
-GeoControls 候选 commit 与 FreeCM 源码根，但主 CMake 尚未消费它，Qt/QML 应用
-目标也不存在。仅能物化源码根不构成产品集成；首次接入仍是一项受版本控制的架构
-改动，应完成：
+GeoControls 候选 commit 与 FreeCM 源码根。`DARKTABLENEXT_BUILD_QML_SHELL=ON`
+会构建 `DarkTableNext/` 的独立欢迎页→主界面壳，并链接 GeoControls；它不连接图像
+核心，也不替代默认 GTK 路径。仅能启动壳不构成产品集成；后续垂直切片仍应完成：
 
 1. 审核 `source_roots.lock.jsonc.in` 中的 remote、`depsManualPath` 和 commit，确认
    固定的是已推送且许可证可接受的版本；若条目不存在再补齐；
@@ -136,8 +136,8 @@ GeoControls 候选 commit 与 FreeCM 源码根，但主 CMake 尚未消费它，
    `CMakeLists.txt`、`Controls/CMakeLists.txt` 和 `AppShell/CMakeLists.txt`；
 3. 让主 CMake 显式解析 Qt 6.8+ 并添加 GeoControls 源码根；应用作为子项目使用时
    关闭 `GEOCONTROLS_BUILD_DEMO`；
-4. 增加最小 Qt/QML 应用目标、QML 模块和一个可测试的垂直切片；
-5. 更新构建文档与测试入口，再运行 `--init` 和 `--update` 生成本地状态。
+4. 保持最小 Qt/QML 应用目标、QML 模块和欢迎页→主界面过渡可运行；
+5. 以一个真实的领域垂直切片替换占位工作区，并同步更新构建文档与测试入口。
 
 不要在 CMake 配置期使用 `FetchContent` 下载 GeoControls，不要复制它的源码到
 `src/`，也不要把一个无版本记录的目录加入 include/QML import path。

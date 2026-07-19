@@ -5,7 +5,7 @@
       {
         "id": "mac-clang-debug",
         "label": "Mac Clang Debug",
-        "description": "Configure the mac_clang_debug CMake preset",
+        "description": "Configure the complete DarkTableNext tree with the mac_clang_debug preset",
         "command": "cmake",
         "args": ["--preset", "mac_clang_debug"],
         "platforms": ["darwin"],
@@ -14,7 +14,7 @@
       {
         "id": "mac-clang-release",
         "label": "Mac Clang Release",
-        "description": "Configure the mac_clang_release CMake preset",
+        "description": "Configure the complete DarkTableNext tree with the mac_clang_release preset",
         "command": "cmake",
         "args": ["--preset", "mac_clang_release"],
         "platforms": ["darwin"]
@@ -22,7 +22,7 @@
       {
         "id": "mac-gcc-debug",
         "label": "Mac GCC Debug",
-        "description": "Configure the mac_gcc_debug CMake preset",
+        "description": "Configure the complete DarkTableNext tree with the mac_gcc_debug preset",
         "command": "cmake",
         "args": ["--preset", "mac_gcc_debug"],
         "platforms": ["darwin"]
@@ -30,7 +30,7 @@
       {
         "id": "mac-gcc-release",
         "label": "Mac GCC Release",
-        "description": "Configure the mac_gcc_release CMake preset",
+        "description": "Configure the complete DarkTableNext tree with the mac_gcc_release preset",
         "command": "cmake",
         "args": ["--preset", "mac_gcc_release"],
         "platforms": ["darwin"]
@@ -40,7 +40,7 @@
       {
         "id": "mac-clang-debug",
         "label": "Mac Clang Debug",
-        "description": "Build the mac_clang_debug CMake preset",
+        "description": "Build the complete DarkTableNext tree with the mac_clang_debug preset",
         "command": "cmake",
         "args": ["--build", "--preset", "mac_clang_debug"],
         "platforms": ["darwin"],
@@ -49,7 +49,7 @@
       {
         "id": "mac-clang-release",
         "label": "Mac Clang Release",
-        "description": "Build the mac_clang_release CMake preset",
+        "description": "Build the complete DarkTableNext tree with the mac_clang_release preset",
         "command": "cmake",
         "args": ["--build", "--preset", "mac_clang_release"],
         "platforms": ["darwin"]
@@ -57,7 +57,7 @@
       {
         "id": "mac-gcc-debug",
         "label": "Mac GCC Debug",
-        "description": "Build the mac_gcc_debug CMake preset",
+        "description": "Build the complete DarkTableNext tree with the mac_gcc_debug preset",
         "command": "cmake",
         "args": ["--build", "--preset", "mac_gcc_debug"],
         "platforms": ["darwin"]
@@ -65,7 +65,7 @@
       {
         "id": "mac-gcc-release",
         "label": "Mac GCC Release",
-        "description": "Build the mac_gcc_release CMake preset",
+        "description": "Build the complete DarkTableNext tree with the mac_gcc_release preset",
         "command": "cmake",
         "args": ["--build", "--preset", "mac_gcc_release"],
         "platforms": ["darwin"]
@@ -73,69 +73,21 @@
     ],
     "run": [
       {
-        "id": "mac-clang-debug",
-        "label": "Mac Clang Debug",
-        "description": "Build and run DarkTableNext with the mac_clang_debug preset",
+        "id": "runqt",
+        "label": "Run Qt/QML Shell",
+        "description": "Build and run the experimental Qt/QML shell from mac_clang_debug",
         "steps": [
           {
             "command": "cmake",
-            "args": ["--build", "--preset", "mac_clang_debug", "--target", "darktable"]
+            "args": ["--build", "--preset", "mac_clang_debug", "--target", "darktablenext_shell"]
           },
           {
-            "command": "./build/mac_clang_debug/bin/darktable",
+            "command": "./build/mac_clang_debug/DarkTableNext/DarkTableNext.app/Contents/MacOS/DarkTableNext",
             "args": []
           }
         ],
         "platforms": ["darwin"],
         "default": true
-      },
-      {
-        "id": "mac-clang-release",
-        "label": "Mac Clang Release",
-        "description": "Build and run DarkTableNext with the mac_clang_release preset",
-        "steps": [
-          {
-            "command": "cmake",
-            "args": ["--build", "--preset", "mac_clang_release", "--target", "darktable"]
-          },
-          {
-            "command": "./build/mac_clang_release/bin/darktable",
-            "args": []
-          }
-        ],
-        "platforms": ["darwin"]
-      },
-      {
-        "id": "mac-gcc-debug",
-        "label": "Mac GCC Debug",
-        "description": "Build and run DarkTableNext with the mac_gcc_debug preset",
-        "steps": [
-          {
-            "command": "cmake",
-            "args": ["--build", "--preset", "mac_gcc_debug", "--target", "darktable"]
-          },
-          {
-            "command": "./build/mac_gcc_debug/bin/darktable",
-            "args": []
-          }
-        ],
-        "platforms": ["darwin"]
-      },
-      {
-        "id": "mac-gcc-release",
-        "label": "Mac GCC Release",
-        "description": "Build and run DarkTableNext with the mac_gcc_release preset",
-        "steps": [
-          {
-            "command": "cmake",
-            "args": ["--build", "--preset", "mac_gcc_release", "--target", "darktable"]
-          },
-          {
-            "command": "./build/mac_gcc_release/bin/darktable",
-            "args": []
-          }
-        ],
-        "platforms": ["darwin"]
       }
     ],
     "test": [],
