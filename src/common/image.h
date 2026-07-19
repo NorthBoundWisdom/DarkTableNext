@@ -186,22 +186,12 @@ typedef enum dt_image_loader_t
     LOADER_UNKNOWN = 0,
     LOADER_TIFF = 1,
     LOADER_PNG = 2,
-    LOADER_J2K = 3,
-    LOADER_JPEG = 4,
-    LOADER_EXR = 5,
-    LOADER_RGBE = 6,
-    LOADER_PFM = 7,
-    LOADER_GM = 8,
-    LOADER_RAWSPEED = 9,
-    LOADER_PNM = 10,
-    LOADER_AVIF = 11,
-    LOADER_IM = 12,
-    LOADER_HEIF = 13,
-    LOADER_LIBRAW = 14,
-    LOADER_WEBP = 15,
-    LOADER_JPEGXL = 16,
-    LOADER_QOI = 17,
-    LOADER_COUNT = 18 // keep last
+    LOADER_JPEG = 3,
+    LOADER_RGBE = 4,
+    LOADER_RAWSPEED = 5,
+    LOADER_LIBRAW = 6,
+    LOADER_QOI = 7,
+    LOADER_COUNT = 8 // keep last
 } dt_image_loader_t;
 
 static const struct
@@ -210,10 +200,8 @@ static const struct
     const char flag;
 } loaders_info[LOADER_COUNT] = {
     {N_("unknown"), '.'}, // EMPTY_FIELD
-    {N_("TIFF"), 't'},     {N_("PNG"), 'p'},    {N_("JPEG 2000"), 'J'}, {N_("JPEG"), 'j'},
-    {N_("EXR"), 'e'},      {N_("RGBE"), 'R'},   {N_("PFM"), 'P'},       {N_("GraphicsMagick"), 'g'},
-    {N_("RawSpeed"), 'r'}, {N_("Netpbm"), 'n'}, {N_("AVIF"), 'a'},      {N_("ImageMagick"), 'i'},
-    {N_("HEIF"), 'h'},     {N_("LibRaw"), 'l'}, {N_("WebP"), 'w'},      {N_("JPEG XL"), 'L'},
+    {N_("TIFF"), 't'},     {N_("PNG"), 'p'},    {N_("JPEG"), 'j'},
+    {N_("RGBE"), 'R'},     {N_("RawSpeed"), 'r'}, {N_("LibRaw"), 'l'},
     {N_("QOI"), 'q'}};
 
 // flags which can be passed via jobs

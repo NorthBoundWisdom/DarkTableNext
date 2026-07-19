@@ -32,54 +32,15 @@
 #include "imageio/imageio_common.h"
 #include "imageio/imageio_module.h"
 
-#ifdef HAVE_OPENEXR
-#include "imageio/imageio_exr.h"
-#endif
-
-#ifdef HAVE_OPENJPEG
-#include "imageio/imageio_j2k.h"
-#endif
-
-#ifdef HAVE_LIBJXL
-#include "imageio/imageio_jpegxl.h"
-#endif
-
 #include "imageio/imageio_jpeg.h"
-#include "imageio/imageio_pfm.h"
 #include "imageio/imageio_png.h"
-#include "imageio/imageio_pnm.h"
 #include "imageio/imageio_qoi.h"
 #include "imageio/imageio_rawspeed.h"
 #include "imageio/imageio_rgbe.h"
 #include "imageio/imageio_tiff.h"
 
-#ifdef HAVE_LIBAVIF
-#include "imageio/imageio_avif.h"
-#endif
-
-#ifdef HAVE_LIBHEIF
-#include "imageio/imageio_heif.h"
-#endif
-
-#ifdef HAVE_WEBP
-#include "imageio/imageio_webp.h"
-#endif
-
 #ifdef HAVE_LIBRAW
 #include "imageio/imageio_libraw.h"
-#endif
-
-#ifdef HAVE_GRAPHICSMAGICK
-#include "imageio/imageio_gm.h"
-#include <magick/api.h>
-#include <magick/blob.h>
-#elif defined HAVE_IMAGEMAGICK
-#include "imageio/imageio_im.h"
-#ifdef HAVE_IMAGEMAGICK7
-#include <MagickWand/MagickWand.h>
-#else
-#include <wand/MagickWand.h>
-#endif
 #endif
 
 #include <assert.h>
@@ -101,19 +62,11 @@ typedef enum
     DT_FILETYPE_FITS,
     DT_FILETYPE_GIF,
     DT_FILETYPE_JPEG,
-    DT_FILETYPE_JPEG2000,
     DT_FILETYPE_PNG,
-    DT_FILETYPE_PNM,
     DT_FILETYPE_QOI,
     DT_FILETYPE_TIFF,
     DT_FILETYPE_BIGTIFF,
-    DT_FILETYPE_WEBP,
     DT_FILETYPE_OTHER_LDR,
-    DT_FILETYPE_AVIF,
-    DT_FILETYPE_HEIC,
-    DT_FILETYPE_JPEGXL,
-    DT_FILETYPE_OPENEXR,
-    DT_FILETYPE_PFM,
     DT_FILETYPE_RGBE,
     DT_FILETYPE_OTHER_HDR,
     DT_FILETYPE_ARW, // Sony Alpha
@@ -144,45 +97,11 @@ typedef enum
 typedef dt_imageio_retval_t dt_image_loader_fn_t(dt_image_t *img, const char *filename,
                                                  dt_mipmap_buffer_t *buf);
 
-// a surrogate loader function for any types whose libraries haven't been linked while building
 static dt_imageio_retval_t _unsupported_type(dt_image_t *img, const char *filename,
                                              dt_mipmap_buffer_t *buf)
 {
     return DT_IMAGEIO_UNSUPPORTED_FORMAT;
 }
-
-// redirect loaders to surrogate as needed
-#ifndef HAVE_OPENJPEG
-#define dt_imageio_open_j2k _unsupported_type
-#endif
-
-#ifndef HAVE_WEBP
-#define dt_imageio_open_webp _unsupported_type
-#endif
-
-#ifndef HAVE_LIBJXL
-#define dt_imageio_open_jpegxl _unsupported_type
-#endif
-
-#ifndef HAVE_LIBAVIF
-#define dt_imageio_open_avif _unsupported_type
-#endif
-
-#ifndef HAVE_LIBHEIF
-#define dt_imageio_open_heif _unsupported_type
-#endif
-
-#ifndef HAVE_GRAPHICSMAGICK
-#define dt_imageio_open_gm _unsupported_type
-#endif
-
-#ifndef HAVE_IMAGEMAGICK
-#define dt_imageio_open_im _unsupported_type
-#endif
-
-#ifndef HAVE_OPENEXR
-#define dt_imageio_open_exr _unsupported_type
-#endif
 
 typedef struct
 {
@@ -220,61 +139,10 @@ static const dt_magic_bytes_t _magic_signatures[] = {
     {DT_FILETYPE_GIF, FALSE, 0, 4, dt_imageio_open_exotic, {'G', 'I', 'F', '8'}},
     // JPEG
     {DT_FILETYPE_JPEG, FALSE, 0, 3, dt_imageio_open_jpeg, {0xFF, 0xD8, 0xFF}}, // SOI marker
-    // JPEG-2000, j2k format
-    {DT_FILETYPE_JPEG2000, FALSE, 0, 4, dt_imageio_open_j2k, {0xFF, 0x4F, 0xFF, 0x51}},
-    // JPEG-2000, jp2 format
-    {DT_FILETYPE_JPEG2000,
-     FALSE,
-     0,
-     12,
-     dt_imageio_open_j2k,
-     {0x00, 0x00, 0x00, 0x0C, 'j', 'P', ' ', ' ', 0x0D, 0x0A, 0x87, 0x0A}},
-    // JPEG-XL image (direct codestream)
-    {DT_FILETYPE_JPEGXL, TRUE, 0, 2, dt_imageio_open_jpegxl, {0xFF, 0x0A}},
-    // JPEG-XL image (ISOBMFF container)
-    {DT_FILETYPE_JPEGXL,
-     TRUE,
-     0,
-     12,
-     dt_imageio_open_jpegxl,
-     {0x00, 0x00, 0x00, 0x0C, 'J', 'X', 'L', ' ', 0x0D, 0x0A, 0x87, 0x0A}},
     // PNG image
     {DT_FILETYPE_PNG, FALSE, 0, 5, dt_imageio_open_png, {0x89, 'P', 'N', 'G', 0x0D}},
-    // WEBP image
-    {DT_FILETYPE_WEBP,
-     FALSE,
-     8,
-     4,
-     dt_imageio_open_webp,
-     {'W', 'E', 'B', 'P'}}, // full signature is RIFF????WEPB, where ???? is the file size
-    // HEIC/HEIF images
-    // this matches heic, heix, heim, heis, hevc, hevx, hevm and hevs major brands
-    {DT_FILETYPE_HEIC, FALSE, 4, 6, dt_imageio_open_heif, {'f', 't', 'y', 'p', 'h', 'e'}},
-    {DT_FILETYPE_HEIC,
-     FALSE,
-     4,
-     8,
-     dt_imageio_open_heif,
-     {'f', 't', 'y', 'p', 'j', '2', 'k', 'i'}}, // JPEG 2000 encapsulated in HEIF
-    {DT_FILETYPE_HEIC,
-     FALSE,
-     4,
-     8,
-     dt_imageio_open_heif,
-     {'f', 't', 'y', 'p', 'a', 'v', 'c', 'i'}}, // AVC (H.264) encoded HEIF
-    // AVIF image
-    // this matches 'avif' and 'avis'
-    {DT_FILETYPE_AVIF, TRUE, 4, 7, dt_imageio_open_avif, {'f', 't', 'y', 'p', 'a', 'v', 'i'}},
-    // Technically, files with major brand names starting with 'mif' or 'msf'
-    // can be either HEIF or AVIF files, depending on information in the
-    // next bytes. But the HEIF loader can read files of both formats, so
-    // that's the loader we're calling in this case.
-    {DT_FILETYPE_AVIF, TRUE, 4, 7, dt_imageio_open_heif, {'f', 't', 'y', 'p', 'm', 'i', 'f'}},
-    {DT_FILETYPE_AVIF, TRUE, 4, 7, dt_imageio_open_heif, {'f', 't', 'y', 'p', 'm', 's', 'f'}},
     // Quite OK Image Format (QOI)
     {DT_FILETYPE_QOI, FALSE, 0, 4, dt_imageio_open_qoi, {'q', 'o', 'i', 'f'}},
-    // OpenEXR image
-    {DT_FILETYPE_OPENEXR, TRUE, 0, 4, dt_imageio_open_exr, {'v', '/', '1', 0x01}},
     // RGBE (.hdr)  image
     {DT_FILETYPE_RGBE,
      TRUE,
@@ -492,25 +360,8 @@ static const dt_magic_bytes_t _magic_signatures[] = {
      {0x8B, 'J', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}},
     // Kodak Cineon image
     {DT_FILETYPE_OTHER_LDR, FALSE, 0, 4, dt_imageio_open_exotic, {0x80, 0x2A, 0x5F, 0xD7}},
-    // ASCII NetPNM (pbm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_exotic, {'P', '1', 0x0A}},
-    // ASCII NetPNM (pgm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_exotic, {'P', '2', 0x0A}},
-    // ASCII NetPNM (ppm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_exotic, {'P', '3', 0x0A}},
-    // binary NetPNM (pbm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_pnm, {'P', '4', 0x0A}},
-    // binary NetPNM (pgm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_pnm, {'P', '5', 0x0A}},
-    // binary NetPNM (ppm)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_pnm, {'P', '6', 0x0A}},
-    // binary NetPNM "Portable Arbitrary Map" (pam)
-    {DT_FILETYPE_PNM, FALSE, 0, 3, dt_imageio_open_exotic, {'P', '7', 0x0A}},
     // Windows BMP bitmap image
     {DT_FILETYPE_BMP, FALSE, 0, 2, dt_imageio_open_exotic, {'B', 'M'}},
-    // Portable float map (PFM) image
-    {DT_FILETYPE_PFM, TRUE, 0, 2, dt_imageio_open_pfm, {'P', 'F'}}, // color
-    {DT_FILETYPE_PFM, TRUE, 0, 2, dt_imageio_open_pfm, {'P', 'f'}}, // grayscale
     // DjVu -- additional checks needed
     {DT_FILETYPE_DJVU, TRUE, 4, 4, dt_imageio_open_exotic, {'F', 'O', 'R', 'M'}},
     // ========= other image types which we may not support ==========
@@ -617,8 +468,6 @@ static const dt_magic_bytes_t _magic_signatures[] = {
     {DT_FILETYPE_NONIMAGE, FALSE, 0, 4, _unsupported_type, {'%', '!', 'P', 'S'}},
     // UTF-8 text file with BOM
     {DT_FILETYPE_NONIMAGE, FALSE, 0, 3, _unsupported_type, {0xEF, 0xBB, 0xBF}},
-    // PDF document
-    {DT_FILETYPE_NONIMAGE, FALSE, 0, 5, _unsupported_type, {'%', 'P', 'D', 'F', '-'}},
     // HTML file
     {DT_FILETYPE_NONIMAGE, FALSE, 0, 5, _unsupported_type, {'<', 'H', 'T', 'M', 'L'}},
     {DT_FILETYPE_NONIMAGE, FALSE, 0, 5, _unsupported_type, {'<', 'h', 't', 'm', 'l'}}};
@@ -633,12 +482,8 @@ static const gchar *_supported_raw[] = {
     "3fr", "ari", "arw", "bay", "cr2", "cr3", "crw", "dc2", "dcr", "erf", "fff", "ia",
     "iiq", "k25", "kc2", "kdc", "mdc", "mef", "mos", "mrw", "nef", "nrw", "orf", "ori",
     "pef", "raf", "raw", "rw2", "rwl", "sr2", "srf", "srw", "sti", "x3f", NULL};
-static const gchar *_supported_ldr[] = {"bmp",  "bmq", "cap", "cin", "cine", "cs1",  "dcm",  "gif",
-                                        "gpr",  "j2c", "j2k", "jng", "jp2",  "jpc",  "jpeg", "jpg",
-                                        "miff", "mng", "pbm", "pfm", "pgm",  "png",  "pnm",  "ppm",
-                                        "pxn",  "qoi", "qtk", "rdc", "tif",  "tiff", "webp", NULL};
-static const gchar *_supported_hdr[] = {"avif", "exr", "hdr", "heic", "heif",
-                                        "hif",  "jxl", "pfm", NULL};
+static const gchar *_supported_ldr[] = {"jpeg", "jpg", "png", "qoi", "tif", "tiff", NULL};
+static const gchar *_supported_hdr[] = {"hdr", NULL};
 
 static inline gboolean _image_handled(dt_imageio_retval_t ret)
 {
@@ -812,119 +657,11 @@ gboolean dt_imageio_large_thumbnail(const char *filename, uint8_t **buffer, int3
     }
     else
     {
-#ifdef HAVE_GRAPHICSMAGICK
-        ExceptionInfo exception;
-        Image *image = NULL;
-        ImageInfo *image_info = NULL;
-
-        GetExceptionInfo(&exception);
-        image_info = CloneImageInfo((ImageInfo *)NULL);
-
-        image = BlobToImage(image_info, buf, bufsize, &exception);
-
-        if (exception.severity != UndefinedException)
-            CatchException(&exception);
-
-        if (!image)
-        {
-            dt_print(DT_DEBUG_ALWAYS, "[dt_imageio_large_thumbnail GM] thumbnail not found?");
-            goto error_gm;
-        }
-
-        *width = image->columns;
-        *height = image->rows;
-        *color_space = DT_COLORSPACE_SRGB; // FIXME: this assumes that
-                                           // embedded thumbnails are
-                                           // always srgb
-
-        *buffer = dt_alloc_align_uint8(4 * image->columns * image->rows);
-        if (!*buffer)
-            goto error_gm;
-
-        for (uint32_t row = 0; row < image->rows; row++)
-        {
-            uint8_t *bufprt = *buffer + (size_t)4 * row * image->columns;
-            const int gm_ret = DispatchImage(image, 0, row, image->columns, 1, "RGBP", CharPixel,
-                                             bufprt, &exception);
-
-            if (exception.severity != UndefinedException)
-                CatchException(&exception);
-
-            if (gm_ret != MagickPass)
-            {
-                dt_print(DT_DEBUG_ALWAYS,
-                         "[dt_imageio_large_thumbnail GM] error_gm reading thumbnail");
-                dt_free_align(*buffer);
-                *buffer = NULL;
-                goto error_gm;
-            }
-        }
-
-        res = FALSE;
-
-    error_gm:
-        if (image)
-            DestroyImage(image);
-        if (image_info)
-            DestroyImageInfo(image_info);
-        DestroyExceptionInfo(&exception);
-        if (res)
-            goto error;
-#elif defined HAVE_IMAGEMAGICK
-        MagickWand *image = NULL;
-        MagickBooleanType mret;
-
-        image = NewMagickWand();
-        mret = MagickReadImageBlob(image, buf, bufsize);
-
-        if (mret != MagickTrue)
-        {
-            dt_print(DT_DEBUG_ALWAYS, "[dt_imageio_large_thumbnail IM] thumbnail not found?");
-            goto error_im;
-        }
-
-        *width = MagickGetImageWidth(image);
-        *height = MagickGetImageHeight(image);
-
-        switch (MagickGetImageColorspace(image))
-        {
-        case sRGBColorspace:
-            *color_space = DT_COLORSPACE_SRGB;
-            break;
-        default:
-            dt_print(DT_DEBUG_ALWAYS,
-                     "[dt_imageio_large_thumbnail IM] could not map colorspace, using sRGB");
-            *color_space = DT_COLORSPACE_SRGB;
-            break;
-        }
-
-        *buffer = malloc(sizeof(uint8_t) * (*width) * (*height) * 4);
-        if (*buffer == NULL)
-            goto error_im;
-
-        mret = MagickExportImagePixels(image, 0, 0, *width, *height, "RGBP", CharPixel, *buffer);
-        if (mret != MagickTrue)
-        {
-            free(*buffer);
-            *buffer = NULL;
-            dt_print(DT_DEBUG_ALWAYS,
-                     "[dt_imageio_large_thumbnail IM] error while reading thumbnail");
-            goto error_im;
-        }
-
-        res = FALSE;
-
-    error_im:
-        DestroyMagickWand(image);
-        if (res)
-            goto error;
-#else
         dt_print(DT_DEBUG_ALWAYS,
                  "[dt_imageio_large_thumbnail] error: The thumbnail image is not in "
                  "JPEG format, and DT was built without neither GraphicsMagick or "
                  "ImageMagick. Please rebuild DT with GraphicsMagick or ImageMagick "
                  "support enabled.");
-#endif
     }
 
     if (res)
@@ -1536,28 +1273,7 @@ gboolean dt_imageio_export_with_flags(
     format_params->width = processed_width;
     format_params->height = processed_height;
 
-    // Check if all the metadata export flags are set for AVIF/EXR/HEIF/JPEG XL/XCF (opt-in)
-    //
-    // TODO: this is a workaround as these formats do not support fine
-    // grained metadata control through dt_exif_xmp_attach_export()
-    // below due to lack of exiv2 write support
-    //
-    // Note: that this is done only when we do not ignore_exif, so we have a proper filename
-    //       otherwise the export is done in a memory buffer.
-    gboolean md_flags_set = TRUE;
-    if (!ignore_exif &&
-        (!strcmp(format->mime(NULL), "image/avif") || !strcmp(format->mime(NULL), "image/heif") ||
-         !strcmp(format->mime(NULL), "image/x-exr") || !strcmp(format->mime(NULL), "image/jxl") ||
-         !strcmp(format->mime(NULL), "image/x-xcf")))
-    {
-        const int32_t meta_all = DT_META_EXIF | DT_META_METADATA | DT_META_LOCATION | DT_META_TAG |
-                                 DT_META_HIERARCHICAL_TAG | DT_META_DT_HISTORY |
-                                 DT_META_PRIVATE_TAG | DT_META_SYNONYMS_TAG |
-                                 DT_META_OMIT_HIERARCHY;
-        md_flags_set = metadata ? (metadata->flags & meta_all) == meta_all : FALSE;
-    }
-
-    if (!ignore_exif && md_flags_set)
+    if (!ignore_exif)
     {
         uint8_t *exif_profile = NULL; // Exif data should be 65536 bytes
                                       // max, but if original size is
@@ -1630,13 +1346,6 @@ dt_imageio_retval_t dt_imageio_open_exotic(dt_image_t *img, const char *filename
     // if buf is NULL, don't proceed
     if (!buf)
         return DT_IMAGEIO_OK;
-    dt_imageio_retval_t ret = dt_imageio_open_gm(img, filename, buf);
-    if (_image_handled(ret))
-        return ret;
-    ret = dt_imageio_open_im(img, filename, buf);
-    if (_image_handled(ret))
-        return ret;
-
     return DT_IMAGEIO_LOAD_FAILED;
 }
 

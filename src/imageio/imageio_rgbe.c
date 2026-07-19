@@ -352,7 +352,7 @@ int RGBE_ReadPixels_RLE(FILE *fp, float *data, int scanline_width, int num_scanl
 #undef RGBE_DATA_BLUE
 #undef RGBE_DATA_SIZE
 
-// this function is borrowed from OpenEXR code
+    // this function is borrowed from a reference HDR implementation
 ///////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2003, Industrial Light & Magic, a division of Lucas

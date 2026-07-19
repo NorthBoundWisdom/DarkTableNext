@@ -33,9 +33,6 @@
 #include <lcms2.h>
 #include <strings.h>
 
-#ifdef USE_COLORDGTK
-#include "colord-gtk.h"
-#endif
 
 #ifdef _WIN32
 #include <dwmapi.h>
@@ -1653,10 +1650,8 @@ void dt_colorspaces_cleanup(dt_colorspaces_t *self)
     g_list_free_full(self->profiles, free);
 
     pthread_rwlock_destroy(&self->xprofile_lock);
-    g_free(self->colord_profile_file);
     g_free(self->xprofile_data);
 
-    g_free(self->colord_profile_file2);
     g_free(self->xprofile_data2);
 
     free(self);
@@ -1729,91 +1724,6 @@ const char *dt_colorspaces_get_name(dt_colorspaces_color_profile_type_t type, co
     return NULL;
 }
 
-#ifdef USE_COLORDGTK
-static void _colorspaces_get_display_profile_colord_callback(GObject *source, GAsyncResult *res,
-                                                             gpointer user_data)
-{
-    const dt_colorspaces_color_profile_type_t profile_type =
-        (dt_colorspaces_color_profile_type_t)GPOINTER_TO_INT(user_data);
-
-    pthread_rwlock_wrlock(&darktable.color_profiles->xprofile_lock);
-
-    gboolean profile_changed = FALSE;
-    gboolean match = FALSE;
-    CdWindow *window = CD_WINDOW(source);
-    GError *error = NULL;
-    CdProfile *profile = cd_window_get_profile_finish(window, res, &error);
-    if (error == NULL && profile != NULL)
-    {
-        const gchar *filename = cd_profile_get_filename(profile);
-        if (filename)
-        {
-            if ((profile_type == DT_COLORSPACE_DISPLAY2 &&
-                 g_strcmp0(filename, darktable.color_profiles->colord_profile_file2)) ||
-                (profile_type != DT_COLORSPACE_DISPLAY2 &&
-                 g_strcmp0(filename, darktable.color_profiles->colord_profile_file)))
-            {
-                /* the profile has changed (either because the user changed
-         * the colord settings or because we are on a different screen
-         * now) */
-                // update darktable.color_profiles->colord_profile_file
-                if (profile_type == DT_COLORSPACE_DISPLAY2)
-                {
-                    g_free(darktable.color_profiles->colord_profile_file2);
-                    darktable.color_profiles->colord_profile_file2 = g_strdup(filename);
-                }
-                else
-                {
-                    g_free(darktable.color_profiles->colord_profile_file);
-                    darktable.color_profiles->colord_profile_file = g_strdup(filename);
-                }
-                // read the file
-                guchar *tmp_data = NULL;
-                gsize size;
-                g_file_get_contents(filename, (gchar **)&tmp_data, &size, NULL);
-                if (profile_type == DT_COLORSPACE_DISPLAY2)
-                {
-                    profile_changed =
-                        size > 0 &&
-                        (darktable.color_profiles->xprofile_size2 != size ||
-                         memcmp(darktable.color_profiles->xprofile_data2, tmp_data, size) != 0);
-                }
-                else
-                {
-                    profile_changed =
-                        size > 0 &&
-                        (darktable.color_profiles->xprofile_size != size ||
-                         memcmp(darktable.color_profiles->xprofile_data, tmp_data, size) != 0);
-                }
-
-                if (profile_changed)
-                {
-                    if (profile_type == DT_COLORSPACE_DISPLAY2)
-                        match = _update_display2_profile(tmp_data, size, NULL, 0);
-                    else
-                        match = _update_display_profile(tmp_data, size, NULL, 0);
-                    dt_print(DT_DEBUG_CONTROL,
-                             "[color profile] colord gave us %s new screen profile:"
-                             " '%s' (size: %zu)",
-                             match ? "a" : "**NO**", filename, size);
-                }
-                else
-                {
-                    g_free(tmp_data);
-                }
-            }
-        }
-    }
-    if (profile)
-        g_object_unref(profile);
-    g_object_unref(window);
-
-    pthread_rwlock_unlock(&darktable.color_profiles->xprofile_lock);
-
-    if (profile_changed && match)
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_CONTROL_PROFILE_CHANGED);
-}
-#endif
 
 #if defined GDK_WINDOWING_X11
 static int _gtk_get_monitor_num(GdkMonitor *monitor)
@@ -1857,23 +1767,8 @@ void dt_colorspaces_set_display_profile(const dt_colorspaces_color_profile_type_
 
 #if defined GDK_WINDOWING_X11
 
-    // we will use the xatom no matter what configured when compiled
-    // without colord
+    // Use the X atom display profile when it is available.
     gboolean use_xatom = TRUE;
-#if defined USE_COLORDGTK
-    gboolean use_colord = TRUE;
-    const char *display_profile_source =
-        (profile_type == DT_COLORSPACE_DISPLAY2) ?
-            dt_conf_get_string_const("ui_last/display2_profile_source") :
-            dt_conf_get_string_const("ui_last/display_profile_source");
-    if (display_profile_source)
-    {
-        if (!strcmp(display_profile_source, "xatom"))
-            use_colord = FALSE;
-        else if (!strcmp(display_profile_source, "colord"))
-            use_xatom = FALSE;
-    }
-#endif
 
     /* let's have a look at the xatom, just in case ... */
     if (use_xatom)
@@ -1905,19 +1800,6 @@ void dt_colorspaces_set_display_profile(const dt_colorspaces_color_profile_type_
         g_free(atom_name);
     }
 
-#ifdef USE_COLORDGTK
-    /* also try to get the profile from colord. this will set the value asynchronously! */
-    if (use_colord)
-    {
-        CdWindow *window = cd_window_new();
-        GtkWidget *center_widget = (profile_type == DT_COLORSPACE_DISPLAY2) ?
-                                       darktable.develop->second_wnd :
-                                       dt_ui_center(darktable.gui->ui);
-        cd_window_get_profile(window, center_widget, NULL,
-                              _colorspaces_get_display_profile_colord_callback,
-                              GINT_TO_POINTER(profile_type));
-    }
-#endif
 
 #elif defined GDK_WINDOWING_QUARTZ
 #if 0

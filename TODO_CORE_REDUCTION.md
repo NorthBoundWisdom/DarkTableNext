@@ -11,6 +11,9 @@
       location-search, GPX, and active geotagging workflows.
 - [x] Remove MIDI and gamepad input modules.
 - [x] Remove email and Piwigo storage backends; retain disk storage.
+- [x] Reduce the supported image formats to RAW, JPEG, PNG, TIFF, RGBE/HDR, QOI, and copy.
+- [x] Remove GraphicsMagick, ImageMagick, G'MIC compressed-LUT, and Colord integrations.
+- [x] Remove the cltest, cmstest, chart, and generate-cache executables; retain the optional CLI.
 
 ## Core definition
 
@@ -38,21 +41,21 @@ workflow. Local disk export remains the only storage backend.
 
 ## Medium-priority removable extensions
 
-- [ ] Reduce format support to the core set. Candidates for removal are PDF, PPM, PFM,
+- [x] Reduce format support to the core set. Removed PDF, PPM/PNM, PFM,
       OpenEXR, WebP, XCF, JPEG 2000, AVIF, HEIF/HEIC, and JPEG XL.
-- [ ] Remove GraphicsMagick/ImageMagick fallback import support if broad raster import is
+- [x] Remove GraphicsMagick/ImageMagick fallback import support; broad raster import is
       not part of the product scope.
-- [ ] Disable G'MIC compressed-LUT support. The `lut3d` module can remain without G'MIC;
+- [x] Disable G'MIC compressed-LUT support. The `lut3d` module remains without G'MIC;
       only `.gmz` compressed LUT support is lost.
-- [ ] Remove non-product executables: `darktable-cltest`, `darktable-cmstest`,
-      `darktable-chart`, and `darktable-generate-cache`. Treat the CLI as optional for a
+- [x] Remove non-product executables: `darktable-cltest`, `darktable-cmstest`,
+      `darktable-chart`, and `darktable-generate-cache`. The CLI remains optional for a
       GUI-only product.
-- [ ] Decide whether Colord display-profile integration belongs in the product. It is an
-      optional integration, not editing semantics.
+- [x] Remove Colord display-profile integration; it is optional integration, not editing
+      semantics.
 
-Relevant build switches: `USE_OPENJPEG`, `USE_JXL`, `USE_WEBP`, `USE_AVIF`, `USE_HEIF`,
+Removed build switches: `USE_OPENJPEG`, `USE_JXL`, `USE_WEBP`, `USE_AVIF`, `USE_HEIF`,
 `USE_XCF`, `USE_OPENEXR`, `USE_GRAPHICSMAGICK`, `USE_IMAGEMAGICK`, `USE_GMIC`,
-`USE_COLORD`, `USE_OPENCL`, and `BUILD_CMSTEST`.
+`USE_COLORD`, and `BUILD_CMSTEST`. `USE_OPENCL` remains in scope for the GPU strategy below.
 
 ## GPU acceleration strategy
 
@@ -85,4 +88,4 @@ them.
 
 ## Next batch
 
-Continue with format reduction, non-product executables, and optional display/GPU integrations.
+Continue with the GPU strategy and the optional image-operation module review.

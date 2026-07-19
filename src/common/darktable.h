@@ -431,9 +431,6 @@ typedef struct darktable_t
     char *tmpdir;
     char *configdir;
     char *cachedir;
-    char *dump_pfm_module;
-    char *dump_pfm_pipe;
-    char *dump_diff_pipe;
     char *tmp_directory;
     char *bench_module;
     GList *guides;
@@ -496,19 +493,6 @@ void dt_print_nts_ext(const char *msg, ...) __attribute__((format(printf, 1, 2))
 int dt_worker_threads();
 size_t dt_get_available_mem();
 size_t dt_get_singlebuffer_mem();
-
-void dt_dump_pfm_file(const char *pipe, const void *data, const int width, const int height,
-                      const int bpp, const char *modname, const char *head, const gboolean input,
-                      const gboolean output, const gboolean cpu);
-
-void dt_dump_pfm(const char *filename, const void *data, const int width, const int height,
-                 const int bpp, const char *modname);
-
-void dt_dump_pipe_pfm(const char *mod, const void *data, const int width, const int height,
-                      const int bpp, const gboolean input, const char *pipe);
-
-void dt_dump_pipe_diff_pfm(const char *mod, const float *a, const float *b, const int width,
-                           const int height, const int ch, const char *pipe);
 
 void *dt_alloc_aligned(const size_t size);
 

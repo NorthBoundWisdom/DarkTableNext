@@ -291,10 +291,6 @@ static inline float *ll_pad_input(const float *const input, const int wd, const 
         }
         pad_by_replication(out, *wd2, *ht2, max_supp);
     }
-    if ((b && b->mode == 2) && (darktable.dump_pfm_module))
-    {
-        dt_dump_pfm("padded", out, *wd2, *ht2, 4 * sizeof(float), "locallaplacian");
-    }
     return out;
 }
 
@@ -487,12 +483,6 @@ void local_laplacian_internal(
         const int pw = dl(w, last_level), ph = dl(h, last_level);
         const int pw0 = dl(b->pwd, pl0), ph0 = dl(b->pht, pl0);
         const int pw1 = dl(b->pwd, pl1), ph1 = dl(b->pht, pl1);
-        if (darktable.dump_pfm_module)
-        {
-            dt_dump_pfm("coarse", b->output[pl0], pw0, ph0, 4 * sizeof(float), "locallaplacian");
-            dt_dump_pfm("oldcoarse", output[last_level], pw, ph, 4 * sizeof(float),
-                        "locallaplacian");
-        }
         DT_OMP_FOR(collapse(2))
         for (int j = 0; j < ph; j++)
             for (int i = 0; i < pw; i++)
@@ -539,9 +529,6 @@ void local_laplacian_internal(
 #endif
                 output[last_level][j * pw + i] = weight * c1 + (1.0f - weight) * c0;
             }
-        if (darktable.dump_pfm_module)
-            dt_dump_pfm("newcoarse", output[last_level], pw, ph, 4 * sizeof(float),
-                        "locallaplacian");
     }
 
     // assemble output pyramid coarse to fine

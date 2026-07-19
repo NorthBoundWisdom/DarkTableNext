@@ -33,12 +33,6 @@ DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
         required_relative_paths=("CL/opencl.h",),
     ),
     DependencyRootSpec(
-        dependency_name="libxcf",
-        repo_name="libxcf",
-        env_key="LIBXCF_SOURCE_ROOT",
-        required_relative_paths=("CMakeLists.txt", "xcf.c", "xcf.h"),
-    ),
-    DependencyRootSpec(
         dependency_name="whereami",
         repo_name="whereami",
         env_key="WHEREAMI_SOURCE_ROOT",
@@ -54,12 +48,6 @@ DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
         dependency_name="Imath",
         repo_name="Imath",
         env_key="IMATH_SOURCE_ROOT",
-        required_relative_paths=("CMakeLists.txt",),
-    ),
-    DependencyRootSpec(
-        dependency_name="OpenEXR",
-        repo_name="OpenEXR",
-        env_key="OPENEXR_SOURCE_ROOT",
         required_relative_paths=("CMakeLists.txt",),
     ),
     DependencyRootSpec(

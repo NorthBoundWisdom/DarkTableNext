@@ -26,19 +26,17 @@ CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=varargs)
 # with current GCC. Keep the diagnostic visible without making it fatal.
 CHECK_COMPILER_FLAG_AND_ENABLE_IT(-Wno-error=format-truncation)
 
-# needed to deal with warnings in libheif
+# needed to deal with warnings from some macOS SDK headers
 CHECK_C_COMPILER_FLAG_AND_ENABLE_IT(-Wno-typedef-redefinition)
 
 # minimal main thread's stack/frame stack size.
 # 2 MiB seems to work.
-# 1 MiB does NOT work with gmic support enabled.
 # MUST be a multiple of the system page size !!!
 # see  $ getconf PAGESIZE
 math(EXPR WANTED_STACK_SIZE 512*4*1024)
 
 # minimal pthread stack/frame stack size.
 # 2 MiB seems to work and is default on Linux.
-# 1 MiB does NOT work with gmic support enabled.
 # MUST be a multiple of the system page size !!!
 # see  $ getconf PAGESIZE
 math(EXPR WANTED_THREADS_STACK_SIZE 512*4*1024)

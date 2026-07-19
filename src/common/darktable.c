@@ -46,7 +46,6 @@
 #include "common/resource_limits.h"
 #include "common/undo.h"
 #include "common/gimp.h"
-#include "common/pfm.h"
 #ifdef HAVE_AI
 #include "common/ai_models.h"
 #endif
@@ -88,19 +87,7 @@
 #include <exiv2/exv_conf.h> // for EXV_PACKAGE_VERSION
 #include <lensfun.h>        // for lensfun library version macros
 
-#ifdef HAVE_GRAPHICSMAGICK
-#include <magick/api.h>
-#elif defined HAVE_IMAGEMAGICK
-#ifdef HAVE_IMAGEMAGICK7
-#include <MagickWand/MagickWand.h>
-#else
-#include <wand/MagickWand.h>
-#endif
-#endif
 
-#ifdef HAVE_LIBHEIF
-#include <libheif/heif.h>
-#endif
 
 #ifdef HAVE_LIBRAW
 #include <libraw/libraw_version.h>
@@ -228,12 +215,6 @@ static int usage(const char *argv0)
          "    Disable the pixelpipe cache. This option allows only\n"
          "    two cachelines per pipe, and should be used for debugging\n"
          "    purposes only.\n"
-         "\n"
-         "--dump-pfm MODULE_A,MODULE_B\n"
-         "\n"
-         "--dump-pipe MODULE_A,MODULE_B\n"
-         "\n"
-         "--dump-diff-pipe MODULE_A,MODULE_B\n"
          "\n"
          "--dumpdir DIR\n"
          "\n"
@@ -563,132 +544,6 @@ static void _check_resourcelevel(const char *key, int *fractions, const int leve
     }
 }
 
-void dt_dump_pfm_file(const char *pipe, const void *data, const int width, const int height,
-                      const int bpp, const char *modname, const char *head, const gboolean input,
-                      const gboolean output, const gboolean cpu)
-{
-    static int written = 0;
-
-    char *path = g_build_filename(darktable.tmp_directory, pipe, NULL);
-    char *fullname = NULL;
-
-    if (!dt_util_test_writable_dir(path))
-    {
-        if (g_mkdir_with_parents(path, 0750))
-        {
-            dt_print(DT_DEBUG_ALWAYS, "%20s can't create directory '%s'", head, path);
-            goto finalize;
-        }
-    }
-
-    char fname[256] = {0};
-    snprintf(fname, sizeof(fname), "%04d_%s_%s_%s%s.%s", written, modname, cpu ? "cpu" : "GPU",
-             (input && output) ? "diff_" : ((!input && !output) ? "" : ((input) ? "in_" : "out_")),
-             (bpp != 16) ? "M" : "C", (bpp == 2) ? "ppm" : "pfm");
-
-    if ((width < 1) || (height < 1) || !data)
-        goto finalize;
-
-    fullname = g_build_filename(path, fname, NULL);
-    dt_write_pfm(fullname, width, height, data, bpp);
-
-    dt_print(DT_DEBUG_ALWAYS, "%-20s %s,  %dx%d, bpp=%d", head, fullname, width, height, bpp);
-    written += 1;
-
-finalize:
-    g_free(fullname);
-    g_free(path);
-}
-
-void dt_dump_pfm(const char *filename, const void *data, const int width, const int height,
-                 const int bpp, const char *modname)
-{
-    if (!darktable.dump_pfm_module)
-        return;
-    if (!modname)
-        return;
-    if (!dt_str_commasubstring(darktable.dump_pfm_module, modname))
-        return;
-
-    dt_dump_pfm_file(modname, data, width, height, bpp, filename, "[dt_dump_pfm]", FALSE, FALSE,
-                     TRUE);
-}
-
-void dt_dump_pipe_pfm(const char *mod, const void *data, const int width, const int height,
-                      const int bpp, const gboolean input, const char *pipe)
-{
-    if (!darktable.dump_pfm_pipe)
-        return;
-    if (!mod)
-        return;
-    if (!dt_str_commasubstring(darktable.dump_pfm_pipe, mod))
-        return;
-
-    dt_dump_pfm_file(pipe, data, width, height, bpp, mod, "[dt_dump_pipe_pfm]", input, !input,
-                     TRUE);
-}
-
-void dt_dump_pipe_diff_pfm(const char *mod, const float *a, const float *b, const int width,
-                           const int height, const int ch, const char *pipe)
-{
-    if (!darktable.dump_diff_pipe)
-        return;
-    if (!mod)
-        return;
-
-    const size_t lfloats = (size_t)ch * width;
-    const size_t pk = lfloats * (height + 10);
-    const size_t border = lfloats * 5;
-    const size_t pixels = (size_t)width * height * ch;
-    float *o = dt_calloc_align_float(3 * pk);
-    if (!o)
-        return;
-
-    float scale = 0.0f;
-    DT_OMP_FOR(reduction(max : scale))
-    for (size_t k = 0; k < pixels; k++)
-    {
-        if (!dt_isnan(b[k]) && fabsf(b[k]) < 1e9)
-            scale = MAX(scale, b[k]);
-    }
-    scale = 1.0f / scale;
-
-    int invalids = 0;
-    DT_OMP_FOR(reduction(+ : invalids))
-    for (size_t k = 0; k < pixels; k++)
-    {
-        const gboolean any_nan = dt_isnan(a[k]) || dt_isnan(b[k]);
-        const gboolean good =
-            !any_nan && a[k] > -FLT_MAX && a[k] < FLT_MAX && b[k] > -FLT_MAX && b[k] < FLT_MAX;
-        const size_t o1 = k + border;
-        const size_t o2 = k + pk;
-        /* we show a shaded image as background but mark NAN and inf locations */
-        const float shade = good ? 0.02f * sqrtf(CLIP(scale * fmaxf(0.0f, b[k]))) : 0.0f;
-        o[o1] = o[o2] = shade;
-        o[o2 + pk - border] = good ? shade : 1.0f;
-        /* diffs and ratios are only shown if signal is good */
-        if (good)
-        {
-            const float diff = scale * fabsf(a[k] - b[k]);
-            const float cval = scale * fabsf(b[k]);
-            const float gval = scale * fabsf(a[k]);
-            const float quot = cval > 1e-7 && gval > 1e-7 ?
-                                   ((cval > gval ? cval / gval : gval / cval) - 1.0f) :
-                                   0.0f;
-            if (diff > 1e-7)
-                o[o1] = 0.2f + CLIP(100.0f * sqrtf(diff));
-            if (quot > 1e-5)
-                o[o2] = 0.2f + CLIP(10.0f * sqrtf(quot));
-        }
-        else
-            invalids += 1;
-    }
-    const int out_lines = invalids ? 3 * height + 20 : 2 * height + 15;
-    dt_dump_pfm_file(pipe, o, width, out_lines, ch * sizeof(float), mod,
-                     "[dt_dump_CPU/GPU_diff_pfm]", TRUE, TRUE, FALSE);
-    dt_free_align(o);
-}
-
 static int32_t _detect_opencl_job_run(dt_job_t *job)
 {
     dt_opencl_init(darktable.opencl, GPOINTER_TO_INT(dt_control_job_get_params(job)), TRUE);
@@ -792,71 +647,11 @@ static char *_get_version_string(void)
     g_string_append(version, "  OpenCL                 -> DISABLED - GPU acceleration is NOT available\n");
 #endif
 
-#ifdef USE_COLORDGTK
-    g_string_append(version, "  Colord                 -> ENABLED\n");
-#else
-    g_string_append(version, "  Colord                 -> DISABLED\n");
-#endif
-
-#ifdef HAVE_GMIC
-    g_string_append(version, "  GMIC                   -> ENABLED  - Compressed LUTs are supported\n");
-#else
-    g_string_append(version, "  GMIC                   -> DISABLED - Compressed LUTs are NOT supported\n");
-#endif
-
-#ifdef HAVE_GRAPHICSMAGICK
-    g_string_append(version, "  GraphicsMagick         -> ENABLED\n");
-#else
-    g_string_append(version, "  GraphicsMagick         -> DISABLED\n");
-#endif
-
-#ifdef HAVE_IMAGEMAGICK
-    g_string_append(version, "  ImageMagick            -> ENABLED\n");
-#else
-    g_string_append(version, "  ImageMagick            -> DISABLED\n");
-#endif
-
-#ifdef HAVE_LIBAVIF
-    g_string_append(version, "  libavif                -> ENABLED\n");
-#else
-    g_string_append(version, "  libavif                -> DISABLED\n");
-#endif
-
-#ifdef HAVE_LIBHEIF
-    g_string_append(version, "  libheif                -> ENABLED\n");
-#else
-    g_string_append(version, "  libheif                -> DISABLED\n");
-#endif
-
-#ifdef HAVE_LIBJXL
-    g_string_append(version, "  libjxl                 -> ENABLED\n");
-#else
-    g_string_append(version, "  libjxl                 -> DISABLED\n");
-#endif
-
 #ifdef HAVE_LIBRAW
     g_string_append_printf(version, "  LibRaw                 -> ENABLED  - Version %s\n",
                            LIBRAW_VERSION_STR);
 #else
     g_string_append(version, "  LibRaw                 -> DISABLED\n");
-#endif
-
-#ifdef HAVE_OPENJPEG
-    g_string_append(version, "  OpenJPEG               -> ENABLED\n");
-#else
-    g_string_append(version, "  OpenJPEG               -> DISABLED\n");
-#endif
-
-#ifdef HAVE_OPENEXR
-    g_string_append(version, "  OpenEXR                -> ENABLED\n");
-#else
-    g_string_append(version, "  OpenEXR                -> DISABLED\n");
-#endif
-
-#ifdef HAVE_WEBP
-    g_string_append(version, "  WebP                   -> ENABLED\n");
-#else
-    g_string_append(version, "  WebP                   -> DISABLED\n");
 #endif
 
 #ifdef HAVE_AI
@@ -927,9 +722,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     char *configdir_from_command = NULL;
     char *cachedir_from_command = NULL;
 
-    darktable.dump_pfm_module = NULL;
-    darktable.dump_pfm_pipe = NULL;
-    darktable.dump_diff_pipe = NULL;
     darktable.tmp_directory = NULL;
     darktable.bench_module = NULL;
 
@@ -937,7 +729,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     gboolean print_statistics = FALSE;
 #ifdef HAVE_OPENCL
     exclude_opencl = FALSE;
-    print_statistics = (strstr(argv[0], "darktable-cltest") == NULL);
+    print_statistics = TRUE;
 #endif
 
 
@@ -974,27 +766,9 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
                 g_strfreev(myoptions);
                 return 1;
             }
-            else if (!strcmp(argv[k], "--dump-pfm") && argc > k + 1)
-            {
-                darktable.dump_pfm_module = argv[++k];
-                argv[k - 1] = NULL;
-                argv[k] = NULL;
-            }
             else if (!strcmp(argv[k], "--bench-module") && argc > k + 1)
             {
                 darktable.bench_module = argv[++k];
-                argv[k - 1] = NULL;
-                argv[k] = NULL;
-            }
-            else if (!strcmp(argv[k], "--dump-pipe") && argc > k + 1)
-            {
-                darktable.dump_pfm_pipe = argv[++k];
-                argv[k - 1] = NULL;
-                argv[k] = NULL;
-            }
-            else if (!strcmp(argv[k], "--dump-diff-pipe") && argc > k + 1)
-            {
-                darktable.dump_diff_pipe = argv[++k];
                 argv[k - 1] = NULL;
                 argv[k] = NULL;
             }
@@ -1353,15 +1127,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     }
     if (myoptions)
         g_strfreev(myoptions);
-
-    if (darktable.dump_pfm_module || darktable.dump_pfm_pipe || darktable.dump_pfm_pipe ||
-        darktable.dump_diff_pipe)
-    {
-        if (darktable.tmp_directory == NULL)
-            darktable.tmp_directory = g_dir_make_tmp("darktable_XXXXXX", NULL);
-        dt_print(DT_DEBUG_ALWAYS, "[init] darktable dump directory is '%s'",
-                 darktable.tmp_directory ? darktable.tmp_directory : "NOT AVAILABLE");
-    }
 
     // Set directories as requested or default.
     // Set a result flag so if we can't create certain directories, we can
@@ -1758,27 +1523,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
 
     darktable.guides = dt_guides_init();
 
-#ifdef HAVE_GRAPHICSMAGICK
-    dt_splash_screen_set_progress(_("initializing GraphicsMagick"));
-    /* GraphicsMagick init */
-#ifndef MAGICK_OPT_NO_SIGNAL_HANDER
-    InitializeMagick(darktable.progname);
 
-    // *SIGH*
-    dt_set_signal_handlers();
-#else
-    InitializeMagickEx(darktable.progname, MAGICK_OPT_NO_SIGNAL_HANDER, NULL);
-#endif
-#elif defined HAVE_IMAGEMAGICK
-    /* ImageMagick init */
-    dt_splash_screen_set_progress(_("initializing ImageMagick"));
-    MagickWandGenesis();
-#endif
-
-#ifdef HAVE_LIBHEIF
-    dt_splash_screen_set_progress(_("initializing libheif"));
-    heif_init(NULL);
-#endif
 
     dt_splash_screen_set_progress(_("initializing WB presets"));
     dt_wb_presets_init(NULL);
@@ -1858,20 +1603,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         dt_splash_screen_destroy();
         return 1;
     }
-
-    if (darktable.dump_pfm_module)
-        dt_print(DT_DEBUG_ALWAYS, "[dt_init] writing intermediate pfm files for module '%s'",
-                 darktable.dump_pfm_module);
-
-    if (darktable.dump_pfm_pipe)
-        dt_print(DT_DEBUG_ALWAYS,
-                 "[dt_init] writing pfm files for module '%s' processing the pipeline",
-                 darktable.dump_pfm_pipe);
-
-    if (darktable.dump_diff_pipe)
-        dt_print(DT_DEBUG_ALWAYS,
-                 "[dt_init] writing CPU/GPU diff pfm files for module '%s' processing the pipeline",
-                 darktable.dump_diff_pipe);
 
     if (init_gui)
     {
@@ -2124,15 +1855,7 @@ After dt_control_shutdown() has finished we are sure there are no background thr
     darktable.opencl = NULL;
     dt_pwstorage_destroy(darktable.pwstorage);
 
-#ifdef HAVE_GRAPHICSMAGICK
-    DestroyMagick();
-#elif defined HAVE_IMAGEMAGICK
-    MagickWandTerminus();
-#endif
 
-#ifdef HAVE_LIBHEIF
-    heif_deinit();
-#endif
 
     dt_guides_cleanup(darktable.guides);
 

@@ -3397,27 +3397,6 @@ void *dt_opencl_duplicate_image(const int devid, const cl_mem src)
     return new;
 }
 
-void dt_opencl_dump_pipe_pfm(const char *mod, const int devid, const cl_mem img,
-                             const gboolean input, const char *pipe)
-{
-    if (!_cldev_running(devid))
-        return;
-
-    const int width = dt_opencl_get_image_width(img);
-    const int height = dt_opencl_get_image_height(img);
-    const int element_size = dt_opencl_get_image_element_size(img);
-    float *data = dt_alloc_aligned((size_t)width * height * element_size);
-    if (data)
-    {
-        if (dt_opencl_copy_image_to_host(devid, data, img, width, height, element_size) ==
-            CL_SUCCESS)
-            dt_dump_pfm_file(pipe, data, width, height, element_size, mod,
-                             "[dt_opencl_dump_pipe_pfm]", input, !input, FALSE);
-
-        dt_free_align(data);
-    }
-}
-
 void dt_opencl_memory_statistics(int devid, const cl_mem mem, const dt_opencl_memory_t action)
 {
     if (!((darktable.unmuted & DT_DEBUG_MEMORY) && (darktable.unmuted & DT_DEBUG_OPENCL)))

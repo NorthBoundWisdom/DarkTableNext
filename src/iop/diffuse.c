@@ -1059,15 +1059,6 @@ wavelets_process(const float *const restrict in, float *const restrict reconstru
 
         residual = buffer_out;
 
-        if (darktable.dump_pfm_module)
-        {
-            char name[64];
-            sprintf(name, "scale-input-%i", s);
-            dt_dump_pfm(name, buffer_in, width, height, 4 * sizeof(float), "diffuse");
-
-            sprintf(name, "scale-blur-%i", s);
-            dt_dump_pfm(name, buffer_out, width, height, 4 * sizeof(float), "diffuse");
-        }
     }
     dt_free_align(tempbuf);
 
@@ -1118,12 +1109,6 @@ wavelets_process(const float *const restrict in, float *const restrict reconstru
                            isotropy_type, regularization, variance_threshold, sqf(current_radius),
                            mult, ABCD, strength);
 
-        if (darktable.dump_pfm_module)
-        {
-            char name[64];
-            sprintf(name, "scale-up-unblur-%i", s);
-            dt_dump_pfm(name, buffer_out, width, height, 4 * sizeof(float), "diffuse");
-        }
         count++;
     }
 

@@ -167,11 +167,9 @@ typedef struct dt_colorspaces_t
 
     // xatom color profile:
     pthread_rwlock_t xprofile_lock;
-    gchar *colord_profile_file;
     uint8_t *xprofile_data;
     int xprofile_size;
 
-    gchar *colord_profile_file2;
     uint8_t *xprofile_data2;
     int xprofile_size2;
 
@@ -345,8 +343,7 @@ static inline void hsl2rgb(dt_aligned_pixel_t rgb, float h, const float s, const
     rgb[3] = 0.0f;
 }
 
-/** trigger updating the display profile from the system settings (x
- * atom, colord, ...) */
+/** trigger updating the display profile from the system settings */
 void dt_colorspaces_set_display_profile(const dt_colorspaces_color_profile_type_t profile_type);
 
 /** get the profile described by type & filename. this doesn't

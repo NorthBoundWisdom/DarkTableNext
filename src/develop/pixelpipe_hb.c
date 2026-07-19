@@ -52,7 +52,7 @@ static inline gboolean _pipe_has_shutdown(dt_dev_pixelpipe_t *pipe)
     return dt_atomic_get_int(&pipe->shutdown) != DT_DEV_PIXELPIPE_STOP_NO;
 }
 
-// benchmarking and pfm dumps should happen for these pipes if there is no shutdown request
+// benchmarking should happen for these pipes if there is no shutdown request
 static inline gboolean _is_debug_pipe(dt_dev_pixelpipe_t *pipe)
 {
     return (dt_pipe_is_full(pipe) || dt_pipe_is_export(pipe)) && !_pipe_has_shutdown(pipe);
@@ -731,55 +731,6 @@ void dt_dev_pixelpipe_usedetails(dt_dev_pixelpipe_iop_t *piece)
     }
 }
 
-static void _dump_pipe_pfm_diff(const char *mod, const void *indata, const dt_iop_roi_t *roi_in,
-                                const int inbpp, const void *outdata, const dt_iop_roi_t *roi_out,
-                                const int outbpp, const char *pipe)
-{
-    if (!darktable.dump_pfm_pipe)
-        return;
-    if (!mod)
-        return;
-    if (!dt_str_commasubstring(darktable.dump_pfm_pipe, mod))
-        return;
-    if (inbpp != outbpp)
-        return;
-    if (!(inbpp == 16 || inbpp == 4))
-        return;
-
-    const int fchannels = inbpp / 4;
-    float *mixed = dt_alloc_align_float((size_t)fchannels * roi_out->width * roi_out->height);
-    if (!mixed)
-        return;
-
-    const float *in = indata;
-    const float *out = outdata;
-
-    DT_OMP_FOR(collapse(2))
-    for (int row = 0; row < roi_out->height; row++)
-    {
-        for (int col = 0; col < roi_out->width; col++)
-        {
-            const size_t ox = fchannels * (row * roi_out->width + col);
-            const int irow = row + roi_out->y;
-            const int icol = col + roi_out->x;
-
-            for (int c = 0; c < fchannels; c++)
-            {
-                if ((irow < roi_in->height) && (icol < roi_in->width) && (icol >= 0) && (irow >= 0))
-                {
-                    mixed[ox + c] =
-                        fabsf(in[fchannels * (irow * roi_in->width + icol) + c] - out[ox + c]);
-                }
-                else
-                    mixed[ox + c] = 0.0f;
-            }
-        }
-    }
-    dt_dump_pfm_file(pipe, mixed, roi_out->width, roi_out->height, outbpp, mod,
-                     "[dt_dump_pipe_pfm]", TRUE, TRUE, TRUE);
-    dt_free_align(mixed);
-}
-
 // helper to get per module histogram
 static void _histogram_collect(dt_dev_pixelpipe_iop_t *piece, const void *pixel,
                                const dt_iop_roi_t *roi, uint32_t **histogram,
@@ -1324,12 +1275,6 @@ static gboolean _pixelpipe_process_on_CPU(
                                                               tiling->factor, tiling->overhead);
     /* process module on cpu. use tiling if needed and possible. */
 
-    const gboolean pfm_dump = darktable.dump_pfm_pipe && _is_debug_pipe(pipe);
-
-    if (pfm_dump)
-        dt_dump_pipe_pfm(module->op, input, roi_in->width, roi_in->height, in_bpp, TRUE,
-                         dt_dev_pixelpipe_type_to_str(pipe->type));
-
     const size_t nfloats = bpp * roi_out->width * roi_out->height / sizeof(float);
     const gboolean want_bcache = _piece_fast_blend(piece, module);
     const dt_hash_t phash =
@@ -1406,14 +1351,6 @@ static gboolean _pixelpipe_process_on_CPU(
         *pixelpipe_flow |= (PIXELPIPE_FLOW_PROCESSED_ON_CPU);
         *pixelpipe_flow &=
             ~(PIXELPIPE_FLOW_PROCESSED_ON_GPU | PIXELPIPE_FLOW_PROCESSED_WITH_TILING);
-    }
-
-    if (pfm_dump)
-    {
-        dt_dump_pipe_pfm(module->op, *output, roi_out->width, roi_out->height, bpp, FALSE,
-                         dt_dev_pixelpipe_type_to_str(pipe->type));
-        _dump_pipe_pfm_diff(module->op, input, roi_in, in_bpp, *output, roi_out, bpp,
-                            dt_dev_pixelpipe_type_to_str(pipe->type));
     }
 
     // and save the output colorspace
@@ -1509,56 +1446,6 @@ static cl_int _opencl_benchmark(dt_dev_pixelpipe_t *pipe, dt_iop_module_t *modul
     return err;
 }
 
-static void _opencl_dump_diff_pipe_pfm(dt_dev_pixelpipe_t *pipe, dt_iop_module_t *module,
-                                       dt_dev_pixelpipe_iop_t *piece, cl_mem in, cl_mem out,
-                                       const dt_iop_roi_t *roi_out, const dt_iop_roi_t *roi_in,
-                                       const int cst)
-{
-    const int ch = dt_opencl_get_image_element_size(in);
-    const int cho = dt_opencl_get_image_element_size(out) / sizeof(float);
-    if ((ch == 4 || ch == 16 || ch == 2) // input supports 1/4 channel floats and 1ch uint16
-        && (cho == 1 || cho == 4)        // output for 1/4 channel floats
-        && (dt_str_commasubstring(darktable.dump_diff_pipe, module->op) ||
-            dt_str_commasubstring(darktable.dump_diff_pipe, "complete")))
-    {
-        const int ow = roi_out->width;
-        const int oh = roi_out->height;
-        const int iw = roi_in->width;
-        const int ih = roi_in->height;
-        float *clin = dt_alloc_aligned((size_t)iw * ih * ch);
-        float *clout = dt_alloc_align_float((size_t)ow * oh * cho);
-        float *cpudata = dt_alloc_align_float((size_t)ow * oh * cho);
-        if (clin && clout && cpudata)
-        {
-            cl_int err =
-                dt_opencl_copy_image_to_host(pipe->devid, clout, out, ow, oh, cho * sizeof(float));
-            if (err == CL_SUCCESS)
-            {
-                err = dt_opencl_copy_image_to_host(pipe->devid, clin, in, iw, ih, ch);
-                if (err == CL_SUCCESS)
-                {
-                    module->process(module, piece, clin, cpudata, roi_in, roi_out);
-                    if (cst == IOP_CS_LAB)
-                    {
-                        for (size_t k = 0; k < (size_t)ow * oh * cho; k += cho)
-                        {
-                            dt_aligned_pixel_t XYZ;
-                            dt_Lab_to_XYZ(cpudata + k, XYZ);
-                            dt_XYZ_to_linearRGB(XYZ, cpudata + k);
-                            dt_Lab_to_XYZ(clout + k, XYZ);
-                            dt_XYZ_to_linearRGB(XYZ, clout + k);
-                        }
-                    }
-                    dt_dump_pipe_diff_pfm(module->op, clout, cpudata, ow, oh, cho,
-                                          dt_dev_pixelpipe_type_to_str(pipe->type));
-                }
-            }
-        }
-        dt_free_align(cpudata);
-        dt_free_align(clout);
-        dt_free_align(clin);
-    }
-}
 #endif
 
 static inline gboolean _skip_piece_on_tags(const dt_dev_pixelpipe_iop_t *piece)
@@ -2130,10 +2017,6 @@ static gboolean _dev_pixelpipe_process_rec(dt_dev_pixelpipe_t *pipe, dt_develop_
                             _opencl_benchmark(pipe, module, piece, cl_mem_input, roi_out, &roi_in,
                                               bpp);
 
-                        if (darktable.dump_pfm_pipe &&
-                            dt_str_commasubstring(darktable.dump_pfm_pipe, module->op))
-                            dt_opencl_dump_pipe_pfm(module->op, pipe->devid, cl_mem_input, TRUE,
-                                                    dt_dev_pixelpipe_type_to_str(pipe->type));
                     }
 
                     cl_int err = CL_SUCCESS;
@@ -2194,17 +2077,6 @@ static gboolean _dev_pixelpipe_process_rec(dt_dev_pixelpipe_t *pipe, dt_develop_
                         dt_print_pipe(DT_DEBUG_OPENCL, "Error: process", pipe, module, pipe->devid,
                                       &roi_in, roi_out, "device=%i (%s), %s", pipe->devid,
                                       darktable.opencl->dev[pipe->devid].cname, cl_errstr(err));
-                    else if (_is_debug_pipe(pipe))
-                    {
-                        if (darktable.dump_pfm_pipe)
-                            dt_opencl_dump_pipe_pfm(module->op, pipe->devid, *cl_mem_output, FALSE,
-                                                    dt_dev_pixelpipe_type_to_str(pipe->type));
-
-                        if (darktable.dump_diff_pipe)
-                            _opencl_dump_diff_pipe_pfm(pipe, module, piece, cl_mem_input,
-                                                       *cl_mem_output, roi_out, &roi_in, cst_out);
-                    }
-
                     pixelpipe_flow |= (PIXELPIPE_FLOW_PROCESSED_ON_GPU);
                     pixelpipe_flow &=
                         ~(PIXELPIPE_FLOW_PROCESSED_ON_CPU | PIXELPIPE_FLOW_PROCESSED_WITH_TILING);

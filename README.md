@@ -27,9 +27,9 @@ python3 configs/source_root_workflow.py --update
 | 依赖 | 角色 | 应用包处理 |
 | --- | --- | --- |
 | RawSpeed | 编译期库与相机数据 | 链接库并部署其运行时数据 |
-| OpenCL、libxcf、whereami | 编译期源根（头文件或静态链接） | 不单独部署 |
+| OpenCL、whereami | 编译期源根（头文件或静态链接） | 不单独部署 |
 | LibRaw | 编译期源根与 RAW 解码库 | 随应用链接 |
-| Imath、OpenEXR、Exiv2、inih | 图像与元数据的编译/运行时库 | 使用活跃 macOS 工具链的库；GCC 为保持 libstdc++ ABI 而从固定源根构建 |
+| Imath、Exiv2、inih | 图像与元数据的编译/运行时库 | 使用活跃 macOS 工具链的库；GCC 为保持 libstdc++ ABI 而从固定源根构建 |
 
 ONNX Runtime 不属于源根依赖：AI 构建只接受本地包管理器安装的运行时，绝不在配置阶段下载 SDK。基准图像资产亦不属于默认依赖，见下文的按需初始化命令。
 

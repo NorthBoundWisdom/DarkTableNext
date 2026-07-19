@@ -3606,10 +3606,6 @@ gboolean dt_exif_xmp_read(dt_image_t *img, const char *filename, const gboolean 
         return TRUE;
     }
 
-    const char *c = filename + strlen(filename) - 4;
-    if (c >= filename && !strcmp(c, ".pfm"))
-        return TRUE;
-
     try
     {
         std::unique_ptr<Exiv2::Image> image(Exiv2::ImageFactory::open(WIDEN(filename)));

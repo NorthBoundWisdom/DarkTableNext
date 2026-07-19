@@ -611,13 +611,6 @@ static int _group_get_mask_roi(const dt_iop_module_t *const restrict module,
             const float op = fpt->opacity;
             const int state = fpt->state;
 
-            if (darktable.dump_pfm_module)
-            {
-                char *filename = g_strdup_printf("mask-%d", fpt->formid);
-                dt_dump_pfm(filename, bufs, width, height, sizeof(float), module->op);
-                g_free(filename);
-            }
-
             if (ok)
             {
                 // first see if we need to invert this shape
@@ -660,12 +653,6 @@ static int _group_get_mask_roi(const dt_iop_module_t *const restrict module,
             }
         }
 
-        if (darktable.dump_pfm_module)
-        {
-            char *filename = g_strdup_printf("mask-combined-%d", fpt->formid);
-            dt_dump_pfm(filename, buffer, width, height, sizeof(float), module->op);
-            g_free(filename);
-        }
     }
     // and we free the intermediate buffer
     dt_free_align(bufs);

@@ -212,20 +212,6 @@ dt_iop_denoiseprofile_get_auto_profile(dt_iop_module_t *self, GList *profiles, c
                                        const size_t namelen, gboolean *autodetected,
                                        const gboolean compensate_hilite_pres);
 
-static void debug_dump_PFM(const dt_dev_pixelpipe_iop_t *const piece, const char *const namespec,
-                           const float *const restrict buf, const int width, const int height,
-                           const int scale)
-{
-    if (!darktable.dump_pfm_module)
-        return;
-    if (!dt_pipe_is_full(piece->pipe))
-        return;
-
-    char name[256];
-    snprintf(name, sizeof(name), namespec, scale);
-    dt_dump_pfm(name, buf, width, height, 4 * sizeof(float), "denoiseprofile");
-}
-
 void init_presets(dt_iop_module_so_t *self)
 {
     dt_iop_denoiseprofile_params_t p;
@@ -859,8 +845,6 @@ static void process_wavelets(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piec
                             toY0U0V0_trans);
     }
 
-    debug_dump_PFM(piece, "transformed", precond, width, height, 0);
-
     float *restrict buf1 = precond;
     float *restrict buf2 = tmp;
 
@@ -874,9 +858,6 @@ static void process_wavelets(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piec
         const float sigma_band = powf(varf, scale) * sigma;
         dt_aligned_pixel_t sum_y2;
         decompose(buf2, buf1, buf, sum_y2, scale, 1.0f / (sigma_band * sigma_band), width, height);
-        debug_dump_PFM(piece, "coarse_%d", buf2, width, height, scale);
-        debug_dump_PFM(piece, "detail_%d", buf, width, height, scale);
-
         const dt_aligned_pixel_t boost = {1.0f, 1.0f, 1.0f, 1.0f};
         dt_aligned_pixel_t thrs;
         variance_stabilizing_xform(thrs, scale, max_scale, npixels, sum_y2, d);

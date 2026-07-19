@@ -477,9 +477,6 @@ int dt_opencl_get_image_element_size(const cl_mem mem);
 
 void *dt_opencl_duplicate_image(const int devid, const cl_mem src);
 
-void dt_opencl_dump_pipe_pfm(const char *mod, const int devid, const cl_mem img,
-                             const gboolean input, const char *pipe);
-
 void dt_opencl_memory_statistics(int devid, const cl_mem mem, dt_opencl_memory_t action);
 
 /** check if image size fit into limits given by OpenCL runtime */

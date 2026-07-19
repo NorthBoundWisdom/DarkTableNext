@@ -32,12 +32,6 @@
 #include "imageio/imageio_jpeg.h"
 #include "imageio/imageio_png.h"
 #include "imageio/imageio_tiff.h"
-#ifdef HAVE_LIBAVIF
-#include "imageio/imageio_avif.h"
-#endif
-#ifdef HAVE_LIBHEIF
-#include "imageio/imageio_heif.h"
-#endif
 #include "develop/imageop_math.h"
 #include "develop/imageop_gui.h"
 #include "iop/iop_api.h"
@@ -1312,12 +1306,6 @@ void reload_defaults(dt_iop_module_t *self)
                     (img->profile_size > 0) ? DT_COLORSPACE_EMBEDDED_ICC : DT_COLORSPACE_NONE;
             }
         }
-        else if (!strcmp(ext, "pfm"))
-        {
-            // PFM have no embedded color profile nor ICC tag, we can't know the color space
-            // but we can assume the are linear since it's a floating point format
-            color_profile = DT_COLORSPACE_LIN_REC709;
-        }
         // the ldr test just checks for magics in the file header
         else if ((!strcmp(ext, "tif") || !strcmp(ext, "tiff")) && dt_imageio_is_ldr(filename))
         {
@@ -1337,32 +1325,6 @@ void reload_defaults(dt_iop_module_t *self)
                 color_profile =
                     (img->profile_size > 0) ? DT_COLORSPACE_EMBEDDED_ICC : DT_COLORSPACE_NONE;
         }
-#ifdef HAVE_LIBAVIF
-        else if (!strcmp(ext, "avif"))
-        {
-            dt_colorspaces_cicp_t cicp;
-            img->profile_size = dt_imageio_avif_read_profile(filename, &img->profile, &cicp);
-            /* AVIF spec gives priority to ICC profile over CICP; only one
-       * valid kind is returned above anyway */
-            color_profile = (img->profile_size > 0) ? DT_COLORSPACE_EMBEDDED_ICC :
-                                                      dt_colorspaces_cicp_to_type(&cicp, filename);
-        }
-#endif
-#ifdef HAVE_LIBHEIF
-        else if (!strcmp(ext, "heif") || !strcmp(ext, "heic") || !strcmp(ext, "hej2") ||
-                 !strcmp(ext, "avci") || !strcmp(ext, "hif")
-#ifndef HAVE_LIBAVIF
-                 || !strcmp(ext, "avif")
-#endif
-        )
-        {
-            dt_colorspaces_cicp_t cicp;
-            img->profile_size = dt_imageio_heif_read_profile(filename, &img->profile, &cicp);
-            /* HEIF spec gives priority to ICC profile over CICP; only one valid kind is returned above anyway */
-            color_profile = (img->profile_size > 0) ? DT_COLORSPACE_EMBEDDED_ICC :
-                                                      dt_colorspaces_cicp_to_type(&cicp, filename);
-        }
-#endif
         g_free(ext);
     }
     else

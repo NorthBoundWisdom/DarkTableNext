@@ -33,7 +33,6 @@
 #include "develop/imageop_math.h"
 #include "common/interpolation.h"
 #include "common/fast_guided_filter.h"
-#include "common/pfm.h"
 #include "common/ras2vect.h"
 #include "common/utility.h"
 #include "imageio/imageio_png.h"
@@ -100,7 +99,7 @@ const char *aliases()
 
 const char **description(dt_iop_module_t *self)
 {
-    return dt_iop_set_description(self, _("read PFM/PNG files recorded for use as raster masks"),
+    return dt_iop_set_description(self, _("read PNG files recorded for use as raster masks"),
                                   _("corrective or creative"), _("linear, raw, scene-referred"),
                                   _("linear, raw"), _("linear, raw, scene-referred"));
 }
@@ -270,36 +269,9 @@ static float *_read_rasterfile(char *filename, const dt_iop_rasterfile_mode_t mo
         return mask;
     }
 
-    int width, height, channels, error = 0;
-    float *image = dt_read_pfm(filename, &error, &width, &height, &channels, 3);
-    float *mask = dt_iop_image_alloc(width, height, 1);
-    if (!image || !mask)
-    {
-        dt_print(DT_DEBUG_ALWAYS, "can't read raster mask file '%s'", filename ? filename : "???");
-        dt_control_log(_("can't read raster mask file '%s'"), filename ? filename : "???");
-
-        dt_free_align(image);
-        dt_free_align(mask);
-        return NULL;
-    }
-
-    DT_OMP_FOR()
-    for (size_t k = 0; k < (size_t)width * height; k++)
-    {
-        float val = 0.0f;
-        if (mode & DT_RASTERFILE_MODE_RED)
-            val = MAX(val, image[k * 3]);
-        if (mode & DT_RASTERFILE_MODE_GREEN)
-            val = MAX(val, image[k * 3 + 1]);
-        if (mode & DT_RASTERFILE_MODE_BLUE)
-            val = MAX(val, image[k * 3 + 2]);
-        mask[k] = CLIP(val);
-    }
-
-    *swidth = width;
-    *sheight = height;
-    dt_free_align(image);
-    return mask;
+    dt_print(DT_DEBUG_ALWAYS, "unsupported raster mask file '%s'", filename);
+    dt_control_log(_("unsupported raster mask file '%s'"), filename);
+    return NULL;
 }
 
 static int _check_extension(const struct dirent *namestruct)
@@ -308,7 +280,7 @@ static int _check_extension(const struct dirent *namestruct)
     if (!filename || !filename[0])
         return 0;
     const char *p = g_strrstr(filename, ".");
-    return p && (!g_ascii_strcasecmp(p, ".pfm") || !g_ascii_strcasecmp(p, ".png"));
+    return p && !g_ascii_strcasecmp(p, ".png");
 }
 
 static void _update_filepath(dt_iop_module_t *self)
@@ -376,9 +348,7 @@ static void _fbutton_clicked(GtkWidget *widget, dt_iop_module_t *self)
     gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(filechooser), FALSE);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(filechooser), mfolder);
     GtkFileFilter *filter = GTK_FILE_FILTER(gtk_file_filter_new());
-    // only pfm/png files yet supported
-    gtk_file_filter_add_pattern(filter, "*.pfm");
-    gtk_file_filter_add_pattern(filter, "*.PFM");
+    // PNG is the supported raster mask format.
     gtk_file_filter_add_pattern(filter, "*.png");
     gtk_file_filter_add_pattern(filter, "*.PNG");
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(filechooser), filter);
@@ -712,7 +682,7 @@ void gui_init(dt_iop_module_t *self)
     g->fbutton = dtgtk_button_new(dtgtk_cairo_paint_directory, CPF_NONE, NULL);
     gtk_widget_set_name(g->fbutton, "non-flat");
     gtk_widget_set_tooltip_text(
-        g->fbutton, _("select the PFM/PNG file recorded as a raster mask,\n"
+        g->fbutton, _("select the PNG file recorded as a raster mask,\n"
                       "CAUTION: path must be set in preferences/processing before choosing"));
     g_signal_connect(G_OBJECT(g->fbutton), "clicked", G_CALLBACK(_fbutton_clicked), self);
 

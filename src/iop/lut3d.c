@@ -38,12 +38,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
-DT_MODULE_INTROSPECTION(3, dt_iop_lut3d_params_t)
+DT_MODULE_INTROSPECTION(4, dt_iop_lut3d_params_t)
 
 #define DT_IOP_LUT3D_MAX_PATHNAME 512
-#define DT_IOP_LUT3D_MAX_LUTNAME 128
 #define DT_IOP_LUT3D_CLUT_LEVEL 48
-#define DT_IOP_LUT3D_MAX_KEYPOINTS 2048
 
 typedef enum dt_iop_lut3d_colorspace_t
 {
@@ -68,9 +66,6 @@ typedef struct dt_iop_lut3d_params_t
     dt_iop_lut3d_colorspace_t
         colorspace; // $DEFAULT: DT_IOP_SRGB $DESCRIPTION: "application color space"
     dt_iop_lut3d_interpolation_t interpolation; // $DEFAULT: DT_IOP_TETRAHEDRAL
-    int nb_keypoints; // $DEFAULT: 0 >0 indicates the presence of compressed lut
-    char c_clut[DT_IOP_LUT3D_MAX_KEYPOINTS * 2 * 3];
-    char lutname[DT_IOP_LUT3D_MAX_LUTNAME];
 } dt_iop_lut3d_params_t;
 
 typedef struct dt_iop_lut3d_gui_data_t
@@ -79,12 +74,6 @@ typedef struct dt_iop_lut3d_gui_data_t
     GtkWidget *filepath;
     GtkWidget *colorspace;
     GtkWidget *interpolation;
-#ifdef HAVE_GMIC
-    GtkWidget *lutentry;
-    GtkWidget *lutname;
-    GtkWidget *lutwindow;
-    gulong lutname_handler_id;
-#endif
 } dt_iop_lut3d_gui_data_t;
 
 typedef enum dt_lut3d_cols_t
@@ -111,21 +100,6 @@ typedef struct dt_iop_lut3d_global_data_t
     int kernel_lut3d_none;
 } dt_iop_lut3d_global_data_t;
 
-#ifdef HAVE_GMIC
-void lut3d_decompress_clut(const unsigned char *const input_keypoints,
-                           const unsigned int nb_input_keypoints,
-                           const unsigned int output_resolution, float *const output_clut_data,
-                           const char *const filename);
-
-unsigned int lut3d_get_cached_clut(float *const output_clut_data,
-                                   const unsigned int output_resolution,
-                                   const char *const filename);
-
-gboolean lut3d_read_gmz(int *const nb_keypoints, unsigned char *const keypoints,
-                        const char *const filename, int *const nb_lut, void *g,
-                        const char *const lutname, const gboolean newlutname);
-
-#endif // HAVE_GMIC
 
 const char *name()
 {
@@ -382,51 +356,6 @@ static void _correct_pixel_pyramid(const float *const in, float *const out, cons
     }
 }
 
-#ifdef HAVE_GMIC
-static void _get_cache_filename(const char *const lutname, char *const cache_filename)
-{
-    char *cache_dir = g_build_filename(g_get_user_cache_dir(), "gmic", NULL);
-    char *cache_file = g_build_filename(cache_dir, lutname, NULL);
-    g_strlcpy(cache_filename, cache_file, DT_IOP_LUT3D_MAX_PATHNAME);
-    g_strlcpy(&cache_filename[strlen(cache_filename)], ".cimgz",
-              DT_IOP_LUT3D_MAX_PATHNAME - strlen(cache_file));
-    g_free(cache_dir);
-    g_free(cache_file);
-}
-
-static uint8_t _calculate_clut_compressed(dt_iop_lut3d_params_t *const p,
-                                          const char *const filepath, float **clut)
-{
-    uint8_t level = DT_IOP_LUT3D_CLUT_LEVEL;
-    float *lclut;
-    lclut = NULL;
-    char cache_filename[DT_IOP_LUT3D_MAX_PATHNAME];
-    size_t buf_size_lut;
-
-    _get_cache_filename(p->lutname, cache_filename);
-    buf_size_lut = (size_t)(level * level * level * 3);
-    lclut = dt_alloc_align_float(buf_size_lut);
-    if (!lclut)
-    {
-        dt_print(DT_DEBUG_ALWAYS, "[lut3d] error allocating buffer for gmz LUT");
-        dt_control_log(_("error allocating buffer for gmz LUT"));
-        level = 0;
-    }
-    else
-    {
-        level = lut3d_get_cached_clut(lclut, level, cache_filename);
-        if (!level)
-        { //clut not in cache
-            char *c_clut = p->c_clut;
-            level = DT_IOP_LUT3D_CLUT_LEVEL;
-            lut3d_decompress_clut((const unsigned char *const)c_clut, p->nb_keypoints, level, lclut,
-                                  cache_filename);
-        }
-    }
-    *clut = lclut;
-    return level;
-}
-#endif // HAVE_GMIC
 
 static uint16_t _calculate_clut_haldclut(dt_iop_lut3d_params_t *const p, const char *const filepath,
                                          float **clut)
@@ -456,10 +385,6 @@ static uint16_t _calculate_clut_haldclut(dt_iop_lut3d_params_t *const p, const c
 
     if (level * level * level != png.width)
     {
-#ifdef HAVE_GMIC
-        dt_print(DT_DEBUG_ALWAYS, "[lut3d] invalid level in png file %d %d", level, png.width);
-        dt_control_log(_("invalid level in png file %d %d"), level, png.width);
-#else
         if (png.height == 2)
         {
             dt_print(DT_DEBUG_ALWAYS,
@@ -471,7 +396,6 @@ static uint16_t _calculate_clut_haldclut(dt_iop_lut3d_params_t *const p, const c
             dt_print(DT_DEBUG_ALWAYS, "[lut3d] invalid level in png file %d %d", level, png.width);
             dt_control_log(_("invalid level in png file %d %d"), level, png.width);
         }
-#endif // HAVE_GMIC
         fclose(png.f);
         png_destroy_read_struct(&png.png_ptr, &png.info_ptr, NULL);
         return 0;
@@ -1088,13 +1012,6 @@ void init_global(dt_iop_module_so_t *self)
     gd->kernel_lut3d_pyramid = dt_opencl_create_kernel(program, "lut3d_pyramid");
     gd->kernel_lut3d_none = dt_opencl_create_kernel(program, "lut3d_none");
 
-#ifdef HAVE_GMIC
-    // make sure the cache dir exists
-    char *cache_dir = g_build_filename(g_get_user_cache_dir(), "gmic", NULL);
-    char *cache_gmic_dir = dt_loc_init_generic(cache_dir, NULL, NULL);
-    g_free(cache_dir);
-    g_free(cache_gmic_dir);
-#endif // HAVE_GMIC
 }
 
 void cleanup_global(dt_iop_module_so_t *self)
@@ -1112,15 +1029,6 @@ static int _calculate_clut(dt_iop_lut3d_params_t *const p, float **clut)
 {
     uint16_t level = 0;
     const char *filepath = p->filepath;
-#ifdef HAVE_GMIC
-    if (p->nb_keypoints && filepath[0])
-    {
-        // compressed in params. no need to read the file
-        level = _calculate_clut_compressed(p, filepath, clut);
-    }
-    else
-    {  // read the file
-#endif // HAVE_GMIC
         gchar *lutfolder = dt_conf_get_string("plugins/darkroom/lut3d/def_path");
         if (filepath[0] && lutfolder[0])
         {
@@ -1140,180 +1048,9 @@ static int _calculate_clut(dt_iop_lut3d_params_t *const p, float **clut)
             g_free(fullpath);
         }
         g_free(lutfolder);
-#ifdef HAVE_GMIC
-    }
-#endif // HAVE_GMIC
     return level;
 }
 
-#ifdef HAVE_GMIC
-static gboolean _list_match_string(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter,
-                                   dt_iop_lut3d_gui_data_t *g)
-{
-    gchar *str = NULL;
-    gboolean visible;
-
-    gtk_tree_model_get(model, iter, DT_LUT3D_COL_NAME, &str, -1);
-    gchar *haystack = g_utf8_strdown(str, -1);
-    gchar *needle = g_utf8_strdown(gtk_entry_get_text(GTK_ENTRY(g->lutentry)), -1);
-
-    visible = (g_strrstr(haystack, needle) != NULL);
-
-    g_free(haystack);
-    g_free(needle);
-    g_free(str);
-    gtk_list_store_set((GtkListStore *)model, iter, DT_LUT3D_COL_VISIBLE, visible, -1);
-    return FALSE;
-}
-
-static void _apply_filter_lutname_list(dt_iop_lut3d_gui_data_t *g)
-{
-    GtkTreeModel *modelf = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    GtkTreeModel *model = gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(modelf));
-    gtk_tree_model_foreach(model, (GtkTreeModelForeachFunc)_list_match_string, g);
-}
-
-void _lut3d_add_lutname_to_list(void *gv, const char *const lutname)
-{
-    dt_iop_lut3d_gui_data_t *g = (dt_iop_lut3d_gui_data_t *)gv;
-    GtkTreeModel *modelf = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    GtkTreeModel *model = gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(modelf));
-    gtk_list_store_insert_with_values((GtkListStore *)model, NULL, -1, DT_LUT3D_COL_NAME, lutname,
-                                      DT_LUT3D_COL_VISIBLE, TRUE, -1);
-}
-
-void _lut3d_clear_lutname_list(void *gv)
-{
-    dt_iop_lut3d_gui_data_t *g = (dt_iop_lut3d_gui_data_t *)gv;
-    GtkTreeModel *modelf = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    GtkTreeModel *model = gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(modelf));
-    // keep _lutname_callback quiet while clearing the list
-    GtkTreeSelection *selection = gtk_tree_view_get_selection((GtkTreeView *)g->lutname);
-    g_signal_handler_block(G_OBJECT(selection), g->lutname_handler_id);
-    gtk_list_store_clear((GtkListStore *)model);
-    g_signal_handler_unblock(G_OBJECT(selection), g->lutname_handler_id);
-}
-
-static gboolean _select_lutname_in_list(dt_iop_lut3d_gui_data_t *g, const char *const lutname)
-{
-    GtkTreeIter iter;
-    GtkTreeSelection *selection = gtk_tree_view_get_selection((GtkTreeView *)g->lutname);
-    GtkTreeModel *model = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    if (lutname)
-    {
-        gboolean valid = gtk_tree_model_get_iter_first(model, &iter);
-        while (valid)
-        {
-            gchar *name;
-            gtk_tree_model_get(model, &iter, DT_LUT3D_COL_NAME, &name, -1);
-            if (!g_strcmp0(lutname, name))
-            {
-                gtk_tree_selection_select_iter(selection, &iter);
-                GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-                gtk_tree_view_scroll_to_cell((GtkTreeView *)g->lutname, path, NULL, TRUE, 0.2, 0);
-                gtk_tree_path_free(path);
-                g_free(name);
-                return TRUE;
-            }
-            g_free(name);
-            valid = gtk_tree_model_iter_next(model, &iter);
-        }
-        return FALSE;
-    }
-    else // select the first in the list
-    {
-        if (gtk_tree_model_iter_nth_child(model, &iter, NULL, 0))
-        {
-            gtk_tree_selection_select_iter(selection, &iter);
-            return TRUE;
-        }
-        else
-        {
-            return FALSE;
-        }
-    }
-}
-
-static void _get_selected_lutname(dt_iop_lut3d_gui_data_t *g, char *const lutname)
-{
-    GtkTreeIter iter;
-    GtkTreeSelection *selection = gtk_tree_view_get_selection((GtkTreeView *)g->lutname);
-    GtkTreeModel *model = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    if (gtk_tree_selection_get_selected(selection, &model, &iter))
-    {
-        gchar *name;
-        gtk_tree_model_get(model, &iter, DT_LUT3D_COL_NAME, &name, -1);
-        g_strlcpy(lutname, name, DT_IOP_LUT3D_MAX_LUTNAME);
-        g_free(name);
-    }
-    else
-        lutname[0] = 0;
-}
-
-static void _get_compressed_clut(dt_iop_module_t *self, gboolean newlutname)
-{
-    dt_iop_lut3d_gui_data_t *g = self->gui_data;
-    dt_iop_lut3d_params_t *p = self->params;
-    int nb_lut = 0;
-    char *lutfolder = dt_conf_get_string("plugins/darkroom/lut3d/def_path");
-    if (p->filepath[0] && lutfolder[0])
-    {
-        if (g_str_has_suffix(p->filepath, ".gmz") || g_str_has_suffix(p->filepath, ".GMZ"))
-        {
-            char *fullpath = g_build_filename(lutfolder, p->filepath, NULL);
-            gboolean lut_found =
-                lut3d_read_gmz(&p->nb_keypoints, (unsigned char *const)p->c_clut, fullpath, &nb_lut,
-                               (void *)g, p->lutname, newlutname);
-            // to be able to fix evolution issue, keep the gmic version with the compressed lut
-            if (lut_found)
-            {
-                if (!newlutname)
-                    _select_lutname_in_list(g, p->lutname);
-            }
-            else if (nb_lut)
-            {
-                _select_lutname_in_list(g, NULL);
-                _get_selected_lutname(g, p->lutname);
-            }
-            else if (p->lutname[0])
-            { // read has failed - make sure lutname appear in the list (for user info)
-                if (!_select_lutname_in_list(g, p->lutname))
-                {
-                    _lut3d_add_lutname_to_list(g, p->lutname);
-                    _select_lutname_in_list(g, p->lutname);
-                }
-            }
-            g_free(fullpath);
-        }
-    }
-    g_free(lutfolder);
-}
-
-static void _show_hide_controls(dt_iop_module_t *self)
-{
-    dt_iop_lut3d_gui_data_t *g = self->gui_data;
-    GtkTreeModel *model = gtk_tree_view_get_model((GtkTreeView *)g->lutname);
-    const int nb_luts = gtk_tree_model_iter_n_children(model, NULL);
-    if ((nb_luts > 1) ||
-        ((nb_luts > 0) &&
-         g_str_has_prefix(dt_bauhaus_combobox_get_text(g->filepath), invalid_filepath_prefix)))
-    {
-        int nb_pixels = (20 * (nb_luts + 1) > 200) ? 200 : 20 * (nb_luts);
-        if (nb_luts > 100)
-            gtk_widget_set_visible(g->lutentry, TRUE);
-        else
-            gtk_widget_set_visible(g->lutentry, FALSE);
-        gtk_widget_set_visible(g->lutwindow, TRUE);
-        gtk_scrolled_window_set_min_content_height((GtkScrolledWindow *)g->lutwindow,
-                                                   DT_PIXEL_APPLY_DPI(nb_pixels));
-    }
-    else
-    {
-        gtk_widget_set_visible(g->lutentry, FALSE);
-        gtk_widget_set_visible(g->lutwindow, FALSE);
-    }
-}
-#endif // HAVE_GMIC
 
 void commit_params(dt_iop_module_t *self, dt_iop_params_t *p1, dt_dev_pixelpipe_t *pipe,
                    dt_dev_pixelpipe_iop_t *piece)
@@ -1321,7 +1058,7 @@ void commit_params(dt_iop_module_t *self, dt_iop_params_t *p1, dt_dev_pixelpipe_
     dt_iop_lut3d_params_t *p = (dt_iop_lut3d_params_t *)p1;
     dt_iop_lut3d_data_t *d = piece->data;
 
-    if (strcmp(p->filepath, d->params.filepath) != 0 || strcmp(p->lutname, d->params.lutname) != 0)
+    if (strcmp(p->filepath, d->params.filepath) != 0)
     { // new clut file
         if (d->clut)
         { // reset current clut if any
@@ -1365,79 +1102,11 @@ static void _filepath_callback(GtkWidget *widget, dt_iop_module_t *self)
     if (!g_str_has_prefix(filepath, invalid_filepath_prefix))
     {
         filepath_set_unix_separator(filepath);
-#ifdef HAVE_GMIC
-        dt_iop_lut3d_gui_data_t *g = self->gui_data;
-        if (strcmp(filepath, p->filepath) != 0 &&
-            !(g_str_has_suffix(filepath, ".gmz") || g_str_has_suffix(filepath, ".GMZ")))
-        {
-            // if new file is gmz we try to keep the same lut
-            p->nb_keypoints = 0;
-            p->lutname[0] = 0;
-            _lut3d_clear_lutname_list(g);
-        }
         dt_strlcpy_to_fixed(p->filepath, filepath, sizeof(p->filepath));
-        _get_compressed_clut(self, FALSE);
-        _show_hide_controls(self);
-        gtk_entry_set_text(GTK_ENTRY(g->lutentry), "");
-#else
-        dt_strlcpy_to_fixed(p->filepath, filepath, sizeof(p->filepath));
-#endif // HAVE_GMIC
         dt_dev_add_history_item(darktable.develop, self, TRUE);
     }
 }
 
-#ifdef HAVE_GMIC
-static void _entry_callback(GtkEntry *entry, dt_iop_module_t *self)
-{
-    dt_iop_lut3d_gui_data_t *g = self->gui_data;
-    _apply_filter_lutname_list(g);
-}
-
-static void _lutname_callback(GtkTreeSelection *selection, dt_iop_module_t *self)
-{
-    DT_GUARD_GUI_UPDATE();
-    dt_iop_lut3d_params_t *p = self->params;
-    GtkTreeIter iter;
-    GtkTreeModel *model;
-    gchar *lutname;
-
-    if (gtk_tree_selection_get_selected(selection, &model, &iter))
-    {
-        gtk_tree_model_get(model, &iter, DT_LUT3D_COL_NAME, &lutname, -1);
-        if (lutname[0] && strcmp(lutname, p->lutname) != 0)
-        {
-            dt_strlcpy_to_fixed(p->lutname, lutname, sizeof(p->lutname));
-            _get_compressed_clut(self, TRUE);
-            dt_dev_add_history_item(darktable.develop, self, TRUE);
-        }
-        g_free(lutname);
-    }
-}
-
-static gboolean _mouse_scroll(GtkWidget *view, GdkEventScroll *event, dt_lib_module_t *self)
-{
-    GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
-    GtkTreeIter iter;
-    GtkTreeModel *model = gtk_tree_view_get_model((GtkTreeView *)view);
-    if (gtk_tree_selection_get_selected(selection, &model, &iter))
-    {
-        gboolean next = FALSE;
-        if (event->delta_y > 0)
-            next = gtk_tree_model_iter_next(model, &iter);
-        else
-            next = gtk_tree_model_iter_previous(model, &iter);
-        if (next)
-        {
-            gtk_tree_selection_select_iter(selection, &iter);
-            GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-            gtk_tree_view_set_cursor((GtkTreeView *)view, path, NULL, FALSE);
-            gtk_tree_path_free(path);
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-#endif // HAVE_GMIC
 
 // remove root lut folder from path
 static void _remove_root_from_path(const char *const lutfolder, char *const filepath)
@@ -1459,14 +1128,8 @@ static int _check_extension(const struct dirent *namestruct)
     if (!p)
         return res;
     char *fext = g_ascii_strdown(g_strdup(p), -1);
-#ifdef HAVE_GMIC
-    if (!g_strcmp0(fext, ".png") || !g_strcmp0(fext, ".cube") || !g_strcmp0(fext, ".3dl") ||
-        !g_strcmp0(fext, ".gmz"))
-        res = 1;
-#else
     if (!g_strcmp0(fext, ".png") || !g_strcmp0(fext, ".cube") || !g_strcmp0(fext, ".3dl"))
         res = 1;
-#endif // HAVE_GMIC
     g_free(fext);
     return res;
 }
@@ -1545,14 +1208,7 @@ static void _button_clicked(GtkWidget *widget, dt_iop_module_t *self)
     gtk_file_filter_add_pattern(filter, "*.CUBE");
     gtk_file_filter_add_pattern(filter, "*.3dl");
     gtk_file_filter_add_pattern(filter, "*.3DL");
-#ifdef HAVE_GMIC
-    gtk_file_filter_add_pattern(filter, "*.gmz");
-    gtk_file_filter_add_pattern(filter, "*.GMZ");
-    gtk_file_filter_set_name(
-        filter, _("hald CLUT (png), 3D LUT (cube or 3dl) or gmic compressed LUT (gmz)"));
-#else
     gtk_file_filter_set_name(filter, _("hald CLUT (png) or 3D LUT (cube or 3dl)"));
-#endif // HAVE_GMIC
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(filechooser), filter);
     gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(filechooser), filter);
 
@@ -1622,13 +1278,6 @@ void gui_update(dt_iop_module_t *self)
 
     _show_hide_colorspace(self);
 
-#ifdef HAVE_GMIC
-    if (p->lutname[0])
-    {
-        _get_compressed_clut(self, FALSE);
-    }
-    _show_hide_controls(self);
-#endif // HAVE_GMIC
 }
 
 static void _module_moved_callback(gpointer instance, dt_iop_module_t *self)
@@ -1642,72 +1291,21 @@ void gui_init(dt_iop_module_t *self)
 
     g->button = dtgtk_button_new(dtgtk_cairo_paint_directory, CPF_NONE, NULL);
     gtk_widget_set_name(g->button, "non-flat");
-#ifdef HAVE_GMIC
-    gtk_widget_set_tooltip_text(
-        g->button,
-        _("select a png (haldclut)"
-          ", a cube, a 3dl or a gmz (compressed LUT) file "
-          "CAUTION: 3D LUT folder must be set in preferences/processing before choosing the LUT file"));
-#else
     gtk_widget_set_tooltip_text(
         g->button,
         _("select a png (haldclut)"
           ", a cube or a 3dl file "
           "CAUTION: 3D LUT folder must be set in preferences/processing before choosing the LUT file"));
-#endif // HAVE_GMIC
 
     g->filepath = dt_bauhaus_combobox_new(self);
     dt_bauhaus_combobox_set_entries_ellipsis(g->filepath, PANGO_ELLIPSIZE_MIDDLE);
-#ifdef HAVE_GMIC
-    gtk_widget_set_tooltip_text(
-        g->filepath,
-        _("the file path (relative to LUT folder) is saved with image along with the LUT data if it's a compressed LUT (gmz)"));
-#else
     gtk_widget_set_tooltip_text(
         g->filepath,
         _("the file path (relative to LUT folder) is saved with image (and not the LUT data themselves)"));
-#endif // HAVE_GMIC
     self->widget = dt_gui_vbox(dt_gui_hbox(g->button, dt_gui_expand(g->filepath)));
     g_signal_connect(G_OBJECT(g->button), "clicked", G_CALLBACK(_button_clicked), self);
     g_signal_connect(G_OBJECT(g->filepath), "value-changed", G_CALLBACK(_filepath_callback), self);
 
-#ifdef HAVE_GMIC
-    // text entry
-    g->lutentry = gtk_entry_new();
-    gtk_widget_set_tooltip_text(g->lutentry, _("enter LUT name"));
-    gtk_widget_add_events(g->lutentry, GDK_KEY_RELEASE_MASK);
-    dt_gui_box_add(self->widget, g->lutentry);
-
-    // treeview
-    GtkTreeModel *lutmodel =
-        (GtkTreeModel *)gtk_list_store_new(DT_LUT3D_NUM_COLS, G_TYPE_STRING, G_TYPE_BOOLEAN);
-    GtkTreeModel *lutfilter = gtk_tree_model_filter_new(lutmodel, NULL);
-    gtk_tree_model_filter_set_visible_column(GTK_TREE_MODEL_FILTER(lutfilter),
-                                             DT_LUT3D_COL_VISIBLE);
-    g_object_unref(lutmodel);
-
-    g->lutname = (GtkWidget *)gtk_tree_view_new();
-    gtk_widget_set_name(g->lutname, "lutname");
-    gtk_tree_view_set_model((GtkTreeView *)g->lutname, lutfilter);
-    gtk_tree_view_set_hover_selection((GtkTreeView *)g->lutname, FALSE);
-    gtk_tree_view_set_headers_visible((GtkTreeView *)g->lutname, FALSE);
-    gtk_widget_set_tooltip_text(g->lutname, _("select the LUT"));
-    g->lutwindow = dt_gui_scroll_wrap(g->lutname);
-
-    GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-    GtkTreeViewColumn *col = gtk_tree_view_column_new_with_attributes("lutname", renderer, "text",
-                                                                      DT_LUT3D_COL_NAME, NULL);
-    gtk_tree_view_append_column((GtkTreeView *)g->lutname, col);
-    GtkTreeSelection *selection = gtk_tree_view_get_selection((GtkTreeView *)g->lutname);
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
-    g->lutname_handler_id = g_signal_connect_data(G_OBJECT(selection), "changed",
-                                                  G_CALLBACK(_lutname_callback), self, NULL, 0);
-    dt_gui_box_add(self->widget, g->lutwindow);
-
-    g_signal_connect(G_OBJECT(g->lutentry), "changed", G_CALLBACK(_entry_callback), self);
-    g_signal_connect(G_OBJECT((GtkTreeView *)g->lutname), "scroll-event", G_CALLBACK(_mouse_scroll),
-                     (gpointer)self);
-#endif // HAVE_GMIC
 
     g->colorspace = dt_bauhaus_combobox_from_params(self, "colorspace");
     gtk_widget_set_tooltip_text(g->colorspace,

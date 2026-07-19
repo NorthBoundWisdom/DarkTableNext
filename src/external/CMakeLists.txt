@@ -23,7 +23,6 @@ function(dt_resolve_freecm_source_root output_variable cache_variable environmen
   set(${output_variable} "${_source_root}" PARENT_SCOPE)
 endfunction()
 
-dt_resolve_freecm_source_root(LIBXCF_PATH LIBXCF_SOURCE_ROOT LIBXCF_SOURCE_ROOT libxcf CMakeLists.txt)
 dt_resolve_freecm_source_root(WHEREAMI_PATH WHEREAMI_SOURCE_ROOT WHEREAMI_SOURCE_ROOT whereami src/whereami.c)
 dt_resolve_freecm_source_root(OPENCL_PATH OPENCL_HEADERS_SOURCE_ROOT OPENCL_HEADERS_SOURCE_ROOT OpenCL CL/opencl.h)
 dt_resolve_freecm_source_root(RAWSPEED_PATH RAWSPEED_SOURCE_ROOT RAWSPEED_SOURCE_ROOT rawspeed CMakeLists.txt)
@@ -34,30 +33,13 @@ set(OPENCL_PATH "${OPENCL_PATH}" PARENT_SCOPE)
 # until FreeCM provides compiler-neutral C++ package artifacts.
 if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   dt_resolve_freecm_source_root(IMATH_PATH IMATH_SOURCE_ROOT IMATH_SOURCE_ROOT Imath CMakeLists.txt)
-  dt_resolve_freecm_source_root(OPENEXR_PATH OPENEXR_SOURCE_ROOT OPENEXR_SOURCE_ROOT OpenEXR CMakeLists.txt)
   dt_resolve_freecm_source_root(EXIV2_PATH EXIV2_SOURCE_ROOT EXIV2_SOURCE_ROOT exiv2 CMakeLists.txt)
   dt_resolve_freecm_source_root(INIH_PATH INIH_SOURCE_ROOT INIH_SOURCE_ROOT inih cpp/INIReader.cpp)
 
-  message(STATUS "Building Imath, OpenEXR, and Exiv2 from FreeCM source roots for GCC ABI compatibility")
+  message(STATUS "Building Imath and Exiv2 from FreeCM source roots for GCC ABI compatibility")
 
   set(IMATH_INSTALL OFF CACHE BOOL "" FORCE)
   add_subdirectory("${IMATH_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/Imath" EXCLUDE_FROM_ALL)
-  # OpenEXR calls find_package(Imath) even when the Imath target is already
-  # present. Imath's build-tree config expects this generated export file only
-  # when it is consumed from an installed build, so provide an empty one here.
-  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Imath/config/ImathTargets.cmake"
-       "# Imath is already available as a build-tree target.\n")
-
-  set(OPENEXR_INSTALL OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_INSTALL_PKG_CONFIG OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_TEST_LIBRARIES OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_TEST_TOOLS OFF CACHE BOOL "" FORCE)
-  set(OPENEXR_TEST_PYTHON OFF CACHE BOOL "" FORCE)
-  add_subdirectory("${OPENEXR_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/OpenEXR" EXCLUDE_FROM_ALL)
-
   # inih ships Meson metadata only. Build its C parser and C++ wrapper from
   # the locked source root, then satisfy Exiv2's standard Findinih module with
   # these targets instead of Homebrew's libc++ binaries.
@@ -85,10 +67,6 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(DARKTABLE_MANAGED_CPP_DEPENDENCIES ON PARENT_SCOPE)
   set(DARKTABLE_MANAGED_EXIV2_INCLUDE_DIR "${EXIV2_PATH}/include" PARENT_SCOPE)
   set(DARKTABLE_MANAGED_EXIV2_CONFIG_HEADER "${CMAKE_BINARY_DIR}/exv_conf.h" PARENT_SCOPE)
-endif()
-
-if(USE_XCF)
-  add_subdirectory("${LIBXCF_PATH}" "${CMAKE_CURRENT_BINARY_DIR}/libxcf")
 endif()
 
 add_library(whereami STATIC "${WHEREAMI_PATH}/src/whereami.c")

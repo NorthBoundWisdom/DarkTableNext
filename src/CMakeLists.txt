@@ -70,8 +70,6 @@ FILE(GLOB SOURCE_FILES
   "common/noiseprofiles.c"
   "common/opencl.c"
   "common/overlay.c"
-  "common/pdf.c"
-  "common/pfm.c"
   "common/presets.c"
   "common/pwstorage/pwstorage.c"
   "common/ras2vect.c"
@@ -154,9 +152,7 @@ FILE(GLOB SOURCE_FILES
   "imageio/imageio_dng.c"
   "imageio/imageio_jpeg.c"
   "imageio/imageio_module.c"
-  "imageio/imageio_pfm.c"
   "imageio/imageio_png.c"
-  "imageio/imageio_pnm.c"
   "imageio/imageio_qoi.c"
   "imageio/imageio_rgbe.c"
   "imageio/imageio_tiff.c"
@@ -262,86 +258,6 @@ else()
   endif()
 endif()
 
-if(USE_OPENEXR)
-  if(DARKTABLE_MANAGED_CPP_DEPENDENCIES)
-    set(OpenEXR_FOUND TRUE)
-    set(OpenEXR_LIBRARIES OpenEXR::OpenEXR)
-  else()
-    find_package(OpenEXR 3.0 CONFIG)
-    if(TARGET OpenEXR::OpenEXR)
-      set(OpenEXR_LIBRARIES OpenEXR::OpenEXR)
-    else()
-      find_package(OpenEXR)
-    endif()
-  endif()
-  if(OpenEXR_FOUND)
-    include_directories(SYSTEM ${OpenEXR_INCLUDE_DIRS})
-    list(APPEND LIBS ${OpenEXR_LIBRARIES})
-    add_definitions("-DHAVE_OPENEXR")
-    list(APPEND SOURCES "imageio/imageio_exr.cc")
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} exr CACHE INTERNAL "")
-  endif(OpenEXR_FOUND)
-endif(USE_OPENEXR)
-
-if(USE_JXL)
-  find_package(JXL 0.7.0)
-  if(JXL_FOUND)
-    include_directories(SYSTEM ${JXL_INCLUDE_DIRS})
-    list(APPEND LIBS ${JXL_LIBRARIES})
-    add_definitions("-DHAVE_LIBJXL")
-    list(APPEND SOURCES "imageio/imageio_jpegxl.c")
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} jxl CACHE INTERNAL "")
-  endif(JXL_FOUND)
-endif(USE_JXL)
-
-if(USE_WEBP)
-  find_package(WebP 0.3.0)
-  if(WebP_FOUND)
-    include_directories(SYSTEM ${WebP_INCLUDE_DIRS})
-    list(APPEND LIBS ${WebP_LIBRARIES})
-    add_definitions("-DHAVE_WEBP")
-    list(APPEND SOURCES "imageio/imageio_webp.c")
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} webp CACHE INTERNAL "")
-  endif(WebP_FOUND)
-endif(USE_WEBP)
-
-if(USE_AVIF)
-  # no version check in config mode because of major only match policy
-  find_package(libavif CONFIG)
-  if(TARGET avif)
-    if(libavif_VERSION VERSION_GREATER_EQUAL 0.9.3)
-      list(APPEND LIBS avif)
-      add_definitions(-DHAVE_LIBAVIF=1)
-      list(APPEND SOURCES "imageio/imageio_avif.c")
-      set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} avif CACHE INTERNAL "")
-    else()
-      set(libavif_FOUND NOTFOUND PARENT_SCOPE)
-    endif()
-  endif()
-endif()
-
-if(USE_HEIF)
-  # no version check in config mode because of exact match policy
-  find_package(libheif CONFIG)
-  if(NOT TARGET heif)
-    find_package(libheif 1.13.0 MODULE)
-  endif()
-  if(TARGET heif)
-    if(libheif_VERSION VERSION_GREATER_EQUAL 1.13)
-      list(APPEND LIBS heif)
-      add_definitions(-DHAVE_LIBHEIF=1)
-      list(APPEND SOURCES "imageio/imageio_heif.c")
-      set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} heif heic hif hej2 avci CACHE INTERNAL "")
-      if(NOT libavif_FOUND)
-        # libheif can handle avif, too
-        set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} avif CACHE INTERNAL "")
-      endif()
-    else()
-      set(libheif_FOUND NOTFOUND)
-    endif()
-  endif()
-endif()
-
 # LibRaw is always built from the pinned FreeCM source root.
 if(USE_LIBRAW)
   message(STATUS "Building LibRaw from the pinned FreeCM source root")
@@ -440,73 +356,19 @@ if (USE_ISOBMFF)
       HAVE_EXV_ENABLE_BMFF)
     if(HAVE_EXV_ENABLE_BMFF)
       set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} cr3 CACHE INTERNAL "")
-      message(STATUS "Exiv2 >= 0.27.4 found with ISOBMFF support (CR3, AVIF, HEIF)")
+      message(STATUS "Exiv2 >= 0.27.4 found with ISOBMFF support (CR3)")
     else()
-      message(STATUS "Exiv2 >= 0.27.4 found, but was not compiled with ISOBMFF support (CR3, AVIF, HEIF)")
+      message(STATUS "Exiv2 >= 0.27.4 found, but was not compiled with ISOBMFF support (CR3)")
     endif()
   else()
-    message(STATUS "Exiv2 < 0.27.4 found, no support for ISOBMFF files (CR3, AVIF, HEIF)")
+    message(STATUS "Exiv2 < 0.27.4 found, no support for ISOBMFF files (CR3)")
   endif()
 endif()
-
-if(USE_OPENJPEG)
-  find_package(OpenJPEG CONFIG)
-  if(OpenJPEG_FOUND)
-    add_definitions("-DHAVE_OPENJPEG")
-    list(APPEND SOURCES "imageio/imageio_j2k.c")
-    include_directories(SYSTEM ${OPENJPEG_INCLUDE_DIRS})
-    list(APPEND LIBS ${OPENJPEG_LIBRARIES})
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} j2c j2k jp2 jpc jpf jpx CACHE INTERNAL "")
-  endif(OpenJPEG_FOUND)
-endif(USE_OPENJPEG)
 
 #
 # Detect compile of optional pwstorage backends
 #
 add_definitions("-DHAVE_APPLE_KEYCHAIN")
-
-if(USE_GRAPHICSMAGICK)
-  find_package(GraphicsMagick)
-  if(GraphicsMagick_FOUND)
-    add_definitions(-DHAVE_GRAPHICSMAGICK)
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} bmp cin dcm dpx fit fits fts gif jng jp2 jpc jpf jpx miff mng pam webp jxl CACHE INTERNAL "")
-    include_directories(SYSTEM ${GraphicsMagick_INCLUDE_DIRS})
-    list(APPEND LIBS ${GraphicsMagick_LIBRARIES})
-    list(APPEND SOURCES "imageio/imageio_gm.c")
-  endif(GraphicsMagick_FOUND)
-endif(USE_GRAPHICSMAGICK)
-
-if(USE_IMAGEMAGICK AND NOT GraphicsMagick_FOUND)
-  # Do not use find_package(): module is not providing needed CFLAGS
-  find_package(PkgConfig)
-  pkg_check_modules(ImageMagick MagickWand)
-  if(ImageMagick_FOUND)
-    list(APPEND SOURCES "imageio/imageio_im.c")
-    if(ImageMagick_VERSION VERSION_GREATER 7)
-      add_definitions(-DHAVE_IMAGEMAGICK7)
-      set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} qoi CACHE INTERNAL "")
-    endif(ImageMagick_VERSION VERSION_GREATER 7)
-    add_definitions(-DHAVE_IMAGEMAGICK ${ImageMagick_CFLAGS_OTHER})
-    include_directories(SYSTEM ${ImageMagick_INCLUDE_DIRS})
-    foreach(lib ${ImageMagick_LIBRARIES})
-      find_library(ImageMagick_LIBRARY NAMES ${lib} HINTS ${ImageMagick_LIBRARY_DIRS})
-      list(APPEND LIBS ${ImageMagick_LIBRARY})
-      unset(ImageMagick_LIBRARY CACHE)
-    endforeach(lib)
-    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} bmp cin dcm dpx fit fits fts gif jng jp2 jpc jpf jpx miff mng pam webp jxl CACHE INTERNAL "")
-  endif(ImageMagick_FOUND)
-endif(USE_IMAGEMAGICK AND NOT GraphicsMagick_FOUND)
-
-if(USE_GMIC)
-  find_package(GMIC)
-  if(GMIC_FOUND)
-    add_definitions(-DHAVE_GMIC)
-    include_directories(SYSTEM ${GMIC_INCLUDE_DIRS})
-    list(APPEND LIBS ${GMIC_LIBRARIES})
-  else()
-    message(FATAL_ERROR "No suitable GMIC development files found, please install them or disable GMIC support")
-  endif(GMIC_FOUND)
-endif(USE_GMIC)
 
 if(USE_ICU)
   find_package(ICU COMPONENTS i18n data uc)
@@ -586,32 +448,6 @@ check_cxx_compiler_flag("-Wno-error=pass-failed" DT_CXX_HAS_NO_ERROR_PASS_FAILED
 if(DT_CXX_HAS_NO_ERROR_PASS_FAILED)
   add_definitions("-Wno-error=pass-failed")
 endif()
-
-# libcolord-gtk:
-if(USE_COLORD)
-  find_package(Colord)
-  if(Colord_FOUND)
-    find_package(ColordGTK)
-    if(ColordGTK_FOUND)
-      # We might make use of colord directly so link against it explicitly. just in case. move up if it is used without colord-gtk, too.
-      include_directories(SYSTEM ${Colord_INCLUDE_DIRS})
-      list(APPEND LIBS ${Colord_LIBRARIES})
-      add_definitions(${Colord_DEFINITIONS})
-
-      # ... and also against libcolord-gtk to get the display profile
-      include_directories(SYSTEM ${ColordGTK_INCLUDE_DIRS})
-      list(APPEND LIBS ${ColordGTK_LIBRARIES})
-      add_definitions(${ColordGTK_DEFINITIONS})
-      add_definitions("-DUSE_COLORDGTK")
-    else(ColordGTK_FOUND)
-      message(STATUS "No libcolord-gtk found, this build will lack the ability to get the screen profile from colord")
-      set(USE_COLORD OFF)
-    endif(ColordGTK_FOUND)
-  else(Colord_FOUND)
-    message(STATUS "No libcolord found, this build will lack the ability to get the screen profile from colord")
-    set(USE_COLORD OFF)
-  endif(Colord_FOUND)
-endif(USE_COLORD)
 
 # macOS system headers are supplied by the compiler sysroot. Third-party CMake
 # find modules occasionally add the SDK root as an explicit include directory;
@@ -737,24 +573,8 @@ add_subdirectory(iop ${DARKTABLE_LIBDIR}/plugins)
 # Compile export modules
 add_subdirectory(imageio ${DARKTABLE_LIBDIR}/plugins/imageio)
 
-if(HAVE_OPENCL)
-  # have a small test program, to be run as root on some systems to enable the driver to run cl stuff
-  add_subdirectory(cltest)
-endif(HAVE_OPENCL)
-
 # have a command line interface
 add_subdirectory(cli)
-
-# have a command line utility to generate all the thumbnails
-add_subdirectory(generate-cache)
-
-# have a small test program that verifies your color management setup
-if(BUILD_CMSTEST)
-  add_subdirectory(cmstest)
-endif(BUILD_CMSTEST)
-
-# have a gui tool to create CLUTs from colour chart targets
-add_subdirectory(chart)
 
 # have some test programs for unit testing, ...
 if(BUILD_TESTING)

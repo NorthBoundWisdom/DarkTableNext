@@ -124,8 +124,7 @@ gboolean dt_image_is_ldr(const dt_image_t *img)
     while (*c != '.' && c > img->filename)
         c--;
 
-    return ((img->flags & DT_IMAGE_LDR) || !strcasecmp(c, ".jpg") || !strcasecmp(c, ".webp") ||
-            !strcasecmp(c, ".ppm"));
+    return ((img->flags & DT_IMAGE_LDR) || !strcasecmp(c, ".jpg"));
 }
 
 gboolean dt_image_is_hdr(const dt_image_t *img)
@@ -134,15 +133,9 @@ gboolean dt_image_is_hdr(const dt_image_t *img)
     while (*c != '.' && c > img->filename)
         c--;
 
-    return ((img->flags & DT_IMAGE_HDR) || !strcasecmp(c, ".exr") || !strcasecmp(c, ".hdr") ||
-            !strcasecmp(c, ".pfm"));
+    return ((img->flags & DT_IMAGE_HDR) || !strcasecmp(c, ".hdr"));
 }
 
-// NULL terminated list of supported non-RAW extensions
-//  const char *dt_non_raw_extensions[]
-//    = { ".jpeg", ".jpg",  ".pfm", ".hdr", ".exr", ".pxn", ".tif", ".tiff", ".png",
-//        ".j2c",  ".j2k",  ".jp2", ".jpc", ".gif", ".jpc", ".jp2", ".bmp",  ".dcm",
-//        ".jng",  ".miff", ".mng", ".pbm", ".pnm", ".ppm", ".pgm", NULL };
 gboolean dt_image_is_raw(const dt_image_t *img)
 {
     return (img->flags & DT_IMAGE_RAW) == DT_IMAGE_RAW;
