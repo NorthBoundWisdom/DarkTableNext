@@ -1096,7 +1096,7 @@ static dt_view_type_flags_t _find_views(dt_action_t *action)
                 vws = DT_VIEW_FALLBACK;
             else if (owner == &darktable.control->actions_thumb)
             {
-                vws = DT_VIEW_DARKROOM | DT_VIEW_MAP | DT_VIEW_TETHERING | DT_VIEW_PRINT;
+                vws = DT_VIEW_DARKROOM;
                 if (!g_ascii_strcasecmp(action->id, "rating") ||
                     !g_ascii_strcasecmp(action->id, "color label"))
                     vws |=
@@ -3487,7 +3487,7 @@ static gboolean _shortcut_match(dt_shortcut_t *f, gchar **fb_log)
 
     if (!_shortcut_closest_match(&existing, f, &matched, &elements, fb_log))
     {
-        // see if there is a fallback from midi knob press to knob turn
+        // see if there is a fallback from a knob press to a knob turn
         if (!f->key_device || f->move_device || f->move)
             return FALSE;
 
@@ -4375,7 +4375,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
         }
 
         // might just be an accidental move during a key press or button click
-        // possibly different time sources from midi or other devices
+        // possibly different time sources from other input devices
         if (event->motion.time > _last_time && !dt_gui_long_click(event->motion.time, _last_time))
             break;
 

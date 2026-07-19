@@ -64,13 +64,6 @@ typedef struct dt_undo_datetime_t
     char after[DT_DATETIME_LENGTH];
 } dt_undo_datetime_t;
 
-typedef struct dt_undo_geotag_t
-{
-    dt_imgid_t imgid;
-    dt_image_geoloc_t before;
-    dt_image_geoloc_t after;
-} dt_undo_geotag_t;
-
 typedef struct dt_undo_duplicate_t
 {
     dt_imgid_t orig_imgid;
@@ -580,17 +573,6 @@ void dt_image_get_location(const dt_imgid_t imgid, dt_image_geoloc_t *geoloc)
     }
 }
 
-static void _set_location(const dt_imgid_t imgid, const dt_image_geoloc_t *geoloc)
-{
-    /* fetch image from cache */
-    dt_image_t *image = dt_image_cache_get(imgid, 'w');
-
-    if (image)
-        memcpy(&image->geoloc, geoloc, sizeof(dt_image_geoloc_t));
-
-    dt_image_cache_write_release_info(image, DT_IMAGE_CACHE_SAFE, "_set_location");
-}
-
 static void _set_datetime(const dt_imgid_t imgid, const char *datetime)
 {
     /* fetch image from cache */
@@ -605,32 +587,7 @@ static void _set_datetime(const dt_imgid_t imgid, const char *datetime)
 static void _pop_undo(gpointer user_data, const dt_undo_type_t type, dt_undo_data_t data,
                       const dt_undo_action_t action, GList **imgs)
 {
-    if (type == DT_UNDO_GEOTAG)
-    {
-        int i = 0;
-
-        for (GList *list = (GList *)data; list; list = g_list_next(list))
-        {
-            dt_undo_geotag_t *undogeotag = list->data;
-            const dt_image_geoloc_t *geoloc =
-                (action == DT_ACTION_UNDO) ? &undogeotag->before : &undogeotag->after;
-
-            _set_location(undogeotag->imgid, geoloc);
-
-            *imgs = g_list_prepend(*imgs, GINT_TO_POINTER(undogeotag->imgid));
-            i++;
-        }
-        if (i > 1)
-            dt_control_log((action == DT_ACTION_UNDO) ?
-                               ngettext("geo-location undone for %d image",
-                                        "geo-location undone for %d images", i) :
-                               ngettext("geo-location re-applied to %d image",
-                                        "geo-location re-applied to %d images", i),
-                           i);
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, g_list_copy(*imgs), 0);
-    }
-    else if (type == DT_UNDO_DATETIME)
+    if (type == DT_UNDO_DATETIME)
     {
         int i = 0;
 
@@ -682,113 +639,6 @@ static void _pop_undo(gpointer user_data, const dt_undo_type_t type, dt_undo_dat
         _pop_undo_execute(undomono->imgid, before, after);
         *imgs = g_list_prepend(*imgs, GINT_TO_POINTER(undomono->imgid));
     }
-}
-
-static void _geotag_undo_data_free(gpointer data)
-{
-    GList *l = (GList *)data;
-    g_list_free_full(l, g_free);
-}
-
-static void _image_set_location(GList *imgs, const dt_image_geoloc_t *geoloc, GList **undo,
-                                const gboolean undo_on)
-{
-    for (GList *images = imgs; images; images = g_list_next(images))
-    {
-        const dt_imgid_t imgid = GPOINTER_TO_INT(images->data);
-
-        if (undo_on)
-        {
-            dt_undo_geotag_t *undogeotag = malloc(sizeof(dt_undo_geotag_t));
-            undogeotag->imgid = imgid;
-            dt_image_get_location(imgid, &undogeotag->before);
-
-            memcpy(&undogeotag->after, geoloc, sizeof(dt_image_geoloc_t));
-
-            *undo = g_list_append(*undo, undogeotag);
-        }
-
-        _set_location(imgid, geoloc);
-    }
-}
-
-void dt_image_set_locations(const GList *imgs, const dt_image_geoloc_t *geoloc,
-                            const gboolean undo_on)
-{
-    if (imgs)
-    {
-        GList *undo = NULL;
-        if (undo_on)
-            dt_undo_start_group(darktable.undo, DT_UNDO_GEOTAG);
-
-        _image_set_location((GList *)imgs, geoloc, &undo, undo_on);
-
-        if (undo_on)
-        {
-            dt_undo_record(darktable.undo, NULL, DT_UNDO_GEOTAG, undo, _pop_undo,
-                           _geotag_undo_data_free);
-            dt_undo_end_group(darktable.undo);
-        }
-
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
-    }
-}
-
-void dt_image_set_location(const dt_imgid_t imgid, const dt_image_geoloc_t *geoloc,
-                           const gboolean undo_on, const gboolean group_on)
-{
-    GList *imgs = NULL;
-    if (!dt_is_valid_imgid(imgid))
-        imgs = dt_act_on_get_images(TRUE, TRUE, FALSE);
-    else
-        imgs = g_list_prepend(imgs, GINT_TO_POINTER(imgid));
-    if (group_on)
-        dt_grouping_add_grouped_images(&imgs);
-    dt_image_set_locations(imgs, geoloc, undo_on);
-    g_list_free(imgs);
-}
-
-static void _image_set_images_locations(const GList *img, const GArray *gloc, GList **undo,
-                                        const gboolean undo_on)
-{
-    int i = 0;
-    for (GList *imgs = (GList *)img; imgs; imgs = g_list_next(imgs))
-    {
-        const dt_imgid_t imgid = GPOINTER_TO_INT(imgs->data);
-        const dt_image_geoloc_t *geoloc = &g_array_index(gloc, dt_image_geoloc_t, i);
-        if (undo_on)
-        {
-            dt_undo_geotag_t *undogeotag = malloc(sizeof(dt_undo_geotag_t));
-            undogeotag->imgid = imgid;
-            dt_image_get_location(imgid, &undogeotag->before);
-
-            memcpy(&undogeotag->after, geoloc, sizeof(dt_image_geoloc_t));
-
-            *undo = g_list_prepend(*undo, undogeotag);
-        }
-
-        _set_location(imgid, geoloc);
-        i++;
-    }
-}
-
-void dt_image_set_images_locations(const GList *imgs, const GArray *gloc, const gboolean undo_on)
-{
-    if (!imgs || !gloc || (g_list_length((GList *)imgs) != gloc->len))
-        return;
-    GList *undo = NULL;
-    if (undo_on)
-        dt_undo_start_group(darktable.undo, DT_UNDO_GEOTAG);
-
-    _image_set_images_locations(imgs, gloc, &undo, undo_on);
-
-    if (undo_on)
-    {
-        dt_undo_record(darktable.undo, NULL, DT_UNDO_GEOTAG, undo, _pop_undo,
-                       _geotag_undo_data_free);
-        dt_undo_end_group(darktable.undo);
-    }
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
 }
 
 void dt_image_update_final_size(const dt_imgid_t imgid)
@@ -1795,11 +1645,6 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
         dt_image_synch_all_xmp(normalized_filename);
         g_free(ext);
         g_free(normalized_filename);
-        if (raise_signals)
-        {
-            GList *imgs = g_list_prepend(NULL, GINT_TO_POINTER(id));
-            DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, imgs, 0);
-        }
         return id;
     }
 
@@ -1991,11 +1836,7 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
 
 
     if (raise_signals)
-    {
         DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_IMAGE_IMPORT, id);
-        GList *imgs = g_list_prepend(NULL, GINT_TO_POINTER(id));
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, imgs, 0);
-    }
 
     // the following line would look logical with new_tags_set being the
     // return value from dt_tag_new above, but this could lead to too

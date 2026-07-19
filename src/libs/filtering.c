@@ -681,7 +681,7 @@ int set_params(dt_lib_module_t *self, const void *params, int size)
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-    return DT_VIEW_LIGHTTABLE | DT_VIEW_MAP | DT_VIEW_PRINT;
+    return DT_VIEW_LIGHTTABLE;
 }
 
 uint32_t container(dt_lib_module_t *self)
@@ -944,7 +944,6 @@ static gboolean _rule_show_popup(GtkWidget *widget, dt_lib_filtering_rule_t *rul
     ADD_COLLECT_ENTRY(spop, DT_COLLECTION_PROP_RATING);
     ADD_COLLECT_ENTRY(spop, DT_COLLECTION_PROP_COLORLABEL);
     ADD_COLLECT_ENTRY(spop, DT_COLLECTION_PROP_TEXTSEARCH);
-    ADD_COLLECT_ENTRY(spop, DT_COLLECTION_PROP_GEOTAGGING);
 
     _popup_add_item(spop, _("times"), 0, TRUE, NULL, NULL, self, 0.0);
     ADD_COLLECT_ENTRY(spop, DT_COLLECTION_PROP_DAY);
@@ -1006,7 +1005,6 @@ static void _populate_rules_combo(GtkWidget *w)
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_RATING);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_COLORLABEL);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_TEXTSEARCH);
-    ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_GEOTAGGING);
 
     dt_bauhaus_combobox_add_section(w, _("times"));
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_DAY);
@@ -1712,7 +1710,6 @@ static void _topbar_populate_rules_combo(GtkWidget *w, dt_lib_filtering_t *d)
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_RATING);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_COLORLABEL);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_TEXTSEARCH);
-    ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_GEOTAGGING);
     // if we have not added any entry, remove the section
     if (nb == dt_bauhaus_combobox_length(w))
         dt_bauhaus_combobox_remove_at(w, nb - 1);

@@ -90,12 +90,6 @@ typedef enum dt_signal_t
     /** \brief This signal is raised when a tag is added/deleted/changed  */
     DT_SIGNAL_TAG_CHANGED,
 
-    /** \brief This signal is raised when a geotag is added/deleted/changed  */
-    // when imgs <> NULL these images have some geotag changes
-    // when imgs == NULL locations have changed
-    // if locid <> 0 it the new selected location on map
-    DT_SIGNAL_GEOTAG_CHANGED,
-
     /** \brief This signal is raised when metadata preferences or value has changed
   1 : int the type of the change
   */
@@ -241,11 +235,6 @@ typedef enum dt_signal_t
     */
     DT_SIGNAL_PREFERENCES_CHANGE,
 
-    /** \brief This signal is raised when new gphoto2 cameras might have been detected
-    no return
-   * */
-    DT_SIGNAL_CAMERA_DETECTED,
-
     /** \brief This signal is raised when dt_control_navigation_redraw() is called.
     no param, no returned value
   */
@@ -273,9 +262,6 @@ typedef enum dt_signal_t
 
     /* \brief This signal is raised when a module is in trouble and message is to be displayed */
     DT_SIGNAL_TROUBLE_MESSAGE,
-
-    /* \brief This signal is raised when the user choses a new location from map (module location)*/
-    DT_SIGNAL_LOCATION_CHANGED,
 
     /** \brief This signal is raised when a storage module signalizes to enable/disable the export
     no param, no returned value

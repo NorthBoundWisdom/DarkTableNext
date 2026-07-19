@@ -23,15 +23,6 @@
 #include "common/history.h"
 #include "common/image.h"
 #include "common/mipmap_cache.h"
-#ifdef HAVE_PRINT
-#include "common/cups_print.h"
-#include "common/printing.h"
-#endif
-#ifdef HAVE_MAP
-#include "common/geo.h"
-#include "common/map_locations.h"
-#include <osm-gps-map.h>
-#endif
 #include <cairo.h>
 #include <gmodule.h>
 #include <gui/gtk.h>
@@ -48,10 +39,6 @@ typedef enum dt_view_type_flags_t
     DT_VIEW_NONE = 0,
     DT_VIEW_LIGHTTABLE = 1 << 0,
     DT_VIEW_DARKROOM = 1 << 1,
-    DT_VIEW_TETHERING = 1 << 2,
-    DT_VIEW_MAP = 1 << 3,
-    DT_VIEW_SLIDESHOW = 1 << 4,
-    DT_VIEW_PRINT = 1 << 5,
     DT_VIEW_MULTI = 1 << 28,
     DT_VIEW_FALLBACK = 1 << 29,
     DT_VIEW_OTHER = 1 << 30, // for your own unpublished user view
@@ -326,55 +313,12 @@ typedef struct dt_view_manager_t
                                   const dt_imgid_t imgid);
         } lighttable;
 
-        /* tethering view proxy object */
-        struct
-        {
-            struct dt_view_t *view;
-            const char *(*get_job_code)(const dt_view_t *view);
-            void (*set_job_code)(const dt_view_t *view, const char *name);
-            int32_t (*get_selected_imgid)(const dt_view_t *view);
-        } tethering;
-
         /* timeline module proxy */
         struct
         {
             struct dt_lib_module_t *module;
         } timeline;
 
-/* map view proxy object */
-#ifdef HAVE_MAP
-        struct
-        {
-            struct dt_view_t *view;
-            void (*center_on_location)(const dt_view_t *view, const gdouble lon, const gdouble lat,
-                                       const double zoom);
-            void (*center_on_bbox)(const dt_view_t *view, const gdouble lon1, const gdouble lat1,
-                                   const gdouble lon2, const gdouble lat2);
-            void (*show_osd)(const dt_view_t *view);
-            void (*set_map_source)(const dt_view_t *view, const OsmGpsMapSource_t map_source);
-            GObject *(*add_marker)(const dt_view_t *view, const dt_geo_map_display_t type,
-                                   GList *points);
-            gboolean (*remove_marker)(const dt_view_t *view, const dt_geo_map_display_t type,
-                                      GObject *marker);
-            void (*add_location)(const dt_view_t *view, dt_map_location_data_t *p,
-                                 const guint posid);
-            void (*location_action)(const dt_view_t *view, const int action);
-            void (*drag_set_icon)(const dt_view_t *view, GdkDragContext *context,
-                                  const dt_imgid_t imgid, const int count);
-            gboolean (*redraw)(gpointer user_data);
-            gboolean (*display_selected)(gpointer user_data);
-        } map;
-#endif
-
-        /* map view proxy object */
-#ifdef HAVE_PRINT
-        struct
-        {
-            struct dt_view_t *view;
-            void (*print_settings)(const dt_view_t *view, dt_print_info_t *pinfo,
-                                   dt_images_box *imgs);
-        } print;
-#endif
     } proxy;
 
 } dt_view_manager_t;
@@ -434,16 +378,6 @@ GSList *dt_mouse_action_create_simple(GSList *actions, const dt_mouse_action_typ
 GSList *dt_mouse_action_create_format(GSList *actions, const dt_mouse_action_type_t type,
                                       const GdkModifierType accel, const char *const format_string,
                                       const char *const replacement);
-
-/*
- * Tethering View PROXY
- */
-/** get the current selected image id for tethering session */
-int32_t dt_view_tethering_get_selected_imgid(const dt_view_manager_t *vm);
-/** set the current jobcode for tethering session */
-void dt_view_tethering_set_job_code(const dt_view_manager_t *vm, const char *name);
-/** get the current jobcode for tethering session */
-const char *dt_view_tethering_get_job_code(const dt_view_manager_t *vm);
 
 /** update the collection module */
 void dt_view_collection_update(const dt_view_manager_t *vm);
@@ -510,31 +444,10 @@ void dt_view_audio_stop(dt_view_manager_t *vm);
 /*
  * Map View Proxy
  */
-#ifdef HAVE_MAP
-void dt_view_map_center_on_location(const dt_view_manager_t *vm, const gdouble lon,
-                                    const gdouble lat, const gdouble zoom);
-void dt_view_map_center_on_bbox(const dt_view_manager_t *vm, const gdouble lon1, const gdouble lat1,
-                                const gdouble lon2, const gdouble lat2);
-void dt_view_map_show_osd(const dt_view_manager_t *vm);
-void dt_view_map_set_map_source(const dt_view_manager_t *vm, const OsmGpsMapSource_t map_source);
-GObject *dt_view_map_add_marker(const dt_view_manager_t *vm, const dt_geo_map_display_t type,
-                                GList *points);
-gboolean dt_view_map_remove_marker(const dt_view_manager_t *vm, const dt_geo_map_display_t type,
-                                   GObject *marker);
-void dt_view_map_add_location(const dt_view_manager_t *vm, dt_map_location_data_t *p,
-                              const guint posid);
-void dt_view_map_location_action(const dt_view_manager_t *vm, const int action);
-void dt_view_map_drag_set_icon(const dt_view_manager_t *vm, GdkDragContext *context,
-                               const dt_imgid_t imgid, const int count);
-#endif
 
 /*
  * Print View Proxy
  */
-#ifdef HAVE_PRINT
-void dt_view_print_settings(const dt_view_manager_t *vm, dt_print_info_t *pinfo,
-                            dt_images_box *imgs);
-#endif
 
 /*
  * Paint buffer (size processed_width x processed_height) in cairo (as a surface)
@@ -544,8 +457,7 @@ void dt_view_print_settings(const dt_view_manager_t *vm, dt_print_info_t *pinfo,
 typedef enum _window_t
 {
     DT_WINDOW_MAIN,
-    DT_WINDOW_SECOND,
-    DT_WINDOW_SLIDESHOW
+    DT_WINDOW_SECOND
 } dt_window_t;
 
 void dt_view_paint_buffer(cairo_t *cr, const size_t width, const size_t height, uint8_t *buffer,

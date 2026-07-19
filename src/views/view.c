@@ -1311,100 +1311,6 @@ void dt_view_filtering_set_sort(const dt_view_manager_t *vm, const int sort, con
         vm->proxy.module_filtering.set_sort(vm->proxy.module_filtering.module, sort, asc);
 }
 
-int32_t dt_view_tethering_get_selected_imgid(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.tethering.view)
-        return vm->proxy.tethering.get_selected_imgid(vm->proxy.tethering.view);
-
-    return -1;
-}
-
-void dt_view_tethering_set_job_code(const dt_view_manager_t *vm, const char *name)
-{
-    if (vm->proxy.tethering.view)
-        vm->proxy.tethering.set_job_code(vm->proxy.tethering.view, name);
-}
-
-const char *dt_view_tethering_get_job_code(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.tethering.view)
-        return vm->proxy.tethering.get_job_code(vm->proxy.tethering.view);
-    return NULL;
-}
-
-#ifdef HAVE_MAP
-void dt_view_map_center_on_location(const dt_view_manager_t *vm, const gdouble lon,
-                                    const gdouble lat, const gdouble zoom)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.center_on_location(vm->proxy.map.view, lon, lat, zoom);
-}
-
-void dt_view_map_center_on_bbox(const dt_view_manager_t *vm, const gdouble lon1, const gdouble lat1,
-                                const gdouble lon2, const gdouble lat2)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.center_on_bbox(vm->proxy.map.view, lon1, lat1, lon2, lat2);
-}
-
-void dt_view_map_show_osd(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.show_osd(vm->proxy.map.view);
-}
-
-void dt_view_map_set_map_source(const dt_view_manager_t *vm, const OsmGpsMapSource_t map_source)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.set_map_source(vm->proxy.map.view, map_source);
-}
-
-GObject *dt_view_map_add_marker(const dt_view_manager_t *vm, const dt_geo_map_display_t type,
-                                GList *points)
-{
-    if (vm->proxy.map.view)
-        return vm->proxy.map.add_marker(vm->proxy.map.view, type, points);
-    return NULL;
-}
-
-gboolean dt_view_map_remove_marker(const dt_view_manager_t *vm, const dt_geo_map_display_t type,
-                                   GObject *marker)
-{
-    if (vm->proxy.map.view)
-        return vm->proxy.map.remove_marker(vm->proxy.map.view, type, marker);
-    return FALSE;
-}
-void dt_view_map_add_location(const dt_view_manager_t *vm, dt_map_location_data_t *p,
-                              const guint posid)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.add_location(vm->proxy.map.view, p, posid);
-}
-
-void dt_view_map_location_action(const dt_view_manager_t *vm, const int action)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.location_action(vm->proxy.map.view, action);
-}
-
-void dt_view_map_drag_set_icon(const dt_view_manager_t *vm, GdkDragContext *context,
-                               const dt_imgid_t imgid, const int count)
-{
-    if (vm->proxy.map.view)
-        vm->proxy.map.drag_set_icon(vm->proxy.map.view, context, imgid, count);
-}
-
-#endif
-
-#ifdef HAVE_PRINT
-void dt_view_print_settings(const dt_view_manager_t *vm, dt_print_info_t *pinfo,
-                            dt_images_box *imgs)
-{
-    if (vm->proxy.print.view)
-        vm->proxy.print.print_settings(vm->proxy.print.view, pinfo, imgs);
-}
-#endif
-
 GSList *dt_mouse_action_create_simple(GSList *actions, const dt_mouse_action_type_t type,
                                       const GdkModifierType accel, const char *const description)
 {
@@ -1811,7 +1717,7 @@ void dt_view_paint_surface(cairo_t *cr, const size_t width, const size_t height,
     const int maxw = MIN(port->width, backbuf_scale * processed_width * (1 << closeup) / ppd);
     const int maxh = MIN(port->height, backbuf_scale * processed_height * (1 << closeup) / ppd);
 
-    if (port->color_assessment && window != DT_WINDOW_SLIDESHOW)
+    if (port->color_assessment)
     {
         // draw the white frame around picture
         const double ratio = dt_conf_get_float("darkroom/ui/color_assessment_border_white_ratio");
@@ -1891,7 +1797,7 @@ void dt_view_paint_surface(cairo_t *cr, const size_t width, const size_t height,
         cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_FAST);
         cairo_paint(cr);
 
-        if (darktable.gui->show_focus_peaking && window != DT_WINDOW_SLIDESHOW)
+        if (darktable.gui->show_focus_peaking)
         {
             dt_focuspeaking(cr, buf_width, buf_height, cairo_image_surface_get_data(surface));
         }

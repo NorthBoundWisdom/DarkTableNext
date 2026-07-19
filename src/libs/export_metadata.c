@@ -194,8 +194,8 @@ char *dt_lib_export_metadata_configuration_dialog(char *metadata_presets, const 
     else
         calculated = gtk_grid_new(); // just empty widget
 
-    GtkWidget *geotag = gtk_check_button_new_with_label(_("geo tags"));
-    gtk_widget_set_tooltip_text(geotag, _("export geo tags"));
+    GtkWidget *location = gtk_check_button_new_with_label(_("location metadata"));
+    gtk_widget_set_tooltip_text(location, _("export location metadata"));
 
     GtkWidget *dttag = gtk_check_button_new_with_label(_("tags"));
     gtk_widget_set_tooltip_text(dttag, _("export tags (to Xmp.dc.Subject)"));
@@ -279,7 +279,7 @@ char *dt_lib_export_metadata_configuration_dialog(char *metadata_presets, const 
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(exiftag), flags & DT_META_EXIF);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dtmetadata), flags & DT_META_METADATA);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(geotag), flags & DT_META_GEOTAG);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(location), flags & DT_META_LOCATION);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dttag), flags & DT_META_TAG);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->private), flags & DT_META_PRIVATE_TAG);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->synonyms), flags & DT_META_SYNONYMS_TAG);
@@ -310,7 +310,7 @@ char *dt_lib_export_metadata_configuration_dialog(char *metadata_presets, const 
     dt_gui_dialog_add(
         GTK_DIALOG(dialog),
         dt_gui_hbox(dt_gui_vbox(gtk_label_new(_("general settings")), exiftag, dtmetadata,
-                                calculated, geotag, dttag, d->private, d->synonyms,
+                                calculated, location, dttag, d->private, d->synonyms,
                                 d->omithierarchy, hierarchical, dthistory),
                     dt_gui_vbox(gtk_label_new(_("per metadata settings")),
                                 dt_gui_scroll_wrap(GTK_WIDGET(view)),
@@ -326,7 +326,7 @@ char *dt_lib_export_metadata_configuration_dialog(char *metadata_presets, const 
         const gint newflags =
             ((gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(exiftag)) ? DT_META_EXIF : 0) |
              (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dtmetadata)) ? DT_META_METADATA : 0) |
-             (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(geotag)) ? DT_META_GEOTAG : 0) |
+             (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(location)) ? DT_META_LOCATION : 0) |
              (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(dttag)) ? DT_META_TAG : 0) |
              (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->private)) ? DT_META_PRIVATE_TAG :
                                                                             0) |

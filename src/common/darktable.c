@@ -31,9 +31,6 @@
 #include "common/pwstorage/pwstorage.h"
 #include "common/selection.h"
 #include "common/system_signal_handling.h"
-#ifdef HAVE_GPHOTO2
-#include "common/camera_control.h"
-#endif
 #include "bauhaus/bauhaus.h"
 #include "common/action.h"
 #include "common/file_location.h"
@@ -243,9 +240,9 @@ static int usage(const char *argv0)
          "-d CHANNEL\n"
          "    Enable debug output to the terminal (or to the log file if on Windows).\n"
          "    Valid channels are:\n\n"
-         "    act_on, ai, cache, camctl, camsupport, control, dev, expose,\n"
+         "    act_on, ai, cache, camsupport, control, dev, expose,\n"
          "    imageio, input, ioporder, lighttable, masks, memory,\n"
-         "    nan, opencl, params, perf, pipe, print, pwstorage, signal,\n"
+         "    nan, opencl, params, perf, pipe, pwstorage, signal,\n"
          "    sql, tiling, picker, undo\n"
          "\n"
          "    It is also possible to specify names that activate all channels\n"
@@ -261,7 +258,7 @@ static int usage(const char *argv0)
          "    activated separately. You can use this option multiple times if you\n"
          "    want to debug more than one channel.\n"
          "\n"
-         "    E.g. darktable -d opencl -d camctl -d perf\n"
+         "    E.g. darktable -d opencl -d perf\n"
          "\n"
          "--d-signal SIGNAL\n"
          "    if -d signal or -d all is specified, specify the signal to debug\n"
@@ -801,18 +798,6 @@ static char *_get_version_string(void)
     g_string_append(version, "  Colord                 -> DISABLED\n");
 #endif
 
-#ifdef HAVE_GPHOTO2
-    g_string_append(version, "  gPhoto2                -> ENABLED  - Camera tethering is available\n");
-#else
-    g_string_append(version, "  gPhoto2                -> DISABLED - Camera tethering is NOT available\n");
-#endif
-
-#ifdef HAVE_MAP
-    g_string_append(version, "  OSMGpsMap              -> ENABLED  - Map view is available\n");
-#else
-    g_string_append(version, "  OSMGpsMap              -> DISABLED - Map view is NOT available\n");
-#endif
-
 #ifdef HAVE_GMIC
     g_string_append(version, "  GMIC                   -> ENABLED  - Compressed LUTs are supported\n");
 #else
@@ -1065,7 +1050,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
           !strcmp(darg, "control") ? DT_DEBUG_CONTROL : // enable debugging for scheduler module
           !strcmp(darg, "dev") ? DT_DEBUG_DEV : // develop module
           !strcmp(darg, "input") ? DT_DEBUG_INPUT : // input devices
-          !strcmp(darg, "camctl") ? DT_DEBUG_CAMCTL : // camera control module
           !strcmp(darg, "perf") ? DT_DEBUG_PERF : // performance measurements
           !strcmp(darg, "pwstorage") ? DT_DEBUG_PWSTORAGE : // pwstorage module
           !strcmp(darg, "opencl") ? DT_DEBUG_OPENCL : // gpu accel via opencl
@@ -1074,7 +1058,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
           !strcmp(darg, "lighttable") ? DT_DEBUG_LIGHTTABLE : // lighttable related stuff.
           !strcmp(darg, "nan") ? DT_DEBUG_NAN : // check for NANs when processing the pipe.
           !strcmp(darg, "masks") ? DT_DEBUG_MASKS : // masks related stuff.
-          !strcmp(darg, "print") ? DT_DEBUG_PRINT : // print errors are reported on console
           !strcmp(darg, "camsupport") ? DT_DEBUG_CAMERA_SUPPORT : // camera support warnings are reported on console
           !strcmp(darg, "ioporder") ? DT_DEBUG_IOPORDER : // iop order information are reported on console
           !strcmp(darg, "imageio") ? DT_DEBUG_IMAGEIO : // image importing or exporting messages on console
@@ -1179,7 +1162,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
                 CHKSIGDBG(DT_SIGNAL_IMAGE_EXPORT_TMPFILE);
                 CHKSIGDBG(DT_SIGNAL_IMAGEIO_STORAGE_CHANGE);
                 CHKSIGDBG(DT_SIGNAL_PREFERENCES_CHANGE);
-                CHKSIGDBG(DT_SIGNAL_CAMERA_DETECTED);
                 CHKSIGDBG(DT_SIGNAL_CONTROL_NAVIGATION_REDRAW);
                 CHKSIGDBG(DT_SIGNAL_CONTROL_LOG_REDRAW);
                 CHKSIGDBG(DT_SIGNAL_CONTROL_TOAST_REDRAW);
@@ -1832,13 +1814,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     dt_splash_screen_set_progress(_("synchronizing local copies"));
     dt_image_local_copy_synch();
 
-#ifdef HAVE_GPHOTO2
-    // Initialize the camera control.  this is done late so that the
-    // gui can react to the signal sent but before switching to
-    // lighttable!
-    dt_splash_screen_set_progress(_("initializing camera control"));
-    darktable.camctl = dt_camctl_new();
-#endif
 
     darktable.develop = malloc(sizeof(dt_develop_t));
     dt_dev_init(darktable.develop, TRUE);
@@ -2070,11 +2045,6 @@ void dt_cleanup()
             dt_gui_process_events();
     }
 
-#ifdef HAVE_PRINT
-    dt_printers_abort_discovery();
-    if (init_gui)
-        dt_gui_process_events();
-#endif
 
 
     // anything that asks user for input should be placed before this line
@@ -2152,10 +2122,6 @@ After dt_control_shutdown() has finished we are sure there are no background thr
     dt_opencl_cleanup(darktable.opencl);
     free(darktable.opencl);
     darktable.opencl = NULL;
-#ifdef HAVE_GPHOTO2
-    dt_camctl_destroy((dt_camctl_t *)darktable.camctl);
-    darktable.camctl = NULL;
-#endif
     dt_pwstorage_destroy(darktable.pwstorage);
 
 #ifdef HAVE_GRAPHICSMAGICK

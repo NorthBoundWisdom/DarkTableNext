@@ -22,7 +22,6 @@
 #include "common/image_cache.h"
 #include "common/metadata.h"
 #include "common/utility.h"
-#include "common/map_locations.h"
 #include "common/datetime.h"
 #include "control/conf.h"
 #include "control/control.h"
@@ -623,8 +622,6 @@ const char *dt_collection_name_untranslated(const dt_collection_properties_t pro
         return N_("aspect ratio");
     case DT_COLLECTION_PROP_FILENAME:
         return N_("filename");
-    case DT_COLLECTION_PROP_GEOTAGGING:
-        return N_("geotagging");
     case DT_COLLECTION_PROP_GROUP_ID:
         return N_("group");
     case DT_COLLECTION_PROP_DUPLICATES:
@@ -1483,46 +1480,6 @@ static gchar *get_query_string(const dt_collection_properties_t property, const 
             query = g_strdup("1 = 1");
         }
         break;
-
-    case DT_COLLECTION_PROP_GEOTAGGING: // geotagging
-    {
-        const gboolean not_tagged = strcmp(escaped_text, _("not tagged")) == 0;
-        const gboolean no_location = strcmp(escaped_text, _("tagged")) == 0;
-        const gboolean all_tagged = strcmp(escaped_text, _("tagged*")) == 0;
-        char *escaped_text2 = g_strstr_len(escaped_text, -1, "|");
-        char *name_clause =
-            g_strdup_printf("t.name LIKE \'%s\' || \'%s\'", dt_map_location_data_tag_root(),
-                            escaped_text2 ? escaped_text2 : "%");
-
-        if (escaped_text2 && (escaped_text2[strlen(escaped_text2) - 1] == '*'))
-        {
-            escaped_text2[strlen(escaped_text2) - 1] = '\0';
-            name_clause =
-                g_strdup_printf("(t.name LIKE \'%s\' || \'%s\' OR t.name LIKE \'%s\' || \'%s|%%\')",
-                                dt_map_location_data_tag_root(), escaped_text2,
-                                dt_map_location_data_tag_root(), escaped_text2);
-        }
-
-        if (not_tagged || all_tagged)
-            // clang-format off
-          query = g_strdup_printf
-            ("(mi.id %s IN (SELECT id AS imgid FROM main.images"
-             "              WHERE (longitude IS NOT NULL AND latitude IS NOT NULL))) ",
-                                  all_tagged ? "" : "not");
-        // clang-format on
-        else
-            // clang-format off
-          query = g_strdup_printf
-            ("(mi.id IN (SELECT id AS imgid FROM main.images"
-             "           WHERE (longitude IS NOT NULL AND latitude IS NOT NULL))"
-             "             AND id %s IN (SELECT imgid FROM main.tagged_images AS ti"
-             "           JOIN data.tags AS t ON t.id = ti.tagid"
-             "           AND %s)) ",
-                                  no_location ? "not" : "",
-                                  name_clause);
-        // clang-format on
-    }
-    break;
 
     case DT_COLLECTION_PROP_LOCAL_COPY: // local copy
         if (!g_strcmp0(escaped_text, _("not copied locally")) ||

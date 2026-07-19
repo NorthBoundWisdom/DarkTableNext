@@ -49,7 +49,7 @@ const char *name(dt_lib_module_t *self)
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-    return DT_VIEW_DARKROOM | DT_VIEW_TETHERING;
+    return DT_VIEW_DARKROOM;
 }
 
 uint32_t container(dt_lib_module_t *self)
@@ -108,8 +108,7 @@ static void _scope_process(struct dt_lib_module_t *self, const float *const inpu
     // FIXME: only need to do colorspace conversion below on roi
     //
     // FIXME: if the only time we use roi in histogram to limit area is
-    // here, and whenever we use tether there is no colorpicker (true?),
-    // and if we're always doing a colorspace transform in darkroom and
+    // here, and if we're always doing a colorspace transform in darkroom and
     // clip to roi during conversion, then can get rid of all roi code
     // for common/histogram?  when darkroom colorpicker is active,
     // gui_module is set to colorout
@@ -145,9 +144,7 @@ static void _scope_process(struct dt_lib_module_t *self, const float *const inpu
         }
     }
 
-    // Convert pixelpipe output in display RGB to histogram profile. If
-    // in tether view, then the image is already converted by the
-    // caller.
+    // Convert pixelpipe output in display RGB to the histogram profile.
 
     float *img_display = dt_alloc_align_float((size_t)4 * width * height);
     if (!img_display)
@@ -234,13 +231,9 @@ static gboolean _drawable_draw_callback(GtkWidget *widget, cairo_t *crf, dt_scop
     set_color(cr, darktable.bauhaus->graph_grid);
     dt_scopes_call_if_exists(cur_mode, draw_grid, cr, width, height);
 
-    // FIXME: should set histogram buffer to black if have just entered
-    // tether view and nothing is displayed
     dt_pthread_mutex_lock(&s->lock);
-    // darkroom view: draw scope so long as preview pipe is finished
-    // tether view: draw whatever has come in from tether
-    if ((dt_view_get_current() == DT_VIEW_TETHERING ||
-         dev->image_storage.id == dev->preview_pipe->output_imgid) &&
+    // draw scope once the darkroom preview pipe is finished
+    if (dev->image_storage.id == dev->preview_pipe->output_imgid &&
         (cur_mode->update_counter == s->update_counter))
     {
         if (dt_scopes_func_exists(cur_mode, draw_scope_channels))
@@ -598,7 +591,6 @@ void view_enter(struct dt_lib_module_t *self, struct dt_view_t *old_view,
     gtk_widget_hide(s->button_box_right);
     gtk_widget_hide(s->button_box_split);
 
-    // FIXME: set histogram data to blank if enter tether with no active image
 }
 
 void view_leave(struct dt_lib_module_t *self, struct dt_view_t *old_view,
@@ -661,8 +653,7 @@ void gui_init(dt_lib_module_t *self)
     s->channels[DT_SCOPES_RGB_GREEN] = dt_conf_get_bool("plugins/darkroom/histogram/show_green");
     s->channels[DT_SCOPES_RGB_BLUE] = dt_conf_get_bool("plugins/darkroom/histogram/show_blue");
 
-    // proxy functions and data so that pixelpipe or tether can
-    // provide data for a histogram
+    // proxy functions and data so that the pixelpipe can provide histogram data
     // FIXME: do need to pass self, or can wrap a callback as a lambda
     darktable.lib->proxy.histogram.module = self;
     darktable.lib->proxy.histogram.process = _scope_process;
@@ -771,11 +762,6 @@ void gui_init(dt_lib_module_t *self)
             dt_gui_box_add(row, s->modes[pos].button_activate);
         dt_gui_box_add(s->button_box_left, row);
     }
-
-    dt_action_t *teth = &darktable.view_manager->proxy.tethering.view->actions;
-    if (teth)
-        dt_action_register(teth, N_("hide histogram"), _lib_histogram_collapse_callback, GDK_KEY_H,
-                           GDK_CONTROL_MASK | GDK_SHIFT_MASK);
 
     // RGB channel buttons
     s->button_box_rgb = dt_gui_hbox();

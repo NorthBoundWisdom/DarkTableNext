@@ -22,14 +22,8 @@
 #include "imageio/imageio_module.h"
 #include <inttypes.h>
 
-#ifdef HAVE_PRINT
-#include "common/cups_print.h"
-#endif
 
 G_BEGIN_DECLS
-
-void dt_control_gpx_apply(const gchar *filename, const int32_t filmid, const gchar *tz,
-                          GList *imgs);
 
 void dt_control_datetime(const GTimeSpan offset, const char *datetime, GList *imgs);
 

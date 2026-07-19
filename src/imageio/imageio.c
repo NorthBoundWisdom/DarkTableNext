@@ -600,8 +600,6 @@ static const dt_magic_bytes_t _magic_signatures[] = {
      5,
      _unsupported_type,
      {0, '<', 0, '?', 0, 'x', 0, 'm', 0, 'l'}}, // UTF-16BE
-    // GPX track file
-    {DT_FILETYPE_NONIMAGE, FALSE, 0, 5, _unsupported_type, {'<', 'g', 'p', 'x', ' '}},
     // MPEG-4 video
     {DT_FILETYPE_NONIMAGE,
      FALSE,
@@ -1552,7 +1550,7 @@ gboolean dt_imageio_export_with_flags(
          !strcmp(format->mime(NULL), "image/x-exr") || !strcmp(format->mime(NULL), "image/jxl") ||
          !strcmp(format->mime(NULL), "image/x-xcf")))
     {
-        const int32_t meta_all = DT_META_EXIF | DT_META_METADATA | DT_META_GEOTAG | DT_META_TAG |
+        const int32_t meta_all = DT_META_EXIF | DT_META_METADATA | DT_META_LOCATION | DT_META_TAG |
                                  DT_META_HIERARCHICAL_TAG | DT_META_DT_HISTORY |
                                  DT_META_PRIVATE_TAG | DT_META_SYNONYMS_TAG |
                                  DT_META_OMIT_HIERARCHY;

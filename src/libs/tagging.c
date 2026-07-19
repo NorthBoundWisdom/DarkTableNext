@@ -119,9 +119,9 @@ const char *description(dt_lib_module_t *self)
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
     if (dt_conf_get_bool("plugins/darkroom/tagging/visible"))
-        return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM | DT_VIEW_MAP | DT_VIEW_TETHERING;
+        return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM;
     else
-        return DT_VIEW_LIGHTTABLE | DT_VIEW_MAP | DT_VIEW_TETHERING;
+        return DT_VIEW_LIGHTTABLE;
 }
 
 uint32_t container(dt_lib_module_t *self)

@@ -1447,11 +1447,10 @@ static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event,
 static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event,
                                       dt_thumbtable_t *table)
 {
-    // we select only in LIGHTTABLE, DARKROOM & MAP mode
+    // we select only in LIGHTTABLE and DARKROOM mode
     const dt_view_type_flags_t cv = dt_view_get_current();
 
-    if (cv != DT_VIEW_DARKROOM && cv != DT_VIEW_LIGHTTABLE && cv != DT_VIEW_MAP &&
-        cv != DT_VIEW_PRINT)
+    if (cv != DT_VIEW_DARKROOM && cv != DT_VIEW_LIGHTTABLE)
         return FALSE;
 
     dt_set_backthumb_time(0.0);
@@ -2255,18 +2254,6 @@ static void _event_dnd_begin(GtkWidget *widget, GdkDragContext *context, dt_thum
     darktable.control->last_clicked_filmstrip_id = dt_control_get_mouse_over_id();
     table->drag_list = dt_act_on_get_images(FALSE, TRUE, TRUE);
 
-#ifdef HAVE_MAP
-    dt_view_manager_t *vm = darktable.view_manager;
-    dt_view_t *view = vm->current_view;
-    if (!strcmp(view->module_name, "map"))
-    {
-        if (table->drag_list)
-            dt_view_map_drag_set_icon(darktable.view_manager, context,
-                                      GPOINTER_TO_INT(table->drag_list->data),
-                                      g_list_length(table->drag_list));
-    }
-    else
-#endif
     {
         // if we are dragging a single image -> use the thumbnail of that image
         // otherwise use the generic d&d icon

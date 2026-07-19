@@ -24,9 +24,6 @@
 #include "common/datetime.h"
 #include "control/conf.h"
 #include "control/control.h"
-#ifdef HAVE_GPHOTO2
-#include "control/jobs/camera_jobs.h"
-#endif
 #include "dtgtk/button.h"
 #include "gui/accelerators.h"
 #include "gui/gtk.h"
@@ -101,30 +98,22 @@ typedef enum dt_places_type_t
 typedef enum dt_import_case_t
 {
     DT_IMPORT_INPLACE = 0,
-    DT_IMPORT_COPY,
-    DT_IMPORT_CAMERA,
-    DT_IMPORT_TETHER
+    DT_IMPORT_COPY
 } dt_import_case_t;
 
 static const char *const _import_text[] = {
     [DT_IMPORT_INPLACE] = N_("add to library"),
     [DT_IMPORT_COPY] = N_("copy & import"),
-    [DT_IMPORT_CAMERA] = N_("copy & import from camera"),
-    [DT_IMPORT_TETHER] = N_("tethered shoot"),
 };
 
 typedef struct dt_lib_import_t
 {
-#ifdef HAVE_GPHOTO2
-    dt_camera_t *camera;
-#endif
     GtkButton *import_inplace;
     GCancellable *cancel_iter;
 
     GtkWidget *ignore_exif, *rating, *apply_metadata, *recursive;
     GtkWidget *import_new;
     dt_import_metadata_t metadata;
-    GtkBox *devices;
     dt_import_case_t import_case;
     struct
     {
@@ -188,191 +177,6 @@ int position(const dt_lib_module_t *self)
     return 999;
 }
 
-#ifdef HAVE_GPHOTO2
-
-/* show import from camera dialog */
-static void _lib_import_from_camera_callback(GtkButton *button, dt_lib_module_t *self)
-{
-    dt_camctl_t *camctl = (dt_camctl_t *)darktable.camctl;
-    camctl->import_ui = TRUE;
-
-    dt_lib_import_t *d = self->data;
-    d->import_case = DT_IMPORT_CAMERA;
-    _import_from_dialog_new(self);
-    _import_from_dialog_run(self);
-    _import_from_dialog_free(self);
-    camctl->import_ui = FALSE;
-}
-
-/* enter tethering mode for camera */
-static void _lib_import_tethered_callback(GtkToggleButton *button, gpointer data)
-{
-    /* select camera to work with before switching mode */
-    dt_camctl_select_camera(darktable.camctl, (dt_camera_t *)data);
-    dt_ctl_switch_mode_to("tethering");
-}
-
-static void _lib_import_mount_callback(GtkToggleButton *button, gpointer data)
-{
-    dt_camera_unused_t *camera = (dt_camera_unused_t *)data;
-    camera->trymount = TRUE;
-    dt_camctl_t *camctl = (dt_camctl_t *)darktable.camctl;
-    camctl->tickmask = 3;
-}
-
-static void _lib_import_unmount_callback(GtkToggleButton *button, gpointer data)
-{
-    dt_camera_t *camera = (dt_camera_t *)data;
-    camera->unmount = TRUE;
-    dt_camctl_t *camctl = (dt_camctl_t *)darktable.camctl;
-    camctl->tickmask = 3;
-}
-
-/** update the device list */
-void gui_update(dt_lib_module_t *self)
-{
-    // TODO the (shortcuts to) the buttons directly pass a pointer to camera
-    // which might already be deleted in a race with the polling thread.
-    // Also shortcuts always refer to the last camera in the list.
-    // This should really be changed to have a fixed set of (un)hidden buttons
-    // that work on the "selected" camera (in a, resizable, treeview).
-    dt_camctl_t *camctl = (dt_camctl_t *)darktable.camctl;
-    dt_pthread_mutex_lock(&camctl->lock);
-
-    if (camctl->changed_camera)
-    {
-        dt_lib_import_t *d = self->data;
-
-        /* cleanup of widgets in devices container*/
-        dt_gui_container_remove_children(GTK_CONTAINER(d->devices));
-        GtkWidget *button = NULL;
-
-        // Add detected supported devices
-        char buffer[512] = {0};
-        for (GList *citem = camctl->cameras; citem; citem = g_list_next(citem))
-        {
-            dt_camera_t *camera = citem->data;
-
-            /* add camera label */
-            GtkWidget *label = dt_ui_section_label_new(_(camera->model));
-            gtk_box_pack_start(GTK_BOX(d->devices), label, TRUE, TRUE, 0);
-
-            /* set camera summary if available */
-            if (*camera->summary.text)
-            {
-                gtk_widget_set_tooltip_text(label, camera->summary.text);
-            }
-            else
-            {
-                snprintf(buffer, sizeof(buffer), _("device \"%s\" connected on port \"%s\"."),
-                         camera->model, camera->port);
-                gtk_widget_set_tooltip_text(label, buffer);
-            }
-
-            /* add camera actions buttons */
-            GtkWidget *vbx = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-            if (camera->can_import == TRUE)
-            {
-                button = dt_action_button_new(self, _import_text[DT_IMPORT_CAMERA],
-                                              _lib_import_from_camera_callback, self, NULL, 0, 0);
-                gtk_box_pack_start(GTK_BOX(vbx), button, FALSE, FALSE, 0);
-                d->camera = camera;
-                gtk_widget_set_halign(gtk_bin_get_child(GTK_BIN(button)), GTK_ALIGN_CENTER);
-                dt_gui_add_help_link(button, "import_camera");
-            }
-            if (camera->can_tether == TRUE)
-            {
-                button = dt_action_button_new(self, _import_text[DT_IMPORT_TETHER],
-                                              _lib_import_tethered_callback, camera, NULL, 0, 0);
-                gtk_box_pack_start(GTK_BOX(vbx), button, FALSE, FALSE, 0);
-                gtk_widget_set_halign(gtk_bin_get_child(GTK_BIN(button)), GTK_ALIGN_CENTER);
-                dt_gui_add_help_link(button, "import_camera");
-            }
-
-            button = dt_action_button_new(self, N_("unmount camera"), _lib_import_unmount_callback,
-                                          camera, NULL, 0, 0);
-            gtk_box_pack_start(GTK_BOX(vbx), button, FALSE, FALSE, 0);
-            gtk_widget_set_halign(gtk_bin_get_child(GTK_BIN(button)), GTK_ALIGN_CENTER);
-            dt_gui_add_help_link(button, "mount_camera");
-
-            gtk_box_pack_start(GTK_BOX(d->devices), vbx, FALSE, FALSE, 0);
-        }
-
-        // Add list of locked cameras
-        for (GList *citem = camctl->unused_cameras; citem; citem = g_list_next(citem))
-        {
-            dt_camera_unused_t *camera = citem->data;
-            GtkWidget *label = dt_ui_section_label_new(_(camera->model));
-            gtk_box_pack_start(GTK_BOX(d->devices), label, FALSE, FALSE, 0);
-
-            if (camera->used)
-                gtk_widget_set_tooltip_text(
-                    label, _("camera is locked by another application\n"
-                             "make sure it is no longer mounted\nor quit the locking application"));
-            else if (camera->boring)
-                gtk_widget_set_tooltip_text(
-                    label, _("tethering and importing is disabled for this camera"));
-
-            button = dt_action_button_new(self, N_("mount camera"), _lib_import_mount_callback,
-                                          camera, NULL, 0, 0);
-            gtk_box_pack_start(GTK_BOX(d->devices), button, FALSE, FALSE, 0);
-            gtk_widget_set_halign(gtk_bin_get_child(GTK_BIN(button)), GTK_ALIGN_CENTER);
-            dt_gui_add_help_link(button, "mount_camera");
-        }
-        gtk_widget_show_all(GTK_WIDGET(d->devices));
-
-        camctl->changed_camera = FALSE;
-    }
-    camctl->import_ui = FALSE;
-    dt_pthread_mutex_unlock(&camctl->lock);
-}
-
-static void _free_camera_files(gpointer data)
-{
-    dt_camera_files_t *file = (dt_camera_files_t *)data;
-    g_free(file->filename);
-    g_free(file);
-}
-
-static guint _import_from_camera_set_file_list(dt_lib_module_t *self)
-{
-    dt_lib_import_t *d = self->data;
-
-    GList *imgs = dt_camctl_get_images_list(darktable.camctl, d->camera);
-    int nb = 0;
-    const gboolean include_nonraws = !dt_conf_get_bool("ui_last/import_ignore_nonraws");
-    for (GList *img = imgs; img; img = g_list_next(img))
-    {
-        dt_camera_files_t *file = img->data;
-        const char *ext = g_strrstr(file->filename, ".");
-        // Either we are not rejecting non-raw, or the file extension
-        // belongs to the raw format
-        if (include_nonraws || (ext && ((dt_imageio_is_raw_by_extension(ext)) ||
-                                        !g_ascii_strncasecmp(ext, ".dng", sizeof(".dng")))))
-        {
-            const time_t datetime = file->timestamp;
-            GDateTime *dt_datetime = g_date_time_new_from_unix_local(datetime);
-            gchar *dt_txt = g_date_time_format(dt_datetime, "%x %X");
-            gchar *basename = g_path_get_basename(file->filename);
-            char dtid[DT_DATETIME_EXIF_LENGTH];
-            dt_datetime_unix_to_exif(dtid, sizeof(dtid), &datetime);
-            const gboolean already_imported = dt_metadata_already_imported(basename, dtid);
-            g_free(basename);
-            gtk_list_store_insert_with_values(d->from.store, NULL, -1, DT_IMPORT_UI_EXISTS,
-                                              already_imported ? "✔" : " ", DT_IMPORT_UI_FILENAME,
-                                              file->filename, DT_IMPORT_FILENAME, file->filename,
-                                              DT_IMPORT_UI_DATETIME, dt_txt, DT_IMPORT_DATETIME,
-                                              datetime, DT_IMPORT_THUMB, d->from.eye, -1);
-            nb++;
-            g_free(dt_txt);
-            g_date_time_unref(dt_datetime);
-        }
-    }
-    g_list_free_full(imgs, _free_camera_files);
-    return nb;
-}
-
-#endif // HAVE_GPHOTO2
 
 
 // maybe this should be (partly) in imageio/imageio.[c|h]?
@@ -494,12 +298,6 @@ static void _thumb_set_in_listview(GtkTreeModel *model, GtkTreeIter *iter, const
     gtk_tree_model_get(model, iter, DT_IMPORT_UI_FILENAME, &filename, DT_IMPORT_FILENAME, &fullname,
                        -1);
     GdkPixbuf *pixbuf = NULL;
-#ifdef HAVE_GPHOTO2
-    if (d->import_case == DT_IMPORT_CAMERA)
-        pixbuf = thumb_sel ? dt_camctl_get_thumbnail(darktable.camctl, d->camera, filename) :
-                             d->from.eye;
-    else
-#endif
     {
         pixbuf = thumb_sel ? _import_get_thumbnail(fullname) : d->from.eye;
     }
@@ -933,16 +731,6 @@ static gboolean _update_files_list(dt_lib_module_t *self)
     gtk_list_store_clear(d->from.store);
     gtk_tree_sortable_set_sort_column_id(
         GTK_TREE_SORTABLE(model), GTK_TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID, GTK_SORT_ASCENDING);
-#ifdef HAVE_GPHOTO2
-    if (d->import_case == DT_IMPORT_CAMERA)
-    {
-        d->from.nb = _import_from_camera_set_file_list(self);
-        gtk_widget_hide(d->from.info);
-        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(model), DT_IMPORT_FILENAME,
-                                             GTK_SORT_ASCENDING);
-    }
-    else
-#endif
     {
         char *folder = dt_conf_get_path("ui_last/import_last_directory");
         if (folder[0])
@@ -1927,12 +1715,9 @@ static void _import_from_dialog_new(dt_lib_module_t *self)
     gtk_widget_set_hexpand(gtk_grid_get_child_at(grid, col++, line), TRUE);
     g_signal_connect(G_OBJECT(d->import_new), "toggled", G_CALLBACK(_import_new_toggled), self);
 
-    if (d->import_case != DT_IMPORT_CAMERA)
-    {
-        d->recursive = dt_gui_preferences_bool(grid, "ui_last/import_recursive", col++, line, TRUE);
-        gtk_widget_set_hexpand(gtk_grid_get_child_at(grid, col++, line), TRUE);
-        g_signal_connect(G_OBJECT(d->recursive), "toggled", G_CALLBACK(_recursive_toggled), self);
-    }
+    d->recursive = dt_gui_preferences_bool(grid, "ui_last/import_recursive", col++, line, TRUE);
+    gtk_widget_set_hexpand(gtk_grid_get_child_at(grid, col++, line), TRUE);
+    g_signal_connect(G_OBJECT(d->recursive), "toggled", G_CALLBACK(_recursive_toggled), self);
     GtkWidget *ignore_nonraws =
         dt_gui_preferences_bool(grid, "ui_last/import_ignore_nonraws", col++, line, TRUE);
     gtk_widget_set_hexpand(gtk_grid_get_child_at(grid, col++, line++), TRUE);
@@ -1944,16 +1729,6 @@ static void _import_from_dialog_new(dt_lib_module_t *self)
     _set_files_list(rbox, self);
     g_timeout_add_full(G_PRIORITY_LOW, 100, (GSourceFunc)_update_files_list, self, NULL);
 
-#ifdef HAVE_GPHOTO2
-    if (d->import_case == DT_IMPORT_CAMERA)
-    {
-        d->from.info =
-            dt_ui_label_new(_("please wait while prefetching the list of images from camera..."));
-        gtk_label_set_single_line_mode(GTK_LABEL(d->from.info), FALSE);
-        gtk_box_pack_start(GTK_BOX(rbox), d->from.info, FALSE, FALSE, 0);
-    }
-    else
-#endif
     {
         // left pane
         g_signal_connect(paned, "notify::position", G_CALLBACK(_paned_position_changed), self);
@@ -2068,9 +1843,7 @@ static void _import_from_dialog_run(dt_lib_module_t *self)
         GtkTreeModel *model = GTK_TREE_MODEL(d->from.store);
         GtkTreeSelection *selection = gtk_tree_view_get_selection(d->from.treeview);
         GList *paths = gtk_tree_selection_get_selected_rows(selection, &model);
-        char *folder = (d->import_case == DT_IMPORT_CAMERA) ?
-                           g_strdup("") :
-                           dt_conf_get_path("ui_last/import_last_directory");
+        char *folder = dt_conf_get_path("ui_last/import_last_directory");
 
         for (GList *path = paths; path; path = g_list_next(path))
         {
@@ -2098,15 +1871,7 @@ static void _import_from_dialog_run(dt_lib_module_t *self)
                 }
                 dt_gui_preferences_string_reset(d->from.datetime);
             }
-#ifdef HAVE_GPHOTO2
-            if (d->import_case == DT_IMPORT_CAMERA)
-            {
-                dt_control_add_job(DT_JOB_QUEUE_USER_BG,
-                                   dt_camera_import_job_create(imgs, d->camera, datetime_override));
-            }
-            else
-#endif
-                dt_control_import(imgs, datetime_override, d->import_case == DT_IMPORT_INPLACE);
+            dt_control_import(imgs, datetime_override, d->import_case == DT_IMPORT_INPLACE);
 
             if (d->import_case == DT_IMPORT_INPLACE)
             {
@@ -2139,11 +1904,8 @@ static void _import_from_dialog_free(dt_lib_module_t *self)
     d->from.event = 0;
     g_object_unref(d->from.eye);
     g_object_unref(d->from.store);
-    if (d->import_case != DT_IMPORT_CAMERA)
-    {
-        GtkTreeModel *model = gtk_tree_view_get_model(d->from.folderview);
-        g_object_unref(GTK_TREE_STORE(model));
-    }
+    GtkTreeModel *model = gtk_tree_view_get_model(d->from.folderview);
+    g_object_unref(GTK_TREE_STORE(model));
     // Destroy and quit
     gtk_widget_destroy(d->from.dialog);
 }
@@ -2172,30 +1934,11 @@ static void _lib_import_from_callback(GtkWidget *widget, dt_lib_module_t *self)
         }
     }
 
-#ifdef HAVE_GPHOTO2
-    // on some systems, GPhoto2 is somewhat prone to crashing while
-    // scanning for new devices; this manifests as a crash during long
-    // import sessions.  So disable the scan while we're importing, even
-    // though we aren't using GPhoto2 to do the importing
-    struct dt_camctl_t *camctl = (dt_camctl_t *)darktable.camctl;
-    camctl->import_ui = TRUE;
-#endif
     _import_from_dialog_new(self);
     _import_from_dialog_run(self);
     _import_from_dialog_free(self);
-#ifdef HAVE_GPHOTO2
-    // OK to resume periodic scans for new GPhoto2 devices
-    camctl->import_ui = FALSE;
-#endif
 }
 
-#ifdef HAVE_GPHOTO2
-static void _camera_detected(gpointer instance, gpointer self)
-{
-    /* update gui with detected devices */
-    dt_lib_gui_queue_update(self);
-}
-#endif
 
 void gui_init(dt_lib_module_t *self)
 {
@@ -2221,19 +1964,6 @@ void gui_init(dt_lib_module_t *self)
 
     self->widget = dt_gui_vbox(dt_gui_hbox(d->import_inplace, widget));
 
-#ifdef HAVE_GPHOTO2
-    /* add devices container for cameras */
-    d->devices = GTK_BOX(dt_gui_vbox());
-    dt_gui_box_add(self->widget, d->devices);
-
-    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_CAMERA_DETECTED, _camera_detected);
-    dt_action_define(DT_ACTION(self), NULL, _import_text[DT_IMPORT_CAMERA], NULL,
-                     &dt_action_def_button);
-    dt_action_define(DT_ACTION(self), NULL, _import_text[DT_IMPORT_TETHER], NULL,
-                     &dt_action_def_button);
-    dt_action_define(DT_ACTION(self), NULL, N_("mount camera"), NULL, &dt_action_def_button);
-    dt_action_define(DT_ACTION(self), NULL, N_("unmount camera"), NULL, &dt_action_def_button);
-#endif
 
     // collapsible section
 

@@ -91,10 +91,6 @@ gboolean dt_control_add_job_res(dt_job_t *job, const int32_t res);
 dt_view_type_flags_t dt_control_job_get_view_creator(const dt_job_t *job);
 gboolean dt_control_job_is_synchronous(const dt_job_t *job);
 
-#ifdef HAVE_GPHOTO2
-#include "control/jobs/camera_jobs.h"
-#include "common/camera_control.h"
-#endif
 #include "control/jobs/control_jobs.h"
 #include "control/jobs/develop_jobs.h"
 #include "control/jobs/film_jobs.h"

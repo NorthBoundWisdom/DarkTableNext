@@ -162,7 +162,6 @@ void dt_control_init(const gboolean withgui)
     s->input_drivers = NULL;
     dt_atomic_set_int(&s->quitting, 0);
     dt_atomic_set_int(&s->pending_jobs, 0);
-    s->cups_started = FALSE;
 
     dt_action_define_fallback(DT_ACTION_TYPE_IOP, &dt_action_def_iop);
     dt_action_define_fallback(DT_ACTION_TYPE_LIB, &dt_action_def_lib);
@@ -333,13 +332,6 @@ void dt_control_quit()
     if (dt_atomic_exch_int(&dc->quitting, 1) == 1)
         return;
 
-#ifdef HAVE_PRINT
-    dt_printers_abort_discovery();
-    // Cups timeout could be pretty long, at least 30seconds
-    // but don't rely on cups returning correctly so a timeout
-    for (int i = 0; i < 40000 && !dc->cups_started; i++)
-        g_usleep(1000);
-#endif
 
     // We test pending jobs vs 1 as we always accept one DT_JOB_QUEUE_SYSTEM_FG job
     if (dt_control_jobs_pending() > 1)
@@ -376,10 +368,6 @@ void dt_control_shutdown()
     dt_pthread_mutex_unlock(&s->cond_mutex);
 
     int err = 0; // collect all joining errors
-                 /* first wait for gphoto device updater */
-#ifdef HAVE_GPHOTO2
-    err = dt_pthread_join(s->update_gphoto_thread);
-#endif
 
     if (!cleanup)
         return; // if not running there are no threads to join

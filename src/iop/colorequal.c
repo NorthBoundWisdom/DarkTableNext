@@ -16,36 +16,6 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Midi mapping is supported, here is the reference for loupedeck+
-midi:D7=iop/colorequal/page;hue
-midi:D#7=iop/colorequal/page
-midi:E7=iop/colorequal/page;brightness
-None;midi:CC1=iop/colorequal/hue/red
-None;midi:CC2=iop/colorequal/hue/orange
-None;midi:CC3=iop/colorequal/hue/yellow
-None;midi:CC4=iop/colorequal/hue/green
-None;midi:CC5=iop/colorequal/hue/cyan
-None;midi:CC6=iop/colorequal/hue/blue
-None;midi:CC7=iop/colorequal/hue/lavender
-None;midi:CC8=iop/colorequal/hue/magenta
-None;midi:CC9=iop/colorequal/saturation/red
-None;midi:CC10=iop/colorequal/saturation/orange
-None;midi:CC11=iop/colorequal/saturation/yellow
-None;midi:CC12=iop/colorequal/saturation/green
-None;midi:CC13=iop/colorequal/saturation/cyan
-None;midi:CC14=iop/colorequal/saturation/blue
-None;midi:CC15=iop/colorequal/saturation/lavender
-None;midi:CC16=iop/colorequal/saturation/magenta
-None;midi:CC17=iop/colorequal/brightness/red
-None;midi:CC18=iop/colorequal/brightness/orange
-None;midi:CC19=iop/colorequal/brightness/yellow
-None;midi:CC20=iop/colorequal/brightness/green
-None;midi:CC21=iop/colorequal/brightness/cyan
-None;midi:CC22=iop/colorequal/brightness/blue
-None;midi:CC23=iop/colorequal/brightness/lavender
-None;midi:CC24=iop/colorequal/brightness/magenta
-*/
-
 //#include "common/extra_optimizations.h" // results in crashes on some systems
 
 #include <assert.h>

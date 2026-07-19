@@ -589,8 +589,8 @@ cairo_surface_t *dt_util_get_logo_text(const float size)
     return _util_get_svg_img(g_strdup("dt_text.svg"), size);
 }
 
-// the following two functions (dt_util_latitude_str and
-// dt_util_longitude_str) were taken from libosmgpsmap
+// The following coordinate-formatting helpers are retained for displaying
+// existing image metadata.
 // Copyright (C) 2013 John Stowers <john.stowers@gmail.com>
 /* these can be overwritten with versions that support
  *   localization */

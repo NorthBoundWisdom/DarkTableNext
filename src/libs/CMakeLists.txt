@@ -6,7 +6,7 @@ add_definitions(-include common/module_api.h)
 add_definitions(-include libs/lib_api.h)
 
 # The modules
-set(MODULES import export copy_history styles tagging image select collect recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks session duplicate ioporder)
+set(MODULES import export copy_history styles tagging image select collect recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks duplicate ioporder)
 
 # The tools
 set(MODULES ${MODULES} viewswitcher)
@@ -45,7 +45,6 @@ add_library(modulegroups MODULE "modulegroups.c")
 add_library(backgroundjobs MODULE "backgroundjobs.c")
 add_library(colorpicker MODULE "colorpicker.c")
 add_library(masks MODULE "masks.c")
-add_library(session MODULE "session.c")
 add_library(duplicate MODULE "duplicate.c")
 add_library(ioporder MODULE "ioporder.c")
 
@@ -66,54 +65,6 @@ add_library(global_toolbox MODULE "tools/global_toolbox.c")
 add_library(timeline MODULE "tools/timeline.c")
 add_library(image_infos MODULE "tools/image_infos.c")
 add_library(log_history MODULE "tools/log_history.c")
-
-if(PortMidi_FOUND)
-  add_definitions("-DHAVE_PORTMIDI")
-  include_directories(${PortMidi_INCLUDE_DIR})
-  set(MODULES ${MODULES} midi)
-  add_library(midi MODULE "tools/midi.c")
-  target_link_libraries (midi ${PortMidi_LIBRARY})
-endif()
-
-if(USE_SDL2)
-  find_package(SDL2)
-  if(SDL2_FOUND)
-    add_definitions("-DHAVE_SDL")
-    set(MODULES ${MODULES} gamepad)
-    add_library(gamepad MODULE "tools/gamepad.c")
-    if(TARGET SDL2::SDL2)
-      target_link_libraries(gamepad SDL2::SDL2)
-    else()
-      include_directories(${SDL2_INCLUDE_DIRS})
-      target_link_libraries(gamepad ${SDL2_LIBRARIES})
-    endif()
-  endif()
-endif()
-
-# check if gphoto2 found and add build of camera modules...
-if(Gphoto2_FOUND)
-  add_library(camera MODULE "camera.c")
-  add_library(live_view MODULE "live_view.c")
-  set(MODULES ${MODULES} camera live_view)
-endif(Gphoto2_FOUND)
-
-# the modules specific to map mode
-if(USE_MAP)
-  add_library(location MODULE "location.c")
-  add_library(map_settings MODULE "map_settings.c")
-  add_library(map_locations MODULE "map_locations.c")
-  set(MODULES ${MODULES} location map_settings map_locations)
-endif(USE_MAP)
-
-# the modules specific to geotagging module
-add_library(geotagging MODULE "geotagging.c")
-set(MODULES ${MODULES} geotagging)
-
-# the module specific to print mode
-if(CUPS_FOUND)
-  add_library(print_settings MODULE "print_settings.c")
-  set(MODULES ${MODULES} print_settings)
-endif(CUPS_FOUND)
 
 # AI neural restore module
 if(USE_AI)

@@ -440,14 +440,6 @@ dt_image_orientation_t dt_image_get_orientation(const dt_imgid_t imgid);
 /** get max width and height of the final processed image with its current history stack */
 gboolean dt_image_get_final_size(const dt_imgid_t imgid, int *width, int *height);
 void dt_image_update_final_size(const dt_imgid_t imgid);
-/** set image location lon/lat/ele */
-void dt_image_set_location(const dt_imgid_t imgid, const dt_image_geoloc_t *geoloc,
-                           const gboolean undo_on, const gboolean group_on);
-/** set images location lon/lat/ele */
-void dt_image_set_locations(const GList *img, const dt_image_geoloc_t *geoloc,
-                            const gboolean undo_on);
-/** set images locations lon/lat/ele */
-void dt_image_set_images_locations(const GList *imgs, const GArray *gloc, const gboolean undo_on);
 /** get image location lon/lat/ele */
 void dt_image_get_location(const dt_imgid_t imgid, dt_image_geoloc_t *geoloc);
 /** returns TRUE if current hash is not basic nor auto_apply, FALSE otherwise. */

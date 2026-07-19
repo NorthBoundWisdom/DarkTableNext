@@ -2752,7 +2752,7 @@ static gboolean _dev_pixelpipe_process_rec(dt_dev_pixelpipe_t *pipe, dt_develop_
 
         // Since histogram is being treated as the second-to-last link
         // in the pixelpipe and has a "process" call, why not treat it
-        // as an iop? Granted, other views such as tether may also
+        // as an iop? Granted, other views may also
         // benefit via a histogram.
         darktable.lib->proxy.histogram.process(darktable.lib->proxy.histogram.module, input,
                                                roi_in.width, roi_in.height, display_profile,

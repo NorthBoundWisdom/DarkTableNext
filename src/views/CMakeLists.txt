@@ -5,28 +5,10 @@ include(manage-symbol-visibility)
 add_definitions(-include common/module_api.h)
 add_definitions(-include views/view_api.h)
 
-set(MODULES darkroom lighttable slideshow)
+set(MODULES darkroom lighttable)
 
 add_library(darkroom MODULE "darkroom.c")
 add_library(lighttable MODULE "lighttable.c")
-add_library(slideshow MODULE "slideshow.c")
-
-if(USE_MAP)
-    add_library(map MODULE "map.c")
-    set(MODULES ${MODULES} map)
-endif(USE_MAP)
-
-
-if(Gphoto2_FOUND)
-    add_library(tethering MODULE "tethering.c")
-    set(MODULES ${MODULES} tethering)
-endif(Gphoto2_FOUND)
-
-if(CUPS_FOUND)
-    add_library(print MODULE "print.c")
-    set(MODULES ${MODULES} print)
-endif(CUPS_FOUND)
-
 foreach(module ${MODULES})
     target_link_libraries(${module} lib_darktable)
 endforeach(module)

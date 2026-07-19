@@ -50,20 +50,10 @@ typedef struct dt_lib_image_t
     GtkWidget *group_button, *ungroup_button, *cache_button, *uncache_button;
     GtkWidget *refresh_button, *set_monochrome_button, *set_color_button;
     GtkWidget *copy_metadata_button, *paste_metadata_button, *clear_metadata_button;
-    GtkWidget *rating_flag, *colors_flag, *metadata_flag, *geotags_flag, *tags_flag;
+    GtkWidget *rating_flag, *colors_flag, *metadata_flag, *tags_flag;
     GtkWidget *page1; // retained for extension pages
     dt_imgid_t imageid;
 } dt_lib_image_t;
-
-typedef enum dt_lib_metadata_id
-{
-    DT_LIB_META_NONE = 0,
-    DT_LIB_META_RATING = 1 << 0,
-    DT_LIB_META_COLORS = 1 << 1,
-    DT_LIB_META_METADATA = 1 << 2,
-    DT_LIB_META_GEOTAG = 1 << 3,
-    DT_LIB_META_TAG = 1 << 4
-} dt_lib_metadata_id;
 
 const char *name(dt_lib_module_t *self)
 {
@@ -311,7 +301,6 @@ static void _execute_metadata(dt_lib_module_t *self, const int action)
     const gboolean rating_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/rating");
     const gboolean colors_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/colors");
     const gboolean dtmetadata_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/metadata");
-    const gboolean geotag_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/geotags");
     const gboolean dttag_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/tags");
     const dt_imgid_t imageid = d->imageid;
     GList *imgs = dt_act_on_get_images(FALSE, TRUE, FALSE);
@@ -324,8 +313,7 @@ static void _execute_metadata(dt_lib_module_t *self, const int action)
         // grouped images have already been added to image list
         const dt_undo_type_t undo_type =
             (rating_flag ? DT_UNDO_RATINGS : 0) | (colors_flag ? DT_UNDO_COLORLABELS : 0) |
-            (dtmetadata_flag ? DT_UNDO_METADATA : 0) | (geotag_flag ? DT_UNDO_GEOTAG : 0) |
-            (dttag_flag ? DT_UNDO_TAGS : 0);
+            (dtmetadata_flag ? DT_UNDO_METADATA : 0) | (dttag_flag ? DT_UNDO_TAGS : 0);
 
         if (undo_type)
             dt_undo_start_group(darktable.undo, undo_type);
@@ -346,17 +334,6 @@ static void _execute_metadata(dt_lib_module_t *self, const int action)
             dt_metadata_set_list_id(imgs, metadata, action != DT_MA_MERGE, TRUE);
             DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
             g_list_free_full(metadata, g_free);
-        }
-        if (geotag_flag)
-        {
-            dt_image_geoloc_t *geoloc = malloc(sizeof(dt_image_geoloc_t));
-            if (action == DT_MA_CLEAR)
-                geoloc->longitude = geoloc->latitude = geoloc->elevation = NAN;
-            else
-                dt_image_get_location(imageid, geoloc);
-            dt_image_set_locations(imgs, geoloc, TRUE);
-            DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, g_list_copy((GList *)imgs), 0);
-            g_free(geoloc);
         }
         if (dttag_flag)
         {
@@ -433,13 +410,6 @@ static void _metadata_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
     dt_lib_image_t *d = self->data;
     const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->metadata_flag));
     dt_conf_set_bool("plugins/lighttable/copy_metadata/metadata", flag);
-}
-
-static void _geotags_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->geotags_flag));
-    dt_conf_set_bool("plugins/lighttable/copy_metadata/geotags", flag);
 }
 
 static void _tags_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
@@ -575,7 +545,6 @@ void gui_init(dt_lib_module_t *self)
     META_FLAG_BUTTON(N_("ratings"), rating, 0, _("select ratings metadata"));
     META_FLAG_BUTTON(N_("colors"), colors, 3, _("select colors metadata"));
     META_FLAG_BUTTON(N_("tags"), tags, 0, _("select tags metadata"));
-    META_FLAG_BUTTON(N_("geo tags"), geotags, 3, _("select geo tags metadata"));
     META_FLAG_BUTTON(N_("metadata"), metadata, 0,
                      _("select darktable metadata (from metadata editor module)"));
 

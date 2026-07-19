@@ -434,10 +434,6 @@ static void _create_data_schema(dt_database_t *db)
                NULL, NULL, NULL);
   sqlite3_exec(db->handle, "CREATE UNIQUE INDEX data.presets_idx ON presets (name, operation, op_version)",
                NULL, NULL, NULL);
-  ////////////////////////////// (map) locations
-  sqlite3_exec(db->handle, "CREATE TABLE data.locations (tagid INTEGER PRIMARY KEY, "
-               "type INTEGER, longitude REAL, latitude REAL, delta1 REAL, delta2 REAL, ratio FLOAT, polygons BLOB, "
-               "FOREIGN KEY(tagid) REFERENCES tags(id))", NULL, NULL, NULL);
   sqlite3_exec(db->handle, "CREATE TABLE data.meta_data (key INTEGER PRIMARY KEY, tagname VARCHAR, "
                            "name VARCHAR, internal INTEGER, visible INTEGER, private INTEGER, display_order INTEGER)",
                NULL, NULL, NULL);

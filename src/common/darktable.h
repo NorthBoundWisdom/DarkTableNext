@@ -319,7 +319,6 @@ typedef enum dt_debug_thread_t
     DT_DEBUG_CONTROL = 1 << 1,
     DT_DEBUG_DEV = 1 << 2,
     DT_DEBUG_PERF = 1 << 4,
-    DT_DEBUG_CAMCTL = 1 << 5,
     DT_DEBUG_PWSTORAGE = 1 << 6,
     DT_DEBUG_OPENCL = 1 << 7,
     DT_DEBUG_SQL = 1 << 8,
@@ -328,7 +327,6 @@ typedef enum dt_debug_thread_t
     DT_DEBUG_NAN = 1 << 11,
     DT_DEBUG_MASKS = 1 << 12,
     DT_DEBUG_INPUT = 1 << 14,
-    DT_DEBUG_PRINT = 1 << 15,
     DT_DEBUG_CAMERA_SUPPORT = 1 << 16,
     DT_DEBUG_IOPORDER = 1 << 17,
     DT_DEBUG_IMAGEIO = 1 << 18,
@@ -411,7 +409,6 @@ typedef struct darktable_t
     struct dt_bauhaus_t *bauhaus;
     const struct dt_database_t *db;
     const struct dt_pwstorage_t *pwstorage;
-    struct dt_camctl_t *camctl;
     const struct dt_collection_t *collection;
     struct dt_selection_t *selection;
     struct dt_points_t *points;

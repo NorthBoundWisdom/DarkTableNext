@@ -3122,7 +3122,7 @@ void gui_init(dt_view_t *self)
                                      darktable.view_manager->guides_popover);
         dt_view_manager_module_toolbox_add(darktable.view_manager,
                                            darktable.view_manager->guides_toggle,
-                                           DT_VIEW_DARKROOM | DT_VIEW_TETHERING);
+                                           DT_VIEW_DARKROOM);
         // we want to update button state each time the view change
         DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_VIEWMANAGER_VIEW_CHANGED, _guides_view_changed);
     }

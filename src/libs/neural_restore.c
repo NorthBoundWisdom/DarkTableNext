@@ -115,7 +115,7 @@
 //    dt_control_log (e.g. "neural denoise: 3 images processed"). the
 //    module deliberately does NOT raise DT_SIGNAL_VIEWMANAGER_THUMBTABLE_ACTIVATE:
 //    lighttable ignores that signal while darkroom / map / culling /
-//    tethering / print_settings would swap the user's current view to
+//    a dedicated view would swap the user's current view to
 //    the freshly-imported image and clobber any in-progress edit.
 //
 // 3. output parameters (collapsible section)

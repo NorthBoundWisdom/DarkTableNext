@@ -23,7 +23,6 @@
 #include "common/datetime.h"
 #include "common/debug.h"
 #include "common/film.h"
-#include "common/map_locations.h"
 #include "common/metadata.h"
 #include "common/utility.h"
 #include "control/conf.h"
@@ -292,7 +291,7 @@ int set_params(dt_lib_module_t *self, const void *params, const int size)
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-    return DT_VIEW_LIGHTTABLE | DT_VIEW_MAP | DT_VIEW_PRINT;
+    return DT_VIEW_LIGHTTABLE;
 }
 
 uint32_t container(dt_lib_module_t *self)
@@ -726,7 +725,6 @@ static gboolean tree_expand(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
     switch (collection)
     {
     case DT_COLLECTION_PROP_TAG:
-    case DT_COLLECTION_PROP_GEOTAGGING:
         if (g_str_has_suffix(needle, "*"))
             needle[strlen(needle) - 1] = '\0';
         if (g_str_has_suffix(needle, "|"))
@@ -1225,7 +1223,6 @@ static void _tree_view(dt_lib_collect_rule_t *dr)
         format_separator = "%s" G_DIR_SEPARATOR_S;
         break;
     case DT_COLLECTION_PROP_TAG:
-    case DT_COLLECTION_PROP_GEOTAGGING:
         format_separator = "%s|";
         break;
     case DT_COLLECTION_PROP_DAY:
@@ -1327,32 +1324,6 @@ static void _tree_view(dt_lib_collect_rule_t *dr)
             // clang-format on
         }
         break;
-
-        case DT_COLLECTION_PROP_GEOTAGGING:
-            // clang-format off
-        query = g_strdup_printf
-          ("SELECT "
-           " CASE WHEN mi.longitude IS NULL"
-           "           OR mi.latitude IS null THEN \'%s\'"
-           "      ELSE CASE WHEN ta.imgid IS NULL THEN \'%s\'"
-           "                ELSE \'%s\' || ta.tagname"
-           "                END"
-           "      END AS name,"
-           " ta.tagid AS tag_id, COUNT(*) AS count"
-           " FROM main.images AS mi"
-           " LEFT JOIN (SELECT imgid, t.id AS tagid, SUBSTR(t.name, %d) AS tagname"
-           "   FROM main.tagged_images AS ti"
-           "   JOIN data.tags AS t"
-           "     ON ti.tagid = t.id"
-           "   JOIN data.locations AS l"
-           "     ON l.tagid = t.id"
-           "   ) AS ta ON ta.imgid = mi.id"
-           " WHERE %s"
-           " GROUP BY name, tag_id",
-           _("not tagged"), _("tagged"), _("tagged"),
-           (int)strlen(dt_map_location_data_tag_root()) + 1, where_ext);
-            // clang-format on
-            break;
 
         case DT_COLLECTION_PROP_DAY:
             // clang-format off
@@ -2409,7 +2380,7 @@ static void update_view(dt_lib_collect_rule_t *dr)
     const int property = _combo_get_active_collection(dr->combo);
 
     if (property == DT_COLLECTION_PROP_FOLDERS || property == DT_COLLECTION_PROP_TAG ||
-        property == DT_COLLECTION_PROP_GEOTAGGING || property == DT_COLLECTION_PROP_DAY ||
+        property == DT_COLLECTION_PROP_DAY ||
         _is_time_property(property))
         _tree_view(dr);
     else
@@ -2454,16 +2425,6 @@ static void _set_tooltip(dt_lib_collect_rule_t *d)
               "click to include hierarchy + sub-hierarchies (suffix `*')\n"
               "shift+click to include only the current hierarchy (no suffix)\n"
               "ctrl+click to include only sub-hierarchies (suffix `|%')"));
-    }
-    else if (property == DT_COLLECTION_PROP_GEOTAGGING)
-    {
-        gtk_widget_set_tooltip_text(
-            d->text,
-            /* xgettext:no-c-format */
-            _("use `%' as wildcard\n"
-              "click to include location + sub-locations (suffix `*')\n"
-              "shift+click to include only the current location (no suffix)\n"
-              "ctrl+click to include only sub-locations (suffix `|%')"));
     }
     else if (property == DT_COLLECTION_PROP_FOLDERS)
     {
@@ -2606,7 +2567,7 @@ static void combo_changed(GtkWidget *combo, dt_lib_collect_rule_t *d)
     const int property = _combo_get_active_collection(d->combo);
 
     if (property == DT_COLLECTION_PROP_FOLDERS || property == DT_COLLECTION_PROP_TAG ||
-        property == DT_COLLECTION_PROP_GEOTAGGING || property == DT_COLLECTION_PROP_DAY ||
+        property == DT_COLLECTION_PROP_DAY ||
         _is_time_property(property))
     {
         d->typing = FALSE;
@@ -2716,8 +2677,7 @@ static void row_activated_with_event(GtkTreeView *view, GtkTreePath *path, GtkTr
             g_free(text2);
             text = n_text;
         }
-        else if (item == DT_COLLECTION_PROP_TAG || item == DT_COLLECTION_PROP_GEOTAGGING ||
-                 item == DT_COLLECTION_PROP_FOLDERS)
+        else if (item == DT_COLLECTION_PROP_TAG || item == DT_COLLECTION_PROP_FOLDERS)
         {
             if (gtk_tree_model_iter_has_child(model, &iter))
             {
@@ -2762,8 +2722,8 @@ static void row_activated_with_event(GtkTreeView *view, GtkTreePath *path, GtkTr
     if (item == DT_COLLECTION_PROP_TAG ||
         (item == DT_COLLECTION_PROP_FOLDERS && !force_update_view) ||
         item == DT_COLLECTION_PROP_DAY || _is_time_property(item) ||
-        item == DT_COLLECTION_PROP_COLORLABEL || item == DT_COLLECTION_PROP_GEOTAGGING ||
-        item == DT_COLLECTION_PROP_HISTORY || item == DT_COLLECTION_PROP_LOCAL_COPY)
+        item == DT_COLLECTION_PROP_COLORLABEL || item == DT_COLLECTION_PROP_HISTORY ||
+        item == DT_COLLECTION_PROP_LOCAL_COPY)
     {
         set_properties(d->rule + active); // we just have to set the selection
     }
@@ -2795,7 +2755,7 @@ static void entry_activated(GtkWidget *entry, dt_lib_collect_rule_t *d)
     const int property = _combo_get_active_collection(d->combo);
 
     if (property != DT_COLLECTION_PROP_FOLDERS && property != DT_COLLECTION_PROP_TAG &&
-        property != DT_COLLECTION_PROP_GEOTAGGING && property != DT_COLLECTION_PROP_DAY &&
+        property != DT_COLLECTION_PROP_DAY &&
         !_is_time_property(property))
     {
         view = c->view;
@@ -3013,32 +2973,6 @@ static void tag_changed(gpointer instance, gpointer self)
     }
 }
 
-static void _geotag_changed(gpointer instance, GList *imgs, const int locid, gpointer self)
-{
-    // if locid <> NULL this event doesn't concern collect module
-    if (!locid)
-    {
-        dt_lib_module_t *dm = (dt_lib_module_t *)self;
-        dt_lib_collect_t *d = dm->data;
-        // update tree
-        if (_combo_get_active_collection(d->rule[d->active_rule].combo) ==
-            DT_COLLECTION_PROP_GEOTAGGING)
-        {
-            d->view_rule = -1;
-            d->rule[d->active_rule].typing = FALSE;
-            _lib_collect_gui_update(self);
-
-            //need to reload collection since we have geotags as active collection filter
-            dt_control_signal_block_by_func(darktable.signals, G_CALLBACK(collection_updated),
-                                            darktable.view_manager->proxy.module_collect.module);
-            dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
-                                       DT_COLLECTION_PROP_GEOTAGGING, NULL);
-            dt_control_signal_unblock_by_func(darktable.signals, G_CALLBACK(collection_updated),
-                                              darktable.view_manager->proxy.module_collect.module);
-        }
-    }
-}
-
 static void _metadata_changed(gpointer instance, int type, gpointer self)
 {
     dt_lib_module_t *dm = (dt_lib_module_t *)self;
@@ -3205,7 +3139,6 @@ static void _populate_collect_combo(GtkWidget *w)
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_TAG);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_RATING);
     ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_COLORLABEL);
-    ADD_COLLECT_ENTRY(DT_COLLECTION_PROP_GEOTAGGING);
 
     dt_pthread_mutex_lock(&darktable.metadata_threadsafe);
     for (GList *iter = dt_metadata_get_list(); iter; iter = iter->next)
@@ -3639,7 +3572,6 @@ void gui_init(dt_lib_module_t *self)
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_FILMROLLS_IMPORTED, filmrolls_imported);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_FILMROLLS_REMOVED, filmrolls_removed);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_TAG_CHANGED, tag_changed);
-    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_GEOTAG_CHANGED, _geotag_changed);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_METADATA_CHANGED, _metadata_changed);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_PREFERENCES_CHANGE, view_set_click);
 

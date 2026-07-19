@@ -199,31 +199,6 @@ static GList *_film_recursive_get_files(const gchar *path, gboolean recursive, G
     return *result;
 }
 
-/* check if we can find a gpx data file to be auto applied
-   to images in the just imported filmroll
-*/
-static void _apply_filmroll_gpx(dt_film_t *cfr)
-{
-    if (cfr && cfr->dir)
-    {
-        g_dir_rewind(cfr->dir);
-        const gchar *dfn = NULL;
-        while ((dfn = g_dir_read_name(cfr->dir)) != NULL)
-        {
-            /* check if we have a gpx to be auto applied to filmroll */
-            const size_t len = strlen(dfn);
-            if (strcmp(dfn + len - 4, ".gpx") == 0 || strcmp(dfn + len - 4, ".GPX") == 0)
-            {
-                gchar *gpx_file = g_build_path(G_DIR_SEPARATOR_S, cfr->dirname, dfn, NULL);
-                gchar *tz = dt_conf_get_string("plugins/lighttable/geotagging/tz");
-                dt_control_gpx_apply(gpx_file, cfr->id, tz, NULL);
-                g_free(gpx_file);
-                g_free(tz);
-            }
-        }
-    }
-}
-
 /* compare used for sorting the list of files to import
    only sort on basename of full path eg. the actually filename.
 */
@@ -262,7 +237,6 @@ static void _film_import1(dt_job_t *job, dt_film_t *film, GList *images)
         job, ngettext("importing %d image", "importing %d images", total), total);
 
     GList *imgs = NULL;
-    GList *all_imgs = NULL;
 
     /* loop thru the images and import to current film roll */
     dt_film_t *cfr = film;
@@ -275,8 +249,6 @@ static void _film_import1(dt_job_t *job, dt_film_t *film, GList *images)
         /* check if we need to initialize a new filmroll */
         if (!cfr || g_strcmp0(cfr->dirname, cdn) != 0)
         {
-            _apply_filmroll_gpx(cfr);
-
             /* cleanup previously imported filmroll*/
             if (cfr && cfr != film)
             {
@@ -303,7 +275,6 @@ static void _film_import1(dt_job_t *job, dt_film_t *film, GList *images)
         fraction += 1.0 / total;
         dt_control_job_set_progress(job, fraction);
 
-        all_imgs = g_list_prepend(all_imgs, GINT_TO_POINTER(imgid));
         imgs = g_list_append(imgs, GINT_TO_POINTER(imgid));
         const double curr_time = dt_get_wtime();
         // if we've imported at least four images without an update, and it's been at least half a second since the last
@@ -323,18 +294,11 @@ static void _film_import1(dt_job_t *job, dt_film_t *film, GList *images)
     }
 
     g_list_free_full(images, g_free);
-    all_imgs = g_list_reverse(all_imgs);
-
     // only redraw at the end, to not spam the cpu with exposure events
     dt_control_queue_redraw_center();
     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_TAG_CHANGED);
 
     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_FILMROLLS_IMPORTED, film ? film->id : cfr->id);
-
-    //QUESTION: should this come after _apply_filmroll_gpx, since that can change geotags again?
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, all_imgs, 0);
-
-    _apply_filmroll_gpx(cfr);
 
     /* cleanup previously imported filmroll*/
     if (cfr && cfr != film)

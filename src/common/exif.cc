@@ -2704,7 +2704,7 @@ int dt_exif_write_blob(uint8_t *blob, uint32_t size, const char *path, const int
     return 1;
 }
 
-static void _remove_exif_geotag(Exiv2::ExifData &exifData)
+static void _remove_exif_location(Exiv2::ExifData &exifData)
 {
     static const char *keys[] = {"Exif.GPSInfo.GPSLatitude",     "Exif.GPSInfo.GPSLongitude",
                                  "Exif.GPSInfo.GPSAltitude",     "Exif.GPSInfo.GPSLatitudeRef",
@@ -2971,7 +2971,7 @@ int dt_exif_read_blob(uint8_t **buf, const char *path, const dt_imgid_t imgid, c
             }
 
             // GPS data
-            _remove_exif_geotag(exifData);
+            _remove_exif_location(exifData);
             const dt_image_t *cimg = dt_image_cache_get(imgid, 'r');
             if (cimg && !std::isnan(cimg->geoloc.longitude) && !std::isnan(cimg->geoloc.latitude))
             {
@@ -3007,7 +3007,7 @@ int dt_exif_read_blob(uint8_t **buf, const char *path, const dt_imgid_t imgid, c
             // According to the Exif spec DateTime is to be set to the last
             // modification time while DateTimeOriginal is to be kept. For
             // us "keeping" it means to write out what we have in DB to
-            // support people adding a time offset in the geotagging module.
+            // preserve the original timestamp offset when present.
             gchar new_datetime[DT_DATETIME_EXIF_LENGTH];
             dt_datetime_now_to_exif(new_datetime);
             exifData["Exif.Image.DateTime"] = new_datetime;
@@ -4097,7 +4097,7 @@ static void _read_xmp_harmony_guide(Exiv2::XmpData &xmpData, dt_image_t *img)
     }
 }
 
-static void _remove_xmp_exif_geotag(Exiv2::XmpData &xmpData)
+static void _remove_xmp_exif_location(Exiv2::XmpData &xmpData)
 {
     static const char *keys[] = {"Xmp.exif.GPSVersionID", "Xmp.exif.GPSLongitude",
                                  "Xmp.exif.GPSLatitude", "Xmp.exif.GPSAltitudeRef",
@@ -4106,10 +4106,10 @@ static void _remove_xmp_exif_geotag(Exiv2::XmpData &xmpData)
     _remove_xmp_keys(xmpData, keys, n_keys);
 }
 
-static void _set_xmp_exif_geotag(Exiv2::XmpData &xmpData, double longitude, double latitude,
-                                 const double altitude)
+static void _set_xmp_exif_location(Exiv2::XmpData &xmpData, double longitude, double latitude,
+                                   const double altitude)
 {
-    _remove_xmp_exif_geotag(xmpData);
+    _remove_xmp_exif_location(xmpData);
 
     if (!std::isnan(longitude) && !std::isnan(latitude))
     {
@@ -4287,7 +4287,7 @@ static void _exif_xmp_read_data(Exiv2::XmpData &xmpData, const dt_imgid_t imgid,
     _set_xmp_harmony_guide(xmpData, imgid);
 
     // GPS data
-    _set_xmp_exif_geotag(xmpData, longitude, latitude, altitude);
+    _set_xmp_exif_location(xmpData, longitude, latitude, altitude);
 
     // The metadata
     _set_xmp_dt_metadata(xmpData, imgid, FALSE);
@@ -4431,10 +4431,10 @@ static void _exif_xmp_read_data_export(Exiv2::XmpData &xmpData, const dt_imgid_t
     }
 
     // GPS data
-    if (metadata->flags & DT_META_GEOTAG)
-        _set_xmp_exif_geotag(xmpData, longitude, latitude, altitude);
+    if (metadata->flags & DT_META_LOCATION)
+        _set_xmp_exif_location(xmpData, longitude, latitude, altitude);
     else
-        _remove_xmp_exif_geotag(xmpData);
+        _remove_xmp_exif_location(xmpData);
 
     // The metadata
     if (metadata->flags & DT_META_METADATA)
@@ -4898,7 +4898,7 @@ gboolean dt_exif_xmp_attach_export(const dt_imgid_t imgid, const char *filename,
 
         // Last but not least, attach what we have in DB to the XMP. In theory that should be
         // the same as what we just copied over from the sidecar file, but you never know ...
-        // Make sure to remove all geotags if necessary.
+        // Remove location metadata when it was not selected for export.
         if (m)
         {
             Exiv2::ExifData exifOldData;
@@ -4948,8 +4948,8 @@ gboolean dt_exif_xmp_attach_export(const dt_imgid_t imgid, const char *filename,
             dt_pthread_mutex_unlock(&darktable.metadata_threadsafe);
             sqlite3_finalize(stmt);
 
-            if (!(m->flags & DT_META_GEOTAG))
-                _remove_exif_geotag(exifData);
+            if (!(m->flags & DT_META_LOCATION))
+                _remove_exif_location(exifData);
 
             // Calculated metadata
             dt_variables_params_t *params;

@@ -30,8 +30,6 @@
     <section name="interface" title="interface"/>
     <section name="tags" title="tags"/>
     <section name="accel" title="shortcuts with multiple instances"/>
-    <section name="geoloc" title="map / geolocalization view"/>
-    <section name="slideshow" title="slideshow view"/>
   </dttab>
 
   <dtconfig common="yes">
@@ -183,20 +181,6 @@
     <longdescription>filename relative to ~/.config/darktable or starting with a slash (restart required)</longdescription>
   </dtconfig>
   <dtconfig>
-    <name>storage/piwigo/last_album</name>
-    <type>string</type>
-    <default></default>
-    <shortdescription></shortdescription>
-    <longdescription></longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>storage/piwigo/overwrite</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription></shortdescription>
-    <longdescription></longdescription>
-  </dtconfig>
-  <dtconfig>
     <name>database/maintenance_freepage_ratio</name>
     <type>int</type>
     <default>25</default>
@@ -266,12 +250,6 @@
     <default>1500</default>
     <shortdescription>maximum width of the side panels in pixels</shortdescription>
     <longdescription>(restart required)</longdescription>
-  </dtconfig>
-  <dtconfig prefs="misc" section="slideshow">
-    <name>slideshow_delay</name>
-    <type>int</type>
-    <default>5</default>
-    <shortdescription>waiting time between each image in slideshow</shortdescription>
   </dtconfig>
 <!-- be sure to keep the code in sync when changing this enum, see common/darktable.c void dt_get_sysresource_level() -->
   <dtconfig prefs="processing" section="cpugpu">
@@ -814,20 +792,6 @@
     <default>0</default>
     <shortdescription/>
     <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/session/jobcode</name>
-    <type>string</type>
-    <default>capture job</default>
-    <shortdescription>name of capture job</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/capture/camera/live_view_fps</name>
-    <type>int</type>
-    <default>15</default>
-    <shortdescription>maximum fps of live view update in tethering view</shortdescription>
-    <longdescription>going too fast will result in too many redraws without a real benefit</longdescription>
   </dtconfig>
   <dtconfig dialog="collect">
     <name>plugins/collect/filmroll_sort</name>
@@ -2200,69 +2164,7 @@
     <shortdescription>ask before exporting in overwrite mode</shortdescription>
     <longdescription>will ask for confirmation before exporting files in overwrite mode</longdescription>
   </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/show_map_osd</name>
-    <type>bool</type>
-    <default>true</default>
-    <shortdescription>show OSD</shortdescription>
-    <longdescription>toggle the visibility of the map overlays</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/filter_images_drawn</name>
-    <type>bool</type>
-    <default>false</default>
-    <shortdescription>filtered images</shortdescription>
-    <longdescription>when set limit the images drawn to the current filmstrip</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/max_images_drawn</name>
-    <type min="10" max="100000">int</type>
-    <default>100</default>
-    <shortdescription>max images</shortdescription>
-    <longdescription>the maximum number of image thumbnails drawn on the map</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/epsilon_factor</name>
-    <type min="1" max="100">int</type>
-    <default>25</default>
-    <shortdescription>group size factor</shortdescription>
-    <longdescription>increase or decrease the spatial size of images groups on the map. can influence the calculation time</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/min_images_per_group</name>
-    <type min="1" max="10">int</type>
-    <default>1</default>
-    <shortdescription>min images per group</shortdescription>
-    <longdescription>the minimum number of images to set up an images group. can influence the calculation time.</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/images_thumbnail</name>
-    <type>
-      <enum>
-        <option>thumbnail</option>
-        <option>count</option>
-        <option>none</option>
-      </enum>
-    </type>
-    <default>thumbnail</default>
-    <shortdescription>thumbnail display</shortdescription>
-    <longdescription>three options are available: images thumbnails, only the count of images of the group or nothing</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/map/show_outline</name>
-    <type>bool</type>
-    <default>true</default>
-    <shortdescription>Whether to highlight the search result on the map</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/map/max_outline_nodes</name>
-    <type>int</type>
-    <default>10000</default>
-    <shortdescription>max polygon points</shortdescription>
-    <longdescription>limit the number of points imported with polygon in find location module</longdescription>
-  </dtconfig>
-  <dtconfig prefs="misc" section="geoloc">
+  <dtconfig prefs="misc" section="interface">
     <name>plugins/lighttable/metadata_view/pretty_location</name>
     <type>bool</type>
     <default>true</default>
@@ -2389,20 +2291,6 @@
     <type>int</type>
     <default>1</default>
     <shortdescription>panels collapsing state in preview mode</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>slideshow/ui/panels_collapse_controls</name>
-    <type>bool</type>
-    <default>false</default>
-    <shortdescription>show borders arrows in slideshow</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>slideshow/ui/panel_collaps_state</name>
-    <type>int</type>
-    <default>1</default>
-    <shortdescription>panels collapsing state in slideshow</shortdescription>
     <longdescription/>
   </dtconfig>
   <dtconfig prefs="darkroom" section="modules">
@@ -2741,27 +2629,6 @@
     <type>string</type>
     <default>https://github.com/NorthBoundWisdom/DarkTableNext</default>
     <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/imageio/storage/email/client</name>
-    <type>string</type>
-    <default/>
-    <shortdescription>client to use, this overrides detection of default client.</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/imageio/storage/gphoto/id</name>
-    <type>string</type>
-    <default>642055548087-n01fgvugnbns7a9jq8jfucjsn5l1t6so.apps.googleusercontent.com</default>
-    <shortdescription>google photo client id</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/imageio/storage/gphoto/secret</name>
-    <type>string</type>
-    <default>o29QcbsDWS5cauRqdmGdF3sP</default>
-    <shortdescription>google photo client secret</shortdescription>
     <longdescription/>
   </dtconfig>
   <dtconfig>
@@ -3133,7 +3000,7 @@
     <type min="100" max="300">int</type>
     <default>180</default>
     <shortdescription>height of the scopes module</shortdescription>
-    <longdescription>height of the scopes module in the darkroom and tethering views</longdescription>
+    <longdescription>height of the scopes module in the darkroom view</longdescription>
   </dtconfig>
   <dtconfig>
     <name>plugins/darkroom/colorequal/graphheight</name>
@@ -3586,61 +3453,6 @@
     <shortdescription/>
     <longdescription/>
   </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/black_point_compensation</name>
-    <type>bool</type>
-    <default>true</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/grid_size</name>
-    <type min="0" max="100">float</type>
-    <default>10</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/unit</name>
-    <type>
-      <enum>
-	<option>mm</option>
-	<option>cm</option>
-	<option>inch</option>
-      </enum>
-    </type>
-    <default>mm</default>
-    <shortdescription>measurement units</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/top_margin</name>
-    <type min="-50" max="500">float</type>
-    <default>17</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/bottom_margin</name>
-    <type min="-50" max="500">float</type>
-    <default>17</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/left_margin</name>
-    <type min="-50" max="500">float</type>
-    <default>17</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/print/print/right_margin</name>
-    <type min="-50" max="500">float</type>
-    <default>17</default>
-    <shortdescription/>
-    <longdescription/>
-  </dtconfig>
   <dtconfig common="yes">
     <name>ui_last/theme</name>
     <type>string</type>
@@ -3856,27 +3668,6 @@
     <default>true</default>
     <shortdescription>show the name of the module of each basic widget</shortdescription>
     <longdescription>show the name of the module of each basic widget</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/lighttable/geotagging/heighttracklist</name>
-    <type>int</type>
-    <default>50</default>
-    <shortdescription>height of the track list</shortdescription>
-    <longdescription>maximum height the track list will grow to before scrolling</longdescription>
-  </dtconfig>
-  <dtconfig ui="yes">
-    <name>plugins/lighttable/geotagging/tz</name>
-    <type>string</type>
-    <default>UTC</default>
-    <shortdescription>camera time zone</shortdescription>
-    <longdescription>most cameras don't store the time zone in EXIF. give the correct time zone so the GPX data can be correctly matched</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/map/geotagging_search_url</name>
-    <type>string</type>
-    <default>https://nominatim.openstreetmap.org/search?q=%s&amp;format=xml&amp;limit=%d&amp;polygon_text=1</default>
-    <shortdescription>Geotagging search URL</shortdescription>
-    <longdescription>this can be changed when the default OpenStreetMap search URL is broken</longdescription>
   </dtconfig>
   <dtconfig>
     <name>plugins/darkroom/temperature/colored_sliders</name>
@@ -4141,12 +3932,5 @@
     <default>500</default>
     <shortdescription>height of the collect list</shortdescription>
     <longdescription>maximum height the collect list in lighttable will grow to before scrolling</longdescription>
-  </dtconfig>
-  <dtconfig prefs="misc" section="interface" capability="midi">
-    <name>plugins/midi/devices</name>
-    <type>string</type>
-    <default></default>
-    <shortdescription>order or exclude MIDI devices</shortdescription>
-    <longdescription>comma-separated list of device name fragments that if matched load MIDI device at id given by location in list\nadd encoding and number of knobs like 'Loupedeck:127,BeatStep:63:16'\nprefix with '-' to ignore matching devices\njust '-' stops loading all further devices or on its own disables MIDI completely</longdescription>
   </dtconfig>
 </dtconfiglist>

@@ -54,7 +54,6 @@ static GType pointer_trouble[] = {G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_STRING};
 static GType collection_args[] = {G_TYPE_UINT, G_TYPE_UINT, G_TYPE_POINTER, G_TYPE_UINT};
 static GType image_export_arg[] = {G_TYPE_UINT,    G_TYPE_STRING,  G_TYPE_POINTER,
                                    G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_POINTER};
-static GType geotag_arg[] = {G_TYPE_POINTER, G_TYPE_UINT};
 
 // callback for the destructor of DT_SIGNAL_COLLECTION_CHANGED
 static void _collection_changed_destroy_callback(gpointer instance, int query_change,
@@ -84,17 +83,6 @@ static void _presets_changed_destroy_callback(gpointer instance, gpointer module
                                               gpointer user_data)
 {
     g_free(module);
-}
-
-// callback for the destructor of DT_SIGNAL_GEOTAG_CHANGED
-static void _image_geotag_destroy_callback(gpointer instance, gpointer imgs, const int locid,
-                                           gpointer user_data)
-{
-    if (imgs)
-    {
-        g_list_free(imgs);
-        imgs = NULL;
-    }
 }
 
 #define G_CALLBACK(f) ((GCallback)(f))
@@ -127,9 +115,6 @@ static dt_signal_description _signal_description[DT_SIGNAL_COUNT] = {
                                      g_cclosure_marshal_VOID__VOID, 0, NULL, NULL, FALSE},
     [DT_SIGNAL_TAG_CHANGED] = {"dt-tag-changed", NULL, NULL, G_TYPE_NONE,
                                g_cclosure_marshal_VOID__VOID, 0, NULL, NULL, FALSE},
-    [DT_SIGNAL_GEOTAG_CHANGED] = {"dt-geotag-changed", NULL, NULL, G_TYPE_NONE,
-                                  g_cclosure_marshal_generic, 2, geotag_arg,
-                                  G_CALLBACK(_image_geotag_destroy_callback), FALSE},
     [DT_SIGNAL_METADATA_CHANGED] = {"dt-metadata-changed", NULL, NULL, G_TYPE_NONE,
                                     g_cclosure_marshal_VOID__UINT, 1, uint_arg, NULL, FALSE},
     [DT_SIGNAL_IMAGE_INFO_CHANGED] = {"dt-image-info-changed", NULL, NULL, G_TYPE_NONE,
@@ -203,9 +188,6 @@ static dt_signal_description _signal_description[DT_SIGNAL_COUNT] = {
     [DT_SIGNAL_PREFERENCES_CHANGE] = {"dt-preferences-changed", NULL, NULL, G_TYPE_NONE,
                                       g_cclosure_marshal_VOID__VOID, 0, NULL, NULL, FALSE},
 
-    [DT_SIGNAL_CAMERA_DETECTED] = {"dt-camera-detected", NULL, NULL, G_TYPE_NONE,
-                                   g_cclosure_marshal_VOID__VOID, 0, NULL, NULL, FALSE},
-
     [DT_SIGNAL_CONTROL_NAVIGATION_REDRAW] = {"dt-control-navigation-redraw", NULL, NULL,
                                              G_TYPE_NONE, g_cclosure_marshal_VOID__VOID, 0, NULL,
                                              NULL, FALSE},
@@ -225,9 +207,6 @@ static dt_signal_description _signal_description[DT_SIGNAL_COUNT] = {
 
     [DT_SIGNAL_TROUBLE_MESSAGE] = {"dt-trouble-message", NULL, NULL, G_TYPE_NONE,
                                    g_cclosure_marshal_generic, 3, pointer_trouble, NULL, FALSE},
-
-    [DT_SIGNAL_LOCATION_CHANGED] = {"dt-location-changed", NULL, NULL, G_TYPE_NONE,
-                                    g_cclosure_marshal_generic, 1, pointer_arg, NULL, TRUE},
 
     [DT_SIGNAL_IMAGEIO_STORAGE_EXPORT_ENABLE] = {"dt-imageio-storage-export-enable", NULL, NULL,
                                                  G_TYPE_NONE, g_cclosure_marshal_VOID__VOID, 0,

@@ -182,11 +182,7 @@ static void _overlays_show_popup(GtkWidget *button, dt_lib_module_t *self)
     // thumbnails part
     const dt_view_type_flags_t cv = dt_view_get_current();
     gboolean thumbs_state;
-    if (cv == DT_VIEW_SLIDESHOW)
-    {
-        thumbs_state = FALSE;
-    }
-    else if (cv == DT_VIEW_LIGHTTABLE)
+    if (cv == DT_VIEW_LIGHTTABLE)
     {
         if (dt_view_lighttable_preview_state(darktable.view_manager) ||
             dt_view_lighttable_get_layout(darktable.view_manager) == DT_LIGHTTABLE_LAYOUT_CULLING)

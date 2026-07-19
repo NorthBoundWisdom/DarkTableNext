@@ -169,7 +169,6 @@ static void load_button_clicked(GtkWidget *widget, dt_lib_module_t *self)
         {
             dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
                                        DT_COLLECTION_PROP_UNDEF, g_list_copy((GList *)imgs));
-            DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, g_list_copy((GList *)imgs), 0);
             dt_control_queue_redraw_center();
         }
         if (!act_on_one)

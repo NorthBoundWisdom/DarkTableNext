@@ -45,7 +45,6 @@ FILE(GLOB SOURCE_FILES
   "common/film.c"
   "common/gaussian.c"
   "common/gimp.c"
-  "common/gpx.c"
   "common/grouping.c"
   "common/guided_filter.c"
   "common/heal.c"
@@ -62,7 +61,6 @@ FILE(GLOB SOURCE_FILES
   "common/iop_profile.c"
   "common/locallaplacian.c"
   "common/locallaplaciancl.c"
-  "common/map_locations.c"
   "common/matrices.c"
   "common/metadata.c"
   "common/metadata_export.c"
@@ -250,21 +248,6 @@ add_definitions(${LIBXML2_DEFINITIONS})
 # Check for potrace
 find_package(Potrace REQUIRED)
 list(APPEND LIBS ${POTRACE_LIBRARY})
-
-if(USE_CAMERA_SUPPORT)
-  find_package(Gphoto2 2.5)
-  if(Gphoto2_FOUND)
-    include_directories(SYSTEM ${Gphoto2_INCLUDE_DIRS})
-    list(APPEND LIBS ${Gphoto2_LIBRARIES})
-    set(SOURCES ${SOURCES} "common/camera_control.c" "control/jobs/camera_jobs.c" )
-    add_definitions("-DHAVE_GPHOTO2")
-    # CPack ignores variables you define in your CMakeLists.txt file,
-    # and only variables ${CPACK_*} are correctly used.
-    # so this needs to be saved by adding another variable with a name beginning with CPACK
-    set(CPACK_NSIS_GPHOTO2_VERSION ${Gphoto2_VERSION_STRING} CACHE STRING "Gphoto2 version string")
-    set(CPACK_NSIS_GPHOTO2_PORT_VERSION ${Gphoto2_PORT_VERSION_STRING} CACHE STRING "Gphoto2 port version string")
-  endif()
-endif(USE_CAMERA_SUPPORT)
 
 # Used for 16-bit (half) float TIFF export (and faster import)
 # (IlmBase Half library in 2.5 and earlier and Imath 3.0 did not have C API)
@@ -466,11 +449,6 @@ if (USE_ISOBMFF)
   endif()
 endif()
 
-# Optionally enable MIDI support
-if(USE_PORTMIDI)
-  find_package(PortMidi)
-endif(USE_PORTMIDI)
-
 if(USE_OPENJPEG)
   find_package(OpenJPEG CONFIG)
   if(OpenJPEG_FOUND)
@@ -609,30 +587,6 @@ if(DT_CXX_HAS_NO_ERROR_PASS_FAILED)
   add_definitions("-Wno-error=pass-failed")
 endif()
 
-# osm gps map library
-if(USE_MAP)
-  find_package(OSMGpsMap)
-  if(OSMGpsMap_FOUND)
-    message(STATUS "Map mode: enabled")
-    add_definitions("-DHAVE_MAP")
-    if(NOT OSMGpsMap_VERSION VERSION_LESS 1.1.0)
-      add_definitions("-DHAVE_OSMGPSMAP_110_OR_NEWER")
-    endif()
-    if(OSMGpsMap_VERSION VERSION_GREATER 1.1.0)
-      add_definitions("-DHAVE_OSMGPSMAP_NEWER_THAN_110")
-    endif()
-    include_directories(SYSTEM ${OSMGpsMap_INCLUDE_DIRS})
-    list(APPEND LIBS ${OSMGpsMap_LIBRARIES})
-    add_definitions(${OSMGpsMap_DEFINITIONS})
-  else(OSMGpsMap_FOUND)
-    set(USE_MAP OFF)
-    message(STATUS "Map mode: disabled, please install libosmgpsmap")
-  endif(OSMGpsMap_FOUND)
-
-else(USE_MAP)
-  message(STATUS "Map mode: disabled")
-endif(USE_MAP)
-
 # libcolord-gtk:
 if(USE_COLORD)
   find_package(Colord)
@@ -658,34 +612,6 @@ if(USE_COLORD)
     set(USE_COLORD OFF)
   endif(Colord_FOUND)
 endif(USE_COLORD)
-
-if(BUILD_PRINT)
-  find_package(Cups)
-  if(CUPS_FOUND)
-    # The macOS SDK is already searched through the compiler sysroot. Adding
-    # its include root explicitly shadows Clang's builtin headers when using
-    # the current Homebrew LLVM toolchain.
-    if(NOT APPLE)
-      include_directories(SYSTEM ${CUPS_INCLUDE_DIR})
-    endif()
-    FILE(GLOB SOURCE_FILES_PRINT
-      "common/cups_print.h"
-      "common/cups_print.c"
-      "common/printprof.c"
-      "common/printing.h"
-      "common/printing.c"
-      )
-    set(SOURCES ${SOURCES} ${SOURCE_FILES_PRINT})
-    list(APPEND LIBS ${CUPS_LIBRARIES})
-    add_definitions("-DHAVE_PRINT")
-    message(STATUS "Print mode: enabled")
-  else(CUPS_FOUND)
-    set(BUILD_PRINT OFF)
-    message(STATUS "Print mode: disabled, please install CUPS dev package")
-  endif(CUPS_FOUND)
-else(BUILD_PRINT)
-  message(STATUS "Print mode: disabled")
-endif(BUILD_PRINT)
 
 # macOS system headers are supplied by the compiler sysroot. Third-party CMake
 # find modules occasionally add the SDK root as an explicit include directory;

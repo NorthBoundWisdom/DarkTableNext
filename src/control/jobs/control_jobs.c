@@ -22,7 +22,6 @@
 #include "common/debug.h"
 #include "common/exif.h"
 #include "common/film.h"
-#include "common/gpx.h"
 #include "common/history.h"
 #include "common/history_snapshot.h"
 #include "common/image.h"
@@ -70,12 +69,6 @@ typedef struct dt_control_datetime_t
     GTimeSpan offset;
     char datetime[DT_DATETIME_LENGTH];
 } dt_control_datetime_t;
-
-typedef struct dt_control_gpx_apply_t
-{
-    gchar *filename;
-    gchar *tz;
-} dt_control_gpx_apply_t;
 
 typedef struct dt_control_export_t
 {
@@ -140,24 +133,6 @@ static void _update_progress(dt_job_t *job, double fraction, double *prev_time)
         dt_control_job_set_progress(job, CLAMP(fraction, 0.0, 1.0));
         *prev_time = curr_time;
     }
-}
-
-/* enumerator of images from filmroll */
-static void _control_image_enumerator_job_film_init(dt_control_image_enumerator_t *t,
-                                                    const int32_t filmid)
-{
-    sqlite3_stmt *stmt;
-    /* get a list of images in filmroll */
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT id FROM main.images WHERE film_id = ?1", -1, &stmt, NULL);
-    DT_DEBUG_SQLITE3_BIND_INT(stmt, 1, filmid);
-
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        const dt_imgid_t imgid = sqlite3_column_int(stmt, 0);
-        t->index = g_list_append(t->index, GINT_TO_POINTER(imgid));
-    }
-    sqlite3_finalize(stmt);
 }
 
 static void _collection_update(double *last_update, double *update_interval)
@@ -1338,102 +1313,6 @@ static int32_t _control_delete_images_job_run(dt_job_t *job)
     return 0;
 }
 
-static int32_t _control_gpx_apply_job_run(dt_job_t *job)
-{
-    dt_control_image_enumerator_t *params = dt_control_job_get_params(job);
-    GList *t = params->index;
-    struct dt_gpx_t *gpx = NULL;
-    uint32_t cntr = 0;
-    const dt_control_gpx_apply_t *d = params->data;
-    const gchar *filename = d->filename;
-    const gchar *tz = d->tz;
-    char message[512] = {0};
-    double fraction = 0;
-
-    /* do we have any selected images */
-    if (!t)
-        goto bail_out;
-
-    /* try parse the gpx data */
-    gpx = dt_gpx_new(filename);
-    if (!gpx)
-    {
-        dt_control_log(_("failed to parse GPX file"));
-        goto bail_out;
-    }
-
-    GTimeZone *tz_camera = (tz == NULL) ? g_time_zone_new_utc() : g_time_zone_new(tz);
-    if (!tz_camera)
-        goto bail_out;
-
-    const guint total = g_list_length(t);
-    double prev_time = 0;
-    g_snprintf(message, sizeof(message),
-               ngettext("setting GPS information", "setting GPS information for %u images", total),
-               total);
-    dt_control_job_set_progress_message(job, message);
-
-    GList *imgs = NULL;
-    GArray *gloc = g_array_new(FALSE, FALSE, sizeof(dt_image_geoloc_t));
-    /* go thru each selected image and lookup location in gpx */
-    do
-    {
-        dt_image_geoloc_t geoloc;
-        dt_imgid_t imgid = GPOINTER_TO_INT(t->data);
-
-        /* get image */
-        const dt_image_t *cimg = dt_image_cache_get(imgid, 'r');
-        if (!cimg)
-            continue;
-
-        GDateTime *exif_time = dt_datetime_img_to_gdatetime(cimg, tz_camera);
-
-        /* release the lock */
-        dt_image_cache_read_release(cimg);
-        if (!exif_time)
-            continue;
-        GDateTime *utc_time = g_date_time_to_timezone(exif_time, darktable.utc_tz);
-        g_date_time_unref(exif_time);
-        if (!utc_time)
-            continue;
-
-        /* only update image location if time is within gpx tack range */
-        if (dt_gpx_get_location(gpx, utc_time, &geoloc))
-        {
-            // takes the option to include the grouped images
-            GList *grps = dt_grouping_get_group_images(imgid);
-            for (GList *grp = grps; grp; grp = g_list_next(grp))
-            {
-                imgs = g_list_prepend(imgs, grp->data);
-                g_array_append_val(gloc, geoloc);
-                cntr++;
-            }
-            g_list_free(grps);
-        }
-        g_date_time_unref(utc_time);
-        _update_progress(job, fraction, &prev_time);
-    } while ((t = g_list_next(t)) != NULL);
-    imgs = g_list_reverse(imgs);
-
-    dt_image_set_images_locations(imgs, gloc, TRUE);
-
-    dt_control_log(ngettext("applied matched GPX location onto %d image",
-                            "applied matched GPX location onto %d images", cntr),
-                   cntr);
-
-    g_time_zone_unref(tz_camera);
-    dt_gpx_destroy(gpx);
-    g_array_unref(gloc);
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, imgs, 0);
-    return 0;
-
-bail_out:
-    if (gpx)
-        dt_gpx_destroy(gpx);
-
-    return 1;
-}
-
 static int32_t _control_move_images_job_run(dt_job_t *job)
 {
     return _generic_dt_control_fileop_images_job_run(job, &dt_image_move, _("moving %d image"),
@@ -1947,74 +1826,11 @@ end:
     return 0;
 }
 
-static dt_control_image_enumerator_t *_control_gpx_apply_alloc()
-{
-    dt_control_image_enumerator_t *params = _control_image_enumerator_alloc();
-    if (!params)
-        return NULL;
-
-    params->data = calloc(1, sizeof(dt_control_gpx_apply_t));
-    if (!params->data)
-    {
-        _control_image_enumerator_cleanup(params);
-        return NULL;
-    }
-
-    return params;
-}
-
-static void _control_gpx_apply_job_cleanup(void *p)
-{
-    dt_control_image_enumerator_t *params = p;
-
-    dt_control_gpx_apply_t *data = params->data;
-    params->data = NULL;
-    g_free(data->filename);
-    g_free(data->tz);
-
-    free(data);
-
-    _control_image_enumerator_cleanup(params);
-}
-
-static dt_job_t *_control_gpx_apply_job_create(const gchar *filename, const int32_t filmid,
-                                               const gchar *tz, GList *imgs)
-{
-    dt_job_t *job = dt_control_job_create(&_control_gpx_apply_job_run, "gpx apply");
-    if (!job)
-        return NULL;
-    dt_control_image_enumerator_t *params = _control_gpx_apply_alloc();
-    if (!params)
-    {
-        dt_control_job_dispose(job);
-        return NULL;
-    }
-    dt_control_job_set_params(job, params, _control_gpx_apply_job_cleanup);
-
-    if (filmid != -1)
-        _control_image_enumerator_job_film_init(params, filmid);
-    else if (!imgs)
-        params->index = dt_act_on_get_images(TRUE, TRUE, FALSE);
-    else
-        params->index = imgs;
-    dt_control_gpx_apply_t *data = params->data;
-    data->filename = g_strdup(filename);
-    data->tz = g_strdup(tz);
-
-    return job;
-}
-
 void dt_control_merge_hdr()
 {
     dt_control_add_job(DT_JOB_QUEUE_USER_FG, _control_generic_images_job_create(
                                                  &_control_merge_hdr_job_run, N_("merge HDR image"),
                                                  0, NULL, PROGRESS_CANCELLABLE, TRUE));
-}
-
-void dt_control_gpx_apply(const gchar *filename, const int32_t filmid, const gchar *tz, GList *imgs)
-{
-    dt_control_add_job(DT_JOB_QUEUE_USER_FG,
-                       _control_gpx_apply_job_create(filename, filmid, tz, imgs));
 }
 
 void dt_control_duplicate_images(const gboolean virgin)
@@ -2936,8 +2752,8 @@ static int32_t _control_import_job_run(dt_job_t *job)
     dt_control_log(ngettext("imported %d image", "imported %d images", cntr), cntr);
     dt_control_queue_redraw_center();
     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_TAG_CHANGED);
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_GEOTAG_CHANGED, imgs, 0);
     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_FILMROLLS_IMPORTED, filmid);
+    g_list_free(imgs);
     if (data->wait)
         *data->wait = FALSE; // resume caller
     return 0;

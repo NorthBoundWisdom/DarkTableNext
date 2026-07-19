@@ -5,7 +5,7 @@ include(manage-symbol-visibility)
 add_definitions(-include common/module_api.h)
 add_definitions(-include imageio/storage/imageio_storage_api.h)
 
-set(MODULES disk email piwigo)
+set(MODULES disk)
 
 foreach(module ${MODULES})
 	add_library(${module} MODULE "${module}.c")

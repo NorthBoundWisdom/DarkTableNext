@@ -1488,35 +1488,6 @@ filechooser row:hover .sidebar-icon
   color: @bauhaus_fg_hover;
 }
 
-/*------------
-  - Map view -
-  ------------*/
-/* Set how to display result list on find location module */
-#dt-map-location > *
-{
-margin: 0.14em;
-}
-
-#dt-map-location label
-{
-padding: 0.14em;
-}
-
-#dt-map-location
-{
-border-bottom: 0.07em solid alpha(@selected_bg_color, 0.75);
-}
-
-#dt-map-location:hover
-{
-  background-color: @field_hover_bg;
-}
-
-#dt-map-location:hover label
-{
-  color: @field_hover_fg;
-}
-
 /*---------------
   - Other stuff -
   ---------------*/

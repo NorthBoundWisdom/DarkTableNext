@@ -17,9 +17,6 @@
 */
 
 #include "common/darktable.h"
-#ifdef HAVE_GPHOTO2
-#include "common/camera_control.h"
-#endif
 #include "common/collection.h"
 #include "common/colorspaces.h"
 #include "common/file_location.h"
@@ -87,16 +84,6 @@
 // according to man xrandr and the docs of gdk_screen_set_resolution 96 is the default
 #define DT_UI_DEFAULT_DPI_RESOLUTION 96
 #endif
-
-typedef enum dt_gui_view_switch_t
-{
-    DT_GUI_VIEW_SWITCH_TO_TETHERING = 1,
-    DT_GUI_VIEW_SWITCH_TO_LIGHTTABLE,
-    DT_GUI_VIEW_SWITCH_TO_DARKROOM,
-    DT_GUI_VIEW_SWITCH_TO_MAP,
-    DT_GUI_VIEW_SWITCH_TO_SLIDESHOW,
-    DT_GUI_VIEW_SWITCH_TO_PRINT
-} dt_gui_view_switch_to_t;
 
 const char *_ui_panel_config_names[] = {"header", "toolbar_top", "toolbar_bottom",
                                         "left",   "right",       "bottom"};
@@ -1480,15 +1467,6 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), sep);
     gtk_widget_show(sep);
 
-    _osx_add_view_menu_item(view_menu, C_("menu", "Slideshow"), "slideshow");
-#ifdef HAVE_MAP
-    _osx_add_view_menu_item(view_menu, C_("menu", "Map"), "map");
-#endif
-    _osx_add_view_menu_item(view_menu, C_("menu", "Print"), "print");
-#ifdef HAVE_GPHOTO2
-    _osx_add_view_menu_item(view_menu, C_("menu", "Tethering"), "tethering");
-#endif
-
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(view_root_menu), view_menu);
 
     // Window menu
@@ -1618,12 +1596,8 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
                                     G_CALLBACK(dt_shortcut_tooltip_callback));
 
     ac = dt_action_section(&darktable.control->actions_global, N_("switch views"));
-    dt_action_register(ac, N_("tethering"), _gui_switch_view_key_accel_callback, GDK_KEY_t, 0);
     dt_action_register(ac, N_("lighttable"), _gui_switch_view_key_accel_callback, GDK_KEY_l, 0);
     dt_action_register(ac, N_("darkroom"), _gui_switch_view_key_accel_callback, GDK_KEY_d, 0);
-    dt_action_register(ac, N_("map"), _gui_switch_view_key_accel_callback, GDK_KEY_m, 0);
-    dt_action_register(ac, N_("slideshow"), _gui_switch_view_key_accel_callback, GDK_KEY_s, 0);
-    dt_action_register(ac, N_("print"), _gui_switch_view_key_accel_callback, GDK_KEY_p, 0);
 
     // register actions for applying styles via shortcuts
     dt_init_styles_actions();
@@ -1632,7 +1606,7 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     dt_action_register(&darktable.control->actions_global, N_("quit"), _quit_callback, GDK_KEY_q,
                        GDK_CONTROL_MASK);
 
-    // Full-screen accelerator (no ESC handler here to enable quit-slideshow using ESC)
+    // Full-screen accelerator
     dt_action_register(&darktable.control->actions_global, N_("fullscreen"),
                        _fullscreen_key_accel_callback, GDK_KEY_F11, 0);
 
