@@ -1,9 +1,7 @@
 add_subdirectory(pixmaps ${DARKTABLE_DATADIR}/pixmaps)
 add_subdirectory(styles ${DARKTABLE_DATADIR}/styles)
 
-if(USE_OPENCL)
-	add_subdirectory(kernels ${DARKTABLE_DATADIR}/kernels)
-endif(USE_OPENCL)
+add_subdirectory(kernels ${DARKTABLE_DATADIR}/kernels)
 
 FILE(GLOB THEME_FILES "themes/*.css")
 FILE(COPY ${THEME_FILES} DESTINATION "${DARKTABLE_DATADIR}/themes")
@@ -52,14 +50,6 @@ endif()
 FILE(COPY wb_presets.json DESTINATION "${DARKTABLE_DATADIR}")
 install(FILES wb_presets.json DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
 
-if(USE_AI)
-  #
-  # Install AI models registry
-  #
-  FILE(COPY ai_models.json DESTINATION "${DARKTABLE_DATADIR}")
-  install(FILES ai_models.json DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/darktable COMPONENT DTApplication)
-endif(USE_AI)
-
 #
 # Transform darktableconfig.xml into darktablerc
 #
@@ -100,15 +90,13 @@ endforeach()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/darktableconfig.xml.in ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml)
 
-if(USE_XMLLINT)
-  add_custom_target(
-    validate_darktableconfig_xml ALL
-    COMMAND ${Xmllint_BIN} --nonet --valid --noout ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-    COMMENT "Checking validity of ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml"
-  )
-endif(USE_XMLLINT)
+add_custom_target(
+  validate_darktableconfig_xml ALL
+  COMMAND ${Xmllint_BIN} --nonet --valid --noout ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+  COMMENT "Checking validity of ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml"
+)
 
 add_custom_command(
   DEPENDS ${CMAKE_SOURCE_DIR}/tools/generate_darktablerc.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml
@@ -120,9 +108,7 @@ add_custom_target(
   darktablerc_file ALL
   DEPENDS ${CMAKE_SOURCE_DIR}/tools/generate_darktablerc.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${CMAKE_CURRENT_BINARY_DIR}/darktableconfig.xml ${CMAKE_CURRENT_BINARY_DIR}/darktablerc
 )
-if(USE_XMLLINT)
-  add_dependencies(darktablerc_file validate_darktableconfig_xml)
-endif(USE_XMLLINT)
+add_dependencies(darktablerc_file validate_darktableconfig_xml)
 
 # first of all install darktablerc file into share as template
 # postinst script should copy this into users homedirectory

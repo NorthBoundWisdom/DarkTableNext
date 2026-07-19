@@ -1,8 +1,0 @@
-{
-  "id": "test-multiply",
-  "name": "Test Multiply",
-  "description": "Test model: y = x * 2",
-  "task": "test",
-  "backend": "onnx",
-  "num_inputs": 1
-}

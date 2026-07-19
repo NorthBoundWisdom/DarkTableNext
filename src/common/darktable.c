@@ -46,9 +46,6 @@
 #include "common/resource_limits.h"
 #include "common/undo.h"
 #include "common/gimp.h"
-#ifdef HAVE_AI
-#include "common/ai_models.h"
-#endif
 #include "control/conf.h"
 #include "control/control.h"
 #include "control/crawler.h"
@@ -89,9 +86,7 @@
 
 
 
-#ifdef HAVE_LIBRAW
 #include <libraw/libraw_version.h>
-#endif
 
 #include "dbus.h"
 
@@ -647,18 +642,8 @@ static char *_get_version_string(void)
     g_string_append(version, "  OpenCL                 -> DISABLED - GPU acceleration is NOT available\n");
 #endif
 
-#ifdef HAVE_LIBRAW
     g_string_append_printf(version, "  LibRaw                 -> ENABLED  - Version %s\n",
                            LIBRAW_VERSION_STR);
-#else
-    g_string_append(version, "  LibRaw                 -> DISABLED\n");
-#endif
-
-#ifdef HAVE_AI
-    g_string_append(version, "  AI                     -> ENABLED\n");
-#else
-    g_string_append(version, "  AI                     -> DISABLED\n");
-#endif
 
     g_string_append_printf(version, "See %s for detailed documentation.\nSee %s to report bugs.\n",
                            PACKAGE_DOCS, PACKAGE_BUGREPORT);
@@ -844,7 +829,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
           !strcmp(darg, "pipe") ? DT_DEBUG_PIPE :
           !strcmp(darg, "expose") ? DT_DEBUG_EXPOSE :
           !strcmp(darg, "picker") ? DT_DEBUG_PICKER :
-          !strcmp(darg, "ai") ? DT_DEBUG_AI : // AI related stuff.
           0;
                 if (dadd)
                     darktable.unmuted |= dadd;
@@ -1327,19 +1311,6 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
 
     // get the list of color profiles
     darktable.color_profiles = dt_colorspaces_init();
-
-#ifdef HAVE_AI
-    // initialize AI models registry (the singleton darktable.ai_registry)
-    if (dt_ai_models_init())
-    {
-        dt_ai_models_load_registry();
-        if (!dt_ai_registry_is_enabled())
-            dt_print(DT_DEBUG_AI, "[darktable_ai] AI subsystem is disabled");
-    }
-    else
-        dt_print(DT_DEBUG_ALWAYS,
-                 "[darktable_ai] could not set up AI directories; AI features unavailable");
-#endif
 
     // initialize datetime data
     dt_datetime_init();
@@ -1835,10 +1806,6 @@ After dt_control_shutdown() has finished we are sure there are no background thr
     dt_mipmap_cache_cleanup();
 
     dt_colorspaces_cleanup(darktable.color_profiles);
-#ifdef HAVE_AI
-    dt_ai_models_cleanup();
-    dt_ai_backend_cleanup_globals();
-#endif
     dt_conf_cleanup(darktable.conf);
     free(darktable.conf);
     darktable.conf = NULL;

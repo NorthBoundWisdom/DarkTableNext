@@ -31,7 +31,6 @@
                      "tree-vectorize", "no-math-errno")
 #endif
 
-// #define AI_ACTIVATED
 /* AI feature not good enough so disabled for now
    If enabled there must be $DESCRIPTION: entries in illuminants.h for bauhaus
 */
@@ -837,188 +836,6 @@ _loop_switch(const float *const restrict in, float *const restrict out, const si
 #define SHF(ii, jj, c) ((i + ii) * width + j + jj) * ch + c
 #define OFF 4
 
-#ifdef AI_ACTIVATED
-
-#if defined(__GNUC__) && defined(_WIN32)
-// On Windows there is a rounding issue making the image full
-// black. For a discussion about the issue and tested solutions see
-// PR #12382).
-#pragma GCC push_options
-#pragma GCC optimize("-fno-finite-math-only")
-#endif
-
-static inline void _auto_detect_WB(const float *const restrict in, float *const restrict temp,
-                                   dt_illuminant_t illuminant, const size_t width,
-                                   const size_t height, const size_t ch,
-                                   const dt_colormatrix_t RGB_to_XYZ, dt_aligned_pixel_t xyz)
-{
-    /* Detect the chromaticity of the illuminant based on the grey edges hypothesis.
-      So we compute a laplacian filter and get the weighted average of its chromaticities
-
-      Inspired by :
-      A Fast White Balance Algorithm Based on Pixel Greyness, Ba Thai·Guang Deng·Robert Ross
-      https://www.researchgate.net/profile/Ba_Son_Thai/publication/308692177_A_Fast_White_Balance_Algorithm_Based_on_Pixel_Greyness/
-
-      Edge-Based Color Constancy, Joost van de Weijer, Theo Gevers, Arjan Gijsenij
-      https://hal.inria.fr/inria-00548686/document
-    */
-    const float D50[2] = {D50xyY.x, D50xyY.y};
-    // Convert RGB to xy
-    DT_OMP_FOR(collapse(2))
-    for (size_t i = 0; i < height; i++)
-        for (size_t j = 0; j < width; j++)
-        {
-            const size_t index = (i * width + j) * ch;
-            dt_aligned_pixel_t RGB;
-            dt_aligned_pixel_t XYZ;
-
-            // Clip negatives
-            for_each_channel(c, aligned(in)) RGB[c] = fmaxf(in[index + c], 0.0f);
-
-            // Convert to XYZ
-            dot_product(RGB, RGB_to_XYZ, XYZ);
-
-            // Convert to xyY
-            const float sum = fmaxf(XYZ[0] + XYZ[1] + XYZ[2], NORM_MIN);
-            XYZ[0] /= sum;   // x
-            XYZ[2] = XYZ[1]; // Y
-            XYZ[1] /= sum;   // y
-
-            // Shift the chromaticity plane so the D50 point (target) becomes the origin
-            const float norm = dt_fast_hypotf(D50[0], D50[1]);
-
-            temp[index] = (XYZ[0] - D50[0]) / norm;
-            temp[index + 1] = (XYZ[1] - D50[1]) / norm;
-            temp[index + 2] = XYZ[2];
-        }
-
-    float elements = 0.f;
-    dt_aligned_pixel_t xyY = {0.f};
-
-    if (illuminant == DT_ILLUMINANT_DETECT_SURFACES)
-    {
-        DT_OMP_FOR(reduction(+ : xyY, elements))
-        for (size_t i = 2 * OFF; i < height - 4 * OFF; i += OFF)
-            for (size_t j = 2 * OFF; j < width - 4 * OFF; j += OFF)
-            {
-                float DT_ALIGNED_PIXEL central_average[2];
-
-                DT_PRAGMA_UNROLL
-                for (size_t c = 0; c < 2; c++)
-                {
-                    // B-spline local average / blur
-                    central_average[c] = (temp[SHF(-OFF, -OFF, c)] + 2.f * temp[SHF(-OFF, 0, c)] +
-                                          temp[SHF(-OFF, +OFF, c)] + 2.f * temp[SHF(0, -OFF, c)] +
-                                          4.f * temp[SHF(0, 0, c)] + 2.f * temp[SHF(0, +OFF, c)] +
-                                          temp[SHF(+OFF, -OFF, c)] + 2.f * temp[SHF(+OFF, 0, c)] +
-                                          temp[SHF(+OFF, +OFF, c)]) /
-                                         16.0f;
-                    central_average[c] = fmaxf(central_average[c], 0.0f);
-                }
-
-                dt_aligned_pixel_t var = {0.f};
-
-                // compute patch-wise variance
-                // If variance = 0, we are on a flat surface and want to discard that patch.
-                DT_PRAGMA_UNROLL
-                for (size_t c = 0; c < 2; c++)
-                {
-                    var[c] = (sqf(temp[SHF(-OFF, -OFF, c)] - central_average[c]) +
-                              sqf(temp[SHF(-OFF, 0, c)] - central_average[c]) +
-                              sqf(temp[SHF(-OFF, +OFF, c)] - central_average[c]) +
-                              sqf(temp[SHF(0, -OFF, c)] - central_average[c]) +
-                              sqf(temp[SHF(0, 0, c)] - central_average[c]) +
-                              sqf(temp[SHF(0, +OFF, c)] - central_average[c]) +
-                              sqf(temp[SHF(+OFF, -OFF, c)] - central_average[c]) +
-                              sqf(temp[SHF(+OFF, 0, c)] - central_average[c]) +
-                              sqf(temp[SHF(+OFF, +OFF, c)] - central_average[c])) /
-                             9.0f;
-                }
-
-                // Compute the patch-wise chroma covariance.
-                // If covariance = 0, chroma channels are not correlated and we either have noise or chromatic aberrations.
-                // Both ways, we want to discard that patch from the chroma average.
-                var[2] = ((temp[SHF(-OFF, -OFF, 0)] - central_average[0]) *
-                              (temp[SHF(-OFF, -OFF, 1)] - central_average[1]) +
-                          (temp[SHF(-OFF, 0, 0)] - central_average[0]) *
-                              (temp[SHF(-OFF, 0, 1)] - central_average[1]) +
-                          (temp[SHF(-OFF, +OFF, 0)] - central_average[0]) *
-                              (temp[SHF(-OFF, +OFF, 1)] - central_average[1]) +
-                          (temp[SHF(0, -OFF, 0)] - central_average[0]) *
-                              (temp[SHF(0, -OFF, 1)] - central_average[1]) +
-                          (temp[SHF(0, 0, 0)] - central_average[0]) *
-                              (temp[SHF(0, 0, 1)] - central_average[1]) +
-                          (temp[SHF(0, +OFF, 0)] - central_average[0]) *
-                              (temp[SHF(0, +OFF, 1)] - central_average[1]) +
-                          (temp[SHF(+OFF, -OFF, 0)] - central_average[0]) *
-                              (temp[SHF(+OFF, -OFF, 1)] - central_average[1]) +
-                          (temp[SHF(+OFF, 0, 0)] - central_average[0]) *
-                              (temp[SHF(+OFF, 0, 1)] - central_average[1]) +
-                          (temp[SHF(+OFF, +OFF, 0)] - central_average[0]) *
-                              (temp[SHF(+OFF, +OFF, 1)] - central_average[1])) /
-                         9.0f;
-
-                // Compute the Minkowski p-norm for regularization
-                const float p = 8.f;
-                const float p_norm =
-                    powf(powf(fabsf(central_average[0]), p) + powf(fabsf(central_average[1]), p),
-                         1.f / p) +
-                    NORM_MIN;
-                const float weight = var[0] * var[1] * var[2];
-
-                DT_PRAGMA_UNROLL
-                for (size_t c = 0; c < 2; c++)
-                    xyY[c] += central_average[c] * weight / p_norm;
-                elements += weight / p_norm;
-            }
-    }
-    else if (illuminant == DT_ILLUMINANT_DETECT_EDGES)
-    {
-        DT_OMP_FOR(reduction(+ : xyY, elements))
-        for (size_t i = 2 * OFF; i < height - 4 * OFF; i += OFF)
-            for (size_t j = 2 * OFF; j < width - 4 * OFF; j += OFF)
-            {
-                float DT_ALIGNED_PIXEL dd[2];
-                float DT_ALIGNED_PIXEL central_average[2];
-
-                DT_PRAGMA_UNROLL
-                for (size_t c = 0; c < 2; c++)
-                {
-                    // B-spline local average / blur
-                    central_average[c] = (temp[SHF(-OFF, -OFF, c)] + 2.f * temp[SHF(-OFF, 0, c)] +
-                                          temp[SHF(-OFF, +OFF, c)] + 2.f * temp[SHF(0, -OFF, c)] +
-                                          4.f * temp[SHF(0, 0, c)] + 2.f * temp[SHF(0, +OFF, c)] +
-                                          temp[SHF(+OFF, -OFF, c)] + 2.f * temp[SHF(+OFF, 0, c)] +
-                                          temp[SHF(+OFF, +OFF, c)]) /
-                                         16.0f;
-
-                    // image - blur = laplacian = edges
-                    dd[c] = temp[SHF(0, 0, c)] - central_average[c];
-                }
-
-                // Compute the Minkowski p-norm for regularization
-                const float p = 8.f;
-                const float p_norm =
-                    powf(powf(fabsf(dd[0]), p) + powf(fabsf(dd[1]), p), 1.f / p) + NORM_MIN;
-
-                DT_PRAGMA_UNROLL
-                for (size_t c = 0; c < 2; c++)
-                    xyY[c] -= dd[c] / p_norm;
-                elements += 1.f;
-            }
-    }
-
-    const float norm_D50 = dt_fast_hypotf(D50[0], D50[1]);
-
-    for (size_t c = 0; c < 2; c++)
-        xyz[c] = norm_D50 * (xyY[c] / elements) + D50[c];
-}
-
-#if defined(__GNUC__) && defined(_WIN32)
-#pragma GCC pop_options
-#endif
-
-#endif // AI_ACTIVATED
 
 static void _declare_cat_on_pipe(dt_iop_module_t *self, const gboolean preset)
 {
@@ -1973,9 +1790,6 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     // auto-detect WB upon request
     if (self->dev->gui_attached && g)
     {
-#ifdef AI_ACTIVATED
-        gboolean exit = FALSE;
-#endif
         if (g->run_profile && dt_pipe_is_preview(piece->pipe))
         {
             dt_iop_gui_enter_critical_section(self);
@@ -1985,34 +1799,6 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
             dt_iop_gui_leave_critical_section(self);
         }
 
-#ifdef AI_ACTIVATED
-        if (data->illuminant_type == DT_ILLUMINANT_DETECT_EDGES ||
-            data->illuminant_type == DT_ILLUMINANT_DETECT_SURFACES)
-        {
-            if (dt_pipe_is_full(piece->pipe))
-            {
-                // detection on full image only
-                dt_iop_gui_enter_critical_section(self);
-                // compute "AI" white balance.  We can use our output buffer
-                // as scratch space since we will be overwriting it afterwards
-                // anyway
-                _auto_detect_WB(in, out, data->illuminant_type, roi_in->width, roi_in->height, ch,
-                                RGB_to_XYZ, g->XYZ);
-                dt_dev_pixelpipe_cache_invalidate_later(piece->pipe, self->iop_order, "AI RGB: ");
-                dt_iop_gui_leave_critical_section(self);
-            }
-
-            // passthrough pixels
-            dt_iop_image_copy_by_size(out, in, roi_in->width, roi_in->height, ch);
-
-            dt_control_log(_("auto-detection of white balance completed"));
-
-            exit = TRUE;
-        }
-
-        if (exit)
-            return;
-#endif
     }
 
     if (data->illuminant_type == DT_ILLUMINANT_CAMERA)
@@ -2780,49 +2566,6 @@ static void _commit_profile_callback(GtkWidget *widget, dt_iop_module_t *self)
     dt_dev_add_history_item(darktable.develop, self, TRUE);
 }
 
-#ifdef AI_ACTIVATED
-static void _develop_ui_pipe_finished_callback(gpointer instance, dt_iop_module_t *self)
-{
-    dt_iop_channelmixer_rgb_gui_data_t *g = self->gui_data;
-    if (!g)
-        return;
-
-    dt_iop_channelmixer_rgb_params_t *p = self->params;
-
-    if (p->illuminant != DT_ILLUMINANT_DETECT_EDGES &&
-        p->illuminant != DT_ILLUMINANT_DETECT_SURFACES)
-        return;
-
-    dt_iop_gui_enter_critical_section(self);
-    p->x = g->XYZ[0];
-    p->y = g->XYZ[1];
-    dt_iop_gui_leave_critical_section(self);
-
-    _check_if_close_to_daylight(p->x, p->y, &p->temperature, &p->illuminant, &p->adaptation);
-
-    DT_ENTER_GUI_UPDATE();
-
-    dt_bauhaus_slider_set(g->temperature, p->temperature);
-    dt_bauhaus_combobox_set(g->illuminant, p->illuminant);
-    dt_bauhaus_combobox_set(g->adaptation, p->adaptation);
-
-    const dt_aligned_pixel_t xyY = {p->x, p->y, 1.f};
-    dt_aligned_pixel_t Lch;
-    dt_xyY_to_Lch(xyY, Lch);
-    dt_bauhaus_slider_set(g->illum_x, rad2degf(Lch[2]));
-    dt_bauhaus_slider_set(g->illum_y, Lch[1]);
-
-    _update_illuminants(self);
-    _update_approx_cct(self);
-    _update_illuminant_color(self);
-
-    DT_LEAVE_GUI_UPDATE();
-
-    gui_changed(self, NULL, NULL);
-
-    dt_dev_add_history_item(darktable.develop, self, TRUE);
-}
-#endif
 
 static void _preview_pipe_finished_callback(gpointer instance, dt_iop_module_t *self)
 {
@@ -2942,12 +2685,6 @@ void commit_params(dt_iop_module_t *self, dt_iop_params_t *p1, dt_dev_pixelpipe_
     if (self->dev->gui_attached && g)
     {
         if (run_profile || run_validation
-#ifdef AI_ACTIVATED
-            || // delta E validation
-            ((d->illuminant_type == DT_ILLUMINANT_DETECT_EDGES ||
-              d->illuminant_type == DT_ILLUMINANT_DETECT_SURFACES) && // WB extraction mode
-             dt_pipe_is_full(piece->pipe))
-#endif
         )
         {
             piece->process_cl_ready = FALSE;
@@ -3054,17 +2791,6 @@ static void _update_illuminants(const dt_iop_module_t *self)
     case DT_ILLUMINANT_CAMERA:
     {
         gtk_widget_set_visible(g->adaptation, TRUE);
-        gtk_widget_set_visible(g->temperature, FALSE);
-        gtk_widget_set_visible(g->illum_fluo, FALSE);
-        gtk_widget_set_visible(g->illum_led, FALSE);
-        gtk_widget_set_visible(g->illum_x, FALSE);
-        gtk_widget_set_visible(g->illum_y, FALSE);
-        break;
-    }
-    case DT_ILLUMINANT_DETECT_EDGES:
-    case DT_ILLUMINANT_DETECT_SURFACES:
-    {
-        gtk_widget_set_visible(g->adaptation, FALSE);
         gtk_widget_set_visible(g->temperature, FALSE);
         gtk_widget_set_visible(g->illum_fluo, FALSE);
         gtk_widget_set_visible(g->illum_led, FALSE);
@@ -3782,14 +3508,6 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
             if (found)
                 dt_control_log(_("white balance successfully extracted from raw image"));
         }
-#ifdef AI_ACTIVATED
-        else if (p->illuminant == DT_ILLUMINANT_DETECT_EDGES ||
-                 p->illuminant == DT_ILLUMINANT_DETECT_SURFACES)
-        {
-            // We need to recompute only the full preview
-            dt_control_log(_("auto-detection of white balance started…"));
-        }
-#endif
     }
 
     if (w == g->temperature)
@@ -4175,10 +3893,6 @@ void gui_init(dt_iop_module_t *self)
 
     g->XYZ[0] = NAN;
 
-#ifdef AI_ACTIVATED
-    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_DEVELOP_UI_PIPE_FINISHED,
-                             _develop_ui_pipe_finished_callback);
-#endif
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED,
                              _preview_pipe_finished_callback);
 

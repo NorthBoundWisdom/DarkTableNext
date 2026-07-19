@@ -1,7 +1,4 @@
 add_subdirectory(external)
-if(USE_AI)
-  add_subdirectory(ai)
-endif(USE_AI)
 
 include(CheckCSourceCompiles)
 include(CheckCXXSymbolExists)
@@ -32,7 +29,6 @@ FILE(GLOB SOURCE_FILES
   "common/database.c"
   "common/datetime.c"
   "common/dbus.c"
-  "common/densecrf.cc"
   "common/distance_transform.c"
   "common/dlopencl.c"
   "common/dng_opcode.c"
@@ -213,11 +209,6 @@ endif()
 
 list(APPEND LIBS ${OpenMP_C_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 
-if(USE_DARKTABLE_PROFILING)
-	add_definitions(-DUSE_DARKTABLE_PROFILING)
-	set(SOURCES ${SOURCES} "common/profiling.c")
-endif()
-
 #
 # Find all other required libraries for building
 #
@@ -259,11 +250,8 @@ else()
 endif()
 
 # LibRaw is always built from the pinned FreeCM source root.
-if(USE_LIBRAW)
-  message(STATUS "Building LibRaw from the pinned FreeCM source root")
-  add_definitions(-DHAVE_LIBRAW=1)
-  list(APPEND SOURCES "imageio/imageio_libraw.c")
-endif()
+message(STATUS "Building LibRaw from the pinned FreeCM source root")
+list(APPEND SOURCES "imageio/imageio_libraw.c")
 
 find_package(LensFun REQUIRED)
 include_directories(SYSTEM ${LensFun_INCLUDE_DIRS})
@@ -279,26 +267,6 @@ foreach(lib ${OUR_LIBS} GIO GThread GModule PangoCairo Rsvg2 PNG JPEG TIFF LCMS2
   add_definitions(${${lib}_DEFINITIONS})
 endforeach(lib)
 
-if(USE_AI)
-  list(APPEND LIBS darktable_ai)
-
-  FILE(GLOB SOURCE_FILES_AI
-    "common/ai_models.c"
-    "common/ai/segmentation.c"
-    "common/ai/restore.c"
-    "common/ai/restore_rgb.c"
-    "common/ai/restore_raw_bayer.c"
-    "common/ai/restore_raw_linear.c"
-    "develop/masks/object.c"
-    "gui/preferences_ai.c"
-  )
-  set(SOURCES ${SOURCES} ${SOURCE_FILES_AI})
-  add_definitions("-DHAVE_AI")
-  message(STATUS "AI features: enabled (local models only)")
-else(USE_AI)
-  message(STATUS "AI features: disabled")
-endif(USE_AI)
-
 if(PNG_VERSION_STRING VERSION_LESS 1.5)
   message(FATAL_ERROR "libpng version 1.5 or newer is required")
 endif()
@@ -306,30 +274,6 @@ endif()
 # Use imported target for curl
 find_package(CURL 7.56 REQUIRED)
 list(APPEND LIBS CURL::libcurl)
-
-if(USE_AI)
-  # libarchive for AI model ZIP extraction
-  # On macOS with Homebrew, libarchive is keg-only
-  if(APPLE)
-    execute_process(
-      COMMAND brew --prefix libarchive
-      OUTPUT_VARIABLE HOMEBREW_LIBARCHIVE_PREFIX
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET
-      RESULT_VARIABLE HOMEBREW_LIBARCHIVE_RESULT
-    )
-    if(HOMEBREW_LIBARCHIVE_RESULT EQUAL 0 AND EXISTS "${HOMEBREW_LIBARCHIVE_PREFIX}")
-      list(APPEND CMAKE_PREFIX_PATH "${HOMEBREW_LIBARCHIVE_PREFIX}")
-    endif()
-  endif()
-  find_package(LibArchive)
-  if(NOT LibArchive_FOUND)
-    message(FATAL_ERROR "libarchive not found")
-  else()
-    include_directories(SYSTEM ${LibArchive_INCLUDE_DIRS})
-    list(APPEND LIBS ${LibArchive_LIBRARIES})
-  endif()
-endif(USE_AI)
 
 # Require Exiv2 0.28 or newer.
 if(DARKTABLE_MANAGED_CPP_DEPENDENCIES)
@@ -345,24 +289,22 @@ else()
 endif()
 list(APPEND LIBS ${Exiv2_LIBRARIES})
 add_definitions(${Exiv2_DEFINITIONS})
-# Optionally enable ISOBMFF support in Exiv2
-if (USE_ISOBMFF)
-  if(Exiv2_VERSION VERSION_GREATER_EQUAL "0.27.4")
-    # exiv2 >= 0.27.4 provides optional support for ISOBMFF files.
-    # This must be manually enabled during exiv2 build and can be checked with
-    # the EXV_ENABLE_BMFF symbol.
-    check_symbol_exists(EXV_ENABLE_BMFF
-      "${EXIV2_CONFIG_HEADER}"
-      HAVE_EXV_ENABLE_BMFF)
-    if(HAVE_EXV_ENABLE_BMFF)
-      set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} cr3 CACHE INTERNAL "")
-      message(STATUS "Exiv2 >= 0.27.4 found with ISOBMFF support (CR3)")
-    else()
-      message(STATUS "Exiv2 >= 0.27.4 found, but was not compiled with ISOBMFF support (CR3)")
-    endif()
+# Enable ISOBMFF support in Exiv2 when the installed library provides it.
+if(Exiv2_VERSION VERSION_GREATER_EQUAL "0.27.4")
+  # exiv2 >= 0.27.4 provides optional support for ISOBMFF files.
+  # This must be manually enabled during exiv2 build and can be checked with
+  # the EXV_ENABLE_BMFF symbol.
+  check_symbol_exists(EXV_ENABLE_BMFF
+    "${EXIV2_CONFIG_HEADER}"
+    HAVE_EXV_ENABLE_BMFF)
+  if(HAVE_EXV_ENABLE_BMFF)
+    set(DT_SUPPORTED_EXTENSIONS ${DT_SUPPORTED_EXTENSIONS} cr3 CACHE INTERNAL "")
+    message(STATUS "Exiv2 >= 0.27.4 found with ISOBMFF support (CR3)")
   else()
-    message(STATUS "Exiv2 < 0.27.4 found, no support for ISOBMFF files (CR3)")
+    message(STATUS "Exiv2 >= 0.27.4 found, but was not compiled with ISOBMFF support (CR3)")
   endif()
+else()
+  message(STATUS "Exiv2 < 0.27.4 found, no support for ISOBMFF files (CR3)")
 endif()
 
 #
@@ -370,18 +312,12 @@ endif()
 #
 add_definitions("-DHAVE_APPLE_KEYCHAIN")
 
-if(USE_ICU)
-  find_package(ICU COMPONENTS i18n data uc)
-  if(ICU_FOUND)
-    add_definitions(-DHAVE_ICU -DSQLITE_CORE -DSQLITE_ENABLE_ICU)
-    list(APPEND LIBS ICU::i18n ICU::data ICU::uc)
-    set(SOURCES ${SOURCES} "common/sqliteicu.c")
-  endif(ICU_FOUND)
-endif(USE_ICU)
+find_package(ICU REQUIRED COMPONENTS i18n data uc)
+add_definitions(-DSQLITE_CORE -DSQLITE_ENABLE_ICU)
+list(APPEND LIBS ICU::i18n ICU::data ICU::uc)
+set(SOURCES ${SOURCES} "common/sqliteicu.c")
 
-if(USE_OPENCL)
-  add_definitions("-DHAVE_OPENCL")
-endif(USE_OPENCL)
+add_definitions("-DHAVE_OPENCL")
 
 
 # Check for __builtin_cpu_supports here due to a bug in clang/llvm. LLVM uses
@@ -514,9 +450,7 @@ add_custom_target(
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../tools/generate_darktablerc_conf.xsl ${DARKTABLE_DATADIR}/darktableconfig.dtd ${DARKTABLE_DATADIR}/darktableconfig.xml ${CMAKE_CURRENT_BINARY_DIR}/conf_gen.h
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
-if(USE_XMLLINT)
-  add_dependencies(generate_preferences validate_darktableconfig_xml generate_conf)
-endif(USE_XMLLINT)
+add_dependencies(generate_preferences validate_darktableconfig_xml generate_conf)
 
 #
 # build libdarktable
@@ -593,21 +527,19 @@ set_target_properties(darktable PROPERTIES INSTALL_RPATH ${RPATH_ORIGIN}/${REL_B
 install(TARGETS darktable DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
 
 
-if(USE_LIBRAW)
-  dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)
-  # LibRaw-cmake is a small build wrapper retained in-tree; give it the
-  # materialized FreeCM checkout explicitly instead of relying on its former
-  # adjacent-source layout.
-  set(LIBRAW_PATH "${LIBRAW_PATH}" CACHE PATH "Pinned LibRaw source root" FORCE)
-  set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
-  set(ENABLE_LCMS OFF CACHE BOOL "")
-  set(ENABLE_JASPER OFF CACHE BOOL "")
+dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)
+# LibRaw-cmake is a small build wrapper retained in-tree; give it the
+# materialized FreeCM checkout explicitly instead of relying on its former
+# adjacent-source layout.
+set(LIBRAW_PATH "${LIBRAW_PATH}" CACHE PATH "Pinned LibRaw source root" FORCE)
+set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
+set(ENABLE_LCMS OFF CACHE BOOL "")
+set(ENABLE_JASPER OFF CACHE BOOL "")
 
-  # Build LibRaw from its pinned source root.
-  set(DARKTABLE_BUILD_SHARED_LIBS_SAVE "${BUILD_SHARED_LIBS}")
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
-  add_subdirectory(external/LibRaw-cmake)
-  set(BUILD_SHARED_LIBS "${DARKTABLE_BUILD_SHARED_LIBS_SAVE}" CACHE BOOL "Build shared libraries" FORCE)
-  unset(DARKTABLE_BUILD_SHARED_LIBS_SAVE)
-  target_link_libraries(lib_darktable PRIVATE libraw::libraw)
-endif()
+# Build LibRaw from its pinned source root.
+set(DARKTABLE_BUILD_SHARED_LIBS_SAVE "${BUILD_SHARED_LIBS}")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+add_subdirectory(external/LibRaw-cmake)
+set(BUILD_SHARED_LIBS "${DARKTABLE_BUILD_SHARED_LIBS_SAVE}" CACHE BOOL "Build shared libraries" FORCE)
+unset(DARKTABLE_BUILD_SHARED_LIBS_SAVE)
+target_link_libraries(lib_darktable PRIVATE libraw::libraw)

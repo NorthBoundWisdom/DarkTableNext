@@ -62,18 +62,6 @@ set(DARKTABLE_DATADIR   "${DARKTABLE_BINDIR}/${REL_BIN_TO_DATADIR}") # DATAROOTD
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
-if(FORCE_COLORED_OUTPUT)
-  check_cxx_compiler_flag("-fdiagnostics-color=always" DT_HAS_GNU_COLORED_DIAGNOSTICS)
-  if(DT_HAS_GNU_COLORED_DIAGNOSTICS)
-    add_compile_options(-fdiagnostics-color=always)
-  else()
-    check_cxx_compiler_flag("-fcolor-diagnostics" DT_HAS_CLANG_COLORED_DIAGNOSTICS)
-    if(DT_HAS_CLANG_COLORED_DIAGNOSTICS)
-      add_compile_options(-fcolor-diagnostics)
-    endif()
-  endif()
-endif()
-
 # macOS uses loader-relative install names for bundled libraries and modules.
 set(CMAKE_MACOSX_RPATH ON)
 set(RPATH_ORIGIN @loader_path)
@@ -210,10 +198,10 @@ if(TESTBUILD_OPENCL_PROGRAMS)
   endif()
 endif()
 
-if(USE_OPENCL AND TESTBUILD_OPENCL_PROGRAMS)
+if(TESTBUILD_OPENCL_PROGRAMS)
   message(STATUS "Will be able to test-compile OpenCL programs. Nice.")
-elseif(USE_OPENCL)
-  message(STATUS "Test-compilation of OpenCL programs is disabled.")
+else()
+  message(STATUS "Test-compilation of OpenCL programs is unavailable.")
 endif()
 
 # we need jsonschema to check noiseprofiles.json
@@ -229,26 +217,15 @@ endif(${jsonschema_BIN} STREQUAL "jsonschema_BIN-NOTFOUND")
 # xsltproc generates the checked build artifacts from the configuration schema.
 find_program(Xsltproc_BIN xsltproc REQUIRED)
 
-# do we have xmllint?
-if(USE_XMLLINT)
-  find_program(Xmllint_BIN xmllint)
-  if(${Xmllint_BIN} STREQUAL "Xmllint_BIN-NOTFOUND")
-    message(STATUS "Missing xmllint")
-    set(USE_XMLLINT OFF)
-  else(${Xmllint_BIN} STREQUAL "Xmllint_BIN-NOTFOUND")
-    message(STATUS "Found xmllint")
-  endif(${Xmllint_BIN} STREQUAL "Xmllint_BIN-NOTFOUND")
-endif(USE_XMLLINT)
+# xmllint validates the generated configuration schema during every build.
+find_program(Xmllint_BIN xmllint REQUIRED)
+message(STATUS "Found xmllint")
 
 # done with looking for programs
 message(STATUS "All external programs found")
 
-# needed to generate file "preferences_gen.h" accordingly
-if(USE_OPENCL)
-	SET(HAVE_OPENCL 1)
-else()
-	SET(HAVE_OPENCL 0)
-endif(USE_OPENCL)
+# OpenCL is a required runtime capability.
+SET(HAVE_OPENCL 1)
 
 if(BUILD_TESTING)
   find_package(cmocka 1.1.0 CONFIG REQUIRED)

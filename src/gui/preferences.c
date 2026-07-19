@@ -30,9 +30,6 @@
 #include "gui/draw.h"
 #include "gui/gtk.h"
 #include "gui/preferences.h"
-#ifdef HAVE_AI
-#include "gui/preferences_ai.h"
-#endif
 #include "gui/presets.h"
 #include "libs/lib.h"
 #include "preferences_gen.h"
@@ -507,10 +504,6 @@ void dt_gui_preferences_show()
     init_tab_generated(_preferences_dialog, stack);
     init_tab_accels(stack);
     init_tab_presets(stack);
-#ifdef HAVE_AI
-    init_tab_ai(_preferences_dialog, stack);
-#endif
-
     gtk_widget_show_all(_preferences_dialog);
 
     //open in the appropriate tab if currently in darkroom or lighttable view

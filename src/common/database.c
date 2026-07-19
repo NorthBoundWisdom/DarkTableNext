@@ -27,9 +27,7 @@
 #include "common/history.h"
 #include "common/metadata.h"
 #include "common/metadata.h"
-#ifdef HAVE_ICU
 #include "common/sqliteicu.h"
-#endif
 #include "control/conf.h"
 #include "control/control.h"
 
@@ -1502,7 +1500,6 @@ start:;
     // take care of potential bad data in the db.
     _sanitize_db(db);
 
-#ifdef HAVE_ICU
     // check if sqlite is already icu enabled
     // if not enabled expected error: no such function:icu_load_collation
     rc = sqlite3_prepare_v2(db->handle, "SELECT icu_load_collation('en_US', 'english')", -1, &stmt,
@@ -1515,8 +1512,6 @@ start:;
         if (rc != SQLITE_OK)
             dt_print(DT_DEBUG_ALWAYS, "[sqlite] init icu extension error %d", rc);
     }
-#endif
-
 error:
     g_free(dbname);
 

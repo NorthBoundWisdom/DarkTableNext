@@ -39,9 +39,7 @@
 #include "imageio/imageio_rgbe.h"
 #include "imageio/imageio_tiff.h"
 
-#ifdef HAVE_LIBRAW
 #include "imageio/imageio_libraw.h"
-#endif
 
 #include <assert.h>
 #include <glib/gstdio.h>
@@ -1442,14 +1440,11 @@ gboolean dt_imageio_lookup_makermodel(const char *maker, const char *model, char
     gboolean found =
         dt_rawspeed_lookup_makermodel(maker, model, mk, mk_len, md, md_len, al, al_len);
 
-#ifdef HAVE_LIBRAW
     if (found == FALSE)
     {
         // Special handling for CR3 raw files via libraw
         found = dt_libraw_lookup_makermodel(maker, model, mk, mk_len, md, md_len, al, al_len);
     }
-#endif
-
     return found;
 }
 

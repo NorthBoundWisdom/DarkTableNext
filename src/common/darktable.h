@@ -292,20 +292,6 @@ struct dt_imageio_t;
 struct dt_bauhaus_t;
 struct dt_undo_t;
 struct dt_colorspaces_t;
-#ifdef HAVE_AI
-struct dt_ai_registry_t;
-struct dt_ai_environment_t;
-struct dt_seg_context_t;
-
-typedef struct dt_ai_seg_t
-{
-    struct dt_ai_environment_t *env;
-    struct dt_seg_context_t *ctx;
-    gboolean model_loaded;
-    gboolean signal_connected;
-} dt_ai_seg_t;
-#endif
-
 typedef float dt_boundingbox_t[4]; //(x,y) of upperleft, then (x,y) of lowerright
 typedef float dt_pickerbox_t[8];
 typedef float dt_pickerpoint_t[2];
@@ -339,10 +325,8 @@ typedef enum dt_debug_thread_t
     DT_DEBUG_PIPE = 1 << 25,
     DT_DEBUG_EXPOSE = 1 << 26,
     DT_DEBUG_PICKER = 1 << 27,
-    DT_DEBUG_AI = 1 << 28,
     DT_DEBUG_ALL = 0xffffffff & ~DT_DEBUG_VERBOSE,
-    DT_DEBUG_COMMON = DT_DEBUG_OPENCL | DT_DEBUG_PARAMS | DT_DEBUG_IMAGEIO | DT_DEBUG_PIPE |
-                      DT_DEBUG_AI,
+    DT_DEBUG_COMMON = DT_DEBUG_OPENCL | DT_DEBUG_PARAMS | DT_DEBUG_IMAGEIO | DT_DEBUG_PIPE,
     DT_DEBUG_RESTRICT = DT_DEBUG_VERBOSE | DT_DEBUG_PERF,
 } dt_debug_thread_t;
 
@@ -447,10 +431,6 @@ typedef struct darktable_t
     struct dt_gimp_t gimp;
     struct dt_splash_t splash;
     int darkroom_active_imgid_rowid;
-#ifdef HAVE_AI
-    struct dt_ai_registry_t *ai_registry;
-    dt_ai_seg_t ai_seg;
-#endif
 } darktable_t;
 
 typedef struct

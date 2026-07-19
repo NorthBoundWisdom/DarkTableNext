@@ -14,6 +14,13 @@
 - [x] Reduce the supported image formats to RAW, JPEG, PNG, TIFF, RGBE/HDR, QOI, and copy.
 - [x] Remove GraphicsMagick, ImageMagick, G'MIC compressed-LUT, and Colord integrations.
 - [x] Remove the cltest, cmstest, chart, and generate-cache executables; retain the optional CLI.
+- [x] Make OpenCL, XML validation, and ISOBMFF/CR3 detection mandatory build behavior;
+      remove the legacy general profiling implementation.
+- [x] Make LibRaw and ICU required dependencies; remove AI/ONNX, neural restoration, object
+      masks, and forced compiler-color diagnostics.
+
+Removed build switches: `USE_OPENCL`, `USE_DARKTABLE_PROFILING`, `USE_XMLLINT`,
+`USE_ISOBMFF`, `USE_LIBRAW`, `USE_AI`, `USE_ICU`, and `FORCE_COLORED_OUTPUT`.
 
 ## Core definition
 
@@ -55,7 +62,7 @@ workflow. Local disk export remains the only storage backend.
 
 Removed build switches: `USE_OPENJPEG`, `USE_JXL`, `USE_WEBP`, `USE_AVIF`, `USE_HEIF`,
 `USE_XCF`, `USE_OPENEXR`, `USE_GRAPHICSMAGICK`, `USE_IMAGEMAGICK`, `USE_GMIC`,
-`USE_COLORD`, and `BUILD_CMSTEST`. `USE_OPENCL` remains in scope for the GPU strategy below.
+`USE_COLORD`, and `BUILD_CMSTEST`. OpenCL remains in scope for the GPU strategy below.
 
 ## GPU acceleration strategy
 
@@ -64,7 +71,7 @@ Removed build switches: `USE_OPENJPEG`, `USE_JXL`, `USE_WEBP`, `USE_AVIF`, `USE_
       have no OpenCL CPU device; Apple has deprecated OpenCL and may remove it from a future
       macOS release.
 - [ ] Replace it with a mandatory Metal compute backend for the macOS product rather than
-      permanently enabling `USE_OPENCL`. Keep the CPU implementation as the correctness
+      permanently retaining the OpenCL runtime. Keep the CPU implementation as the correctness
       baseline and fallback while Metal coverage is incomplete.
 - [ ] Before porting, benchmark representative RAW editing and export workflows to identify
       the few modules responsible for most pixel-pipeline time. Port those first; do not

@@ -1504,14 +1504,6 @@ static gboolean _blendop_masks_add_shape(GtkWidget *widget, GdkEventButton *even
     if (this < 0)
         return FALSE;
 
-#ifdef HAVE_AI
-    if (bd->masks_type[this] == DT_MASKS_OBJECT && !dt_masks_object_available())
-    {
-        dt_control_log(_("AI model is not available. Check preferences > AI"));
-        return TRUE;
-    }
-#endif
-
     _blendop_masks_modes_toggle(NULL, self, DEVELOP_MASK_MASK);
 
     // set all shape buttons to inactive
@@ -2701,13 +2693,6 @@ void dt_iop_gui_init_masks(GtkWidget *blendw, dt_iop_module_t *module)
             N_("show and edit in restricted mode (no moving/resizing of shapes)"),
             G_CALLBACK(_blendop_masks_show_and_edit), FALSE, 0, 0, dtgtk_cairo_paint_masks_eye,
             abox);
-
-#ifdef HAVE_AI
-        bd->masks_type[5] = DT_MASKS_OBJECT;
-        bd->masks_shapes[5] = dt_iop_togglebutton_new(
-            module, "blend`shapes", N_("add AI object"), NULL, G_CALLBACK(_blendop_masks_add_shape),
-            FALSE, 0, 0, dtgtk_cairo_paint_masks_object, abox);
-#endif
 
         bd->masks_type[0] = DT_MASKS_GRADIENT;
         bd->masks_shapes[0] = dt_iop_togglebutton_new(module, "blend`shapes", N_("add gradient"),

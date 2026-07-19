@@ -26,12 +26,6 @@ This guide maps the existing Image Operation (IOP) modules and darkroom implemen
 | **[Quick_Access_Panel.md](Quick_Access_Panel.md)** | Quick Access Panel integration for widgets |
 | **[GUI_Recipes.md](GUI_Recipes.md)** | Copy-paste patterns for notebooks, sections, buttons, visibility |
 
-### AI Subsystem
-| File | Description |
-|------|-------------|
-| **[AI.md](AI.md)** | AI subsystem architecture, backend API, and how to add new AI features |
-| **[AI_Tasks.md](AI_Tasks.md)** | Reference for each AI task: mask, denoise, upscale |
-
 ### Guides
 | File | Description |
 |------|-------------|

@@ -16,7 +16,6 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef HAVE_LIBRAW
 #include "common/colorspaces.h"
 #include "common/darktable.h"
 #include "common/exif.h"
@@ -212,7 +211,6 @@ const model_map_t modelMap[] = {
      .clean_make = "Canon",
      .clean_model = "EOS R1",
      .clean_alias = "EOS R1"},
-#endif
 };
 
 static gboolean is_in_glist(GList *list, const gchar *exif_model)

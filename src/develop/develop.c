@@ -1390,11 +1390,8 @@ static void _dev_add_history_item(dt_develop_t *dev, dt_iop_module_t *module, co
 
     dt_pthread_mutex_unlock(&dev->history_mutex);
 
-    // Signal after releasing history_mutex to avoid deadlock: raising
-    // DT_SIGNAL_DEVELOP_HISTORY_CHANGE while holding history_mutex can trigger
-    // signal handlers (e.g. neural_restore) that call dt_control_get_mouse_over_id,
-    // which acquires global_mutex — conflicting with dt_dev_zoom_move and
-    // dt_dev_get_viewport_params which hold global_mutex and then acquire history_mutex.
+    // Signal after releasing history_mutex to avoid deadlock with handlers that
+    // acquire global_mutex while other paths acquire history_mutex afterwards.
     if (need_end_record)
         dt_dev_undo_end_record(dev);
 

@@ -36,8 +36,6 @@ typedef enum dt_illuminant_t
     DT_ILLUMINANT_CUSTOM = 7,  // $DESCRIPTION: "custom" input x and y directly - bypass search
     DT_ILLUMINANT_CAMERA = 10, // $DESCRIPTION: "as shot in camera" read RAW EXIF for WB
     DT_ILLUMINANT_LAST,
-    DT_ILLUMINANT_DETECT_SURFACES = 8,
-    DT_ILLUMINANT_DETECT_EDGES = 9,
 } dt_illuminant_t;
 
 // CIE fluorescent standards : https://en.wikipedia.org/wiki/Standard_illuminant
@@ -312,8 +310,6 @@ illuminant_to_xy(const dt_illuminant_t illuminant,   // primary type of illumina
                 break;
     }
     case DT_ILLUMINANT_CUSTOM: // leave x and y as-is
-    case DT_ILLUMINANT_DETECT_EDGES:
-    case DT_ILLUMINANT_DETECT_SURFACES:
     case DT_ILLUMINANT_LAST:
     {
         return FALSE;
