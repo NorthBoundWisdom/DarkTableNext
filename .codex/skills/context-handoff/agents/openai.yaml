@@ -1,0 +1,4 @@
+interface:
+  display_name: "Context Handoff"
+  short_description: "Capture durable state for the next work session"
+  default_prompt: "Use $context-handoff to write a precise continuation note for the current DarkTableNext work."

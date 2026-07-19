@@ -1,0 +1,4 @@
+interface:
+  display_name: "QML UI Integration"
+  short_description: "Develop QML UI with GeoControls boundaries"
+  default_prompt: "Use $qml-ui-integration to implement a DarkTableNext QML slice with the correct GeoControls ownership."

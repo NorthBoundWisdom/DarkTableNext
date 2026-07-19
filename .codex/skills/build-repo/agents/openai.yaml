@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build DarkTableNext"
+  short_description: "Configure, build, and test the active workspace"
+  default_prompt: "Use $build-repo to configure, build, and test DarkTableNext with the active FreeCM workspace."

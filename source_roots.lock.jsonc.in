@@ -23,13 +23,12 @@
   "depsManualPath": {
     "rawspeed": "",
     "OpenCL": "",
-    "libxcf": "",
     "whereami": "",
     "exiv2": "",
     "Imath": "",
-    "OpenEXR": "",
     "inih": "",
-    "LibRaw": ""
+    "LibRaw": "",
+    "GeoControls": ""
   },
   "dependencies": {
     "rawspeed": {
@@ -41,11 +40,6 @@
       "repoName": "OpenCL",
       "remote": "https://github.com/KhronosGroup/OpenCL-Headers.git",
       "commit": "a98488062f50c77c3e2edaf9c4f8dca7c41781ec"
-    },
-    "libxcf": {
-      "repoName": "libxcf",
-      "remote": "https://github.com/houz/libxcf.git",
-      "commit": "64efecf63ddd952ccf654e479714aaae6f8c5986"
     },
     "whereami": {
       "repoName": "whereami",
@@ -62,11 +56,6 @@
       "remote": "https://github.com/AcademySoftwareFoundation/Imath.git",
       "commit": "1e480d11cb98b032a2dece9b9a8730512effc7f6"
     },
-    "OpenEXR": {
-      "repoName": "OpenEXR",
-      "remote": "https://github.com/AcademySoftwareFoundation/openexr.git",
-      "commit": "741ecb82ccdb291ce5b04713fc6c03208753575e"
-    },
     "inih": {
       "repoName": "inih",
       "remote": "https://github.com/benhoyt/inih.git",
@@ -76,6 +65,11 @@
       "repoName": "LibRaw",
       "remote": "https://github.com/LibRaw/LibRaw.git",
       "commit": "87241b45d8c8178247faca4aa8e6a1896b0b1eeb"
+    },
+    "GeoControls": {
+      "repoName": "GeoControls",
+      "remote": "git@github.com:NorthBoundWisdom/GeoControls.git",
+      "commit": "ce98b471bb18a19568f13e36d7140d8eb294d3f6"
     }
   }
 }

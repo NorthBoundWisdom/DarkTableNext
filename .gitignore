@@ -1,4 +1,6 @@
 build*/
+!/.codex/skills/build-repo/
+!/.codex/skills/build-repo/**
 source_roots.lock.jsonc
 CMakePresets.json
 .clangd
