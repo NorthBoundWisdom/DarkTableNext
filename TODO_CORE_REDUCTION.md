@@ -1,98 +1,150 @@
-# Core reduction TODO
+# 核心收缩与 GPU 后端改造计划
 
-## Completed
+## 已完成
 
-- [x] Hard-remove the Lua runtime, bindings, scripts, build wiring, and tests.
-- [x] Remove the `USE_LUA` option and all Lua compatibility paths.
-- [x] Verify a no-Lua full build, build graph, dynamic links, and version output.
-- [x] Commit the result as `e4f52d5 refactor: remove Lua runtime and integration`.
-- [x] Remove slideshow, print, map, and tethering views.
-- [x] Remove their camera, live-view, print-settings, map-settings, map-locations,
-      location-search, GPX, and active geotagging workflows.
-- [x] Remove MIDI and gamepad input modules.
-- [x] Remove email and Piwigo storage backends; retain disk storage.
-- [x] Reduce the supported image formats to RAW, JPEG, PNG, TIFF, RGBE/HDR, QOI, and copy.
-- [x] Remove GraphicsMagick, ImageMagick, G'MIC compressed-LUT, and Colord integrations.
-- [x] Remove the cltest, cmstest, chart, and generate-cache executables; retain the optional CLI.
-- [x] Make OpenCL, XML validation, and ISOBMFF/CR3 detection mandatory build behavior;
-      remove the legacy general profiling implementation.
-- [x] Make LibRaw and ICU required dependencies; remove AI/ONNX, neural restoration, object
-      masks, and forced compiler-color diagnostics.
+- [x] 硬删除 Lua 运行时、绑定、脚本、构建接线和测试。
+- [x] 删除 `USE_LUA` 选项及所有 Lua 兼容路径；完成无 Lua 全量构建、构建图、动态链接和版本输出验证。
+- [x] 删除幻灯片、打印、地图和联机拍摄视图，以及相机、实时取景、打印设置、地图设置、位置搜索、GPX 和主动地理标记工作流。
+- [x] 删除 MIDI、游戏手柄、邮件和 Piwigo；仅保留本地磁盘导出。
+- [x] 将输入/输出格式收缩至 RAW、JPEG、PNG、TIFF、RGBE/HDR、QOI 和原文件复制。
+- [x] 删除 GraphicsMagick、ImageMagick、G'MIC 压缩 LUT、Colord、非产品可执行文件，以及旧的通用 profiling 实现。
+- [x] 使 XML 验证、ISOBMFF/CR3 检测、LibRaw 和 ICU 成为固定构建行为。
+- [x] 删除 AI/ONNX、神经修复、对象蒙版及其模型、文档、偏好项和测试。
 
-Removed build switches: `USE_OPENCL`, `USE_DARKTABLE_PROFILING`, `USE_XMLLINT`,
-`USE_ISOBMFF`, `USE_LIBRAW`, `USE_AI`, `USE_ICU`, and `FORCE_COLORED_OUTPUT`.
+已删除的构建开关：`USE_LUA`、`USE_DARKTABLE_PROFILING`、`USE_XMLLINT`、`USE_ISOBMFF`、`USE_LIBRAW`、`USE_AI`、`USE_ICU`、`FORCE_COLORED_OUTPUT`、`USE_MAP`、`BUILD_PRINT`、`USE_CAMERA_SUPPORT`、`USE_PORTMIDI`、`USE_SDL2`、`USE_OPENJPEG`、`USE_JXL`、`USE_WEBP`、`USE_AVIF`、`USE_HEIF`、`USE_XCF`、`USE_OPENEXR`、`USE_GRAPHICSMAGICK`、`USE_IMAGEMAGICK`、`USE_GMIC`、`USE_COLORD` 和 `BUILD_CMSTEST`。
 
-## Core definition
+## 核心产品边界
 
-For the next reduction passes, treat the core product as:
+后续收缩以以下产品为准：
 
-- local photo catalog and import;
-- RAW decoding and the essential development pipeline;
-- lighttable and darkroom views;
-- local disk export, including JPEG, PNG, TIFF, and original-file copy.
+- 本地照片目录与导入；
+- RAW 解码和必要的非破坏性开发管线；
+- lighttable 与 darkroom；
+- 本地磁盘导出：JPEG、PNG、TIFF 和原文件复制。
 
-## High-priority removable extensions
+GPS 仅保留已有坐标的读取、保存和展示；不再提供地图、位置查询、GPX 导入/匹配或主动地理标记。删除 IOP 前必须先确定历史记录、样式和预设的迁移或显式不兼容策略。
 
-- [x] Remove peripheral views: slideshow, printing, map, and tethering.
-- [x] Remove their companion modules: print settings, camera, live view, map settings,
-      map locations, location search, and the GPS/GPX geotagging workflow.
-- [x] Remove MIDI and gamepad input modules.
-- [x] Remove remote export destinations: email and Piwigo; retain disk storage.
+## 当前执行顺序（2026-07-19）
 
-Removed build switches: `USE_MAP`, `BUILD_PRINT`, `USE_CAMERA_SUPPORT`,
-`USE_PORTMIDI`, and `USE_SDL2`.
+Metal 阶段 1–5 暂停实施。已经完成的 Phase 0 测量基础设施保留并先行入库；待第二轮过时代码清理完成、最终产品与 IOP 边界冻结后，再恢复正式 RAW 基线和后端重构。
 
-The remaining GPS scope is deliberately passive: read, preserve, and display existing image
-coordinates. There is no map UI, location lookup, GPX import/matching, or active geotagging
-workflow. Local disk export remains the only storage backend.
+1. [x] 落地 CPU/OpenCL 基线 runner、32-bit float TIFF 像素比较、逐模块后端和连续 GPU 段统计。
+2. [ ] 冻结新增 `process_cl()`、`.cl` 内核和 OpenCL 专用公共 API；清理期只允许修复现有后端，不继续扩大迁移面。
+3. [ ] 执行第二轮过时代码清理，优先删除不接触 pixelpipe、GPU 调度和核心图像算法的外围代码。
+4. [ ] 形成最终保留 IOP 清单，并为拟删除 IOP 明确历史记录、样式和预设的兼容或不兼容策略。
+5. [ ] 以冻结后的产品范围补齐正式 RAW/XMP 语料、预览/能耗采样和首批连续热点链。
+6. [ ] 达到 Phase 0 出口后，再开始后端中立 API 与 Metal 阶段 1。
 
-## Medium-priority removable extensions
+### Metal 前的第二轮过时代码清理
 
-- [x] Reduce format support to the core set. Removed PDF, PPM/PNM, PFM,
-      OpenEXR, WebP, XCF, JPEG 2000, AVIF, HEIF/HEIC, and JPEG XL.
-- [x] Remove GraphicsMagick/ImageMagick fallback import support; broad raster import is
-      not part of the product scope.
-- [x] Disable G'MIC compressed-LUT support. The `lut3d` module remains without G'MIC;
-      only `.gmz` compressed LUT support is lost.
-- [x] Remove non-product executables: `darktable-cltest`, `darktable-cmstest`,
-      `darktable-chart`, and `darktable-generate-cache`. The CLI remains optional for a
-      GUI-only product.
-- [x] Remove Colord display-profile integration; it is optional integration, not editing
-      semantics.
+- [ ] 重新盘点构建选项、动态模块、平台分支、配置迁移、数据库兼容层、资源、文档和测试，给出“删除 / 保留 / 等待 Metal”三类清单。
+- [ ] 第一批只处理与像素处理无关的孤立代码、失效入口、已无消费者的配置键和资源，并逐批进行 release 构建、动态模块和 CLI 冒烟验证。
+- [ ] 第二批评估仍超出核心产品边界的导入、导出、元数据、UI 和集成功能；删除时同步清理 CMake、偏好项、图标、文档和迁移代码。
+- [ ] IOP 只在兼容性清单完成后单独处理；不得因尚未计划移植 Metal 就直接删除 CPU 参考实现。
+- [ ] 清理结束时重新生成源码规模、依赖、动态模块和 OpenCL 接触面基线，以此锁定 Metal 的真实迁移范围。
 
-Removed build switches: `USE_OPENJPEG`, `USE_JXL`, `USE_WEBP`, `USE_AVIF`, `USE_HEIF`,
-`USE_XCF`, `USE_OPENEXR`, `USE_GRAPHICSMAGICK`, `USE_IMAGEMAGICK`, `USE_GMIC`,
-`USE_COLORD`, and `BUILD_CMSTEST`. OpenCL remains in scope for the GPU strategy below.
+清理期间暂不重构 `pixelpipe_hb.c`、`common/opencl*`、`common/dlopencl*`、混合/蒙版、色彩转换、插值、tiling、去马赛克和去噪公共实现。这些区域只接受阻塞清理工作的必要修复。
 
-## GPU acceleration strategy
+## GPU 后端：以 Metal 替换 OpenCL
 
-- [ ] Treat the current OpenCL implementation as a legacy compatibility backend, not as a
-      long-term required dependency. OpenCL can target the Apple Silicon GPU, but arm64 apps
-      have no OpenCL CPU device; Apple has deprecated OpenCL and may remove it from a future
-      macOS release.
-- [ ] Replace it with a mandatory Metal compute backend for the macOS product rather than
-      permanently retaining the OpenCL runtime. Keep the CPU implementation as the correctness
-      baseline and fallback while Metal coverage is incomplete.
-- [ ] Before porting, benchmark representative RAW editing and export workflows to identify
-      the few modules responsible for most pixel-pipeline time. Port those first; do not
-      translate all OpenCL kernels mechanically.
-- [ ] Build a backend-neutral GPU resource/dispatch boundary, then implement the hot kernels
-      as precompiled Metal shaders. Chain compatible operations in command buffers and avoid
-      needless CPU/GPU synchronization so Apple Silicon unified memory is actually useful.
-- [ ] Validate output against the CPU path and measure end-to-end latency, throughput, memory,
-      and energy on Apple Silicon. Remove the OpenCL runtime, `.cl` kernels, test target, and
-      `#ifdef HAVE_OPENCL` branches only after the Metal path covers the chosen core pipeline.
+### 结论与边界
 
-## Last: optional image-operation modules
+这不是替换一个运行时库的小改动，而是一次受控的像素管线后端重构。当前 OpenCL 已被固定为构建能力，且其类型、调度和错误模型直接渗入 IOP API、像素管线、通用算法、偏好项和打包逻辑。
 
-- [ ] Assess and remove creative or specialized processing modules separately, beginning
-      with bloom, soften, overlay, velvia, vignette, split-toning, grain, borders,
-      liquify, retouch, watermark, censorize, negadoctor, and agx.
+当前代码面的基线（开始实施前重新生成一次）：
 
-Do not remove image-operation modules blindly: stored edits, styles, and presets reference
-their operation names. Define a migration or explicit incompatibility policy before removing
-them.
+- 63 个 IOP 实现 `process_cl()`，71 个 IOP 直接使用 OpenCL API 或类型；
+- 41 个 `.cl` 内核，约 1.8 万行；
+- `common/opencl*`、`common/dlopencl*` 约 5,300 行，另外有大量 OpenCL 专用的高斯、双边、NLM、插值、混合和去马赛克辅助路径；
+- `pixelpipe_hb.c` 除执行模块外，还负责设备选择、CPU/GPU 交界复制、色彩转换、混合、拾色、直方图、分块、缓存和失败后重跑 CPU。
 
-## Next batch
+目标状态：
 
-Continue with the GPU strategy and the optional image-operation module review.
+- macOS 构建期固定提供 Metal 后端；GPU 在运行时**不是**正确性前提，CPU 始终是参考实现和可靠回退；
+- OpenCL 只在迁移期间作为兼容后端，不能继续成为新功能的接口或依赖；
+- 不要求首版 Metal 覆盖所有 IOP。未移植或收益不足的模块继续走 CPU；
+- 在选定核心工作流的 Metal 覆盖、结果一致性和性能验收完成前，不删除 OpenCL。
+
+不要机械地将 `.cl` 改写为 `.metal`。两者的资源模型、图像/纹理访问、线程组本地存储、编译模型、同步和错误语义不同；直接逐文件翻译会把 OpenCL 的历史抽象和分支原样带入新后端。
+
+### 实施原则
+
+1. 先测量，后移植；先建立共享后端边界，后写业务着色器。
+2. 保持 `params -> commit_params -> piece->data -> process` 的 CPU 正确性链路不变。
+3. GPU API 使用不暴露 `cl_mem`、OpenCL 错误码或内核编号的自有不透明类型；后端特有对象不得进入 IOP 公共 API。
+4. 每个 CPU/GPU 边界都显式表达资源驻留、写入方和同步点。Apple Silicon 的统一内存不等于没有同步、格式转换或缓存代价。
+5. 后端错误必须能丢弃不可信 GPU 结果并从原始 CPU 输入安全重跑，而不能继续使用部分写入的输出。
+
+### 阶段 0：基线、范围与准入门槛
+
+执行方法、工作负载矩阵、误差门槛和当前完成度见
+[`DevDocs/GPU_Baseline.md`](DevDocs/GPU_Baseline.md)。
+
+当前状态：测量与正确性比较工具已完成；正式语料、预览/能耗数据和热点链选择等待第二轮代码清理完成后继续。Phase 0 尚未达到出口，不能进入阶段 1。
+
+- [ ] 冻结新增 OpenCL 专用 API、`process_cl()` 和 `.cl` 内核；新代码只能走 CPU 或新的后端中立接口。
+- [ ] 建立可重复的代表性工作负载：快速预览、100% 暗房预览、全尺寸导出；覆盖 RAW、几何变换、色彩管理、蒙版/混合和高成本去噪/去马赛克场景。
+- [ ] 增加每 IOP、CPU/GPU 交界、命令提交、等待和内存峰值的采样；记录端到端延迟、吞吐、能耗和常驻内存，而不仅是单核函数时间。
+- [ ] 为工作负载生成 CPU 金样，定义逐像素误差、NaN/Inf、alpha/蒙版、几何 ROI 和色彩空间的验收规则；允许经说明的浮点舍入差异，不允许未解释的视觉或语义差异。
+- [ ] 根据数据选出首批连续的高耗时操作链。若没有能抵消 CPU/GPU 边界成本的连续链，暂停移植并重新评估范围。
+
+阶段出口：CPU 基线、性能报告、首批模块清单和数值容差均进入版本控制；在此之前不开始批量写 Metal 内核。
+
+### 阶段 1：抽出后端中立的执行边界
+
+- [ ] 新建 GPU 抽象层（建议 `src/gpu/`）：设备、队列、命令缓冲、图像/缓冲资源、资源状态、同步栅栏、错误状态和性能计时均使用 `dt_gpu_*` 类型。
+- [ ] 将 `dt_iop_module_t` 的 GPU 回调由 OpenCL 专有签名迁移为后端中立签名；`cl_mem`、`cl_int`、`process_cl_ready` 和 OpenCL 内核编号不得继续出现在公共 IOP 头文件中。迁移期间可由适配器调用旧 `process_cl()`，但适配器是唯一允许接触旧 API 的位置。
+- [ ] 将 `dt_dev_pixelpipe_iop_t` 与 `dt_dev_pixelpipe_t` 的设备编号、就绪标记、失败状态和资源所有权改为后端中立状态；把执行策略从 `pixelpipe_hb.c` 的 OpenCL 分支中抽出。
+- [ ] 明确 CPU/GPU 资源状态机：`host-valid`、`gpu-valid`、`both-valid`、`invalid`；缓存命中、ROI 变化、分块、蒙版、色彩转换和回退都必须遵守该状态机。
+- [ ] 保留 OpenCL 适配器以维持迁移期行为，同时让纯 CPU 构建/测试可以不包含 OpenCL 类型。
+
+阶段出口：像素管线能通过同一套调度入口运行 CPU 和旧 OpenCL；IOP 公共 API、`imageop.h` 和 pixelpipe 公共头不再泄漏 OpenCL 类型。CPU 与 OpenCL 基线结果保持一致。
+
+### 阶段 2：Metal 运行时、构建与最小闭环
+
+- [ ] 在 macOS 上以 Objective-C++ `.mm` 实现 Metal 私有适配层，对 C/C++ 其余代码仅暴露 C ABI；在 CMake 中仅对 Apple 启用 `OBJCXX` 并链接 `Metal`、`Foundation` 和必需系统框架。
+- [ ] 用构建期 `xcrun metal` / `metallib` 预编译 `.metal` 着色器并随 app bundle 安装；不沿用 OpenCL 的运行时源码加载、设备编译缓存和字符串内核查找模型。
+- [ ] 实现设备选择、命令队列、命令缓冲、资源池、管线状态缓存、错误映射和受控的 in-flight 限制；每次 pixelpipe 任务建立可追踪的命令提交边界。
+- [ ] 实现最小的混合管线：CPU 输入、一个或多个连续 Metal 操作、CPU 输出；先确保资源驻留和回退正确，再优化零拷贝或设备缓存。
+- [ ] 选择纹理/缓冲格式和存储模式必须以基准为准；不要因统一内存而假设 `shared`、`managed` 或 `private` 中某一种总是最优。
+
+阶段出口：一条真实 darkroom/导出路径可在 Metal 上端到端完成，任一后端错误均会安全重跑 CPU；构建产物不依赖运行时编译用户提供的 GPU 源码。
+
+### 阶段 3：按收益移植核心操作链
+
+- [ ] 按阶段 0 的测量顺序移植，不按目录或 `.cl` 文件数量排序。每个候选先评估其前后模块能否留在 GPU，避免为单个廉价操作支付两次边界转换。
+- [ ] 优先补齐链路共同依赖：像素格式/色彩空间转换、混合与蒙版、缩放/插值，以及被多个高成本模块复用的高斯、双边、NLM 等算法辅助件。
+- [ ] 再移植测得的热点 IOP；去马赛克、去噪、扩散、修饰等高复杂度模块单独设计和验证，不与简单点运算捆绑交付。
+- [ ] 为每个已移植操作声明 GPU 能力、输入格式、ROI/分块限制和预计中间缓冲；调度器基于这些元数据选择连续 GPU 段或 CPU 路径。
+- [ ] 未移植 IOP 保持 CPU 实现；不得以关闭模块、降低精度或跳过蒙版来伪造 GPU 覆盖率。
+
+阶段出口：选定核心工作流在代表性 Apple Silicon 设备上达到预先约定的端到端收益，且 GPU 段之间没有无收益的 host/device 往返。
+
+### 阶段 4：正确性、稳定性与性能验收
+
+- [ ] 为 CPU/Metal 对比添加自动测试：小型合成图用于逐像素诊断，受控 RAW 工作负载用于整管线验证；分别覆盖预览、导出、ROI、分块、蒙版、色彩管理和 GPU 失败回退。
+- [ ] 将 Metal 集成测试与 CPU 单元测试分层：CPU 测试不要求 GPU；Metal 测试在具备 Apple GPU 的 macOS runner 上执行，并报告设备、系统和 shader library 版本。
+- [ ] 对预览首帧、交互更新、全尺寸导出、峰值内存、能耗和错误恢复设定门槛；同时保留 CPU 基线，避免“GPU 更快但整体更慢”。
+- [ ] 进行长时间切图、撤销/重做、连续导出和内存压力测试，确认命令缓冲、资源池和缓存不会泄漏、死锁或复用过期资源。
+
+阶段出口：核心工作流的正确性、性能、稳定性和 CPU 回退均达到门槛，并形成可复现的验收报告。
+
+### 阶段 5：移除 OpenCL
+
+- [ ] 仅在阶段 4 验收通过后，删除 OpenCL 运行时、动态加载器、`.cl` 内核、内核测试编译逻辑、`HAVE_OPENCL` 分支、OpenCL 偏好项/CLI 参数/诊断和过时的设备配置迁移代码。
+- [ ] 删除或改写仍使用 OpenCL 类型的通用算法辅助件；保留等价 CPU 实现及已验收的 Metal 实现。
+- [ ] 更新 CMake、应用打包、README、开发文档和测试说明，使 Metal 是唯一 GPU 后端，CPU 是始终可用的回退路径。
+- [ ] 对完整构建图、动态链接、应用 bundle 内容、CLI、darkroom、lighttable 和导出进行回归验证。
+
+阶段出口：源码、构建依赖、运行时包和用户配置中均不存在 OpenCL；全量产品仍可在 GPU 不可用或 Metal 任务失败时正确运行 CPU 路径。
+
+## 可选 IOP 的后续收缩
+
+- [ ] 在第二轮清理中先完成创意或专用模块的使用面与兼容性盘点；候选包括 bloom、soften、overlay、velvia、vignette、split-toning、grain、borders、liquify、retouch、watermark、censorize、negadoctor 和 agx。
+- [ ] 仅删除产品边界明确排除、且已有历史记录/样式/预设策略的模块；最终保留清单一旦冻结，就作为 Metal 覆盖范围的输入。
+
+不要盲删 IOP：历史编辑、样式和预设均会引用操作名。每次删除必须同时给出迁移策略，或明确写入 0.9 的不兼容边界。
+
+## 下一次开工时的第一步
+
+不继续写 Metal，也不改 pixelpipe。先执行“Metal 前的第二轮过时代码清理”的盘点，产出按风险排序的删除候选；第一批从没有运行时消费者、且与图像算法无关的代码开始。每批完成后维护本计划并提交独立、可回退的变更。

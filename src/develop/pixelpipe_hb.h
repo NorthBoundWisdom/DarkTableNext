@@ -153,6 +153,21 @@ typedef struct dt_dev_detail_mask_t
     float *data;
 } dt_dev_detail_mask_t;
 
+/** Coarse CPU/GPU routing statistics for one pixelpipe invocation. */
+typedef struct dt_dev_pixelpipe_perf_t
+{
+    double cpu_module_wall;
+    double gpu_module_wall;
+    uint64_t cpu_pixels;
+    uint64_t gpu_pixels;
+    uint32_t cpu_modules;
+    uint32_t gpu_modules;
+    uint32_t gpu_segments;
+    uint32_t backend_switches;
+    uint32_t attempts;
+    int last_backend;
+} dt_dev_pixelpipe_perf_t;
+
 /**
  * this encapsulates the pixelpipe.
  * a develop module will need several of these:
@@ -166,6 +181,7 @@ typedef struct dt_dev_pixelpipe_t
     // set to TRUE in order to obsolete old cache entries on next pixelpipe run
     gboolean cache_obsolete;
     uint64_t runs; // used only for pixelpipe cache statistics
+    dt_dev_pixelpipe_perf_t perf;
     // input buffer
     float *input;
     // width and height of input buffer

@@ -75,6 +75,69 @@ typedef enum dt_pixelpipe_flow_t
     PIXELPIPE_FLOW_BLENDED_ON_GPU = 1 << 7
 } dt_pixelpipe_flow_t;
 
+typedef enum dt_pixelpipe_perf_backend_t
+{
+    PIXELPIPE_PERF_BACKEND_NONE = 0,
+    PIXELPIPE_PERF_BACKEND_CPU,
+    PIXELPIPE_PERF_BACKEND_GPU
+} dt_pixelpipe_perf_backend_t;
+
+static void _pixelpipe_perf_record(dt_dev_pixelpipe_t *pipe, const dt_times_t *start,
+                                   const dt_pixelpipe_flow_t flow,
+                                   const dt_iop_roi_t *const roi_out)
+{
+    if (!(darktable.unmuted & DT_DEBUG_PERF))
+        return;
+
+    const dt_pixelpipe_perf_backend_t backend =
+        flow & PIXELPIPE_FLOW_PROCESSED_ON_GPU ? PIXELPIPE_PERF_BACKEND_GPU :
+        flow & PIXELPIPE_FLOW_PROCESSED_ON_CPU ? PIXELPIPE_PERF_BACKEND_CPU :
+                                                 PIXELPIPE_PERF_BACKEND_NONE;
+    if (backend == PIXELPIPE_PERF_BACKEND_NONE)
+        return;
+
+    dt_times_t end;
+    dt_get_times(&end);
+    const double wall = end.clock - start->clock;
+    const uint64_t pixels = (uint64_t)roi_out->width * (uint64_t)roi_out->height;
+
+    if (pipe->perf.last_backend != PIXELPIPE_PERF_BACKEND_NONE &&
+        pipe->perf.last_backend != backend)
+        pipe->perf.backend_switches++;
+
+    if (backend == PIXELPIPE_PERF_BACKEND_GPU)
+    {
+        pipe->perf.gpu_module_wall += wall;
+        pipe->perf.gpu_pixels += pixels;
+        pipe->perf.gpu_modules++;
+        if (pipe->perf.last_backend != PIXELPIPE_PERF_BACKEND_GPU)
+            pipe->perf.gpu_segments++;
+    }
+    else
+    {
+        pipe->perf.cpu_module_wall += wall;
+        pipe->perf.cpu_pixels += pixels;
+        pipe->perf.cpu_modules++;
+    }
+
+    pipe->perf.last_backend = backend;
+}
+
+static void _pixelpipe_perf_report(const dt_dev_pixelpipe_t *pipe)
+{
+    if (!(darktable.unmuted & DT_DEBUG_PERF))
+        return;
+
+    dt_print(DT_DEBUG_PERF,
+             "[dev_pixelpipe_summary] [%s] attempts=%u cpu_modules=%u gpu_modules=%u "
+             "gpu_segments=%u backend_switches=%u gpu_segment_endpoints=%u "
+             "cpu_module_wall=%.6f gpu_module_wall=%.6f cpu_mpix=%.3f gpu_mpix=%.3f",
+             dt_dev_pixelpipe_type_to_str(pipe->type), pipe->perf.attempts, pipe->perf.cpu_modules,
+             pipe->perf.gpu_modules, pipe->perf.gpu_segments, pipe->perf.backend_switches,
+             2u * pipe->perf.gpu_segments, pipe->perf.cpu_module_wall, pipe->perf.gpu_module_wall,
+             pipe->perf.cpu_pixels / 1000000.0, pipe->perf.gpu_pixels / 1000000.0);
+}
+
 #include "develop/pixelpipe_cache.c"
 
 const char *dt_dev_pixelpipe_type_to_str(const dt_dev_pixelpipe_type_t pipe_type)
@@ -2493,6 +2556,8 @@ static gboolean _dev_pixelpipe_process_rec(dt_dev_pixelpipe_t *pipe, dt_develop_
                                                                      ""));
     }
 
+    _pixelpipe_perf_record(pipe, &start, pixelpipe_flow, roi_out);
+
     dt_show_times_f(&start, "[dev_pixelpipe]", "[%s] processed `%s%s' on %s%s%s%s%s",
                     dt_dev_pixelpipe_type_to_str(pipe->type), module->op,
                     dt_iop_get_instance_id(module),
@@ -2739,6 +2804,7 @@ gboolean dt_dev_pixelpipe_process(dt_dev_pixelpipe_t *pipe, dt_develop_t *dev, c
     pipe->processing = TRUE;
     pipe->nocache = dt_pipe_is_image(pipe);
     pipe->runs++;
+    memset(&pipe->perf, 0, sizeof(pipe->perf));
     pipe->opencl_enabled = dt_opencl_running();
 
     // if devid is a valid CL device we don't lock it as the caller has done so already
@@ -2773,6 +2839,7 @@ gboolean dt_dev_pixelpipe_process(dt_dev_pixelpipe_t *pipe, dt_develop_t *dev, c
 // re-entry point: in case of late opencl errors we start all over
 // again with opencl-support disabled
 restart:
+    pipe->perf.attempts++;
 
     // check if we should obsolete caches
     if (pipe->cache_obsolete)
@@ -2919,6 +2986,7 @@ restart:
     dt_print_pipe(DT_DEBUG_PIPE, "pipe finished", pipe, NULL, old_devid, &roi, &roi, "'%s' ID=%i",
                   pipe->image.filename, pipe->image.id);
     dt_print_mem_usage("after pixelpipe process");
+    _pixelpipe_perf_report(pipe);
 
     pipe->processing = FALSE;
     return FALSE;
