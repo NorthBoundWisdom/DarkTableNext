@@ -149,16 +149,11 @@ enum
     //DT_ACTION_ELEMENT_BUTTON = 1,
 };
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
-#pragma warning(disable : 4132)
-#endif
-static const dt_action_def_t _action_def_slider, _action_def_combo, _action_def_focus_slider,
-    _action_def_focus_combo, _action_def_focus_button;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+static const dt_action_def_t *_action_def_slider(void);
+static const dt_action_def_t *_action_def_combo(void);
+static const dt_action_def_t *_action_def_focus_slider(void);
+static const dt_action_def_t *_action_def_focus_combo(void);
+static const dt_action_def_t *_action_def_focus_button(void);
 
 // INNER_PADDING is the horizontal space between slider and quad
 // and vertical space between labels and slider baseline
@@ -856,11 +851,11 @@ void dt_bauhaus_init()
     g_signal_connect(area, "scroll-event", G_CALLBACK(_popup_scroll), NULL);
 
     dt_action_define(&darktable.control->actions_focus, NULL, N_("sliders"), NULL,
-                     &_action_def_focus_slider);
+                     _action_def_focus_slider());
     dt_action_define(&darktable.control->actions_focus, NULL, N_("dropdowns"), NULL,
-                     &_action_def_focus_combo);
+                     _action_def_focus_combo());
     dt_action_define(&darktable.control->actions_focus, NULL, N_("buttons"), NULL,
-                     &_action_def_focus_button);
+                     _action_def_focus_button());
 }
 
 void dt_bauhaus_cleanup()
@@ -993,8 +988,8 @@ dt_action_t *dt_bauhaus_widget_set_label(GtkWidget *widget, const char *section,
         if (!darktable.bauhaus->skip_accel || w->module->type != DT_ACTION_TYPE_IOP_INSTANCE)
         {
             ac = dt_action_define(w->module, section, label, widget,
-                                  w->type == DT_BAUHAUS_SLIDER ? &_action_def_slider :
-                                                                 &_action_def_combo);
+                                  w->type == DT_BAUHAUS_SLIDER ? _action_def_slider() :
+                                                                 _action_def_combo());
             if (w->module->type != DT_ACTION_TYPE_IOP_INSTANCE)
                 w->module = ac;
         }
@@ -3879,14 +3874,39 @@ static const dt_shortcut_fallback_t _action_fallbacks_combo[] = {
     {.move = DT_SHORTCUT_MOVE_VERTICAL, .effect = DT_ACTION_EFFECT_DEFAULT_MOVE, .speed = -1},
     {}};
 
-static const dt_action_def_t _action_def_slider = {
+static const dt_action_def_t _action_def_slider_value = {
     N_("slider"), _action_process_slider, _action_elements_slider, _action_fallbacks_slider};
-static const dt_action_def_t _action_def_combo = {N_("dropdown"), _action_process_combo,
-                                                  _action_elements_combo, _action_fallbacks_combo};
+static const dt_action_def_t _action_def_combo_value = {
+    N_("dropdown"), _action_process_combo, _action_elements_combo, _action_fallbacks_combo};
 
-static const dt_action_def_t _action_def_focus_slider = {
+static const dt_action_def_t _action_def_focus_slider_value = {
     N_("sliders"), _action_process_focus_slider, DT_ACTION_ELEMENTS_NUM(value), NULL, TRUE};
-static const dt_action_def_t _action_def_focus_combo = {
+static const dt_action_def_t _action_def_focus_combo_value = {
     N_("dropdowns"), _action_process_focus_combo, DT_ACTION_ELEMENTS_NUM(selection), NULL, TRUE};
-static const dt_action_def_t _action_def_focus_button = {
+static const dt_action_def_t _action_def_focus_button_value = {
     N_("buttons"), _action_process_focus_button, DT_ACTION_ELEMENTS_NUM(toggle), NULL, TRUE};
+
+static const dt_action_def_t *_action_def_slider(void)
+{
+    return &_action_def_slider_value;
+}
+
+static const dt_action_def_t *_action_def_combo(void)
+{
+    return &_action_def_combo_value;
+}
+
+static const dt_action_def_t *_action_def_focus_slider(void)
+{
+    return &_action_def_focus_slider_value;
+}
+
+static const dt_action_def_t *_action_def_focus_combo(void)
+{
+    return &_action_def_focus_combo_value;
+}
+
+static const dt_action_def_t *_action_def_focus_button(void)
+{
+    return &_action_def_focus_button_value;
+}

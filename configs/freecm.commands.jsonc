@@ -566,6 +566,15 @@
         "args": ["--build", "--preset", "mac_clang_release", "--target", "package-macos"],
         "platforms": ["darwin"],
         "default": true
+      },
+      {
+        "id": "win-msvc-release",
+        "label": "Windows MSI (MSVC Release)",
+        "description": "Stage DarkTableNext and create an x64 MSI through FreeCM and WiX",
+        "command": "cmake",
+        "args": ["--build", "--preset", "win_msvc_release", "--target", "package-windows"],
+        "platforms": ["win32"],
+        "default": true
       }
     ]
   }

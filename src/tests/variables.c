@@ -36,6 +36,7 @@ int run_test(const test_t *test, int *n_tests, int *n_failed)
         }
         else
             printf("  [OK] input: '%s', result: '%s'\n", test_case->input, result);
+        g_free(result);
     }
 
     dt_variables_params_destroy(params);
@@ -188,34 +189,14 @@ static const test_t test_real_paths = {
         printf("%d / %d tests failed\n\n", n_failed, n_tests);                                     \
     }
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    const char *datadir = g_getenv("DARKTABLE_TEST_DATADIR");
-    const char *moduledir = g_getenv("DARKTABLE_TEST_MODULEDIR");
-    const char *configdir = g_getenv("DARKTABLE_TEST_CONFIGDIR");
-    if (!datadir || !moduledir || !configdir)
+    setvbuf(stdout, NULL, _IONBF, 0);
+    if (dt_pthread_mutex_init(&darktable.metadata_threadsafe, NULL))
     {
-        fprintf(stderr, "darktable-test-variables must run through CTest\n");
+        fprintf(stderr, "failed to initialize metadata mutex\n");
         return 1;
     }
-
-    char *argv_override[] = {"darktable-test-variables",
-                             "--library",
-                             ":memory:",
-                             "--datadir",
-                             (char *)datadir,
-                             "--moduledir",
-                             (char *)moduledir,
-                             "--configdir",
-                             (char *)configdir,
-                             "--conf",
-                             "write_sidecar_files=never",
-                             NULL};
-    int argc_override = sizeof(argv_override) / sizeof(*argv_override) - 1;
-
-    // init dt without gui and without data.db:
-    if (dt_init(argc_override, argv_override, FALSE, FALSE))
-        exit(1);
 
     int n_tests_overall = 0, n_failed_overall = 0, n_test_functions = 0,
         n_test_functions_failed = 0;
@@ -235,7 +216,7 @@ int main(int argc, char *argv[])
     printf("%d / %d tests failed (%d / %d)\n", n_failed_overall, n_tests_overall,
            n_test_functions_failed, n_test_functions);
 
-    dt_cleanup();
+    dt_pthread_mutex_destroy(&darktable.metadata_threadsafe);
 
-    return 0;
+    return n_failed_overall > 0 ? 1 : 0;
 }

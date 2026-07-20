@@ -1065,20 +1065,7 @@ static double log_gamma_windschitl(const double x)
 
 // clang-format on
 
-static double *inv = NULL; /* table to keep computed inverse values */
-
-__attribute__((constructor)) static void invConstructor()
-{
-    if (inv)
-        return;
-    inv = malloc(sizeof(double) * TABSIZE);
-}
-
-__attribute__((destructor)) static void invDestructor()
-{
-    free(inv);
-    inv = NULL;
-}
+static double inv[TABSIZE]; /* table to keep computed inverse values */
 
 // clang-format off
 

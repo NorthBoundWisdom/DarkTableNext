@@ -1890,15 +1890,7 @@ static void _init_widgets(dt_gui_gtk_t *gui)
     dt_gui_apply_theme();
 }
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
-#pragma warning(disable : 4132)
-#endif
-static const dt_action_def_t _action_def_focus_tabs;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+static const dt_action_def_t *_action_def_focus_tabs(void);
 
 static void _init_main_table(GtkWidget *container)
 {
@@ -2056,7 +2048,7 @@ static void _init_main_table(GtkWidget *container)
     gtk_widget_show_all(container);
 
     dt_action_define(&darktable.control->actions_focus, NULL, N_("tabs"), NULL,
-                     &_action_def_focus_tabs);
+                     _action_def_focus_tabs());
 }
 
 void dt_ui_container_swap_left_right(struct dt_ui_t *ui, const gboolean swap)
@@ -3977,8 +3969,13 @@ const dt_action_def_t dt_action_def_tabs_rgb = {N_("tabs"), _action_process_tabs
 const dt_action_def_t dt_action_def_tabs_none = {N_("tabs"), _action_process_tabs,
                                                  _action_elements_tabs_all_rgb + 4};
 
-static const dt_action_def_t _action_def_focus_tabs = {N_("tabs"), _action_process_focus_tabs,
-                                                       DT_ACTION_ELEMENTS_NUM(tabs), NULL, TRUE};
+static const dt_action_def_t _action_def_focus_tabs_value = {
+    N_("tabs"), _action_process_focus_tabs, DT_ACTION_ELEMENTS_NUM(tabs), NULL, TRUE};
+
+static const dt_action_def_t *_action_def_focus_tabs(void)
+{
+    return &_action_def_focus_tabs_value;
+}
 
 static void _get_height_if_visible(GtkWidget *w, gint *height)
 {

@@ -639,8 +639,8 @@ static inline void dt_mm_restore_flush_zero(const unsigned int mode)
     _MM_SET_FLUSH_ZERO_MODE(mode);
 }
 
-#define DT_PREFETCH(addr) _mm_prefetch(addr, _MM_HINT_T2)
-#define PREFETCH_NTA(addr) _mm_prefetch(addr, _MM_HINT_NTA)
+#define DT_PREFETCH(addr) _mm_prefetch((const char *)(addr), _MM_HINT_T2)
+#define PREFETCH_NTA(addr) _mm_prefetch((const char *)(addr), _MM_HINT_NTA)
 
 #else // no SSE2
 

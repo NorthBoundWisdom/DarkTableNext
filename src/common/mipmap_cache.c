@@ -194,11 +194,10 @@ typedef struct dt_mipmap_buffer_dsc_t
 } DT_ALIGNED_ARRAY __attribute__((packed)) dt_mipmap_buffer_dsc_t;
 
 #if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
-static const size_t dt_mipmap_buffer_dsc_size __attribute__((unused)) =
+static const size_t dt_mipmap_buffer_dsc_size =
     sizeof(dt_mipmap_buffer_dsc_t) - sizeof(((dt_mipmap_buffer_dsc_t *)0)->redzone);
 #else
-static const size_t dt_mipmap_buffer_dsc_size __attribute__((unused)) =
-    sizeof(dt_mipmap_buffer_dsc_t);
+static const size_t dt_mipmap_buffer_dsc_size = sizeof(dt_mipmap_buffer_dsc_t);
 #endif
 
 // last resort mem alloc for dead images. sizeof(dt_mipmap_buffer_dsc_t) + max static image pixels (14x15)

@@ -403,7 +403,7 @@ void nlmeans_denoise(const float *const inbuf, float *const outbuf,
                             {
                                 out[4 * col + c] += pixel[c] * wt;
                             }
-                            _mm_prefetch(in + 4 * col + offset + stride,
+                            _mm_prefetch((const char *)(in + 4 * col + offset + stride),
                                          _MM_HINT_T0); // try to ensure next row is ready in time
                         }
                     }
@@ -425,7 +425,7 @@ void nlmeans_denoise(const float *const inbuf, float *const outbuf,
                             {
                                 out[4 * col + c] += pixel[c] * wt;
                             }
-                            _mm_prefetch(in + 4 * col + offset + stride,
+                            _mm_prefetch((const char *)(in + 4 * col + offset + stride),
                                          _MM_HINT_T0); // try to ensure next row is ready in time
                         }
                     }
@@ -443,12 +443,12 @@ void nlmeans_denoise(const float *const inbuf, float *const outbuf,
                             const float *const bot_px = bot_row + 4 * col;
                             const float diff =
                                 pixel_difference(bot_px, bot_px + offset, params->norm);
-                            _mm_prefetch(bot_px + stride, _MM_HINT_T0);
+                            _mm_prefetch((const char *)(bot_px + stride), _MM_HINT_T0);
 #ifdef CACHE_PIXDIFFS
                             set_pixdiff(col_sums, radius, row + radius + 1, col, diff);
 #endif
                             col_sums[col] += diff;
-                            _mm_prefetch(bot_px + offset + stride, _MM_HINT_T0);
+                            _mm_prefetch((const char *)(bot_px + offset + stride), _MM_HINT_T0);
                         }
                     }
                     else if (row < row_bot)
@@ -467,17 +467,17 @@ void nlmeans_denoise(const float *const inbuf, float *const outbuf,
                                 pixel_difference(bot_px, bot_px + offset, params->norm);
                             col_sums[col] +=
                                 diff - get_pixdiff(col_sums, radius, row - radius, col);
-                            _mm_prefetch(bot_px + stride, _MM_HINT_T0);
+                            _mm_prefetch((const char *)(bot_px + stride), _MM_HINT_T0);
                             set_pixdiff(col_sums, radius, row + 1 + radius, col, diff);
 #else
                             const float *const top_px = top_row + 4 * col;
                             const float *const bot_px = bot_row + 4 * col;
                             const float diff = diff_of_pixels_diff(bot_px, bot_px + offset, top_px,
                                                                    top_px + offset, params->norm);
-                            _mm_prefetch(bot_px + stride, _MM_HINT_T0);
+                            _mm_prefetch((const char *)(bot_px + stride), _MM_HINT_T0);
                             col_sums[col] += diff;
 #endif /* CACHE_PIXDIFFS */
-                            _mm_prefetch(bot_px + offset + stride, _MM_HINT_T0);
+                            _mm_prefetch((const char *)(bot_px + offset + stride), _MM_HINT_T0);
                         }
                     }
                     else if (row >= row_top &&

@@ -577,6 +577,16 @@ add_subdirectory(cli)
 # have some test programs for unit testing, ...
 if(BUILD_TESTING)
   add_subdirectory(tests)
+  if(WIN32)
+    add_custom_command(
+      TARGET lib_darktable
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory
+              $<TARGET_FILE_DIR:darktable-test-variables>
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_FILE:lib_darktable>
+              $<TARGET_FILE_DIR:darktable-test-variables>)
+  endif()
 endif(BUILD_TESTING)
 
 # build darktable executable

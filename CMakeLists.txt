@@ -63,14 +63,31 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU|MSVC)$")
 endif()
 
 if(MSVC)
-  add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h" /EHsc /Zc:preprocessor
-                      /utf-8
-                      "$<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>")
+  add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h"
+                      "$<$<COMPILE_LANGUAGE:CXX>:/EHsc>"
+                      /utf-8)
+  if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:/Zc:preprocessor>"
+                        "$<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>")
+  endif()
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>")
+  endif()
   add_compile_definitions(_CRT_NONSTDC_NO_DEPRECATE _CRT_SECURE_NO_WARNINGS
                           _ITERATOR_DEBUG_LEVEL=0)
-  if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    add_compile_definitions(DT_MSVC_NO_C99_COMPLEX)
-  endif()
+endif()
+
+include(CheckCSourceCompiles)
+check_c_source_compiles(
+  "#include <complex.h>
+   int main(void)
+   {
+     const float complex value = 1.0f + 2.0f * I;
+     return crealf(value) == 1.0f && cimagf(value) == 2.0f ? 0 : 1;
+   }"
+  DT_HAVE_C99_COMPLEX)
+if(NOT DT_HAVE_C99_COMPLEX)
+  add_compile_definitions(DT_NO_C99_COMPLEX)
 endif()
 
 include(DefineOptions.cmake)
@@ -399,6 +416,83 @@ configure_file(
     @ONLY)
 install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/macos_bundle_install.cmake"
         COMPONENT DTApplication)
+endif()
+
+# Windows packages use the normal install graph as their first-party payload.
+# The package script then reuses FreeCM's dependency inspection and WiX
+# fragment APIs to add the relocatable GTK runtime and produce an MSI.
+if(WIN32)
+  set(DARKTABLE_WINDOWS_PACKAGE_ROOT "${CMAKE_BINARY_DIR}/package/windows")
+  set(DARKTABLE_WINDOWS_PACKAGE_STAGE "${DARKTABLE_WINDOWS_PACKAGE_ROOT}/stage")
+  set(DARKTABLE_WINDOWS_PACKAGE_WORK "${DARKTABLE_WINDOWS_PACKAGE_ROOT}/wix")
+  set(DARKTABLE_WINDOWS_PACKAGE_MSI
+      "${CMAKE_BINARY_DIR}/DarkTableNext-${PROJECT_VERSION}-win64.msi")
+  set(DARKTABLE_WINDOWS_UPGRADE_CODE
+      "A7391ACD-F5E6-5EA2-B772-5E1C61383A32")
+
+  if(NOT VCPKG_INSTALLED_DIR OR NOT VCPKG_TARGET_TRIPLET)
+    message(FATAL_ERROR
+        "Windows packaging requires the vcpkg installed root and target triplet from the FreeCM preset")
+  endif()
+  set(DARKTABLE_WINDOWS_RUNTIME_ROOT
+      "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+
+  set(DT_WIX_BIN_DIR "C:/Program Files (x86)/WiX Toolset v3.14/bin" CACHE PATH
+      "Directory containing the WiX v3 candle.exe and light.exe tools")
+  find_program(DT_WIX_CANDLE_EXECUTABLE candle.exe HINTS "${DT_WIX_BIN_DIR}"
+               NO_DEFAULT_PATH)
+  find_program(DT_WIX_LIGHT_EXECUTABLE light.exe HINTS "${DT_WIX_BIN_DIR}"
+               NO_DEFAULT_PATH)
+  find_program(DT_GLIB_COMPILE_SCHEMAS_EXECUTABLE glib-compile-schemas.exe
+               HINTS "${DARKTABLE_WINDOWS_RUNTIME_ROOT}/tools/glib"
+               NO_DEFAULT_PATH)
+  find_program(DT_DUMPBIN_EXECUTABLE dumpbin.exe)
+
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "package-windows is available only from a single-config Release preset")
+  elseif(DT_WIX_CANDLE_EXECUTABLE AND DT_WIX_LIGHT_EXECUTABLE AND
+     DT_GLIB_COMPILE_SCHEMAS_EXECUTABLE AND DT_DUMPBIN_EXECUTABLE)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    include(InstallRequiredSystemLibraries)
+
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/package.json.in"
+        "${CMAKE_BINARY_DIR}/windows-package.json"
+        @ONLY)
+
+    get_property(DARKTABLE_WINDOWS_PACKAGE_TARGETS GLOBAL
+                 PROPERTY DT_LOADABLE_MODULE_TARGETS)
+    list(APPEND DARKTABLE_WINDOWS_PACKAGE_TARGETS darktable darktable-cli)
+    if(TARGET darktable-rs-identify)
+      # RawSpeed registers this helper in the install graph. The packaged
+      # product does not expose it, but it must exist before CMake can stage
+      # a clean build; package.py removes it from the final payload.
+      list(APPEND DARKTABLE_WINDOWS_PACKAGE_TARGETS darktable-rs-identify)
+    endif()
+
+    add_custom_target(prepare-windows-package
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${DARKTABLE_WINDOWS_PACKAGE_STAGE}"
+        COMMAND "${CMAKE_COMMAND}" --install "${CMAKE_BINARY_DIR}"
+                --prefix "${DARKTABLE_WINDOWS_PACKAGE_STAGE}"
+        DEPENDS ${DARKTABLE_WINDOWS_PACKAGE_TARGETS}
+        COMMENT "Preparing the DarkTableNext Windows package staging tree"
+        VERBATIM
+        USES_TERMINAL)
+
+    add_custom_target(package-windows
+        COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${CMAKE_SOURCE_DIR}/FreeCM"
+                "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/package.py"
+                --config "${CMAKE_BINARY_DIR}/windows-package.json"
+        DEPENDS prepare-windows-package
+        COMMENT "Creating the DarkTableNext Windows MSI through FreeCM and WiX"
+        VERBATIM
+        USES_TERMINAL)
+  else()
+    message(STATUS
+        "package-windows is unavailable: install WiX Toolset v3.14, load the MSVC environment, and reconfigure")
+  endif()
 endif()
 
 # uninstall target

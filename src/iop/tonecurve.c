@@ -57,15 +57,7 @@ static gboolean dt_iop_tonecurve_leave_notify(GtkWidget *widget, GdkEventCrossin
                                               dt_iop_module_t *self);
 static gboolean dt_iop_tonecurve_key_press(GtkWidget *widget, GdkEventKey *event,
                                            dt_iop_module_t *self);
-#ifdef _MSC_VER
-#pragma warning(push)
-// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
-#pragma warning(disable : 4132)
-#endif
-static const dt_action_def_t _action_def_tonecurve;
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+static const dt_action_def_t *_action_def_tonecurve(void);
 static gboolean _tonecurve_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
                                                   gpointer user_data);
 
@@ -1135,7 +1127,7 @@ void gui_init(dt_iop_module_t *self)
     g->area = GTK_DRAWING_AREA(dtgtk_drawing_area_new_with_height(0));
     g_object_set_data(G_OBJECT(g->area), "iop-instance", self);
     dt_action_t *curve_action = dt_action_define_iop(self, NULL, N_("curve"), GTK_WIDGET(g->area),
-                                                      &_action_def_tonecurve);
+                                                      _action_def_tonecurve());
     dt_action_set_context_menu_provider_only(curve_action, TRUE);
 
     // FIXME: that tooltip goes in the way of the numbers when you hover a node to get a reading
@@ -1802,8 +1794,13 @@ static const dt_action_element_def_t _action_elements_tonecurve[] = {
     {NULL},
 };
 
-static const dt_action_def_t _action_def_tonecurve = {N_("curve"), _tonecurve_action_process,
-                                                      _action_elements_tonecurve};
+static const dt_action_def_t _action_def_tonecurve_value = {
+    N_("curve"), _tonecurve_action_process, _action_elements_tonecurve};
+
+static const dt_action_def_t *_action_def_tonecurve(void)
+{
+    return &_action_def_tonecurve_value;
+}
 
 static gboolean _tonecurve_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
                                                   gpointer user_data)

@@ -545,7 +545,7 @@ static void xtrans_markesteijn_interpolate(float *out, const float *const in, co
 #undef TS
 
 #define TS DT_FDC_TS
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
 static void xtrans_fdc_interpolate(float *out, const float *const in, const int width,
                                    const int height, const uint8_t (*const xtrans)[6],
                                    const int iso, const uint32_t filters)

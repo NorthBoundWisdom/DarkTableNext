@@ -102,7 +102,7 @@ gchar *dt_util_normalize_path(const gchar *input);
 
 #ifdef WIN32
 // returns TRUE if the path is a Windows UNC (\\server\share\...\file)
-const gboolean dt_util_path_is_UNC(const gchar *filename);
+gboolean dt_util_path_is_UNC(const gchar *filename);
 #endif
 
 // gets the directory components of a file name, like

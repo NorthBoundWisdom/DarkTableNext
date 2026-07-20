@@ -1385,10 +1385,10 @@ static void _fill_mask(const size_t numpoints, float *const bufptr, const float 
     }
 }
 
-static float *const _ellipse_points_to_transform(const float center_x, const float center_y,
-                                                 const float dim1, const float dim2,
-                                                 const float rotation, const float wd,
-                                                 const float ht, size_t *point_count)
+static float *_ellipse_points_to_transform(const float center_x, const float center_y,
+                                           const float dim1, const float dim2,
+                                           const float rotation, const float wd,
+                                           const float ht, size_t *point_count)
 {
     const float v1 = deg2radf(rotation);
     const float v2 = deg2radf(rotation - 90.0f);

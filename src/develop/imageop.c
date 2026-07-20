@@ -220,7 +220,7 @@ void dt_iop_default_init(dt_iop_module_t *module)
         switch (i->header.type)
         {
         case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
             *(dt_introspection_float_complex_value_t *)((uint8_t *)module->default_params
                                                          + i->header.offset) =
                 i->FloatComplex.Default;
@@ -1800,7 +1800,7 @@ gboolean _iop_validate_params(dt_introspection_field_t *field, gpointer params,
                                  field->Char.Max, field->Char.Default);
         break;
     case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
     {
         const dt_introspection_float_complex_value_t *const value = p;
         all_ok = value->real >= field->FloatComplex.Min.real

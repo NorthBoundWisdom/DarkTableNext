@@ -297,30 +297,6 @@ int write_image(dt_imageio_module_data_t *jpg_tmp, const char *filename, const v
     return 0;
 }
 
-static int __attribute__((__unused__)) read_header(const char *filename, dt_imageio_jpeg_t *jpg)
-{
-    jpg->f = g_fopen(filename, "rb");
-    if (!jpg->f)
-        return 1;
-
-    struct dt_imageio_jpeg_error_mgr jerr;
-    jpg->dinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = dt_imageio_jpeg_error_exit;
-    if (setjmp(jerr.setjmp_buffer))
-    {
-        jpeg_destroy_decompress(&(jpg->dinfo));
-        fclose(jpg->f);
-        return 1;
-    }
-    jpeg_create_decompress(&(jpg->dinfo));
-    jpeg_stdio_src(&(jpg->dinfo), jpg->f);
-    // jpg->dinfo.buffered_image = TRUE;
-    jpeg_read_header(&(jpg->dinfo), TRUE);
-    jpg->global.width = jpg->dinfo.image_width;
-    jpg->global.height = jpg->dinfo.image_height;
-    return 0;
-}
-
 int read_image(dt_imageio_module_data_t *jpg_tmp, uint8_t *out)
 {
     dt_imageio_jpeg_t *jpg = (dt_imageio_jpeg_t *)jpg_tmp;

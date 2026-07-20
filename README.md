@@ -71,6 +71,33 @@ MSVC first-party targets use an actionable `/W4` baseline. The normal build
 matches the GCC/Clang policy by leaving broad numeric conversion diagnostics to
 a dedicated audit; enable them with `-DDT_MSVC_STRICT_CONVERSIONS=ON`.
 
+### Windows MSI
+
+Windows Release builds can be staged with the normal CMake install graph and
+packaged as a self-contained x64 MSI through the FreeCM package helpers and WiX
+Toolset v3.14. Install WiX once with:
+
+```powershell
+winget install --id WiXToolset.WiXToolset --exact
+```
+
+Then load the compiler environment, configure, and build the package target:
+
+```powershell
+setenv
+cmake --preset win_msvc_release
+cmake --build --preset win_msvc_release --target package-windows
+```
+
+The MSI is written to
+`build/win_msvc_release/DarkTableNext-0.9.0-win64.msi`. It contains the
+application, CLI, retained modules and data, the GTK/vcpkg runtime closure, and
+the corresponding third-party license files. See
+[DevDocs/Windows_Packaging.md](DevDocs/Windows_Packaging.md) for staging and
+validation details.
+
+### macOS DMG
+
 Configure the macOS release preset and build the packaging target to produce a
 local DMG:
 

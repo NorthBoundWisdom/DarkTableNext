@@ -87,7 +87,7 @@ typedef struct dt_introspection_type_double_t
   double                              Default;         // default value for this double field. taken from comments. defaults to 0.0
 } dt_introspection_type_double_t;
 
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
 typedef struct dt_introspection_float_complex_value_t
 {
   float real;
@@ -98,7 +98,7 @@ typedef struct dt_introspection_float_complex_value_t
 typedef struct dt_introspection_type_float_complex_t
 {
   dt_introspection_type_header_t      header;
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
   dt_introspection_float_complex_value_t Min;
   dt_introspection_float_complex_value_t Max;
   dt_introspection_float_complex_value_t Default;

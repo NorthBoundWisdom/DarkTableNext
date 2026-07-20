@@ -149,7 +149,8 @@ static void _init_expansion(dt_variables_params_t *params, gboolean iterate)
     params->data->longitude = NAN;
     params->data->latitude = NAN;
     params->data->elevation = NAN;
-    params->data->show_msec = dt_conf_get_bool("lighttable/ui/milliseconds");
+    params->data->show_msec =
+        darktable.conf ? dt_conf_get_bool("lighttable/ui/milliseconds") : FALSE;
     params->data->camera_maker = NULL;
     params->data->camera_alias = NULL;
     if (dt_is_valid_imgid(params->imgid))
@@ -946,7 +947,8 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
         {
             char *pattern = _expand_source(params, variable, ')');
             const size_t pattern_length = strlen(pattern);
-            if (!strncmp(base_value, pattern, pattern_length))
+            if (pattern_length <= base_value_length &&
+                !strncmp(base_value, pattern, pattern_length))
             {
                 char *_base_value = g_strdup(base_value + pattern_length);
                 g_free(base_value);
@@ -963,7 +965,8 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
         {
             char *pattern = _expand_source(params, variable, ')');
             const size_t pattern_length = strlen(pattern);
-            if (!strncmp(base_value + base_value_length - pattern_length, pattern, pattern_length))
+            if (pattern_length <= base_value_length &&
+                !strncmp(base_value + base_value_length - pattern_length, pattern, pattern_length))
                 base_value[base_value_length - pattern_length] = '\0';
             g_free(pattern);
         }
@@ -1014,7 +1017,8 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
             }
             case '#':
             {
-                if (!strncmp(base_value, pattern, pattern_length))
+                if (pattern_length <= base_value_length &&
+                    !strncmp(base_value, pattern, pattern_length))
                 {
                     char *_base_value =
                         g_malloc(base_value_length - pattern_length + replacement_length + 1);
@@ -1027,7 +1031,8 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
             }
             case '%':
             {
-                if (!strncmp(base_value + base_value_length - pattern_length, pattern,
+                if (pattern_length <= base_value_length &&
+                    !strncmp(base_value + base_value_length - pattern_length, pattern,
                              pattern_length))
                 {
                     char *_base_value =
@@ -1082,6 +1087,12 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
         {
             const char mode = **variable;
             char *_base_value = NULL;
+            if (*base_value == '\0')
+            {
+                if (mode == operation)
+                    (*variable)++;
+                break;
+            }
             if (operation == '^' && mode == '^')
             {
                 _base_value = g_utf8_strup(base_value, -1);

@@ -17,6 +17,7 @@ This guide maps the existing Image Operation (IOP) modules and darkroom implemen
 | **[maths.md](maths.md)** | Core Math, transposed matrices, and color science helpers |
 | **[GPU_Baseline.md](GPU_Baseline.md)** | OpenCL → Metal Phase 0 workload, correctness, and performance gates |
 | **[Runtime_Persistence.md](Runtime_Persistence.md)** | DevMode checkout isolation and production instance-lock policy |
+| **[Windows_Packaging.md](Windows_Packaging.md)** | FreeCM-backed Windows staging, MSI construction, and validation |
 
 ### GUI Development
 | File | Description |

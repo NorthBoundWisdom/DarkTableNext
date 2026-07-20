@@ -23,8 +23,7 @@ G_BEGIN_DECLS
 
 // Allocate a 64-byte aligned buffer for an image of the given dimensions and channels.
 // The return value must be freed with dt_free_align().
-static inline float *__restrict__ dt_iop_image_alloc(const size_t width, const size_t height,
-                                                     const size_t ch)
+static inline float *dt_iop_image_alloc(const size_t width, const size_t height, const size_t ch)
 {
     return dt_alloc_align_float(width * height * ch);
 }

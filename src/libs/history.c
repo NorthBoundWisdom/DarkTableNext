@@ -947,7 +947,7 @@ static gchar *_lib_history_change_text(dt_introspection_field_t *field, const ch
             return CHANGE_TEXT_BAUHAUS('%c', char);
         break;
     case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
-#if defined(DT_MSVC_NO_C99_COMPLEX)
+#if defined(DT_NO_C99_COMPLEX)
     {
         const dt_introspection_float_complex_value_t *const old_value = o;
         const dt_introspection_float_complex_value_t *const new_value = p;

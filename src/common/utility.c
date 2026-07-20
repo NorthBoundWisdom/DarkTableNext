@@ -859,7 +859,7 @@ gchar *dt_util_normalize_path(const gchar *_input)
 
 #ifdef WIN32
 // returns TRUE if the path is a Windows UNC (\\server\share\...\file)
-const gboolean dt_util_path_is_UNC(const gchar *filename)
+gboolean dt_util_path_is_UNC(const gchar *filename)
 {
     return filename[0] == G_DIR_SEPARATOR && filename[1] == G_DIR_SEPARATOR;
 }
