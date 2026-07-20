@@ -11,7 +11,7 @@ RAW 编辑应用。0.9 是核心收缩与维护基线：保留已经验证的 RA
 
 | 维度 | 当前维护范围 |
 | --- | --- |
-| 平台 | macOS（Apple Silicon 与 Intel） |
+| 平台 | macOS（Apple Silicon 与 Intel）；Windows MSVC/vcpkg bootstrap |
 | 图像核心 | C/C++ RAW 解码、IOP、pixelpipe、历史与色彩管理 |
 | 前端 | GTK3、dtgtk 与 Bauhaus 控件 |
 | GPU | OpenCL 可运行基线；CPU 路径始终保留 |
@@ -23,12 +23,21 @@ RAW 编辑应用。0.9 是核心收缩与维护基线：保留已经验证的 RA
 
 ## 开发环境
 
-当前构建只支持 macOS，并要求：
+macOS 构建要求：
 
 - CMake 3.26 或更新版本；
 - Homebrew、Ninja、`ccache`；
 - Clang（默认）或当前项目预设指定的 Homebrew GCC；
 - 当前 CMake 配置所检查的图像、数据库与 GTK 依赖。
+
+Windows bootstrap 使用 Visual Studio 的 x64 开发者环境和
+`C:\OpenSource\vcpkg` 的 `x64-windows` triplet。FreeCM 生成的
+`win_msvc_debug` 与 `win_msvc_release` 预设会接入该工具链。除已安装的 GTK3
+及图像库外，构建工具需要：
+
+```powershell
+C:\OpenSource\vcpkg\vcpkg.exe install "libxml2[tools]:x64-windows" "libxslt[tools]:x64-windows" gtk3:x64-windows pthreads:x64-windows
+```
 
 外部源码不使用临时 CMake 下载或复制进仓库的 vendored 副本，而由 FreeCM 和
 `source_roots.lock.jsonc.in` 统一管理。
@@ -84,6 +93,13 @@ macOS packager 收集允许的 Homebrew Mach-O 依赖、重写 rpath、签名并
 DMG。默认是 ad-hoc 签名，适合本机验收；正式对外发布时，在配置阶段传入
 `-DDT_MACOS_CODESIGN_IDENTITY="Developer ID Application: …"`，并在发布环境完成公证。
 
+Windows 配置与构建：
+
+```powershell
+cmake --preset win_msvc_debug
+cmake --build --preset win_msvc_debug
+```
+
 ### 开发构建的模块重链
 
 应用会在启动时动态加载 IOP、Lighttable、view 与 imageio 模块。正常构建只会在模块自身源码或
@@ -114,6 +130,7 @@ cmake --build --preset mac_clang_debug
 - `mac_clang_debug` / `mac_clang_release`
 - `mac_gcc_debug` / `mac_gcc_release`
 - `mac_xcode`
+- `win_msvc_debug` / `win_msvc_release`
 
 ### 测试
 

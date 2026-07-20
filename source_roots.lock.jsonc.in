@@ -10,11 +10,13 @@
     // for this checkout under darktable-dev/<checkout hash>.
     "DevMode": false
   },
-  "cmakeEnvironment": {
-    "PATH": "/opt/homebrew/opt/llvm/bin:$penv{PATH}"
-  },
+  "cmakeEnvironment": {},
   "cmakeCacheVariables": {
     "PROJECT_VERSION": "0.9.0",
+    "win": {
+      "CMAKE_TOOLCHAIN_FILE": "C:/OpenSource/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "PKG_CONFIG_EXECUTABLE": "C:/OpenSource/vcpkg/installed/x64-windows/tools/pkgconf/pkgconf.exe"
+    },
     "mac": {
       "CURL_INCLUDE_DIR": "/opt/homebrew/opt/curl/include",
       "CURL_LIBRARY": "/opt/homebrew/opt/curl/lib/libcurl.dylib",

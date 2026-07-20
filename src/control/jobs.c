@@ -202,7 +202,11 @@ static void _control_job_print(_dt_job_t *job, const char *info, const char *err
              job->description, _queuename(job->queue), job->priority);
 }
 
+#ifdef _WIN32
+static __declspec(thread) int32_t threadid = -1;
+#else
 static __thread int32_t threadid = -1;
+#endif
 // As threadid is `per thread` we don't have to use atomics
 static inline int32_t _control_get_threadid()
 {

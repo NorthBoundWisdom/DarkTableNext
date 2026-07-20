@@ -93,7 +93,13 @@ set(BUILD_BENCHMARKING_SAVE "${BUILD_BENCHMARKING}")
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(BUILD_BENCHMARKING OFF CACHE BOOL "" FORCE)
 set(BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
-set(WITH_OPENMP ON CACHE BOOL "" FORCE)
+if(MSVC)
+  # RawSpeed applies an OpenMP `for` directive to a range-for loop, which the
+  # MSVC OpenMP frontend rejects. Its sequential decoder path is equivalent.
+  set(WITH_OPENMP OFF CACHE BOOL "" FORCE)
+else()
+  set(WITH_OPENMP ON CACHE BOOL "" FORCE)
+endif()
 # RawSpeed's own warnings are useful upstream, but they are not part of the
 # application's warning contract.
 set(RAWSPEED_ENABLE_WERROR OFF CACHE BOOL "" FORCE)
@@ -106,6 +112,30 @@ set(RAWSPEED_ENABLE_CLANG_TIDY_WERROR OFF CACHE BOOL "" FORCE)
 if(CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang)$")
   set(RAWSPEED_HAVE_CXX_FLAG_WSTACK_USAGE_4096 OFF CACHE INTERNAL
       "Clang does not support -Wstack-usage=4096" FORCE)
+endif()
+
+# RawSpeed's CheckZLIB.cmake appends Clang-only warning suppressions to its
+# CMake probes. MSVC rejects those flags before it can test the vcpkg Zlib
+# headers and library, which RawSpeed still resolves as a required package.
+if(MSVC)
+  foreach(_rawspeed_zlib_check
+      HAVE_ZLIB_H
+      HAVE_ZLIB_Z_OK
+      HAVE_ZLIB_UNCOMPRESS_PROTOTYPE
+      HAVE_ZLIB_ZERROR_PROTOTYPE
+      HAVE_ZLIB_UNCOMPRESS
+      HAVE_ZLIB_ZERROR)
+    set(${_rawspeed_zlib_check} TRUE CACHE INTERNAL
+        "Prevalidated by the vcpkg Zlib package for the MSVC RawSpeed build" FORCE)
+  endforeach()
+
+  # CheckTypeSize(uLongf HAVE_ZLIB_ULONGF) writes its try-compile status to
+  # HAVE_HAVE_ZLIB_ULONGF, while RawSpeed consumes the size variable. vcpkg's
+  # x64-windows zlib typedefs uLongf to the 32-bit unsigned long type.
+  set(HAVE_HAVE_ZLIB_ULONGF TRUE CACHE INTERNAL
+      "Prevalidated by the vcpkg Zlib package for the MSVC RawSpeed build" FORCE)
+  set(HAVE_ZLIB_ULONGF 4 CACHE INTERNAL
+      "sizeof(uLongf) in the vcpkg x64-windows Zlib package" FORCE)
 endif()
 
 set(RAWSPEED_BINARY_PREFIX "darktable")
@@ -121,6 +151,7 @@ set(CMAKE_INSTALL_DATAROOTDIR_SAVE "${CMAKE_INSTALL_DATAROOTDIR}")
 set(CMAKE_INSTALL_DATAROOTDIR "${CMAKE_INSTALL_DATAROOTDIR}/darktable")
 
 add_subdirectory("${RAWSPEED_PATH}" ${DARKTABLE_LIBDIR}/rawspeed)
+
 # Copying rawspeed resources to where dt expects them
 add_custom_target("deploy" ALL)
 SET(RAWSPEED_DATADIR "${RAWSPEED_PATH}/data")

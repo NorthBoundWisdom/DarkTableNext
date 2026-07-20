@@ -75,9 +75,7 @@ endforeach(module)
 # TODO: Modules are now not only lighttable related and should be placed
 #       in a better matching structure then just in lighttable directory.
 foreach(module ${MODULES})
-  if(WIN32)
-    _detach_debuginfo (${module} ${CMAKE_INSTALL_LIBDIR}/darktable/plugins/lighttable)
-  else()
+  if(NOT WIN32)
     set_target_properties(${module}
                           PROPERTIES
                           INSTALL_RPATH ${RPATH_ORIGIN}/../..)

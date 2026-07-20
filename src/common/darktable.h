@@ -37,7 +37,6 @@
 #include "common/dttypes.h"
 #include "common/utility.h"
 #include "common/wb_presets.h"
-#include <sys/resource.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <glib/gi18n.h>
@@ -46,9 +45,14 @@
 #include <math.h>
 #include <sqlite3.h>
 #include <stdio.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -621,9 +625,17 @@ void dt_capabilities_cleanup();
 
 static inline double dt_get_wtime(void)
 {
+#if defined(_WIN32)
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+    QueryPerformanceFrequency(&frequency);
+    QueryPerformanceCounter(&counter);
+    return (double)counter.QuadPart / (double)frequency.QuadPart;
+#else
     struct timeval time;
     gettimeofday(&time, NULL);
     return time.tv_sec - 1290608000 + (1.0 / 1000000.0) * time.tv_usec;
+#endif
 }
 
 static inline double dt_get_debug_wtime(void)
@@ -640,9 +652,13 @@ static inline double dt_get_lap_time(double *time)
 
 static inline double dt_get_utime(void)
 {
+#if defined(_WIN32)
+    return dt_get_wtime();
+#else
     struct rusage ru;
     getrusage(RUSAGE_SELF, &ru);
     return ru.ru_utime.tv_sec + ru.ru_utime.tv_usec * (1.0 / 1000000.0);
+#endif
 }
 
 static inline double dt_get_lap_utime(double *time)

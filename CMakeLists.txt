@@ -41,15 +41,21 @@ function(dt_module_configure_link_dependencies target)
   endif()
 endfunction()
 
-if(NOT APPLE)
-  message(FATAL_ERROR "DarkTableNext supports macOS only.")
+if(NOT APPLE AND NOT WIN32)
+  message(FATAL_ERROR "DarkTableNext supports macOS and Windows only.")
 endif()
 
-if(NOT CMAKE_C_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU)$")
-  message(FATAL_ERROR "Unsupported C compiler: ${CMAKE_C_COMPILER_ID}. Use Clang or GCC.")
+if(NOT CMAKE_C_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU|MSVC)$")
+  message(FATAL_ERROR "Unsupported C compiler: ${CMAKE_C_COMPILER_ID}. Use Clang, GCC, or MSVC.")
 endif()
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU)$")
-  message(FATAL_ERROR "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER_ID}. Use Clang or GCC.")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU|MSVC)$")
+  message(FATAL_ERROR "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER_ID}. Use Clang, GCC, or MSVC.")
+endif()
+
+if(MSVC)
+  add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h" /EHsc /Zc:preprocessor
+                      "$<$<COMPILE_LANGUAGE:C>:/std:c11>")
+  add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
 endif()
 
 include(DefineOptions.cmake)
@@ -77,8 +83,10 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 # macOS uses loader-relative install names for bundled libraries and modules.
-set(CMAKE_MACOSX_RPATH ON)
-set(RPATH_ORIGIN @loader_path)
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH ON)
+  set(RPATH_ORIGIN @loader_path)
+endif()
 
 check_c_compiler_flag("-fopenmp-version=51" DT_C_HAS_OPENMP_51_FLAG)
 if(DT_C_HAS_OPENMP_51_FLAG)
@@ -89,32 +97,46 @@ if(DT_CXX_HAS_OPENMP_51_FLAG)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=51")
 endif()
 
-find_package(OpenMP 4.5 REQUIRED)
+if(MSVC)
+  # MSVC does not implement the OpenMP declare-simd directives used by the
+  # image core. Keep the portable serial paths active for this bootstrap.
+  set(OpenMP_C_FLAGS "" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_FLAGS "" CACHE STRING "" FORCE)
+  set(OpenMP_C_LIBRARIES "" CACHE STRING "" FORCE)
+  set(OpenMP_CXX_LIBRARIES "" CACHE STRING "" FORCE)
+  set(OpenMP_FOUND FALSE)
+else()
+  find_package(OpenMP 4.5 REQUIRED)
+endif()
 
 # Check for base threading library
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 
-# Fail if returned library is not pthread
-if (NOT CMAKE_USE_PTHREADS_INIT)
+# Fail if returned library is not pthread on platforms that use POSIX threads.
+if(NOT WIN32 AND NOT CMAKE_USE_PTHREADS_INIT)
     message(FATAL_ERROR "POSIX threads: not found")
 endif()
 
 #
 # Set platform defaults...
 #
-message("-- macOS build")
-find_program(HOMEBREW_EXISTS "brew")
-if(NOT HOMEBREW_EXISTS)
-  message(FATAL_ERROR "DarkTableNext currently requires Homebrew on macOS.")
+if(APPLE)
+  message("-- macOS build")
+  find_program(HOMEBREW_EXISTS "brew")
+  if(NOT HOMEBREW_EXISTS)
+    message(FATAL_ERROR "DarkTableNext currently requires Homebrew on macOS.")
+  endif()
+  execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
+  string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
+  message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
+  list(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX} ${HOMEBREW_PREFIX}/opt/llvm ${HOMEBREW_PREFIX}/opt/icu4c)
+  set(CMAKE_FIND_FRAMEWORK "LAST")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DARWIN_C_SOURCE")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
+elseif(WIN32)
+  message("-- Windows build")
 endif()
-execute_process(COMMAND brew --prefix OUTPUT_VARIABLE HOMEBREW_PREFIX)
-string(STRIP "${HOMEBREW_PREFIX}" HOMEBREW_PREFIX)
-message("-- Homebrew detected, setting CMAKE_PREFIX_PATH to ${HOMEBREW_PREFIX}")
-list(APPEND CMAKE_PREFIX_PATH ${HOMEBREW_PREFIX} ${HOMEBREW_PREFIX}/opt/llvm ${HOMEBREW_PREFIX}/opt/icu4c)
-set(CMAKE_FIND_FRAMEWORK "LAST")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DARWIN_C_SOURCE")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
 
 #
 # Set package version
@@ -272,7 +294,9 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 # macOS uses the POSIX 2008 interfaces throughout the core.
-add_definitions("-D_XOPEN_SOURCE=700")
+if(APPLE)
+  add_definitions("-D_XOPEN_SOURCE=700")
+endif()
 
 # Set default component name - that way external modules like RawSpeed will install their
 # materials under the default component and not under 'Unspecified'

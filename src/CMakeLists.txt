@@ -76,7 +76,6 @@ FILE(GLOB SOURCE_FILES
   "common/overlay.c"
   "common/presets.c"
   "common/pwstorage/pwstorage.c"
-  "common/ras2vect.c"
   "common/ratings.c"
   "common/resource_limits.c"
   "common/selection.c"
@@ -197,29 +196,36 @@ endif()
 # Append thread flags/libraries to LIBS
 list(APPEND LIBS "${CMAKE_THREAD_LIBS_INIT}")
 
+if(WIN32)
+  find_package(PThreads4W CONFIG REQUIRED)
+  list(APPEND LIBS PThreads4W::PThreads4W)
+endif()
+
 # libm is part of libSystem on macOS. Other platforms may still require an
 # explicit math library when this build logic is reused.
-if(NOT APPLE)
+if(NOT APPLE AND NOT WIN32)
   list(APPEND LIBS "-lm")
 endif()
 
-if(OpenMP_C_FLAGS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-endif()
+if(NOT MSVC)
+  if(OpenMP_C_FLAGS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  endif()
 
-if(OpenMP_CXX_FLAGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
+  if(OpenMP_CXX_FLAGS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  endif()
 
-if(OpenMP_C_INCLUDE_DIRS)
-  include_directories(${OpenMP_C_INCLUDE_DIRS})
-endif()
+  if(OpenMP_C_INCLUDE_DIRS)
+    include_directories(${OpenMP_C_INCLUDE_DIRS})
+  endif()
 
-if(OpenMP_CXX_INCLUDE_DIRS)
-  include_directories(${OpenMP_CXX_INCLUDE_DIRS})
-endif()
+  if(OpenMP_CXX_INCLUDE_DIRS)
+    include_directories(${OpenMP_CXX_INCLUDE_DIRS})
+  endif()
 
-list(APPEND LIBS ${OpenMP_C_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+  list(APPEND LIBS ${OpenMP_C_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+endif()
 
 #
 # Find all other required libraries for building
@@ -243,10 +249,6 @@ find_package(LibXml2 2.6 REQUIRED)
 include_directories(SYSTEM ${LIBXML2_INCLUDE_DIR})
 list(APPEND LIBS ${LIBXML2_LIBRARIES})
 add_definitions(${LIBXML2_DEFINITIONS})
-
-# Check for potrace
-find_package(Potrace REQUIRED)
-list(APPEND LIBS ${POTRACE_LIBRARY})
 
 # Used for 16-bit (half) float TIFF export (and faster import)
 # (IlmBase Half library in 2.5 and earlier and Imath 3.0 did not have C API)
@@ -347,12 +349,16 @@ if(HAVE_BUILTIN_CPU_SUPPORTS)
 endif(HAVE_BUILTIN_CPU_SUPPORTS)
 MESSAGE(STATUS "Does the compiler support __builtin_cpu_supports(): ${HAVE_BUILTIN_CPU_SUPPORTS}")
 
+if(MSVC)
+  set(HAVE_TLS TRUE)
+else()
 check_c_source_compiles("
 static __thread int tls;
 int main(void)
 {
   return 0;
 }" HAVE_TLS)
+endif()
 if(NOT HAVE_TLS)
   MESSAGE(FATAL_ERROR "The compiler does not support Thread-local storage.")
 endif()
@@ -397,7 +403,9 @@ find_package(Pugixml 1.5 REQUIRED)
 include_directories(SYSTEM ${Pugixml_INCLUDE_DIRS})
 list(APPEND LIBS ${Pugixml_LIBRARIES})
 
-add_definitions(-Werror -Wfatal-errors)
+if(NOT MSVC)
+  add_definitions(-Werror -Wfatal-errors)
+endif()
 
 # Clang reports declined OpenMP SIMD optimization requests through
 # -Wpass-failed. They are useful in a dedicated vectorization report, but are
@@ -600,7 +608,11 @@ dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT 
 # materialized FreeCM checkout explicitly instead of relying on its former
 # adjacent-source layout.
 set(LIBRAW_PATH "${LIBRAW_PATH}" CACHE PATH "Pinned LibRaw source root" FORCE)
-set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
+if(MSVC)
+  set(ENABLE_OPENMP OFF CACHE BOOL "" FORCE)
+else()
+  set(ENABLE_OPENMP ON CACHE BOOL "" FORCE)
+endif()
 set(ENABLE_LCMS OFF CACHE BOOL "")
 set(ENABLE_JASPER OFF CACHE BOOL "")
 

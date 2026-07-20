@@ -90,9 +90,15 @@ typedef struct dt_introspection_type_double_t
 typedef struct dt_introspection_type_float_complex_t
 {
   dt_introspection_type_header_t      header;
+#if defined(_MSC_VER)
+  float                               Min;
+  float                               Max;
+  float                               Default;
+#else
   float _Complex                      Min;             // minimum allowed value for this float complex field. taken from comments. defaults to -G_MAXFLOAT + -G_MAXFLOAT * _Complex_I
   float _Complex                      Max;             // maximum allowed value for this float complex field. taken from comments. defaults to G_MAXFLOAT + G_MAXFLOAT * _Complex_I
   float _Complex                      Default;         // default value for this float complex field. taken from comments. defaults to 0.0 + 0.0 * _Complex_I
+#endif
 } dt_introspection_type_float_complex_t;
 
 typedef struct dt_introspection_type_char_t

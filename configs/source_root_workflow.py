@@ -23,28 +23,37 @@ from repomgrcpp.preset_templates import resolve_preset_models as resolve_freecm_
 
 
 def resolve_preset_models(*args: object, **kwargs: object):
-    """Keep the generated macOS compiler presets tied to their toolchains."""
+    """Keep generated compiler presets tied to their platform toolchains."""
     lock_data = args[1] if len(args) > 1 else kwargs.get("lock_data")
     if lock_data is None:
         raise ValueError("resolve_preset_models requires the dependency lock data")
     dev_mode_from_lock_data(lock_data, path_label=REPO_ROOT / "source_roots.lock.jsonc")
 
     resolved = resolve_freecm_preset_models(*args, **kwargs)
-    if resolved.os_group != "mac":
-        return resolved
-
     for model in (resolved.resolved_model, resolved.generated_model):
         for preset in model["configurePresets"]:
             cache = preset["cacheVariables"]
             name = preset["name"]
-            if name.startswith("mac_clang_"):
-                cache["CMAKE_C_COMPILER"] = "clang"
-                cache["CMAKE_CXX_COMPILER"] = "clang++"
-            elif name.startswith("mac_gcc_"):
-                cache["CMAKE_C_COMPILER"] = "gcc-16"
-                cache["CMAKE_CXX_COMPILER"] = "g++-16"
+            if resolved.os_group == "mac":
+                if name.startswith("mac_clang_"):
+                    cache["CMAKE_C_COMPILER"] = "clang"
+                    cache["CMAKE_CXX_COMPILER"] = "clang++"
+                elif name.startswith("mac_gcc_"):
+                    cache["CMAKE_C_COMPILER"] = "gcc-16"
+                    cache["CMAKE_CXX_COMPILER"] = "g++-16"
+                    preset["environment"] = {
+                        "PATH": "/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm/bin:$penv{PATH}"
+                    }
+            elif resolved.os_group == "win":
+                path_prefix = (
+                    "C:/Program Files/Git/usr/bin;"
+                    "C:/OpenSource/vcpkg/installed/x64-windows/tools/libxml2;"
+                    "C:/OpenSource/vcpkg/installed/x64-windows/tools/libxslt;"
+                )
+                if name.startswith("win_llvm_"):
+                    path_prefix = "C:/Program Files/LLVM/bin;" + path_prefix
                 preset["environment"] = {
-                    "PATH": "/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm/bin:$penv{PATH}"
+                    "PATH": path_prefix + "$penv{PATH}"
                 }
     return resolved
 
@@ -59,7 +68,5 @@ WORKFLOW_SCRIPT = bind_cmake_workflow_script(
     repo_display_name="DarkTableNext",
     dependency_build_order=DEPENDENCY_BUILD_ORDER,
 )
-
-
 if __name__ == "__main__":
     raise SystemExit(WORKFLOW_SCRIPT.main())

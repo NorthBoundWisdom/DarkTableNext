@@ -28,6 +28,7 @@
 #include <string.h> // for strerror
 #include <inttypes.h>
 
+#if !defined(_WIN32)
 #include <sys/resource.h> // for rlimit, RLIMIT_STACK, getrlimit, setrlimit
 
 static void dt_set_rlimits_stack()
@@ -72,8 +73,11 @@ static void dt_set_rlimits_stack()
         }
     }
 }
+#endif
 
 void dt_set_rlimits()
 {
+#if !defined(_WIN32)
     dt_set_rlimits_stack();
+#endif
 }

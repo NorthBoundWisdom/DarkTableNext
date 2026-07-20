@@ -81,7 +81,7 @@ static inline void _retrw_error(const int ret, const char *mess)
     fflush(stdout);
 }
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(_WIN32)
 
 #ifndef MUTEX_REPORTING
 #define MUTEX_REPORTING // make sure we report the BAD variants

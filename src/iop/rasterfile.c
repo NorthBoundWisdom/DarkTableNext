@@ -33,7 +33,6 @@
 #include "develop/imageop_math.h"
 #include "common/interpolation.h"
 #include "common/fast_guided_filter.h"
-#include "common/ras2vect.h"
 #include "common/utility.h"
 #include "imageio/imageio_png.h"
 #include "gui/accelerators.h"
@@ -44,8 +43,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-
-#define SET_THRESHOLD 0.6f
 
 DT_MODULE_INTROSPECTION(1, dt_iop_rasterfile_params_t)
 
@@ -125,7 +122,6 @@ typedef struct dt_iop_rasterfile_gui_data_t
     GtkWidget *mode;
     GtkWidget *fbutton;
     GtkWidget *file;
-    GtkWidget *vectorize;
 } dt_iop_rasterfile_gui_data_t;
 
 void modify_roi_in(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
@@ -137,37 +133,6 @@ void modify_roi_in(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece,
     roi_in->y = 0;
     roi_in->width = piece->buf_in.width;
     roi_in->height = piece->buf_in.height;
-}
-
-static void _vectorize_button_clicked(GtkWidget *widget, dt_iop_module_t *self)
-{
-    dt_develop_t *dev = darktable.develop;
-
-    dt_rasterfile_cache_t *cd = self->data;
-
-    dt_pthread_mutex_lock(&cd->lock);
-
-    const dt_image_t *const image = &(self->dev->image_storage);
-    GList *forms = ras2forms(cd->mask, cd->width, cd->height, image, SET_THRESHOLD, 0, 0.0, NULL);
-
-    dt_pthread_mutex_unlock(&cd->lock);
-
-    const int nbform = g_list_length(forms);
-    if (nbform == 0)
-    {
-        dt_control_log(_("no mask extracted from the raster file\n"
-                         "make sure the masks have proper contrast"));
-    }
-    else
-    {
-        dt_control_log(ngettext("%d mask extracted from the raster file",
-                                "%d masks extracted from the raster file", nbform),
-                       nbform);
-
-        // add all forms into the mask manager
-
-        dt_masks_register_forms(dev, forms);
-    }
 }
 
 static float *_read_rasterfile(char *filename, const dt_iop_rasterfile_mode_t mode, int *swidth,
@@ -379,7 +344,6 @@ static void _fbutton_clicked(GtkWidget *widget, dt_iop_module_t *self)
         }
         g_free(filepath);
         gtk_widget_set_sensitive(g->file, p->path[0] && p->file[0]);
-        gtk_widget_set_sensitive(g->vectorize, p->path[0] && p->file[0]);
     }
     g_free(mfolder);
     g_object_unref(filechooser);
@@ -614,7 +578,6 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
             dt_dev_reprocess_center(self->dev);
     }
 
-    gtk_widget_set_sensitive(g->vectorize, p->path[0] && p->file[0]);
 }
 
 void gui_update(dt_iop_module_t *self)
@@ -691,15 +654,7 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(g->file, _("the mask file path is saved with the image history"));
     g_signal_connect(G_OBJECT(g->file), "value-changed", G_CALLBACK(_file_callback), self);
 
-    // Vectorize button
-
-    g->vectorize = gtk_button_new_with_label(_("vectorize"));
-    gtk_widget_set_tooltip_text(g->vectorize,
-                                _("vectorize the current bitmap and create corresponding"
-                                  " path masks in the mask manager"));
-    g_signal_connect(g->vectorize, "clicked", G_CALLBACK(_vectorize_button_clicked), self);
-
-    dt_gui_box_add(self->widget, dt_gui_hbox(g->fbutton, dt_gui_expand(g->file)), g->vectorize);
+    dt_gui_box_add(self->widget, dt_gui_hbox(g->fbutton, dt_gui_expand(g->file)));
 }
 
 #undef RASTERFILE_MAXFILE

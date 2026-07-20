@@ -34,6 +34,39 @@
         "command": "cmake",
         "args": ["--preset", "mac_gcc_release"],
         "platforms": ["darwin"]
+      },
+      {
+        "id": "win-llvm-debug",
+        "label": "Win LLVM Debug",
+        "description": "Configure the win_llvm_debug CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "win_llvm_debug"],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-llvm-release",
+        "label": "Win LLVM Release",
+        "description": "Configure the win_llvm_release CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "win_llvm_release"],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-msvc-debug",
+        "label": "Win MSVC Debug",
+        "description": "Configure the win_msvc_debug CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "win_msvc_debug"],
+        "platforms": ["win32"],
+        "default": true
+      },
+      {
+        "id": "win-msvc-release",
+        "label": "Win MSVC Release",
+        "description": "Configure the win_msvc_release CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "win_msvc_release"],
+        "platforms": ["win32"]
       }
     ],
     "build": [
@@ -69,6 +102,39 @@
         "command": "cmake",
         "args": ["--build", "--preset", "mac_gcc_release"],
         "platforms": ["darwin"]
+      },
+      {
+        "id": "win-llvm-debug",
+        "label": "Win LLVM Debug",
+        "description": "Build the win_llvm_debug CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "win_llvm_debug"],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-llvm-release",
+        "label": "Win LLVM Release",
+        "description": "Build the win_llvm_release CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "win_llvm_release"],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-msvc-debug",
+        "label": "Win MSVC Debug",
+        "description": "Build the win_msvc_debug CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "win_msvc_debug"],
+        "platforms": ["win32"],
+        "default": true
+      },
+      {
+        "id": "win-msvc-release",
+        "label": "Win MSVC Release",
+        "description": "Build the win_msvc_release CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "win_msvc_release"],
+        "platforms": ["win32"]
       }
     ],
     "run": [
@@ -136,6 +202,71 @@
           }
         ],
         "platforms": ["darwin"]
+      },
+      {
+        "id": "win-llvm-debug",
+        "label": "Win LLVM Debug",
+        "description": "Build and run DarkTableNext with the win_llvm_debug preset",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_llvm_debug", "--target", "darktable"]
+          },
+          {
+            "command": ".\\build\\win_llvm_debug\\bin\\darktable.exe",
+            "args": []
+          }
+        ],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-llvm-release",
+        "label": "Win LLVM Release",
+        "description": "Build and run DarkTableNext with the win_llvm_release preset",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_llvm_release", "--target", "darktable"]
+          },
+          {
+            "command": ".\\build\\win_llvm_release\\bin\\darktable.exe",
+            "args": []
+          }
+        ],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-msvc-debug",
+        "label": "Win MSVC Debug",
+        "description": "Build and run DarkTableNext with the win_msvc_debug preset",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_msvc_debug", "--target", "darktable"]
+          },
+          {
+            "command": ".\\build\\win_msvc_debug\\bin\\darktable.exe",
+            "args": []
+          }
+        ],
+        "platforms": ["win32"],
+        "default": true
+      },
+      {
+        "id": "win-msvc-release",
+        "label": "Win MSVC Release",
+        "description": "Build and run DarkTableNext with the win_msvc_release preset",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_msvc_release", "--target", "darktable"]
+          },
+          {
+            "command": ".\\build\\win_msvc_release\\bin\\darktable.exe",
+            "args": []
+          }
+        ],
+        "platforms": ["win32"]
       }
     ],
     "test": [],
