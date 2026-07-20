@@ -240,15 +240,6 @@ typedef struct dt_view_manager_t
    */
     struct
     {
-        /* filter toolbox proxy object */
-        struct
-        {
-            struct dt_lib_module_t *module;
-            GtkWidget *(*get_filter_box)(struct dt_lib_module_t *);
-            GtkWidget *(*get_sort_box)(struct dt_lib_module_t *);
-            GtkWidget *(*get_count)(struct dt_lib_module_t *);
-        } filter;
-
         /* module collection proxy object */
         struct
         {
@@ -269,7 +260,6 @@ typedef struct dt_view_manager_t
             void (*update)(struct dt_lib_module_t *);
             void (*set_sort)(struct dt_lib_module_t *, const int sort, const gboolean asc);
             void (*reset_filter)(struct dt_lib_module_t *, const gboolean smart_filter);
-            void (*show_pref_menu)(struct dt_lib_module_t *, GtkWidget *bt);
         } module_filtering;
 
         /* filmstrip proxy object */
@@ -382,14 +372,7 @@ GSList *dt_mouse_action_create_format(GSList *actions, const dt_mouse_action_typ
 void dt_view_collection_update(const dt_view_manager_t *vm);
 void dt_view_filtering_set_sort(const dt_view_manager_t *vm, const int sort, const gboolean asc);
 
-/*
- * Filter dropdown proxy
- */
 void dt_view_filtering_reset(const dt_view_manager_t *vm, const gboolean smart_filter);
-void dt_view_filtering_show_pref_menu(const dt_view_manager_t *vm, GtkWidget *bt);
-GtkWidget *dt_view_filter_get_filters_box(const dt_view_manager_t *vm);
-GtkWidget *dt_view_filter_get_sort_box(const dt_view_manager_t *vm);
-GtkWidget *dt_view_filter_get_count(const dt_view_manager_t *vm);
 
 // active images functions
 void dt_view_active_images_reset(const gboolean raise);

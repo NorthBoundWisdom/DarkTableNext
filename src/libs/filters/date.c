@@ -44,10 +44,7 @@ static gboolean _date_update(dt_lib_filtering_rule_t *rule)
 
     dt_lib_filtering_t *d = rule->lib;
     _widgets_range_t *special = (_widgets_range_t *)rule->w_specific;
-    _widgets_range_t *specialtop = (_widgets_range_t *)rule->w_specific_top;
     GtkDarktableRangeSelect *range = DTGTK_RANGE_SELECT(special->range_select);
-    GtkDarktableRangeSelect *rangetop =
-        (specialtop) ? DTGTK_RANGE_SELECT(specialtop->range_select) : NULL;
 
     rule->manual_widget_set++;
     // first, we update the graph
@@ -65,27 +62,19 @@ static gboolean _date_update(dt_lib_filtering_rule_t *rule)
     sqlite3_stmt *stmt;
     DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
     dtgtk_range_select_reset_blocks(range);
-    if (rangetop)
-        dtgtk_range_select_reset_blocks(rangetop);
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const int count = sqlite3_column_int(stmt, 1);
         const int64_t dt = sqlite3_column_int64(stmt, 0);
         dtgtk_range_select_add_block(range, dt, count);
-        if (rangetop)
-            dtgtk_range_select_add_block(rangetop, dt, count);
     }
     sqlite3_finalize(stmt);
 
     // and setup the selection
     dtgtk_range_select_set_selection_from_raw_text(range, rule->raw_text, FALSE);
-    if (rangetop)
-        dtgtk_range_select_set_selection_from_raw_text(rangetop, rule->raw_text, FALSE);
     rule->manual_widget_set--;
 
     dtgtk_range_select_redraw(range);
-    if (rangetop)
-        dtgtk_range_select_redraw(rangetop);
     return TRUE;
 }
 
@@ -110,26 +99,6 @@ static void _month_set_mask(dt_lib_filtering_rule_t *rule, const int mask, const
     gchar *txt = g_strdup_printf("0x%x", mask);
     _rule_set_raw_text(rule, txt, signal);
     g_free(txt);
-}
-
-static gchar *_month_pretty_print(const gchar *raw_txt)
-{
-    const int mask = _month_get_mask(raw_txt);
-    if (mask == 0 || mask == 0xFFF)
-        return g_strdup(_("all"));
-
-    gchar *txt = NULL;
-    for (int i = 0; i < 12; i++)
-    {
-        if (mask & (1 << i))
-        {
-            if (txt)
-                dt_util_str_cat(&txt, ", %s", Q_(dt_month_short_names[i]));
-            else
-                txt = g_strdup(Q_(dt_month_short_names[i]));
-        }
-    }
-    return txt ? txt : g_strdup(_("all"));
 }
 
 static void _month_widget_changed(GtkToggleButton *button, gpointer user_data)
@@ -160,7 +129,6 @@ static gboolean _month_update(dt_lib_filtering_rule_t *rule)
 
     rule->manual_widget_set++;
     _widgets_month_t *month = (_widgets_month_t *)rule->w_specific;
-    _widgets_month_t *monthtop = (_widgets_month_t *)rule->w_specific_top;
 
     const int mask = _month_get_mask(rule->raw_text);
 
@@ -168,8 +136,6 @@ static gboolean _month_update(dt_lib_filtering_rule_t *rule)
     {
         const gboolean active = (mask & (1 << i)) != 0;
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(month->toggles[i]), active);
-        if (monthtop)
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(monthtop->toggles[i]), active);
     }
 
     rule->manual_widget_set--;
@@ -177,14 +143,11 @@ static gboolean _month_update(dt_lib_filtering_rule_t *rule)
 }
 
 static void _month_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection_properties_t prop,
-                               const gchar *text, dt_lib_module_t *self, const gboolean top)
+                               const gchar *text, dt_lib_module_t *self)
 {
     _widgets_month_t *month = g_malloc0(sizeof(_widgets_month_t));
     month->rule = rule;
-    if (top)
-        rule->w_specific_top = month;
-    else
-        rule->w_specific = month;
+    rule->w_specific = month;
 
     GtkWidget *month_box = gtk_flow_box_new();
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(month_box), 12); // default is 7
@@ -211,21 +174,16 @@ static void _month_widget_init(dt_lib_filtering_rule_t *rule, const dt_collectio
         rule->manual_widget_set--;
     }
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), month_box, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), month_box, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), month_box, TRUE, TRUE, 0);
 }
 
 static void _date_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection_properties_t prop,
-                              const gchar *text, dt_lib_module_t *self, const gboolean top)
+                              const gchar *text, dt_lib_module_t *self)
 {
     _widgets_range_t *special = g_malloc0(sizeof(_widgets_range_t));
 
     special->range_select =
-        dtgtk_range_select_new(dt_collection_name_untranslated(prop), !top, DT_RANGE_TYPE_DATETIME);
-    if (top)
-        gtk_widget_set_size_request(special->range_select, 160, -1);
+        dtgtk_range_select_new(dt_collection_name_untranslated(prop), TRUE, DT_RANGE_TYPE_DATETIME);
     GtkDarktableRangeSelect *range = DTGTK_RANGE_SELECT(special->range_select);
 
     range->type = DT_RANGE_TYPE_DATETIME;
@@ -251,5 +209,5 @@ static void _date_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection
     }
     sqlite3_finalize(stmt);
 
-    _range_widget_add_to_rule(rule, special, top);
+    _range_widget_add_to_rule(rule, special);
 }

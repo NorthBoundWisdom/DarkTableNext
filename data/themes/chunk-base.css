@@ -1365,9 +1365,9 @@ filechooser row:hover .sidebar-icon
   min-height: 18em;
 }
 
-/*--------------------------------------------------
-  - Collect module and quick filters on header bar -
---------------------------------------------------*/
+/*------------------
+  - Collect module -
+  ------------------*/
 /* set main settings and module part */
 #range-select #dt-range-band
 {
@@ -1375,7 +1375,7 @@ filechooser row:hover .sidebar-icon
   border-radius: 0.21em;
   min-height: 1.6em;    /* band height */
   min-width: 9em;
-  margin: 0.1em 0;      /* be sure it's set same margin as bauhaus-combobox to have same height in quick filters box with sortby combobox */
+  margin: 0.1em 0;
   padding: 0.07em;
 }
 
@@ -1412,7 +1412,7 @@ filechooser row:hover .sidebar-icon
   border-color: alpha(@fg_color, 0.09);
 }
 
-/* set range parts and quick filter box in header toolbar */
+/* set range and search control backgrounds */
 .search,
 #dt-range-band,
 #header-toolbar #bauhaus-combobox:not(.dt_transparent_background)
@@ -1420,11 +1420,8 @@ filechooser row:hover .sidebar-icon
   background-color: @range_bg_color;
 }
 
-/* and adjust label and color buttons, especially in header bar */
-.dt_quick_filter,
+/* adjust the left-panel sort label and header toolbar buttons */
 #filter-sort-box label,
-#header-rule-box label,
-#header-sort-box label,
 #header-toolbar .dt_module_btn
 {
   margin-right: 0.56em;
@@ -1535,7 +1532,7 @@ filechooser row:hover .sidebar-icon
   background-color: alpha(@darkroom_bg_color, 0.5);
 }
 
-/* search boxes (background color is set on collect module part above ; to be the same as other filters in quick filter bar) */
+/* search boxes */
 #right .search  /* set only search box margin in modules panel */
 {
   margin: 0.14em 0.28em;

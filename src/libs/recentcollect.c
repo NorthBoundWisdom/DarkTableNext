@@ -184,7 +184,7 @@ static void _button_pressed(GtkButton *button, dt_lib_module_t *self)
         // we store the wanted offset which will be set by thumbtable on collection_change signal
         dt_conf_set_int("plugins/lighttable/collect/history_next_pos", pos);
 
-        dt_collection_deserialize(line, FALSE);
+        dt_collection_deserialize(line);
     }
 }
 

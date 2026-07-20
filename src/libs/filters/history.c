@@ -38,23 +38,6 @@ typedef enum _history_type_t
 static const char *_history_names[] = {N_("all images"), N_("basic"), N_("auto applied"),
                                        N_("altered"), NULL};
 
-static void _history_synchronise(_widgets_history_t *source)
-{
-    _widgets_history_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const int val = dt_bauhaus_combobox_get(source->combo);
-        dt_bauhaus_combobox_set(dest->combo, val);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _history_decode(const gchar *txt, int *val)
 {
     if (!txt || strlen(txt) == 0)
@@ -92,7 +75,6 @@ static void _history_changed(GtkWidget *widget, gpointer user_data)
         _rule_set_raw_text(history->rule, "$ALTERED", TRUE);
         break;
     }
-    _history_synchronise(history);
 }
 
 static gboolean _history_update(dt_lib_filtering_rule_t *rule)
@@ -141,7 +123,6 @@ static gboolean _history_update(dt_lib_filtering_rule_t *rule)
     }
 
     dt_bauhaus_combobox_set(history->combo, val);
-    _history_synchronise(history);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -149,7 +130,7 @@ static gboolean _history_update(dt_lib_filtering_rule_t *rule)
 
 static void _history_widget_init(dt_lib_filtering_rule_t *rule,
                                  const dt_collection_properties_t prop, const gchar *text,
-                                 dt_lib_module_t *self, const gboolean top)
+                                 dt_lib_module_t *self)
 {
     _widgets_history_t *history = g_malloc0(sizeof(_widgets_history_t));
     history->rule = rule;
@@ -159,18 +140,6 @@ static void _history_widget_init(dt_lib_filtering_rule_t *rule,
         (GtkCallback)_history_changed, history, _history_names);
     dt_bauhaus_widget_hide_label(history->combo);
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), history->combo, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), history->combo, TRUE, TRUE, 0);
-
-    if (top)
-    {
-        dt_gui_add_class(history->combo, "dt_quick_filter");
-    }
-
-    if (top)
-        rule->w_specific_top = history;
-    else
-        rule->w_specific = history;
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), history->combo, TRUE, TRUE, 0);
+    rule->w_specific = history;
 }

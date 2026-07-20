@@ -27,10 +27,7 @@ static gboolean _focal_update(dt_lib_filtering_rule_t *rule)
 
     dt_lib_filtering_t *d = rule->lib;
     _widgets_range_t *special = (_widgets_range_t *)rule->w_specific;
-    _widgets_range_t *specialtop = (_widgets_range_t *)rule->w_specific_top;
     GtkDarktableRangeSelect *range = DTGTK_RANGE_SELECT(special->range_select);
-    GtkDarktableRangeSelect *rangetop =
-        (specialtop) ? DTGTK_RANGE_SELECT(specialtop->range_select) : NULL;
 
     rule->manual_widget_set++;
     // first, we update the graph
@@ -46,27 +43,19 @@ static gboolean _focal_update(dt_lib_filtering_rule_t *rule)
     sqlite3_stmt *stmt;
     DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
     dtgtk_range_select_reset_blocks(range);
-    if (rangetop)
-        dtgtk_range_select_reset_blocks(rangetop);
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         const double val = sqlite3_column_double(stmt, 0);
         const int count = sqlite3_column_int(stmt, 1);
         dtgtk_range_select_add_block(range, val, count);
-        if (rangetop)
-            dtgtk_range_select_add_block(rangetop, val, count);
     }
     sqlite3_finalize(stmt);
 
     // and setup the selection
     dtgtk_range_select_set_selection_from_raw_text(range, rule->raw_text, FALSE);
-    if (rangetop)
-        dtgtk_range_select_set_selection_from_raw_text(rangetop, rule->raw_text, FALSE);
     rule->manual_widget_set--;
 
     dtgtk_range_select_redraw(range);
-    if (rangetop)
-        dtgtk_range_select_redraw(rangetop);
     return TRUE;
 }
 
@@ -82,14 +71,12 @@ static gchar *_focal_print_func(const double value, const gboolean detailled)
 }
 
 static void _focal_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection_properties_t prop,
-                               const gchar *text, dt_lib_module_t *self, const gboolean top)
+                               const gchar *text, dt_lib_module_t *self)
 {
     _widgets_range_t *special = g_malloc0(sizeof(_widgets_range_t));
 
     special->range_select =
-        dtgtk_range_select_new(dt_collection_name_untranslated(prop), !top, DT_RANGE_TYPE_NUMERIC);
-    if (top)
-        gtk_widget_set_size_request(special->range_select, 160, -1);
+        dtgtk_range_select_new(dt_collection_name_untranslated(prop), TRUE, DT_RANGE_TYPE_NUMERIC);
     GtkDarktableRangeSelect *range = DTGTK_RANGE_SELECT(special->range_select);
     range->step_bd = 1.0;
     dtgtk_range_select_set_selection_from_raw_text(range, text, FALSE);
@@ -114,5 +101,5 @@ static void _focal_widget_init(dt_lib_filtering_rule_t *rule, const dt_collectio
     range->min_r = floor(min);
     range->max_r = floor(max) + 1.0;
 
-    _range_widget_add_to_rule(rule, special, top);
+    _range_widget_add_to_rule(rule, special);
 }

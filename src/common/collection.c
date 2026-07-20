@@ -2383,11 +2383,9 @@ void dt_collection_sort_serialize(char *buf, int bufsize)
   }
 }
 
-char *dt_collection_checksum(const gboolean filtering)
+char *dt_collection_checksum(void)
 {
-  const char *plugin_name = filtering
-    ? "plugins/lighttable/filtering"
-    : "plugins/lighttable/collect";
+  const char *plugin_name = "plugins/lighttable/collect";
   char confname[200];
 
   snprintf(confname, sizeof(confname), "%s/num_rules", plugin_name);
@@ -2406,17 +2404,6 @@ char *dt_collection_checksum(const gboolean filtering)
     const int item = dt_conf_get_int(confname);
     g_checksum_update(checksum, (const guchar *)&item, sizeof(int));
 
-    if(filtering)
-    {
-      snprintf(confname, sizeof(confname), "%s/off%1d", plugin_name, k);
-      const int off = dt_conf_get_int(confname);
-      g_checksum_update(checksum, (const guchar *)&off, sizeof(int));
-
-      snprintf(confname, sizeof(confname), "%s/top%1d", plugin_name, k);
-      const int top = dt_conf_get_int(confname);
-      g_checksum_update(checksum, (const guchar *)&top, sizeof(int));
-    }
-
     snprintf(confname, sizeof(confname), "%s/string%1d", plugin_name, k);
     const char *str = dt_conf_get_string_const(confname);
     g_checksum_update(checksum, (const guchar *)str, strlen(str));
@@ -2427,12 +2414,9 @@ char *dt_collection_checksum(const gboolean filtering)
   return chk;
 }
 
-int dt_collection_serialize(char *buf, int bufsize,
-                            const gboolean filtering)
+int dt_collection_serialize(char *buf, int bufsize)
 {
-  const char *plugin_name = filtering
-    ? "plugins/lighttable/filtering"
-    : "plugins/lighttable/collect";
+  const char *plugin_name = "plugins/lighttable/collect";
   char confname[200];
   snprintf(confname, sizeof(confname), "%s/num_rules", plugin_name);
   const int num_rules = dt_conf_get_int(confname);
@@ -2451,19 +2435,6 @@ int dt_collection_serialize(char *buf, int bufsize,
     c = snprintf(buf, bufsize, "%d:", item);
     buf += c;
     bufsize -= c;
-    if(filtering)
-    {
-      snprintf(confname, sizeof(confname), "%s/off%1d", plugin_name, k);
-      const int off = dt_conf_get_int(confname);
-      c = snprintf(buf, bufsize, "%d:", off);
-      buf += c;
-      bufsize -= c;
-      snprintf(confname, sizeof(confname), "%s/top%1d", plugin_name, k);
-      const int top = dt_conf_get_int(confname);
-      c = snprintf(buf, bufsize, "%d:", top);
-      buf += c;
-      bufsize -= c;
-    }
     snprintf(confname, sizeof(confname), "%s/string%1d", plugin_name, k);
     const char *str = dt_conf_get_string_const(confname);
     if(str && (str[0] != '\0'))
@@ -2476,15 +2447,13 @@ int dt_collection_serialize(char *buf, int bufsize,
   return 0;
 }
 
-void dt_collection_deserialize(const char *buf, const gboolean filtering)
+void dt_collection_deserialize(const char *buf)
 {
-  const char *plugin_name = filtering
-    ? "plugins/lighttable/filtering"
-    : "plugins/lighttable/collect";
+  const char *plugin_name = "plugins/lighttable/collect";
   char confname[200];
   int num_rules = 0;
   sscanf(buf, "%d", &num_rules);
-  if(num_rules == 0 && !filtering)
+  if(num_rules == 0)
   {
     // we always want at least 1 rule
     snprintf(confname, sizeof(confname), "%s/num_rules", plugin_name);
@@ -2498,7 +2467,7 @@ void dt_collection_deserialize(const char *buf, const gboolean filtering)
   }
   else
   {
-    int mode = 0, item = 0, off = 0, top = 0;
+    int mode = 0, item = 0;
     snprintf(confname, sizeof(confname), "%s/num_rules", plugin_name);
     dt_conf_set_int(confname, num_rules);
     while(buf[0] != '\0' && buf[0] != ':') buf++;
@@ -2506,26 +2475,17 @@ void dt_collection_deserialize(const char *buf, const gboolean filtering)
     char str[400];
     for(int k = 0; k < num_rules; k++)
     {
-      const int n = (filtering)
-        ? sscanf(buf, "%d:%d:%d:%d:%399[^$]", &mode, &item, &off, &top, str)
-        : sscanf(buf, "%d:%d:%399[^$]", &mode, &item, str);
-      if((!filtering && n == 3) || (filtering && n == 5))
+      const int n = sscanf(buf, "%d:%d:%399[^$]", &mode, &item, str);
+      if(n == 3)
       {
         snprintf(confname, sizeof(confname), "%s/mode%1d", plugin_name, k);
         dt_conf_set_int(confname, mode);
         snprintf(confname, sizeof(confname), "%s/item%1d", plugin_name, k);
         dt_conf_set_int(confname, item);
-        if(filtering)
-        {
-          snprintf(confname, sizeof(confname), "%s/off%1d", plugin_name, k);
-          dt_conf_set_int(confname, off);
-          snprintf(confname, sizeof(confname), "%s/top%1d", plugin_name, k);
-          dt_conf_set_int(confname, top);
-        }
         snprintf(confname, sizeof(confname), "%s/string%1d", plugin_name, k);
         dt_conf_set_string(confname, str);
       }
-      else if(!filtering && num_rules == 1)
+      else if(num_rules == 1)
       {
         snprintf(confname, sizeof(confname), "%s/mode%1d", plugin_name, k);
         dt_conf_set_int(confname, 0);
@@ -2802,16 +2762,8 @@ gboolean dt_collection_has_property(const dt_collection_properties_t property)
 
 gboolean dt_collection_hint_message_internal(void *message)
 {
-    GtkWidget *count = dt_view_filter_get_count(darktable.view_manager);
-    if (count)
-    {
-        gtk_label_set_markup(GTK_LABEL(count), message);
-        gtk_widget_set_tooltip_markup(count, message);
-    }
+    dt_control_hinter_message(message);
     g_free(message);
-
-    dt_control_hinter_message("");
-
     return FALSE;
 }
 
@@ -3153,7 +3105,7 @@ void dt_collection_history_save()
     char confname[200] = {0};
 
     char buf[4096];
-    if (dt_collection_serialize(buf, sizeof(buf), FALSE))
+    if (dt_collection_serialize(buf, sizeof(buf)))
         return;
 
     // compare to last saved history

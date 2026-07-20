@@ -243,11 +243,11 @@ void dt_collection_hint_message(const dt_collection_t *collection);
 /** returns the image offset in the collection */
 int dt_collection_image_offset(dt_imgid_t imgid);
 
-/* serialize and deserialize into a string. */
-void dt_collection_deserialize(const char *buf, const gboolean filtering);
-int dt_collection_serialize(char *buf, int bufsize, const gboolean filtering);
+/* serialize and deserialize the current collection into a string. */
+void dt_collection_deserialize(const char *buf);
+int dt_collection_serialize(char *buf, int bufsize);
 /* get a checksum for the current collection */
-char *dt_collection_checksum(const gboolean filtering);
+char *dt_collection_checksum(void);
 
 /* splits an input string into a number part and an optional operator part */
 void dt_collection_split_operator_number(const gchar *input, char **number1, char **number2,

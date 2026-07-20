@@ -3370,7 +3370,7 @@ static void _history_apply(GtkWidget *widget, dt_lib_module_t *self)
         dt_conf_set_int("plugins/lighttable/collect/history_next_pos", pos);
 
         const int prev_property = dt_conf_get_int("plugins/lighttable/collect/item0");
-        dt_collection_deserialize(line, FALSE);
+        dt_collection_deserialize(line);
 
         // for the tag property we need to adjust the order accordingly
         const int new_property = dt_conf_get_int("plugins/lighttable/collect/item0");
@@ -3508,7 +3508,7 @@ static void _history_previous(dt_action_t *action)
 
     if (line && g_strcmp0(line, ""))
     {
-        dt_collection_deserialize(line, FALSE);
+        dt_collection_deserialize(line);
     }
 }
 

@@ -110,63 +110,6 @@ static void _colors_operator_clicked(GtkWidget *w, _widgets_colors_t *colors)
     _colors_update(rule);
 }
 
-static gchar *_colors_pretty_print(const gchar *raw_txt)
-{
-    gchar *txt = NULL;
-    const int val = _get_mask(raw_txt);
-    const int colors_set = val & (CL_ALL_INCLUDED | CL_GREY_INCLUDED);
-    const int colors_unset = (val & (CL_ALL_EXCLUDED | CL_GREY_EXCLUDED)) >> 12;
-    // we update the colors icons
-    int nb = 0;
-    for (int i = 0; i < DT_COLORLABELS_LAST; i++)
-    {
-        const int id = 1 << i;
-        gboolean incl = TRUE;
-        if (colors_set & id)
-            incl = TRUE;
-        else if (colors_unset & id)
-            incl = FALSE;
-        else
-            continue;
-
-        nb++;
-        gchar *col = NULL;
-        switch (i)
-        {
-        case DT_COLORLABELS_RED:
-            col = g_strdup(_("R"));
-            break;
-        case DT_COLORLABELS_YELLOW:
-            col = g_strdup(_("Y"));
-            break;
-        case DT_COLORLABELS_GREEN:
-            col = g_strdup(_("G"));
-            break;
-        case DT_COLORLABELS_BLUE:
-            col = g_strdup(_("B"));
-            break;
-        default:
-            col = g_strdup(_("P"));
-            break;
-        }
-        dt_util_str_cat(&txt, "%s%s%s%s", (i == 0) ? "" : " ", (incl) ? "" : "<s>", col,
-                        (incl) ? "" : "</s>");
-        g_free(col);
-    }
-    if (nb == 0)
-    {
-        txt = g_strdup(_("all"));
-    }
-    else if (nb > 1)
-    {
-        const gboolean op = val & 0x80000000;
-        gchar *txt2 = g_strdup_printf("%s(%s)", (op) ? "∩" : "∪", txt);
-        g_free(txt);
-        txt = txt2;
-    }
-    return txt;
-}
-
 static gboolean _colors_update(dt_lib_filtering_rule_t *rule)
 {
     if (!rule->w_specific)
@@ -174,7 +117,6 @@ static gboolean _colors_update(dt_lib_filtering_rule_t *rule)
 
     rule->manual_widget_set++;
     _widgets_colors_t *colors = (_widgets_colors_t *)rule->w_specific;
-    _widgets_colors_t *colorstop = (_widgets_colors_t *)rule->w_specific_top;
 
     const int mask = _get_mask(rule->raw_text);
     int mask_excluded = 0x1000;
@@ -188,12 +130,6 @@ static gboolean _colors_update(dt_lib_filtering_rule_t *rule)
         dtgtk_button_set_paint(DTGTK_BUTTON(colors->colors[i]), dtgtk_cairo_paint_label_sel,
                                (i | i_mask), NULL);
         gtk_widget_queue_draw(colors->colors[i]);
-        if (colorstop)
-        {
-            dtgtk_button_set_paint(DTGTK_BUTTON(colorstop->colors[i]), dtgtk_cairo_paint_label_sel,
-                                   (i | i_mask), NULL);
-            gtk_widget_queue_draw(colorstop->colors[i]);
-        }
         if ((mask & mask_excluded) || (mask & mask_included))
             nb++;
         mask_excluded <<= 1;
@@ -206,15 +142,6 @@ static gboolean _colors_update(dt_lib_filtering_rule_t *rule)
         (mask & CL_AND_MASK) ? dtgtk_cairo_paint_intersection : dtgtk_cairo_paint_union, 0, NULL);
     gtk_widget_set_sensitive(colors->operator, nb> 1);
     gtk_widget_queue_draw(colors->operator);
-    if (colorstop)
-    {
-        dtgtk_button_set_paint(DTGTK_BUTTON(colorstop->operator),
-                               (mask & CL_AND_MASK) ? dtgtk_cairo_paint_intersection :
-                                                      dtgtk_cairo_paint_union,
-                               0, NULL);
-        gtk_widget_set_sensitive(colorstop->operator, nb> 1);
-        gtk_widget_queue_draw(colorstop->operator);
-    }
 
     rule->manual_widget_set--;
 
@@ -277,14 +204,11 @@ const dt_action_def_t dt_action_def_colors_rule = {N_("color filter"), _action_p
 
 static void _colors_widget_init(dt_lib_filtering_rule_t *rule,
                                 const dt_collection_properties_t prop, const gchar *text,
-                                dt_lib_module_t *self, const gboolean top)
+                                dt_lib_module_t *self)
 {
     _widgets_colors_t *colors = g_malloc0(sizeof(_widgets_colors_t));
     colors->rule = rule;
-    if (top)
-        rule->w_specific_top = colors;
-    else
-        rule->w_specific = colors;
+    rule->w_specific = colors;
 
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_name(hbox, "filter-colors-box");
@@ -333,13 +257,5 @@ static void _colors_widget_init(dt_lib_filtering_rule_t *rule,
     dt_shortcut_register(ac, DT_COLORLABELS_PURPLE + 1, DT_ACTION_EFFECT_TOGGLE, GDK_KEY_F5,
                          GDK_SHIFT_MASK);
 
-    if (top)
-    {
-        dt_gui_add_class(hbox, "dt_quick_filter");
-    }
-
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), hbox, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), hbox, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), hbox, TRUE, TRUE, 0);
 }

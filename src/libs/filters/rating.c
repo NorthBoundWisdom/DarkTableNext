@@ -29,26 +29,6 @@ typedef struct _widgets_rating_legacy_t
     GtkWidget *stars;
 } _widgets_rating_legacy_t;
 
-static void _rating_legacy_synchronise(_widgets_rating_legacy_t *source)
-{
-    _widgets_rating_legacy_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const int comp = dt_bauhaus_combobox_get(source->comparator);
-        dt_bauhaus_combobox_set(dest->comparator, comp);
-        const int stars = dt_bauhaus_combobox_get(source->stars);
-        dt_bauhaus_combobox_set(dest->stars, stars);
-        gtk_widget_set_visible(dest->comparator, stars > 1 && stars < 7);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _rating_legacy_decode(const gchar *txt, int *comp, int *stars)
 {
     if (!txt)
@@ -168,7 +148,6 @@ static void _rating_legacy_changed(GtkWidget *widget, gpointer user_data)
     }
 
     gtk_widget_set_visible(rating_legacy->comparator, stars > 1 && stars < 7);
-    _rating_legacy_synchronise(rating_legacy);
 }
 
 static gboolean _rating_update(dt_lib_filtering_rule_t *rule)
@@ -183,7 +162,6 @@ static gboolean _rating_update(dt_lib_filtering_rule_t *rule)
     dt_bauhaus_combobox_set(rating_legacy->comparator, comp);
     dt_bauhaus_combobox_set(rating_legacy->stars, stars);
     gtk_widget_set_visible(rating_legacy->comparator, stars > 1 && stars < 7);
-    _rating_legacy_synchronise(rating_legacy);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -191,7 +169,7 @@ static gboolean _rating_update(dt_lib_filtering_rule_t *rule)
 
 static void _rating_widget_init(dt_lib_filtering_rule_t *rule,
                                 const dt_collection_properties_t prop, const gchar *text,
-                                dt_lib_module_t *self, const gboolean top)
+                                dt_lib_module_t *self)
 {
     _widgets_rating_legacy_t *rating_legacy = g_malloc0(sizeof(_widgets_rating_legacy_t));
     rating_legacy->rule = rule;
@@ -220,21 +198,7 @@ static void _rating_widget_init(dt_lib_filtering_rule_t *rule,
     dt_bauhaus_combobox_set_entry_label(rating_legacy->stars, 6, "           ★ ★ ★ ★ ★");
     gtk_container_add(GTK_CONTAINER(rating_legacy->overlay), rating_legacy->stars);
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), rating_legacy->overlay, TRUE, TRUE, 0);
-    else
-    {
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), rating_legacy->overlay, TRUE, TRUE, 0);
-        gtk_widget_set_halign(rating_legacy->overlay, GTK_ALIGN_CENTER);
-    }
-
-    if (top)
-    {
-        dt_gui_add_class(rating_legacy->overlay, "dt_quick_filter");
-    }
-
-    if (top)
-        rule->w_specific_top = rating_legacy;
-    else
-        rule->w_specific = rating_legacy;
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), rating_legacy->overlay, TRUE, TRUE, 0);
+    gtk_widget_set_halign(rating_legacy->overlay, GTK_ALIGN_CENTER);
+    rule->w_specific = rating_legacy;
 }

@@ -67,7 +67,6 @@ dt_help_url urls_db[] = {
     {"masks_refinement", "darkroom/masking-and-blending/masks/refinement-controls/"},
     {"duplicate", "module-reference/utility-modules/darkroom/duplicate-manager/"},
     {"import_fr", "overview/workflow/import-rate-tag/"},
-    {"global_toolbox", "overview/user-interface/top-panel/#on-the-right-hand-side"},
     {"lighttable_mode", "lighttable/overview/"},
     {"lighttable_filemanager", "lighttable/lighttable-modes/filemanager/"},
     {"darkroom_bottom_panel", "darkroom/darkroom-view-layout/#bottom-panel"},

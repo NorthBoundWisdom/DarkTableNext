@@ -191,7 +191,7 @@ static int32_t _generic_dt_control_fileop_images_job_run(
     }
 
     int32_t col_count = dt_collection_get_collected_count();
-    char *old_chk = dt_collection_checksum(FALSE);
+    char *old_chk = dt_collection_checksum();
 
     gboolean completeSuccess = TRUE;
     double prev_time = 0;
@@ -206,7 +206,7 @@ static int32_t _generic_dt_control_fileop_images_job_run(
             col_count--;
     }
 
-    char *new_chk = dt_collection_checksum(FALSE);
+    char *new_chk = dt_collection_checksum();
     const gboolean col_changed = g_strcmp0(old_chk, new_chk) != 0;
     g_free(old_chk);
     g_free(new_chk);
@@ -218,7 +218,7 @@ static int32_t _generic_dt_control_fileop_images_job_run(
     {
         char collect[1024];
         snprintf(collect, sizeof(collect), "1:0:0:%s$", new_film.dirname);
-        dt_collection_deserialize(collect, FALSE);
+        dt_collection_deserialize(collect);
     }
     dt_film_remove_empty();
 

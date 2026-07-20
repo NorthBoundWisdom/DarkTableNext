@@ -33,25 +33,6 @@ typedef struct _widgets_filename_t
     int internal_change;
 } _widgets_filename_t;
 
-static void _filename_synchronise(_widgets_filename_t *source)
-{
-    _widgets_filename_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const gchar *txt1 = gtk_entry_get_text(GTK_ENTRY(source->name));
-        gtk_entry_set_text(GTK_ENTRY(dest->name), txt1);
-        const gchar *txt2 = gtk_entry_get_text(GTK_ENTRY(source->ext));
-        gtk_entry_set_text(GTK_ENTRY(dest->ext), txt2);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _filename_decode(const gchar *txt, gchar **name, gchar **ext)
 {
     if (!txt || strlen(txt) == 0)
@@ -79,7 +60,6 @@ static void _filename_changed(GtkWidget *widget, gpointer user_data)
                                    gtk_entry_get_text(GTK_ENTRY(filename->ext)));
 
     _rule_set_raw_text(filename->rule, value, TRUE);
-    _filename_synchronise(filename);
     g_free(value);
 }
 
@@ -281,16 +261,6 @@ static gboolean _filename_update(dt_lib_filtering_rule_t *rule)
         gtk_entry_set_text(GTK_ENTRY(filename->name), name);
     if (ext)
         gtk_entry_set_text(GTK_ENTRY(filename->ext), ext);
-    if (rule->topbar && rule->w_specific_top)
-    {
-        filename = (_widgets_filename_t *)rule->w_specific_top;
-        filename->tree_ok = FALSE;
-        if (name)
-            gtk_entry_set_text(GTK_ENTRY(filename->name), name);
-        if (ext)
-            gtk_entry_set_text(GTK_ENTRY(filename->ext), ext);
-    }
-    _filename_synchronise(filename);
     rule->manual_widget_set--;
 
     g_free(name);
@@ -369,17 +339,14 @@ void _filename_tree_count_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer
 
 static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
                                   const dt_collection_properties_t prop, const gchar *text,
-                                  dt_lib_module_t *self, const gboolean top)
+                                  dt_lib_module_t *self)
 {
     _widgets_filename_t *filename = g_malloc0(sizeof(_widgets_filename_t));
     filename->rule = rule;
 
     GtkWidget *hb = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), hb, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), hb, TRUE, TRUE, 0);
-    filename->name = dt_ui_entry_new(top ? 10 : 0);
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), hb, TRUE, TRUE, 0);
+    filename->name = dt_ui_entry_new(0);
     gtk_widget_set_can_default(filename->name, TRUE);
     gtk_entry_set_placeholder_text(GTK_ENTRY(filename->name), _("filename"));
     gtk_widget_set_tooltip_text(filename->name, _("enter filename to search.\n"
@@ -392,7 +359,7 @@ static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
     g_signal_connect(G_OBJECT(filename->name), "button-press-event", G_CALLBACK(_filename_press),
                      filename);
 
-    filename->ext = dt_ui_entry_new(top ? 5 : 0);
+    filename->ext = dt_ui_entry_new(0);
     gtk_widget_set_can_default(filename->ext, TRUE);
     gtk_entry_set_placeholder_text(GTK_ENTRY(filename->ext), _("extension"));
     gtk_widget_set_tooltip_text(filename->ext,
@@ -406,11 +373,6 @@ static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
                      filename);
     g_signal_connect(G_OBJECT(filename->ext), "button-press-event", G_CALLBACK(_filename_press),
                      filename);
-    if (top)
-    {
-        dt_gui_add_class(hb, "dt_quick_filter");
-    }
-
     // the popup
     filename->pop = gtk_popover_new(filename->name);
     gtk_widget_set_size_request(filename->pop, 250, 400);
@@ -478,8 +440,5 @@ static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
     gtk_box_pack_start(GTK_BOX(hb), btn, FALSE, TRUE, 0);
     g_signal_connect(G_OBJECT(btn), "clicked", G_CALLBACK(_filename_ok_clicked), filename);
 
-    if (top)
-        rule->w_specific_top = filename;
-    else
-        rule->w_specific = filename;
+    rule->w_specific = filename;
 }

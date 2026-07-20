@@ -85,18 +85,5 @@ void gui_cleanup(dt_lib_module_t *self)
 void _lib_hinter_set_message(dt_lib_module_t *self, const char *message)
 {
     dt_lib_hinter_t *d = self->data;
-
-    if (message && !*message && !dt_ui_panel_visible(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP))
-    {
-        GtkWidget *count = dt_view_filter_get_count(darktable.view_manager);
-        if (count)
-        {
-            gchar *count_message = g_strdup_printf(_("%s in current collection"),
-                                                   gtk_label_get_text(GTK_LABEL(count)));
-            gtk_label_set_markup(GTK_LABEL(d->label), count_message);
-            g_free(count_message);
-        }
-    }
-    else
-        gtk_label_set_markup(GTK_LABEL(d->label), message);
+    gtk_label_set_markup(GTK_LABEL(d->label), message);
 }

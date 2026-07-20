@@ -1130,32 +1130,6 @@ void dt_view_filtering_reset(const dt_view_manager_t *vm, const gboolean smart_f
         vm->proxy.module_filtering.reset_filter(vm->proxy.module_filtering.module, smart_filter);
 }
 
-void dt_view_filtering_show_pref_menu(const dt_view_manager_t *vm, GtkWidget *bt)
-{
-    if (vm->proxy.module_filtering.module && vm->proxy.module_filtering.show_pref_menu)
-        vm->proxy.module_filtering.show_pref_menu(vm->proxy.module_filtering.module, bt);
-}
-
-GtkWidget *dt_view_filter_get_filters_box(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.filter.module && vm->proxy.filter.get_filter_box)
-        return vm->proxy.filter.get_filter_box(vm->proxy.filter.module);
-    return NULL;
-}
-GtkWidget *dt_view_filter_get_sort_box(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.filter.module && vm->proxy.filter.get_sort_box)
-        return vm->proxy.filter.get_sort_box(vm->proxy.filter.module);
-    return NULL;
-}
-
-GtkWidget *dt_view_filter_get_count(const dt_view_manager_t *vm)
-{
-    if (vm && vm->proxy.filter.module && vm->proxy.filter.get_count)
-        return vm->proxy.filter.get_count(vm->proxy.filter.module);
-    return NULL;
-}
-
 void dt_view_active_images_reset(const gboolean raise)
 {
     if (!darktable.view_manager->active_images)

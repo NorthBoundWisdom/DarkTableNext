@@ -8,6 +8,9 @@
 - [x] 删除 MIDI、游戏手柄、邮件和 Piwigo；仅保留本地磁盘导出。
 - [x] 将输入/输出格式收缩至 RAW、JPEG、PNG、TIFF、RGBE/HDR、QOI 和原文件复制。
 - [x] 删除 GraphicsMagick、ImageMagick、G'MIC 压缩 LUT、Colord、非产品可执行文件，以及旧的通用 profiling 实现。
+- [x] 删除 Lighttable 顶部快捷筛选/排序栏及规则置顶状态；左侧筛选器是唯一的规则编辑入口。
+- [x] 删除全局顶部工具箱：分组、缩略图叠加层、上下文帮助、快捷键映射和全局偏好入口不再占用工作区。
+- [x] 删除 Lighttable 筛选规则与排序快照历史；它们与 Darkroom 编辑历史、XMP 和图像数据库历史无关。
 - [x] 使 XML 验证、ISOBMFF/CR3 检测、LibRaw 和 ICU 成为固定构建行为。
 - [x] 删除 AI/ONNX、神经修复、对象蒙版及其模型、文档、偏好项和测试。
 

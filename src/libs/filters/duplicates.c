@@ -37,23 +37,6 @@ typedef enum _duplicates_type_t
 static const char *_duplicates_names[] = {N_("all images"), N_("images with duplicates"),
                                           N_("duplicates only"), NULL};
 
-static void _duplicates_synchronise(_widgets_duplicates_t *source)
-{
-    _widgets_duplicates_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const int val = dt_bauhaus_combobox_get(source->combo);
-        dt_bauhaus_combobox_set(dest->combo, val);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _duplicates_changed(GtkWidget *widget, gpointer user_data)
 {
     _widgets_duplicates_t *duplicates = (_widgets_duplicates_t *)user_data;
@@ -73,7 +56,6 @@ static void _duplicates_changed(GtkWidget *widget, gpointer user_data)
         _rule_set_raw_text(duplicates->rule, "$DUPLICATES_ONLY", TRUE);
         break;
     }
-    _duplicates_synchronise(duplicates);
 }
 
 static void _duplicates_decode(const gchar *txt, int *val)
@@ -144,7 +126,6 @@ static gboolean _duplicates_update(dt_lib_filtering_rule_t *rule)
     }
 
     dt_bauhaus_combobox_set(duplicates->combo, val);
-    _duplicates_synchronise(duplicates);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -152,7 +133,7 @@ static gboolean _duplicates_update(dt_lib_filtering_rule_t *rule)
 
 static void _duplicates_widget_init(dt_lib_filtering_rule_t *rule,
                                     const dt_collection_properties_t prop, const gchar *text,
-                                    dt_lib_module_t *self, const gboolean top)
+                                    dt_lib_module_t *self)
 {
     _widgets_duplicates_t *duplicates = g_malloc0(sizeof(_widgets_duplicates_t));
     duplicates->rule = rule;
@@ -162,18 +143,6 @@ static void _duplicates_widget_init(dt_lib_filtering_rule_t *rule,
         (GtkCallback)_duplicates_changed, duplicates, _duplicates_names);
     dt_bauhaus_widget_hide_label(duplicates->combo);
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), duplicates->combo, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), duplicates->combo, TRUE, TRUE, 0);
-
-    if (top)
-    {
-        dt_gui_add_class(duplicates->combo, "dt_quick_filter");
-    }
-
-    if (top)
-        rule->w_specific_top = duplicates;
-    else
-        rule->w_specific = duplicates;
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), duplicates->combo, TRUE, TRUE, 0);
+    rule->w_specific = duplicates;
 }

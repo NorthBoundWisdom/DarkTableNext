@@ -120,7 +120,7 @@ Action 树加入缩略图菜单。
 | Presets 子菜单 | `gui/presets.c` | 部分保留 | 模块标题/主体的完整菜单已提供预设入口；预设条目上的辅助点击仍是“应用到新 IOP 实例”，含多实例与长按判定，因此保留为对象专属手势。 |
 | Filtering filename/misc | `libs/filters/{filename,misc}.c` | 保留 | 辅助点击打开带多选树、当前输入和可见性过滤的编辑 popover，不是固定命令菜单。 |
 | Color-label 描述编辑 | `libs/tools/colorlabels.c` | 保留 | 辅助点击打开当前色标的文本编辑浮层；普通点击仍是批量标记 Action。 |
-| Global toolbox、log history | `libs/tools/{global_toolbox,log_history}.c` | 排除 | 分别打开快捷键偏好与应用日志面板，不是当前命中对象的离散业务操作。 |
+| Log history | `libs/tools/log_history.c` | 排除 | 打开应用日志面板，不是当前命中对象的离散业务操作。已移除的 Global toolbox 不再是上下文菜单候选。 |
 | GTK 内部菜单、shortcut fallback | `gui/gtk.c`、`gui/accelerators.c` | 排除 | 不是产品对象操作，不能作为上下文菜单条目。 |
 
 ## 产品契约

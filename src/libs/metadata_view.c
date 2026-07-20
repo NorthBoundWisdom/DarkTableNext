@@ -1118,7 +1118,7 @@ static void _jump_to()
         dt_image_cache_read_release(img);
         char collect[1024];
         snprintf(collect, sizeof(collect), "1:0:0:%s$", path);
-        dt_collection_deserialize(collect, FALSE);
+        dt_collection_deserialize(collect);
     }
 }
 

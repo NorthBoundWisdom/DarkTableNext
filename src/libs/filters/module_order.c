@@ -37,23 +37,6 @@ typedef enum _module_order_type_t
 
 static char **_module_order_names = NULL;
 
-static void _module_order_synchronise(_widgets_module_order_t *source)
-{
-    _widgets_module_order_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const int val = dt_bauhaus_combobox_get(source->combo);
-        dt_bauhaus_combobox_set(dest->combo, val);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _module_order_decode(const gchar *txt, int *val)
 {
     if (!txt || strlen(txt) == 0)
@@ -91,7 +74,6 @@ static void _module_order_changed(GtkWidget *widget, gpointer user_data)
         _rule_set_raw_text(module_order->rule, "", TRUE);
         break;
     }
-    _module_order_synchronise(module_order);
 }
 
 static gboolean _module_order_update(dt_lib_filtering_rule_t *rule)
@@ -134,7 +116,6 @@ static gboolean _module_order_update(dt_lib_filtering_rule_t *rule)
     }
 
     dt_bauhaus_combobox_set(module_order->combo, val);
-    _module_order_synchronise(module_order);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -142,7 +123,7 @@ static gboolean _module_order_update(dt_lib_filtering_rule_t *rule)
 
 static void _module_order_widget_init(dt_lib_filtering_rule_t *rule,
                                       const dt_collection_properties_t prop, const gchar *text,
-                                      dt_lib_module_t *self, const gboolean top)
+                                      dt_lib_module_t *self)
 {
     _widgets_module_order_t *module_order = g_malloc0(sizeof(_widgets_module_order_t));
     module_order->rule = rule;
@@ -163,18 +144,6 @@ static void _module_order_widget_init(dt_lib_filtering_rule_t *rule,
         module_order, (const char **)_module_order_names);
     dt_bauhaus_widget_hide_label(module_order->combo);
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), module_order->combo, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), module_order->combo, TRUE, TRUE, 0);
-
-    if (top)
-    {
-        dt_gui_add_class(module_order->combo, "dt_quick_filter");
-    }
-
-    if (top)
-        rule->w_specific_top = module_order;
-    else
-        rule->w_specific = module_order;
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), module_order->combo, TRUE, TRUE, 0);
+    rule->w_specific = module_order;
 }

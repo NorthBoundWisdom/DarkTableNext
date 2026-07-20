@@ -32,23 +32,6 @@ typedef struct _widgets_misc_t
     dt_collection_properties_t prop;
 } _widgets_misc_t;
 
-static void _misc_synchronise(_widgets_misc_t *source)
-{
-    _widgets_misc_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const gchar *txt1 = gtk_entry_get_text(GTK_ENTRY(source->name));
-        gtk_entry_set_text(GTK_ENTRY(dest->name), txt1);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _misc_changed(GtkWidget *widget, gpointer user_data)
 {
     _widgets_misc_t *misc = (_widgets_misc_t *)user_data;
@@ -56,7 +39,6 @@ static void _misc_changed(GtkWidget *widget, gpointer user_data)
         return;
 
     _rule_set_raw_text(misc->rule, gtk_entry_get_text(GTK_ENTRY(misc->name)), TRUE);
-    _misc_synchronise(misc);
 }
 
 static gboolean _misc_focus_out(GtkWidget *entry, GdkEventFocus *event, gpointer user_data)
@@ -286,13 +268,6 @@ static gboolean _misc_update(dt_lib_filtering_rule_t *rule)
     _widgets_misc_t *misc = (_widgets_misc_t *)rule->w_specific;
     misc->tree_ok = FALSE;
     gtk_entry_set_text(GTK_ENTRY(misc->name), rule->raw_text);
-    if (rule->topbar && rule->w_specific_top)
-    {
-        misc = (_widgets_misc_t *)rule->w_specific_top;
-        misc->tree_ok = FALSE;
-        gtk_entry_set_text(GTK_ENTRY(misc->name), rule->raw_text);
-    }
-    _misc_synchronise(misc);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -368,18 +343,15 @@ void _misc_tree_count_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer, Gt
 }
 
 static void _misc_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection_properties_t prop,
-                              const gchar *text, dt_lib_module_t *self, const gboolean top)
+                              const gchar *text, dt_lib_module_t *self)
 {
     _widgets_misc_t *misc = g_malloc0(sizeof(_widgets_misc_t));
     misc->rule = rule;
     misc->prop = prop;
 
     GtkWidget *hb = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), hb, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), hb, TRUE, TRUE, 0);
-    misc->name = dt_ui_entry_new(top ? 10 : 0);
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), hb, TRUE, TRUE, 0);
+    misc->name = dt_ui_entry_new(0);
     gtk_widget_set_can_default(misc->name, TRUE);
 
     gchar *name = NULL;
@@ -445,11 +417,6 @@ static void _misc_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection
     g_signal_connect(G_OBJECT(misc->name), "focus-out-event", G_CALLBACK(_misc_focus_out), misc);
     g_signal_connect(G_OBJECT(misc->name), "button-press-event", G_CALLBACK(_misc_press), misc);
 
-    if (top)
-    {
-        dt_gui_add_class(hb, "dt_quick_filter");
-    }
-
     // the popup
     misc->pop = gtk_popover_new(misc->name);
     gtk_widget_set_size_request(misc->pop, 250, 400);
@@ -487,8 +454,5 @@ static void _misc_widget_init(dt_lib_filtering_rule_t *rule, const dt_collection
     gtk_box_pack_start(GTK_BOX(hb), btn, FALSE, TRUE, 0);
     g_signal_connect(G_OBJECT(btn), "clicked", G_CALLBACK(_misc_ok_clicked), misc);
 
-    if (top)
-        rule->w_specific_top = misc;
-    else
-        rule->w_specific = misc;
+    rule->w_specific = misc;
 }

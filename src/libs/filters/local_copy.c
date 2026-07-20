@@ -37,23 +37,6 @@ typedef enum _local_copy_type_t
 static const char *_local_copy_names[] = {N_("all images"), N_("copied locally"),
                                           N_("not copied locally"), NULL};
 
-static void _local_copy_synchronise(_widgets_local_copy_t *source)
-{
-    _widgets_local_copy_t *dest = NULL;
-    if (source == source->rule->w_specific_top)
-        dest = source->rule->w_specific;
-    else
-        dest = source->rule->w_specific_top;
-
-    if (dest)
-    {
-        source->rule->manual_widget_set++;
-        const int val = dt_bauhaus_combobox_get(source->combo);
-        dt_bauhaus_combobox_set(dest->combo, val);
-        source->rule->manual_widget_set--;
-    }
-}
-
 static void _local_copy_decode(const gchar *txt, int *val)
 {
     if (!txt || strlen(txt) == 0)
@@ -86,7 +69,6 @@ static void _local_copy_changed(GtkWidget *widget, gpointer user_data)
         _rule_set_raw_text(local_copy->rule, "$LOCAL_COPY", TRUE);
         break;
     }
-    _local_copy_synchronise(local_copy);
 }
 
 static gboolean _local_copy_update(dt_lib_filtering_rule_t *rule)
@@ -129,7 +111,6 @@ static gboolean _local_copy_update(dt_lib_filtering_rule_t *rule)
     }
 
     dt_bauhaus_combobox_set(local_copy->combo, val);
-    _local_copy_synchronise(local_copy);
     rule->manual_widget_set--;
 
     return TRUE;
@@ -137,7 +118,7 @@ static gboolean _local_copy_update(dt_lib_filtering_rule_t *rule)
 
 static void _local_copy_widget_init(dt_lib_filtering_rule_t *rule,
                                     const dt_collection_properties_t prop, const gchar *text,
-                                    dt_lib_module_t *self, const gboolean top)
+                                    dt_lib_module_t *self)
 {
     _widgets_local_copy_t *local_copy = g_malloc0(sizeof(_widgets_local_copy_t));
     local_copy->rule = rule;
@@ -147,18 +128,6 @@ static void _local_copy_widget_init(dt_lib_filtering_rule_t *rule,
         (GtkCallback)_local_copy_changed, local_copy, _local_copy_names);
     dt_bauhaus_widget_hide_label(local_copy->combo);
 
-    if (top)
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box_top), local_copy->combo, TRUE, TRUE, 0);
-    else
-        gtk_box_pack_start(GTK_BOX(rule->w_special_box), local_copy->combo, TRUE, TRUE, 0);
-
-    if (top)
-    {
-        dt_gui_add_class(local_copy->combo, "dt_quick_filter");
-    }
-
-    if (top)
-        rule->w_specific_top = local_copy;
-    else
-        rule->w_specific = local_copy;
+    gtk_box_pack_start(GTK_BOX(rule->w_special_box), local_copy->combo, TRUE, TRUE, 0);
+    rule->w_specific = local_copy;
 }
