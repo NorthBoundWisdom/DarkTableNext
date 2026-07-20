@@ -559,6 +559,15 @@
     ],
     "package": [
       {
+        "id": "linux-clang-release",
+        "label": "Linux AppImage (Clang Release)",
+        "description": "Stage DarkTableNext and create an x86_64 AppImage through FreeCM",
+        "command": "cmake",
+        "args": ["--build", "--preset", "clang_release", "--target", "package-linux"],
+        "platforms": ["linux"],
+        "default": true
+      },
+      {
         "id": "mac-clang-release",
         "label": "macOS DMG (Clang Release)",
         "description": "Stage the native app and create an ad-hoc-signed macOS DMG through FreeCM",

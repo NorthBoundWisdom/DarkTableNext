@@ -72,15 +72,12 @@ int dt_pthread_create(pthread_t *thread, void *(*start_routine)(void *), void *a
 
 int dt_pthread_join(pthread_t thread)
 {
-#if defined(MUTEX_REPORTING) && (defined(__linux__) || defined(__APPLE__))
-    char name[256] = {"???"};
-    pthread_getname_np(thread, name, sizeof(name));
     const int ret = pthread_join(thread, NULL);
-    printf("[dt_pthread_join] '%s' returned %s\n", name, _pthread_ret_mess(ret));
-    fflush(stdout);
-#else
-    const int ret = pthread_join(thread, NULL);
-#endif
+    if (ret != 0)
+    {
+        printf("[dt_pthread_join] error: pthread_join() returned %s\n", _pthread_ret_mess(ret));
+        fflush(stdout);
+    }
 
     assert(ret == 0);
     return ret;

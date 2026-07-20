@@ -418,6 +418,113 @@ install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/macos_bundle_install.cmake"
         COMPONENT DTApplication)
 endif()
 
+# Linux packages use the normal install graph for first-party files. A
+# GTK-aware FreeCM package script adds the Homebrew runtime closure and creates
+# the AppImage using assets pinned by source_roots.lock.jsonc.in.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(DARKTABLE_LINUX_PACKAGE_ROOT "${CMAKE_BINARY_DIR}/package/linux")
+  set(DARKTABLE_LINUX_APPDIR "${DARKTABLE_LINUX_PACKAGE_ROOT}/AppDir")
+  set(DARKTABLE_LINUX_PACKAGE_WORK "${DARKTABLE_LINUX_PACKAGE_ROOT}/tools")
+  set(DARKTABLE_LINUX_APPIMAGE
+      "${CMAKE_BINARY_DIR}/DarkTableNext-${PROJECT_VERSION}-x86_64.AppImage")
+  set(DARKTABLE_APPIMAGE_ASSET_ROOT
+      "${CMAKE_SOURCE_DIR}/build/dependency_seed_repos/appimage-tools")
+  set(DARKTABLE_APPIMAGETOOL
+      "${DARKTABLE_APPIMAGE_ASSET_ROOT}/appimagetool-x86_64.AppImage")
+  set(DARKTABLE_APPIMAGE_RUNTIME
+      "${DARKTABLE_APPIMAGE_ASSET_ROOT}/runtime-x86_64")
+
+  find_program(DT_LINUX_PKG_CONFIG_EXECUTABLE pkg-config REQUIRED)
+  find_program(DT_GDK_PIXBUF_QUERY_LOADERS gdk-pixbuf-query-loaders REQUIRED)
+  find_program(DT_GTK_QUERY_IMMODULES gtk-query-immodules-3.0 REQUIRED)
+  find_program(DT_GLIB_COMPILE_SCHEMAS glib-compile-schemas REQUIRED)
+  find_program(DT_HOMEBREW_EXECUTABLE brew REQUIRED)
+
+  function(dt_linux_pkg_config_variable output_variable package variable)
+    execute_process(
+        COMMAND "${DT_LINUX_PKG_CONFIG_EXECUTABLE}" --variable=${variable} ${package}
+        OUTPUT_VARIABLE value
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND_ERROR_IS_FATAL ANY)
+    if(value STREQUAL "")
+      message(FATAL_ERROR
+          "pkg-config returned an empty ${variable} for ${package}")
+    endif()
+    set(${output_variable} "${value}" PARENT_SCOPE)
+  endfunction()
+
+  dt_linux_pkg_config_variable(
+      DARKTABLE_GDK_PIXBUF_MODULE_DIR gdk-pixbuf-2.0 gdk_pixbuf_moduledir)
+  dt_linux_pkg_config_variable(DARKTABLE_GTK_LIBDIR gtk+-3.0 libdir)
+  dt_linux_pkg_config_variable(
+      DARKTABLE_GTK_BINARY_VERSION gtk+-3.0 gtk_binary_version)
+  dt_linux_pkg_config_variable(DARKTABLE_GLIB_PREFIX glib-2.0 prefix)
+  dt_linux_pkg_config_variable(DARKTABLE_FONTCONFIG_SYSCONFDIR fontconfig sysconfdir)
+  execute_process(
+      COMMAND "${DT_LINUX_PKG_CONFIG_EXECUTABLE}" --variable=giomoduledir gio-2.0
+      OUTPUT_VARIABLE DARKTABLE_GIO_MODULE_DIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      COMMAND_ERROR_IS_FATAL ANY)
+  if(NOT IS_DIRECTORY "${DARKTABLE_GIO_MODULE_DIR}")
+    set(DARKTABLE_GIO_MODULE_DIR "${DARKTABLE_GLIB_PREFIX}/lib/gio/modules")
+  endif()
+  execute_process(
+      COMMAND "${DT_HOMEBREW_EXECUTABLE}" --prefix
+      OUTPUT_VARIABLE DARKTABLE_HOMEBREW_PREFIX
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      COMMAND_ERROR_IS_FATAL ANY)
+  execute_process(
+      COMMAND "${DT_HOMEBREW_EXECUTABLE}" --cellar
+      OUTPUT_VARIABLE DARKTABLE_HOMEBREW_CELLAR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      COMMAND_ERROR_IS_FATAL ANY)
+  set(DARKTABLE_GLIB_SCHEMA_DIR
+      "${DARKTABLE_GLIB_PREFIX}/share/glib-2.0/schemas")
+  set(DARKTABLE_ICON_THEME_DIR "${DARKTABLE_HOMEBREW_PREFIX}/share/icons")
+  set(DARKTABLE_FONTCONFIG_DIR "${DARKTABLE_FONTCONFIG_SYSCONFDIR}/fonts")
+  get_filename_component(
+      DARKTABLE_OPENMP_RUNTIME_DIR "${OpenMP_omp_LIBRARY}" DIRECTORY)
+
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "package-linux is available only from a single-config Release preset")
+  elseif(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+    message(STATUS "package-linux is unavailable: only x86_64 AppImage assets are pinned")
+  else()
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/package.json.in"
+        "${DARKTABLE_LINUX_PACKAGE_ROOT}/package.json"
+        @ONLY)
+
+    get_property(DARKTABLE_LINUX_PACKAGE_TARGETS GLOBAL
+                 PROPERTY DT_LOADABLE_MODULE_TARGETS)
+    list(APPEND DARKTABLE_LINUX_PACKAGE_TARGETS
+         darktable darktable-cli darktablerc_file)
+    if(TARGET darktable-rs-identify)
+      list(APPEND DARKTABLE_LINUX_PACKAGE_TARGETS darktable-rs-identify)
+    endif()
+
+    add_custom_target(prepare-linux-package
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${DARKTABLE_LINUX_APPDIR}"
+        COMMAND "${CMAKE_COMMAND}" --install "${CMAKE_BINARY_DIR}"
+                --prefix "${DARKTABLE_LINUX_APPDIR}/usr"
+        DEPENDS ${DARKTABLE_LINUX_PACKAGE_TARGETS}
+        COMMENT "Preparing the DarkTableNext Linux AppDir"
+        VERBATIM
+        USES_TERMINAL)
+
+    add_custom_target(package-linux
+        COMMAND "${CMAKE_COMMAND}" -E env "PYTHONPATH=${CMAKE_SOURCE_DIR}/FreeCM"
+                "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/package.py"
+                --config "${DARKTABLE_LINUX_PACKAGE_ROOT}/package.json"
+        DEPENDS prepare-linux-package
+        COMMENT "Creating the DarkTableNext Linux AppImage through FreeCM"
+        VERBATIM
+        USES_TERMINAL)
+  endif()
+endif()
+
 # Windows packages use the normal install graph as their first-party payload.
 # The package script then reuses FreeCM's dependency inspection and WiX
 # fragment APIs to add the relocatable GTK runtime and produce an MSI.

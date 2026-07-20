@@ -109,6 +109,29 @@
 DT_CORE_API darktable_t darktable;
 DT_CORE_API const char *const dt_supported_extensions[] = DT_SUPPORTED_EXTENSIONS_INITIALIZER;
 
+#ifdef __linux__
+// GNOME may advertise its optional event-sound module to a GTK runtime that does not ship it.
+static GLogWriterOutput _linux_log_writer(GLogLevelFlags log_level, const GLogField *fields,
+                                          gsize n_fields, gpointer user_data)
+{
+    const gchar *domain = NULL;
+    const gchar *message = NULL;
+    for (gsize k = 0; k < n_fields; k++)
+    {
+        if (g_strcmp0(fields[k].key, "GLIB_DOMAIN") == 0)
+            domain = fields[k].value;
+        else if (g_strcmp0(fields[k].key, "MESSAGE") == 0)
+            message = fields[k].value;
+    }
+
+    if (g_strcmp0(domain, "Gtk") == 0 &&
+        g_strcmp0(message, "Failed to load module \"canberra-gtk-module\"") == 0)
+        return G_LOG_WRITER_HANDLED;
+
+    return g_log_writer_default(log_level, fields, n_fields, user_data);
+}
+#endif
+
 static int usage(const char *argv0)
 {
 #ifdef _WIN32
@@ -1236,6 +1259,9 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     // however after gtk_disable_setlocale
     if (init_gui)
     {
+#ifdef __linux__
+        g_log_set_writer_func(_linux_log_writer, NULL, NULL);
+#endif
         gtk_init(&argc, &argv);
 
         darktable.themes = NULL;

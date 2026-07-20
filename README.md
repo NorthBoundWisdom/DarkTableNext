@@ -96,6 +96,26 @@ the corresponding third-party license files. See
 [DevDocs/Windows_Packaging.md](DevDocs/Windows_Packaging.md) for staging and
 validation details.
 
+### Linux AppImage
+
+The Linux Clang Release preset can stage the application and its GTK runtime
+as a self-contained x86_64 AppImage. Initialise FreeCM assets once, then build
+the package target:
+
+```sh
+python3 configs/source_root_workflow.py --init
+python3 configs/source_root_workflow.py --update
+cmake --preset linux_clang_release
+cmake --build --preset clang_release --target package-linux
+```
+
+The artifact is written to
+`build/linux_clang_release/DarkTableNext-0.9.0-x86_64.AppImage`. The packaging
+step uses pinned `appimagetool` and runtime assets and does not download files
+during the CMake build. See
+[DevDocs/Linux_Packaging.md](DevDocs/Linux_Packaging.md) for payload and
+validation details.
+
 ### macOS DMG
 
 Configure the macOS release preset and build the packaging target to produce a
