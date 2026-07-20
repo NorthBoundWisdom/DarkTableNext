@@ -32,6 +32,15 @@
 
 DT_MODULE(1)
 
+typedef enum dt_lighttable_direct_mode_t
+{
+    DT_LIGHTTABLE_DIRECT_MODE_NONE = 0,
+    DT_LIGHTTABLE_DIRECT_MODE_GRID,
+    DT_LIGHTTABLE_DIRECT_MODE_LOUPE,
+    DT_LIGHTTABLE_DIRECT_MODE_COMPARE,
+    DT_LIGHTTABLE_DIRECT_MODE_SURVEY
+} dt_lighttable_direct_mode_t;
+
 typedef struct dt_lib_tool_lighttable_t
 {
     GtkWidget *layout_box;
@@ -45,6 +54,7 @@ typedef struct dt_lib_tool_lighttable_t
     int current_zoom;
     gboolean fullpreview_focus;
     dt_lighttable_culling_restriction_t culling_init_restriction;
+    dt_lighttable_direct_mode_t direct_mode_pending;
 } dt_lib_tool_lighttable_t;
 
 /* set zoom proxy function */
@@ -213,6 +223,90 @@ static void _lib_lighttable_set_layout(dt_lib_module_t *self, const dt_lighttabl
     }
 
     _lib_lighttable_update_btn(self);
+}
+
+static void _lib_lighttable_apply_direct_mode(dt_lib_module_t *self,
+                                              const dt_lighttable_direct_mode_t mode)
+{
+    dt_lib_tool_lighttable_t *d = self->data;
+
+    switch (mode)
+    {
+    case DT_LIGHTTABLE_DIRECT_MODE_GRID:
+        _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_FILEMANAGER);
+        if (_lib_lighttable_get_zoom(self) == 1)
+            _lib_lighttable_set_zoom(self, 2);
+        break;
+    case DT_LIGHTTABLE_DIRECT_MODE_LOUPE:
+        d->fullpreview_focus = FALSE;
+        _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_PREVIEW);
+        break;
+    case DT_LIGHTTABLE_DIRECT_MODE_COMPARE:
+        d->culling_init_restriction = DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO;
+        _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_CULLING);
+        _lib_lighttable_set_zoom(self, 2);
+        break;
+    case DT_LIGHTTABLE_DIRECT_MODE_SURVEY:
+        _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC);
+        break;
+    case DT_LIGHTTABLE_DIRECT_MODE_NONE:
+        break;
+    }
+}
+
+static void _lib_lighttable_request_direct_mode(dt_lib_module_t *self,
+                                                const dt_lighttable_direct_mode_t mode)
+{
+    dt_lib_tool_lighttable_t *d = self->data;
+    d->direct_mode_pending = mode;
+
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE)
+    {
+        d->direct_mode_pending = DT_LIGHTTABLE_DIRECT_MODE_NONE;
+        _lib_lighttable_apply_direct_mode(self, mode);
+        return;
+    }
+
+    const gboolean failed = dt_view_manager_switch(darktable.view_manager, "lighttable");
+    if (failed || dt_view_get_current() != DT_VIEW_LIGHTTABLE)
+        d->direct_mode_pending = DT_LIGHTTABLE_DIRECT_MODE_NONE;
+}
+
+static void _lib_lighttable_direct_mode_view_changed(gpointer instance, dt_view_t *old_view,
+                                                     dt_view_t *new_view, dt_lib_module_t *self)
+{
+    dt_lib_tool_lighttable_t *d = self->data;
+    if (!d || d->direct_mode_pending == DT_LIGHTTABLE_DIRECT_MODE_NONE)
+        return;
+
+    const dt_lighttable_direct_mode_t mode = d->direct_mode_pending;
+    d->direct_mode_pending = DT_LIGHTTABLE_DIRECT_MODE_NONE;
+    if (new_view && new_view->view(new_view) == DT_VIEW_LIGHTTABLE)
+        _lib_lighttable_apply_direct_mode(self, mode);
+}
+
+static void _lib_lighttable_direct_grid(dt_action_t *action)
+{
+    _lib_lighttable_request_direct_mode(darktable.view_manager->proxy.lighttable.module,
+                                        DT_LIGHTTABLE_DIRECT_MODE_GRID);
+}
+
+static void _lib_lighttable_direct_loupe(dt_action_t *action)
+{
+    _lib_lighttable_request_direct_mode(darktable.view_manager->proxy.lighttable.module,
+                                        DT_LIGHTTABLE_DIRECT_MODE_LOUPE);
+}
+
+static void _lib_lighttable_direct_compare(dt_action_t *action)
+{
+    _lib_lighttable_request_direct_mode(darktable.view_manager->proxy.lighttable.module,
+                                        DT_LIGHTTABLE_DIRECT_MODE_COMPARE);
+}
+
+static void _lib_lighttable_direct_survey(dt_action_t *action)
+{
+    _lib_lighttable_request_direct_mode(darktable.view_manager->proxy.lighttable.module,
+                                        DT_LIGHTTABLE_DIRECT_MODE_SURVEY);
 }
 
 static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton *event,
@@ -554,6 +648,18 @@ void gui_init(dt_lib_module_t *self)
     darktable.view_manager->proxy.lighttable.update_layout_btn = _lib_lighttable_update_btn;
     darktable.view_manager->proxy.lighttable.get_culling_initial_restriction =
         _lib_lighttable_get_culling_initial_restriction;
+
+    dt_action_register(&darktable.control->actions_global, N_("grid"), _lib_lighttable_direct_grid,
+                       GDK_KEY_g, 0);
+    dt_action_register(&darktable.control->actions_global, N_("loupe"),
+                       _lib_lighttable_direct_loupe, GDK_KEY_e, 0);
+    dt_action_register(&darktable.control->actions_global, N_("compare"),
+                       _lib_lighttable_direct_compare, GDK_KEY_c, 0);
+    dt_action_register(&darktable.control->actions_global, N_("survey"),
+                       _lib_lighttable_direct_survey, GDK_KEY_n, 0);
+
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_VIEWMANAGER_VIEW_CHANGED,
+                             _lib_lighttable_direct_mode_view_changed);
 
     dt_action_register(ltv, N_("toggle culling zoom mode"),
                        _lib_lighttable_key_accel_toggle_culling_zoom_mode, GDK_KEY_less, 0);

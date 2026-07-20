@@ -57,6 +57,32 @@ If an existing module control lacks a shortcut:
 ## User Configuration
 Users can customize shortcuts in **Preferences > Shortcuts**. The system scans all registered actions and presents them in a hierarchical list.
 
+## Lightroom-style Direct View Shortcuts
+
+DarkTableNext provides direct, idempotent view commands in addition to the older toggle and hold
+actions. User mappings loaded from the shortcut configuration continue to take precedence over
+these defaults.
+
+| Key | Action ID / scope | Default behavior |
+| --- | --- | --- |
+| `G` | `global/grid` | Enter Lighttable Grid, exit Preview/Culling, preserve densities above 1, and restore density 2 from density 1. |
+| `E` | `global/loupe` | Enter explicit Lighttable Preview at Fit; invoking it again does not exit Preview or change its zoom. |
+| `C` | `global/compare` | Enter fixed two-image Culling. |
+| `N` | `global/survey` | Enter dynamic Culling driven by the current selection. |
+| `D` | `global/switch views/darkroom` | Enter Darkroom; invoking it in Darkroom is a no-op. |
+| `I` | `lighttable/show infos` | Toggle the persistent information label for Loupe, Compare, and Survey. The state is retained while Grid or Darkroom hides the label and across application restarts. |
+| `Z` | active Lighttable or Darkroom view | Toggle Fit/100% in Loupe/Culling; enter Loupe at 100% from Grid; reuse Darkroom's close-up zoom toggle. |
+
+The layout tool records a requested `global/grid`, `global/loupe`, `global/compare`, or
+`global/survey` mode before a cross-view transition and applies it only after the
+`DT_SIGNAL_VIEWMANAGER_VIEW_CHANGED` signal confirms Lighttable. A failed transition drops the
+request, and a later request replaces an earlier pending mode.
+
+Existing aliases remain available: `L` enters Lighttable, `F` toggles Preview, `X` toggles fixed
+Culling, `Control+X` toggles dynamic Culling, `W` holds Preview, and `Option+1` toggles Darkroom
+close-up zoom. To keep the direct global keys unique in Darkroom, guide lines, the exposure control,
+and the crop module now default to `Shift+G`, `Shift+E`, and `Shift+C`, respectively.
+
 ## macOS System Command Projection
 
 `src/gui/system_commands.c` is a projection of the existing Action system, not a second shortcut

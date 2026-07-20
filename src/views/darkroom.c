@@ -3111,7 +3111,7 @@ void gui_init(dt_view_t *self)
             dtgtk_togglebutton_new(dtgtk_cairo_paint_grid, 0, NULL);
         ac = dt_action_define(sa, N_("guide lines"), N_("toggle"),
                               darktable.view_manager->guides_toggle, &dt_action_def_toggle);
-        dt_shortcut_register(ac, 0, 0, GDK_KEY_g, 0);
+        dt_shortcut_register(ac, 0, 0, GDK_KEY_g, GDK_SHIFT_MASK);
         gtk_widget_set_tooltip_text(darktable.view_manager->guides_toggle,
                                     _("toggle guide lines\nright-click for guides options"));
         darktable.view_manager->guides_popover =
@@ -3150,8 +3150,9 @@ void gui_init(dt_view_t *self)
     dt_shortcut_register(ac, 0, DT_ACTION_EFFECT_UP, GDK_KEY_Up, 0);
 
     // Zoom shortcuts
-    dt_action_register(DT_ACTION(self), N_("zoom close-up"), zoom_key_accel, GDK_KEY_1,
-                       GDK_MOD1_MASK);
+    ac = dt_action_register(DT_ACTION(self), N_("zoom close-up"), zoom_key_accel, GDK_KEY_1,
+                            GDK_MOD1_MASK);
+    dt_shortcut_register(ac, 0, 0, GDK_KEY_z, 0);
 
     // zoom in/out
     dt_action_register(DT_ACTION(self), N_("zoom in"), zoom_in_callback, GDK_KEY_plus,

@@ -1150,6 +1150,13 @@
     <longdescription/>
   </dtconfig>
   <dtconfig>
+    <name>plugins/lighttable/info_overlay_pinned</name>
+    <type>bool</type>
+    <default>false</default>
+    <shortdescription>keep the information label visible in loupe and culling layouts</shortdescription>
+    <longdescription/>
+  </dtconfig>
+  <dtconfig>
     <name>plugins/lighttable/overlays/0/0</name>
     <type>int</type>
     <default>0</default>

@@ -1078,6 +1078,10 @@ void dt_gui_store_last_preset(const char *name)
 
 static void _gui_switch_view_key_accel_callback(dt_action_t *action)
 {
+    const dt_view_t *current = dt_view_manager_get_current_view(darktable.view_manager);
+    if (current && !g_ascii_strcasecmp(current->module_name, action->id))
+        return;
+
     dt_ctl_switch_mode_to(action->id);
 }
 

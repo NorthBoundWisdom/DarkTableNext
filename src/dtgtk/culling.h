@@ -94,6 +94,10 @@ typedef struct dt_culling_t
     dt_imgid_t pressed_imgid;
     double press_x;
     double press_y;
+
+    // Keep a pinned information overlay independent from the configured
+    // overlay mode. The configured mode remains in dt_conf while this is set.
+    gboolean overlay_forced;
 } dt_culling_t;
 
 dt_culling_t *dt_culling_new(const dt_culling_mode_t mode);
@@ -115,6 +119,7 @@ void dt_culling_change_offset_image(dt_culling_t *table, const int offset);
 
 void dt_culling_zoom_max(dt_culling_t *table);
 void dt_culling_zoom_fit(dt_culling_t *table);
+void dt_culling_zoom_toggle(dt_culling_t *table);
 
 // zoom by zoom_delta (in th->zoom units) centered on culling-local (x_culling, y_culling).
 // equivalent to _thumbs_zoom_add.

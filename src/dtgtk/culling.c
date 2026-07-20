@@ -33,6 +33,8 @@
 #define FULL_PREVIEW_IN_MEMORY_LIMIT 9
 #define ZOOM_MAX 100000.0f
 
+static int _get_overlays_block_timeout(const dt_culling_t *table);
+
 static inline float _absmul(float a, float b)
 {
     return a > b ? a / b : b / a;
@@ -599,18 +601,36 @@ static void _toggle_zoom_current(dt_culling_t *table, const float x_culling, con
 static void _toggle_zoom_all(dt_culling_t *table, const float x_culling, const float y_culling)
 {
     gboolean zmax = TRUE;
+    gboolean has_zoomable_thumb = FALSE;
     for (GList *l = table->list; l; l = g_list_next(l))
     {
-        const dt_thumbnail_t *th = l->data;
-        if (th->zoom_100 < 1.0 || th->zoom < th->zoom_100)
+        dt_thumbnail_t *th = l->data;
+        const float zoom_100 = dt_thumbnail_get_zoom100(th);
+        if (zoom_100 <= 1.0f)
+            continue;
+
+        has_zoomable_thumb = TRUE;
+        if (th->zoom < zoom_100)
         {
             zmax = FALSE;
             break;
         }
     }
 
+    if (!has_zoomable_thumb)
+        return;
+
     if (zmax)
         dt_culling_zoom_fit(table);
+    else if (x_culling < 0.0f || y_culling < 0.0f)
+    {
+        for (GList *l = table->list; l; l = g_list_next(l))
+        {
+            dt_thumbnail_t *th = l->data;
+            if (dt_thumbnail_get_zoom100(th) > 1.0f && _zoom_to_center(th, ZOOM_MAX, FALSE))
+                _set_table_zoom_ratio(table, th);
+        }
+    }
     else
         _thumbs_zoom_add(table, ZOOM_MAX, x_culling, y_culling, 0, FALSE);
 }
@@ -1165,6 +1185,9 @@ static void _dt_pref_change_callback(gpointer instance, gpointer user_data)
     // adjust the act_on algo class if needed
     dt_act_on_set_class(table->widget);
 
+    if (!table->overlay_forced)
+        table->overlays_block_timeout = _get_overlays_block_timeout(table);
+
     dt_culling_full_redraw(table, TRUE);
 
     for (GList *l = table->list; l; l = g_list_next(l))
@@ -1172,7 +1195,6 @@ static void _dt_pref_change_callback(gpointer instance, gpointer user_data)
         dt_thumbnail_t *th = l->data;
         if (th)
         {
-            th->overlay_timeout_duration = dt_conf_get_int("plugins/lighttable/overlay_timeout");
             dt_thumbnail_reload_infos(th);
             const float zoom_ratio = th->zoom_100 > 1 ? th->zoom / th->zoom_100 : table->zoom_ratio;
 
@@ -1306,6 +1328,17 @@ static gchar *_thumbs_get_overlays_class(const dt_thumbnail_overlay_t over)
     }
 }
 
+static int _get_overlays_block_timeout(const dt_culling_t *table)
+{
+    gchar *txt =
+        g_strdup_printf("plugins/lighttable/overlays/culling_block_timeout/%d", table->mode);
+    const int timeout = dt_conf_key_exists(txt) ?
+                            dt_conf_get_int(txt) :
+                            dt_conf_get_int("plugins/lighttable/overlay_timeout");
+    g_free(txt);
+    return timeout;
+}
+
 dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
 {
     dt_culling_t *table = calloc(1, sizeof(dt_culling_t));
@@ -1327,13 +1360,7 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
     dt_gui_add_class(table->widget, cl0);
     free(cl0);
 
-    otxt = g_strdup_printf("plugins/lighttable/overlays/culling_block_timeout/%d", table->mode);
-    table->overlays_block_timeout = 2;
-    if (!dt_conf_key_exists(otxt))
-        table->overlays_block_timeout = dt_conf_get_int("plugins/lighttable/overlay_timeout");
-    else
-        table->overlays_block_timeout = dt_conf_get_int(otxt);
-    g_free(otxt);
+    table->overlays_block_timeout = _get_overlays_block_timeout(table);
 
     otxt = g_strdup_printf("plugins/lighttable/tooltips/culling/%d", table->mode);
     table->show_tooltips = dt_conf_get_bool(otxt);
@@ -2212,8 +2239,9 @@ void dt_culling_full_redraw(dt_culling_t *table, const gboolean force)
     for (GList *l = table->list; l; l = g_list_next(l))
     {
         dt_thumbnail_t *thumb = l->data;
-        // we set the overlays timeout
-        thumb->overlay_timeout_duration = table->overlays_block_timeout;
+        // Apply the effective overlay to reused and newly-created thumbnails.
+        // In particular, a pinned information label uses a negative timeout.
+        dt_thumbnail_set_overlay(thumb, table->overlays, table->overlays_block_timeout);
         // we add or move the thumb at the right position
         if (!gtk_widget_get_parent(thumb->w_main))
         {
@@ -2354,6 +2382,15 @@ void dt_culling_change_offset_image(dt_culling_t *table, const dt_imgid_t imgid)
 
 void dt_culling_zoom_max(dt_culling_t *table)
 {
+    if (!table)
+        return;
+    if (!table->list)
+    {
+        if (dt_is_valid_imgid(table->offset_imgid))
+            table->zoom_ratio = 1.0f;
+        return;
+    }
+
     float x = 0;
     float y = 0;
     if (table->mode == DT_CULLING_MODE_PREVIEW && table->list)
@@ -2372,6 +2409,22 @@ void dt_culling_zoom_fit(dt_culling_t *table)
     {
         _zoom_thumb_fit((dt_thumbnail_t *)l->data);
     }
+}
+
+void dt_culling_zoom_toggle(dt_culling_t *table)
+{
+    if (!table)
+        return;
+    if (!table->list)
+    {
+        if (dt_is_valid_imgid(table->offset_imgid))
+            table->zoom_ratio = 1.0f;
+        return;
+    }
+
+    // A shortcut has no pointer anchor, so zoom every eligible thumbnail
+    // around its own center. Pointer-driven toggles retain their click anchor.
+    _toggle_zoom_all(table, -1.0f, -1.0f);
 }
 
 gboolean dt_culling_zoom_add(dt_culling_t *table, const float zoom_delta, const float x_root,
@@ -2510,31 +2563,14 @@ void dt_culling_set_hand_tool(dt_culling_t *table, const gboolean active)
     _set_hand_cursor(table, table->hand_tool ? "grab" : NULL);
 }
 
-// change the type of overlays that should be shown
-void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over)
+static void _apply_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over,
+                                 const int timeout)
 {
-    if (!table)
-        return;
-    gchar *txt = g_strdup_printf("plugins/lighttable/overlays/culling/%d", table->mode);
-    dt_conf_set_int(txt, over);
-    g_free(txt);
     gchar *cl0 = _thumbs_get_overlays_class(table->overlays);
     gchar *cl1 = _thumbs_get_overlays_class(over);
 
     dt_gui_remove_class(table->widget, cl0);
     dt_gui_add_class(table->widget, cl1);
-
-    txt = g_strdup_printf("plugins/lighttable/overlays/culling_block_timeout/%d", table->mode);
-    int timeout = 2;
-    if (!dt_conf_key_exists(txt))
-        timeout = dt_conf_get_int("plugins/lighttable/overlay_timeout");
-    else
-        timeout = dt_conf_get_int(txt);
-    g_free(txt);
-
-    txt = g_strdup_printf("plugins/lighttable/tooltips/culling/%d", table->mode);
-    table->show_tooltips = dt_conf_get_bool(txt);
-    g_free(txt);
 
     // we need to change the overlay content if we pass from normal to
     // extended overlays this is not done on the fly with css to avoid
@@ -2550,58 +2586,55 @@ void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overla
     }
 
     table->overlays = over;
+    table->overlays_block_timeout = timeout;
     g_free(cl0);
     g_free(cl1);
 }
 
-// force the overlays to be shown
-void dt_culling_force_overlay(dt_culling_t *table, const gboolean force)
+// change the configured overlays type. A pinned information label remains the
+// effective mode until it is unpinned, at which point the latest configuration
+// and timeout are applied.
+void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over)
 {
     if (!table)
         return;
 
-    int timeout = -1;
-
     gchar *txt = g_strdup_printf("plugins/lighttable/overlays/culling/%d", table->mode);
-    dt_thumbnail_overlay_t over = dt_conf_get_int(txt);
+    dt_conf_set_int(txt, over);
     g_free(txt);
-    gchar *cl0 = _thumbs_get_overlays_class(DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK);
-    gchar *cl1 = _thumbs_get_overlays_class(over);
 
-    if (!force)
-    {
-        dt_gui_remove_class(table->widget, cl0);
-        dt_gui_add_class(table->widget, cl1);
-
-        txt = g_strdup_printf("plugins/lighttable/overlays/culling_block_timeout/%d", table->mode);
-        timeout = 2;
-        if (!dt_conf_key_exists(txt))
-            timeout = dt_conf_get_int("plugins/lighttable/overlay_timeout");
-        else
-            timeout = dt_conf_get_int(txt);
-        g_free(txt);
-    }
-    else
-    {
-        dt_gui_remove_class(table->widget, cl1);
-        dt_gui_add_class(table->widget, cl0);
-        over = DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK;
-    }
-
-    g_free(cl0);
-    g_free(cl1);
-
-    // we need to change the overlay content if we pass from normal to
-    // extended overlays this is not done on the fly with css to avoid
-    // computing extended msg for nothing and to reserve space if needed
+    txt = g_strdup_printf("plugins/lighttable/tooltips/culling/%d", table->mode);
+    table->show_tooltips = dt_conf_get_bool(txt);
+    g_free(txt);
     for (GList *l = table->list; l; l = g_list_next(l))
     {
         dt_thumbnail_t *th = l->data;
-        dt_thumbnail_set_overlay(th, over, timeout);
-        // and we resize the bottom area
-        const float zoom_ratio = th->zoom_100 > 1 ? th->zoom / th->zoom_100 : table->zoom_ratio;
-        dt_thumbnail_resize(th, th->width, th->height, TRUE, zoom_ratio);
+        th->tooltip = table->show_tooltips;
     }
 
-    table->overlays = over;
+    if (!table->overlay_forced)
+        _apply_overlays_mode(table, over, _get_overlays_block_timeout(table));
+}
+
+// force the information overlays to stay visible across thumbnail recreation.
+void dt_culling_force_overlay(dt_culling_t *table, const gboolean force)
+{
+    if (!table || table->overlay_forced == force)
+        return;
+
+    table->overlay_forced = force;
+    if (force)
+    {
+        _apply_overlays_mode(table, DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK, -1);
+        return;
+    }
+
+    gchar *txt = g_strdup_printf("plugins/lighttable/overlays/culling/%d", table->mode);
+    const dt_thumbnail_overlay_t over = dt_conf_get_int(txt);
+    g_free(txt);
+
+    txt = g_strdup_printf("plugins/lighttable/tooltips/culling/%d", table->mode);
+    table->show_tooltips = dt_conf_get_bool(txt);
+    g_free(txt);
+    _apply_overlays_mode(table, over, _get_overlays_block_timeout(table));
 }

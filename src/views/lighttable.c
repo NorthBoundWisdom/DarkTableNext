@@ -799,45 +799,31 @@ static void _overlays_force(dt_view_t *self, const gboolean show)
 {
     dt_library_t *lib = self->data;
 
-    // single-image Loupe/Preview change
-    if (_loupe_active(lib) && (!show || lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_NONE ||
-                               lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK))
-    {
-        dt_culling_force_overlay(lib->preview, show);
-    }
-
-    // culling change (note that full_preview can be combined with culling)
-    if ((lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
-         lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC) &&
-        (!show || lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_NONE ||
-         lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK))
-    {
-        dt_culling_force_overlay(lib->culling, show);
-    }
+    // Keep the state on both renderers even while their widgets are hidden so
+    // newly-created thumbnails inherit it on the next Loupe/Culling entry.
+    dt_culling_force_overlay(lib->preview, show);
+    dt_culling_force_overlay(lib->culling, show);
 }
 
 static float _action_process_infos(gpointer target, const dt_action_element_t element,
                                    const dt_action_effect_t effect, const float move_size)
 {
     dt_view_t *self = darktable.view_manager->proxy.lighttable.view;
-    dt_library_t *lib = self->data;
+    gboolean pinned = dt_conf_get_bool("plugins/lighttable/info_overlay_pinned");
 
-    if (DT_PERFORM_ACTION(move_size))
+    if (DT_ACTION_TOGGLE_NEEDED(effect, move_size, pinned))
     {
-        if (effect != DT_ACTION_EFFECT_ON)
-        {
-            _overlays_force(self, FALSE);
-        }
-        else if (effect != DT_ACTION_EFFECT_OFF)
-        {
-            _overlays_force(self, TRUE);
-        }
+        pinned = effect == DT_ACTION_EFFECT_ON  ? TRUE :
+                 effect == DT_ACTION_EFFECT_OFF ? FALSE :
+                                                  !pinned;
+        dt_conf_set_bool("plugins/lighttable/info_overlay_pinned", pinned);
+        _overlays_force(self, pinned);
     }
 
-    return _loupe_active(lib);
+    return pinned;
 }
 
-const dt_action_element_def_t _action_elements_infos[] = {{NULL, dt_action_effect_hold}, {NULL}};
+const dt_action_element_def_t _action_elements_infos[] = {{NULL, dt_action_effect_toggle}, {NULL}};
 
 const dt_action_def_t dt_action_def_infos = {N_("show infos"), _action_process_infos,
                                              _action_elements_infos, NULL, TRUE};
@@ -1029,6 +1015,27 @@ static void _accel_culling_zoom_fit(dt_action_t *action)
         dt_culling_zoom_fit(lib->culling);
 }
 
+static void _accel_culling_zoom_toggle(dt_action_t *action)
+{
+    dt_view_t *self = darktable.view_manager->proxy.lighttable.view;
+    dt_library_t *lib = self->data;
+
+    _lighttable_check_layout(self);
+    _lighttable_sync_auto_loupe(self);
+
+    dt_culling_t *table = _active_culling(lib);
+    if (!table && lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
+    {
+        _loupe_enter(self, DT_LIGHTTABLE_LOUPE_PREVIEW, TRUE, FALSE,
+                     DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO);
+        dt_culling_full_redraw(lib->preview, TRUE);
+        dt_culling_zoom_toggle(lib->preview);
+        return;
+    }
+
+    dt_culling_zoom_toggle(table);
+}
+
 static void _accel_select_toggle(dt_action_t *action)
 {
     const dt_imgid_t id = dt_control_get_mouse_over_id();
@@ -1151,6 +1158,7 @@ void gui_init(dt_view_t *self)
 
     lib->culling = dt_culling_new(DT_CULLING_MODE_CULLING);
     lib->preview = dt_culling_new(DT_CULLING_MODE_PREVIEW);
+    _overlays_force(self, dt_conf_get_bool("plugins/lighttable/info_overlay_pinned"));
 
     // add culling and preview to the center widget
     gtk_overlay_add_overlay(GTK_OVERLAY(dt_ui_center_base(darktable.gui->ui)),
@@ -1195,7 +1203,7 @@ void gui_init(dt_view_t *self)
 
     // Show infos key
     ac = dt_action_define(sa, NULL, N_("show infos"), NULL, &dt_action_def_infos);
-    dt_shortcut_register(ac, DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_HOLD, GDK_KEY_i, 0);
+    dt_shortcut_register(ac, DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_TOGGLE, GDK_KEY_i, 0);
 
     dt_action_register(DT_ACTION(self), N_("reset first image offset"), _accel_reset_first_offset,
                        0, 0);
@@ -1213,6 +1221,8 @@ void gui_init(dt_view_t *self)
     // zoom for full culling & preview
     dt_action_register(DT_ACTION(self), N_("preview zoom 100%"), _accel_culling_zoom_100, 0, 0);
     dt_action_register(DT_ACTION(self), N_("preview zoom fit"), _accel_culling_zoom_fit, 0, 0);
+    dt_action_register(DT_ACTION(self), N_("preview zoom toggle"), _accel_culling_zoom_toggle,
+                       GDK_KEY_z, 0);
 
     // zoom in/out/min/max
     dt_action_register(DT_ACTION(self), N_("zoom in"), zoom_in_callback, GDK_KEY_plus,

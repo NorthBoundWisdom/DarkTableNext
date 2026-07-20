@@ -165,7 +165,7 @@ typedef int32_t dt_mask_id_t;
 // Increment only when a public lib_darktable ABI consumed by a loadable module changes.
 // The build normally preserves compatible module binaries across implementation-only
 // core changes; this epoch is the explicit invalidation boundary enforced by the loader.
-#define DT_MODULE_VERSION 26 // version of dt's module interface
+#define DT_MODULE_VERSION 27 // version of dt's module interface
 
 // version of current performance configuration version
 // if you want to run an updated version of the performance configuration later
