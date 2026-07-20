@@ -39,7 +39,6 @@
 #include "gui/accelerators.h"
 #include "gui/context_menu.h"
 #include "iop/iop_api.h"
-#include "libs/colorpicker.h"
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(1)
 
@@ -1381,34 +1380,7 @@ static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_mo
         if (self->request_color_pick == DT_REQUEST_COLORPICK_MODULE &&
             gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker)))
         {
-            // the global live samples ...
-            cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(3));
-
-            for (GSList *samples = darktable.lib->proxy.colorpicker.live_samples; samples;
-                 samples = g_slist_next(samples))
-            {
-                dt_colorpicker_sample_t *sample = samples->data;
-
-                picker_scale(sample->lab[DT_PICK_MEAN], picker_mean);
-                picker_scale(sample->lab[DT_PICK_MIN], picker_min);
-                picker_scale(sample->lab[DT_PICK_MAX], picker_max);
-
-                // Convert abcissa to log coordinates if needed
-                picker_min[ch] = to_log(picker_min[ch], g->loglogscale, ch, g->semilog, 0);
-                picker_max[ch] = to_log(picker_max[ch], g->loglogscale, ch, g->semilog, 0);
-                picker_mean[ch] = to_log(picker_mean[ch], g->loglogscale, ch, g->semilog, 0);
-
-                cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.35);
-                cairo_rectangle(cr, width * picker_min[ch], 0,
-                                width * fmax(picker_max[ch] - picker_min[ch], 0.0f), -height);
-                cairo_fill(cr);
-                cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.5);
-                cairo_move_to(cr, width * picker_mean[ch], 0);
-                cairo_line_to(cr, width * picker_mean[ch], -height);
-                cairo_stroke(cr);
-            }
-
-            // ... and the local sample
+            // local sample
             if (raw_max[0] >= 0.0f)
             {
                 cairo_save(cr);

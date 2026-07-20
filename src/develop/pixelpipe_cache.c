@@ -20,7 +20,7 @@
 #include "develop/format.h"
 #include "develop/pixelpipe.h"
 #include "libs/lib.h"
-#include "libs/colorpicker.h"
+#include "common/color_picker.h"
 #include <stdlib.h>
 
 static inline int _to_mb(size_t m)
@@ -143,13 +143,13 @@ static dt_hash_t _dev_pixelpipe_cache_basichash(dt_dev_pixelpipe_t *pipe, const 
             if (piece->module->request_color_pick != DT_REQUEST_COLORPICK_OFF && roi)
             {
                 if (darktable.lib->proxy.colorpicker.primary_sample->size ==
-                    DT_LIB_COLORPICKER_SIZE_BOX)
+                    DT_COLOR_PICKER_SIZE_BOX)
                 {
                     hash = dt_hash(hash, darktable.lib->proxy.colorpicker.primary_sample->box,
                                    sizeof(dt_pickerbox_t));
                 }
                 else if (darktable.lib->proxy.colorpicker.primary_sample->size ==
-                         DT_LIB_COLORPICKER_SIZE_POINT)
+                         DT_COLOR_PICKER_SIZE_POINT)
                 {
                     hash = dt_hash(hash, darktable.lib->proxy.colorpicker.primary_sample->point,
                                    2 * sizeof(float));

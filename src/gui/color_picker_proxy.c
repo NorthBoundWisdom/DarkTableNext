@@ -25,11 +25,9 @@
 #include "develop/blend.h"
 
 /*
-  The color_picker_proxy code is an interface which links the UI
-  colorpicker buttons in iops (and the colorpicker lib) with the rest
-  of the implementation (selecting/drawing colorpicker area in center
-  view, reading color value from preview pipe, and displaying results
-  in the colorpicker lib).
+  The color_picker_proxy code links color-picker buttons in IOPs with
+  selecting/drawing the sample area in the center view and reading the
+  sample value from the preview pipe.
 
   From the iop (or lib) POV, all that is necessary is to instantiate
   color picker(s) via dt_color_picker_new() or
@@ -41,20 +39,17 @@
   reactivated.
 
   The actual work of "picking" happens in pixelpipe_hb.c. The drawing
-  & mouse-sensitivity of the picker overlay in the center view happens
-  in darkroom.c. The display of current sample values occurs via
-  libs/colorpicker.c, which uses this code to activate its own picker.
+  and mouse-sensitivity of the picker overlay in the center view happens
+  in darkroom.c.
 
   The sample position is potentially stored in two places:
 
   1. For each sampler widget, in dt_iop_color_picker_t.
-  2. For the active iop, the primary, and the live samples in
-     dt_colorpicker_sample_t.
+  2. For the active IOP, in the primary dt_colorpicker_sample_t.
 
-  There is "global" state in darktable.lib->proxy.colorpicker
-  including the current picker_proxy and the primary_sample. There
-  will be at most one editable sample, with one proxy, at one time in
-  the center view.
+  There is shared state in darktable.lib->proxy.colorpicker including
+  the current picker_proxy and primary_sample. There is at most one
+  editable sample, with one proxy, at one time in the center view.
 */
 
 // FIXME: should this be here or perhaps lib.c?
@@ -62,14 +57,9 @@ gboolean dt_iop_color_picker_is_visible(const dt_develop_t *dev)
 {
     dt_iop_color_picker_t *proxy = darktable.lib->proxy.colorpicker.picker_proxy;
 
-    const gboolean module_picker =
-        dev->gui_module && dev->gui_module->enabled &&
-        dev->gui_module->request_color_pick != DT_REQUEST_COLORPICK_OFF && proxy &&
-        proxy->module == dev->gui_module;
-
-    const gboolean primary_picker = proxy && !proxy->module;
-
-    return module_picker || primary_picker;
+    return dev->gui_module && dev->gui_module->enabled &&
+           dev->gui_module->request_color_pick != DT_REQUEST_COLORPICK_OFF && proxy &&
+           proxy->module == dev->gui_module;
 }
 
 static gboolean _record_point_area(dt_iop_color_picker_t *self)
@@ -78,7 +68,7 @@ static gboolean _record_point_area(dt_iop_color_picker_t *self)
     gboolean changed = self->changed;
     if (self && sample)
     {
-        if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
+        if (sample->size == DT_COLOR_PICKER_SIZE_POINT)
             for (int k = 0; k < 2; k++)
             {
                 if (self->pick_pos[k] != sample->point[k])
@@ -87,7 +77,7 @@ static gboolean _record_point_area(dt_iop_color_picker_t *self)
                     changed = TRUE;
                 }
             }
-        else if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+        else if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
             for (int k = 0; k < 8; k++)
             {
                 if (self->pick_box[k] != sample->box[k])
@@ -136,10 +126,9 @@ static void _init_picker(dt_iop_color_picker_t *picker, dt_iop_module_t *module,
 {
     DT_IOP_SECTION_FOR_PARAMS_UNWIND(module);
 
-    // module is NULL if primary colorpicker
     picker->module = module;
     picker->flags = flags;
-    picker->picker_cst = module ? module->default_colorspace(module, NULL, NULL) : IOP_CS_NONE;
+    picker->picker_cst = module->default_colorspace(module, NULL, NULL);
     picker->colorpick = button;
     picker->changed = FALSE;
     picker->fixed_cst = FALSE;
@@ -151,7 +140,6 @@ static void _init_picker(dt_iop_color_picker_t *picker, dt_iop_module_t *module,
 static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventButton *e,
                                                     dt_iop_color_picker_t *self)
 {
-    // module is NULL if primary colorpicker
     dt_iop_module_t *module = self->module;
 
     DT_GUARD_GUI_UPDATE(FALSE);
@@ -160,11 +148,10 @@ static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventB
     if (prior_picker && prior_picker != self)
     {
         _color_picker_reset(prior_picker);
-        if (prior_picker->module)
-            prior_picker->module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
+        prior_picker->module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
     }
 
-    if (module && module->off)
+    if (module->off)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(module->off), TRUE);
 
     const GdkModifierType state = e != NULL ? e->state : dt_key_modifier_state();
@@ -177,8 +164,7 @@ static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventB
     {
         darktable.lib->proxy.colorpicker.picker_proxy = self;
 
-        if (module)
-            module->request_color_pick = DT_REQUEST_COLORPICK_MODULE;
+        module->request_color_pick = DT_REQUEST_COLORPICK_MODULE;
 
         // set point or area mode without stomping on any other flags
         dt_iop_color_picker_flags_t kind = self->flags & DT_COLOR_PICKER_POINT_AREA;
@@ -214,15 +200,8 @@ static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventB
             dt_bauhaus_widget_set_quad_active(self->colorpick, TRUE);
         DT_LEAVE_GUI_UPDATE();
 
-        if (module)
-        {
-            module->dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
-            dt_iop_request_focus(module);
-        }
-        else
-        {
-            dt_dev_invalidate_all(darktable.develop);
-        }
+        module->dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
+        dt_iop_request_focus(module);
         // force applying the next incoming sample
         self->changed = TRUE;
     }
@@ -230,16 +209,7 @@ static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventB
     {
         darktable.lib->proxy.colorpicker.picker_proxy = NULL;
         _color_picker_reset(self);
-        if (module)
-        {
-            module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
-            // will turn off live sample button
-            darktable.lib->proxy.colorpicker.update_panel(darktable.lib->proxy.colorpicker.module);
-        }
-        else if (darktable.lib->proxy.colorpicker.restrict_histogram)
-        {
-            dt_dev_invalidate_all(darktable.develop);
-        }
+        module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
     }
 
     dt_control_queue_redraw_center();
@@ -315,51 +285,26 @@ static void _iop_color_picker_pickerdata_ready_callback(gpointer instance, dt_io
     }
 }
 
-static void _color_picker_proxy_preview_pipe_callback(gpointer instance, gpointer user_data)
-{
-    dt_iop_color_picker_t *picker = darktable.lib->proxy.colorpicker.picker_proxy;
-    if (picker)
-    {
-        // lib picker is active? record new picker area, but we don't care
-        // about changed value as regardless we want to handle the new
-        // sample
-        if (!picker->module)
-            _record_point_area(picker);
-    }
-
-    dt_lib_module_t *module = darktable.lib->proxy.colorpicker.module;
-    if (module)
-    {
-        dt_print_pipe(DT_DEBUG_PIPE | DT_DEBUG_PICKER | DT_DEBUG_VERBOSE, "picker update callback",
-                      NULL, NULL, DT_DEVICE_NONE, NULL, NULL);
-
-        // pixelpipe may have run because sample area changed or an iop,
-        // regardless we want to the colorpicker lib, which also can
-        // provide swatch color for a point sample overlay
-        darktable.lib->proxy.colorpicker.update_panel(module);
-        darktable.lib->proxy.colorpicker.update_samples(module);
-        // FIXME: It appears that DT_SIGNAL_DEVELOP_UI_PIPE_FINISHED --
-        // which redraws the center view -- isn't called until all the
-        // DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED signal handlers are
-        // called. Hence the UI will always update once the picker data
-        // updates. But I'm not clear how this is guaranteed to be so.
-    }
-}
-
 void dt_iop_color_picker_init(void)
 {
+    dt_colorpicker_sample_t *sample = g_malloc0(sizeof(*sample));
+
+    dt_lib_colorpicker_reset_box_area(sample->box);
+    dt_lib_colorpicker_reset_point(sample->point);
+    darktable.lib->proxy.colorpicker.primary_sample = sample;
+    darktable.lib->proxy.colorpicker.picker_proxy = NULL;
+
     // we have incoming iop picker data
     DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_CONTROL_PICKERDATA_READY,
                               _iop_color_picker_pickerdata_ready_callback, NULL);
-    // we have new primary picker data as preview pipe has run to conclusion
-    DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED,
-                              _color_picker_proxy_preview_pipe_callback, NULL);
 }
 
 void dt_iop_color_picker_cleanup(void)
 {
     DT_CONTROL_SIGNAL_DISCONNECT(_iop_color_picker_pickerdata_ready_callback, NULL);
-    DT_CONTROL_SIGNAL_DISCONNECT(_color_picker_proxy_preview_pipe_callback, NULL);
+    g_free(darktable.lib->proxy.colorpicker.primary_sample);
+    darktable.lib->proxy.colorpicker.primary_sample = NULL;
+    darktable.lib->proxy.colorpicker.picker_proxy = NULL;
 }
 
 static void _color_picker_destroy(dt_iop_color_picker_t *picker)

@@ -1467,17 +1467,23 @@ gchar *dt_lib_get_localized_name(const gchar *plugin_name)
 
 void dt_lib_colorpicker_set_box_area(dt_lib_t *lib, const dt_pickerbox_t box)
 {
-    if (!lib || !lib->proxy.colorpicker.module || !lib->proxy.colorpicker.set_sample_box_area)
+    if (!lib || !lib->proxy.colorpicker.primary_sample)
         return;
-    lib->proxy.colorpicker.set_sample_box_area(lib->proxy.colorpicker.module, box);
+
+    dt_colorpicker_sample_t *sample = lib->proxy.colorpicker.primary_sample;
+    memcpy(sample->box, box, sizeof(dt_pickerbox_t));
+    sample->size = DT_COLOR_PICKER_SIZE_BOX;
     gtk_widget_grab_focus(dt_ui_center(darktable.gui->ui));
 }
 
 void dt_lib_colorpicker_set_point(dt_lib_t *lib, const float pos[2])
 {
-    if (!lib || !lib->proxy.colorpicker.module || !lib->proxy.colorpicker.set_sample_point)
+    if (!lib || !lib->proxy.colorpicker.primary_sample)
         return;
-    lib->proxy.colorpicker.set_sample_point(lib->proxy.colorpicker.module, pos);
+
+    dt_colorpicker_sample_t *sample = lib->proxy.colorpicker.primary_sample;
+    memcpy(sample->point, pos, sizeof(dt_pickerpoint_t));
+    sample->size = DT_COLOR_PICKER_SIZE_POINT;
     gtk_widget_grab_focus(dt_ui_center(darktable.gui->ui));
 }
 
@@ -1497,9 +1503,11 @@ void dt_lib_colorpicker_reset_point(dt_pickerpoint_t pos)
 void dt_lib_colorpicker_setup(dt_lib_t *lib, const gboolean denoise, const gboolean pick_output)
 
 {
-    if (!lib || !lib->proxy.colorpicker.module || !lib->proxy.colorpicker.setup_sample)
+    if (!lib || !lib->proxy.colorpicker.primary_sample)
         return;
-    lib->proxy.colorpicker.setup_sample(lib->proxy.colorpicker.module, denoise, pick_output);
+
+    lib->proxy.colorpicker.primary_sample->denoise = denoise;
+    lib->proxy.colorpicker.primary_sample->pick_output = pick_output;
 }
 
 void dt_lib_histogram_get_harmony(dt_lib_t *lib, dt_color_harmony_guide_t *guide)

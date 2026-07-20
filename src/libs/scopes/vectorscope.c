@@ -22,7 +22,6 @@
 #include "common/image_cache.h"
 #include "common/math.h"
 #include "gui/accelerators.h"
-#include "libs/colorpicker.h"
 #include "scopes.h"
 #include "scopes/vectorscope.h"
 
@@ -87,9 +86,6 @@ const float dt_scopes_vec_color_harmony_width[DT_COLOR_HARMONY_WIDTH_N] = {
 typedef struct dt_scopes_vec_t
 {
     uint8_t *vectorscope_graph, *vectorscope_bkgd;
-    float vectorscope_pt[2];     // point colorpicker position
-    GSList *vectorscope_samples; // live samples position
-    int selected_sample;         // position of the selected live sample in the list
     int vectorscope_diameter_px;
     float hue_ring[6][VECTORSCOPE_HUES][2] DT_ALIGNED_ARRAY;
     const dt_iop_order_iccprofile_info_t *hue_ring_prof;
@@ -545,59 +541,6 @@ static void _vec_process(dt_scopes_mode_t *const self, const float *const input,
                 dt_atomic_add_int(binned + out_y * diam_px + out_x, 1);
         }
 
-    dt_aligned_pixel_t RGB = {0.f}, chromaticity;
-    const dt_lib_colorpicker_statistic_t statistic = darktable.lib->proxy.colorpicker.statistic;
-    dt_colorpicker_sample_t *sample;
-
-    // find position of the primary sample
-    sample = darktable.lib->proxy.colorpicker.primary_sample;
-    memcpy(RGB, sample->scope[statistic], sizeof(dt_aligned_pixel_t));
-
-    _get_chromaticity(RGB, chromaticity, vs_type, vs_prof, rgb2ryb_ypp);
-
-    if (vs_scale == DT_SCOPES_VEC_SCALE_LOGARITHMIC)
-        log_scale(&chromaticity[1], &chromaticity[2], max_radius);
-
-    d->vectorscope_pt[0] = chromaticity[1];
-    d->vectorscope_pt[1] = chromaticity[2];
-
-    // if live simple visualized, find their position
-    if (d->vectorscope_samples && darktable.lib->proxy.colorpicker.display_samples)
-    {
-        g_slist_free_full((GSList *)d->vectorscope_samples, free);
-        d->vectorscope_samples = NULL;
-        d->selected_sample = -1;
-    }
-    GSList *samples = darktable.lib->proxy.colorpicker.live_samples;
-    if (samples)
-    {
-        const dt_colorpicker_sample_t *selected = darktable.lib->proxy.colorpicker.selected_sample;
-
-        int pos = 0;
-        for (; samples; samples = g_slist_next(samples))
-        {
-            sample = samples->data;
-            if (sample == selected)
-                d->selected_sample = pos;
-            pos++;
-
-            //find coordinates
-            memcpy(RGB, sample->scope[statistic], sizeof(dt_aligned_pixel_t));
-
-            _get_chromaticity(RGB, chromaticity, vs_type, vs_prof, rgb2ryb_ypp);
-
-            if (vs_scale == DT_SCOPES_VEC_SCALE_LOGARITHMIC)
-                log_scale(&chromaticity[1], &chromaticity[2], max_radius);
-
-            float *sample_xy = (float *)calloc(2, sizeof(float));
-
-            sample_xy[0] = chromaticity[1];
-            sample_xy[1] = chromaticity[2];
-
-            d->vectorscope_samples = g_slist_append(d->vectorscope_samples, sample_xy);
-        }
-    }
-
     // shortcut to change from linear to display gamma
     const dt_iop_order_iccprofile_info_t *const profile = dt_ioppr_add_profile_info_to_list(
         darktable.develop, DT_COLORSPACE_HLG_REC2020, "", DT_INTENT_PERCEPTUAL);
@@ -759,12 +702,6 @@ static void _vec_draw(const dt_scopes_mode_t *const self, cairo_t *cr, const int
 
     cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
 
-    const gboolean display_primary_sample =
-        darktable.lib->proxy.colorpicker.restrict_histogram &&
-        darktable.lib->proxy.colorpicker.primary_sample->size == DT_LIB_COLORPICKER_SIZE_POINT;
-    const gboolean display_live_samples =
-        d->vectorscope_samples && darktable.lib->proxy.colorpicker.display_samples;
-
     // we draw the color harmony guidelines (only in RYB mode)
     const gboolean is_ryb = (d->vectorscope_type == DT_SCOPES_VEC_VECTORSCOPE_RYB);
     const gboolean is_custom_harmony = is_ryb && (d->harmony_guide.custom_n > 0);
@@ -871,8 +808,6 @@ static void _vec_draw(const dt_scopes_mode_t *const self, cairo_t *cr, const int
         cairo_restore(cr);
     }
 
-    if (display_primary_sample || display_live_samples)
-        cairo_push_group(cr);
     cairo_set_source(cr, bkgd_pat);
     cairo_mask(cr, graph_pat);
     cairo_set_operator(cr, CAIRO_OPERATOR_HARD_LIGHT);
@@ -884,12 +819,6 @@ static void _vec_draw(const dt_scopes_mode_t *const self, cairo_t *cr, const int
     cairo_pattern_destroy(graph_pat);
     cairo_surface_destroy(graph_surface);
 
-    if (display_primary_sample || display_live_samples)
-    {
-        cairo_pop_group_to_source(cr);
-        cairo_paint_with_alpha(cr, 0.5);
-    }
-
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
     // overlay central circle
@@ -899,41 +828,6 @@ static void _vec_draw(const dt_scopes_mode_t *const self, cairo_t *cr, const int
     cairo_arc(cr, 0., 0., DT_PIXEL_APPLY_DPI(3.), 0., M_PI * 2.);
     cairo_fill(cr);
 
-    if (display_primary_sample)
-    {
-        // point sample
-        set_color(cr, darktable.bauhaus->graph_fg);
-        cairo_arc(cr, scale * d->vectorscope_pt[0], scale * d->vectorscope_pt[1],
-                  DT_PIXEL_APPLY_DPI(3.), 0., M_PI * 2.);
-        cairo_fill(cr);
-    }
-
-    // live samples
-    if (display_live_samples)
-    {
-        GSList *samples = d->vectorscope_samples;
-        const float *sample_xy = NULL;
-        int pos = 0;
-        for (; samples; samples = g_slist_next(samples))
-        {
-            sample_xy = samples->data;
-            if (pos == d->selected_sample)
-            {
-                set_color(cr, darktable.bauhaus->graph_fg_active);
-                cairo_arc(cr, scale * sample_xy[0], scale * sample_xy[1], DT_PIXEL_APPLY_DPI(6.),
-                          0., M_PI * 2.);
-                cairo_fill(cr);
-            }
-            else
-            {
-                set_color(cr, darktable.bauhaus->graph_fg);
-                cairo_arc(cr, scale * sample_xy[0], scale * sample_xy[1], DT_PIXEL_APPLY_DPI(4.),
-                          0., M_PI * 2.);
-                cairo_stroke(cr);
-            }
-            pos++;
-        }
-    }
     cairo_restore(cr);
 }
 
@@ -1300,10 +1194,6 @@ static void _vec_gui_init(dt_scopes_mode_t *const self, dt_scopes_t *const scope
     // initially no vectorscope to draw
     d->vectorscope_radius = 0.f;
 
-    // initially no live samples
-    d->vectorscope_samples = NULL;
-    d->selected_sample = -1;
-
     d->rgb2ryb_ypp =
         interpolate_set(sizeof(dt_color_ryb_x_vtx) / sizeof(float), (float *)dt_color_ryb_x_vtx,
                         (float *)dt_color_ryb_y_vtx, CUBIC_SPLINE);
@@ -1387,10 +1277,6 @@ static void _vec_gui_cleanup(dt_scopes_mode_t *const self)
 
     dt_free_align(d->vectorscope_graph);
     dt_free_align(d->vectorscope_bkgd);
-    if (d->vectorscope_samples)
-        g_slist_free_full((GSList *)d->vectorscope_samples, free);
-    d->vectorscope_samples = NULL;
-    d->selected_sample = -1;
     g_free(d->rgb2ryb_ypp);
     g_free(d->ryb2rgb_ypp);
 

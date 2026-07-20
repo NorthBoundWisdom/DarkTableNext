@@ -12,6 +12,8 @@
 - [x] 删除全局顶部工具箱：分组、缩略图叠加层、上下文帮助、快捷键映射和全局偏好入口不再占用工作区；Lighttable 底部评分、色标、布局和缩放工具栏保留并固定显示。Grid 保存目标缩略图尺寸，按可用宽度自动派生每行 2–10 张；两个网格按钮直接缩小或放大目标尺寸，不再显示数值输入及 `+/-`。
 - [x] 删除 Lighttable 筛选规则与排序快照历史；它们与 Darkroom 编辑历史、XMP 和图像数据库历史无关。
 - [x] 删除 Lighttable 时间线；底部改为与中央 grid 共享 collection/selection 的横向照片浏览条。
+- [x] 删除 Darkroom 的 duplicate manager 与全局 color picker/live samples 旧面板；已有多版本数据、
+      Lighttable duplicate 操作和各处理模块内的吸管取色能力保持不变。
 - [x] Lighttable 将 Grid 与单图 Loupe 作为两个显式状态：`G` 返回响应式 Grid，`E` 或底栏方框按钮进入保留 filmstrip 和面板的 Loupe。Loupe 单击图片在 Fit 与原始像素 100% 间切换，放大后按住空格并左键拖动平移；双击返回 Grid，Grid 双击进入 Loupe，不再通过密度 1 隐式切换状态。
 - [x] 删除 Lighttable 底栏的焦点峰值、显示 ICC 配置和日志历史按钮；焦点峰值保留快捷键与
       `View` 菜单状态项，日志历史迁至 `View` 菜单，颜色管理与峰值检测底层保持不变。

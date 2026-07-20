@@ -122,6 +122,7 @@ typedef struct dt_scopes_t
     dt_scopes_highlight_t highlight;          // depends on mouse position
     scopes_channels_t channels;               // display state chosen by RGB buttons
     gboolean dragging;                        // to block motion handling during drag
+    dt_imgid_t lighttable_imgid;              // image represented by the lighttable histogram
     gdouble last_offset_x, last_offset_y;     // for drag handling
     // UI elements
     GtkWidget *overlay;          // GtkOverlay -- scope and buttons

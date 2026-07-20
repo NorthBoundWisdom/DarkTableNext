@@ -1553,7 +1553,7 @@ dt_colorspaces_t *dt_colorspaces_init()
         // choosey
         const cmsColorSpaceSignature color_space = cmsGetColorSpace(prof->profile);
         // The histogram profile is used for histogram, clipping
-        // indicators and the global color picker.  Some of these also
+        // indicators and active IOP color pickers. Some of these also
         // assume a matrix profile. LUT profiles don't make much sense in
         // these applications so filter out any profile that doesn't
         // implement the relative colorimetric intent as a matrix (+ TRC).

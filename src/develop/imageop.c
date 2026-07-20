@@ -2073,11 +2073,6 @@ void dt_iop_request_focus(dt_iop_module_t *module)
     dt_develop_t *dev = darktable.develop;
     dt_iop_module_t *out_focus_module = dev->gui_module;
 
-    // disable global color picker on any focus change request
-    // unless restrict histogram is active
-    if (!darktable.lib->proxy.colorpicker.restrict_histogram)
-        dt_iop_color_picker_reset(NULL, TRUE);
-
     if (DT_IN_GUI_UPDATE() || (out_focus_module == module))
         return;
 

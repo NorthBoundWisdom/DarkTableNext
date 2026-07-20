@@ -54,7 +54,6 @@
 #include "gui/styles.h"
 #include "imageio/imageio_common.h"
 #include "imageio/imageio_module.h"
-#include "libs/colorpicker.h"
 #include "views/view.h"
 #include "views/view_api.h"
 
@@ -289,142 +288,90 @@ void _display_module_trouble_message_callback(gpointer instance, dt_iop_module_t
     }
 }
 
-static void _darkroom_pickers_draw(dt_view_t *self, cairo_t *cri, const float wd, const float ht,
-                                   const float zoom_scale, GSList *samples,
-                                   const gboolean is_primary_sample)
+static void _darkroom_picker_draw(dt_view_t *self, cairo_t *cri, const float zoom_scale,
+                                  const dt_colorpicker_sample_t *sample)
 {
-    if (!samples)
+    if (!sample)
         return;
 
     dt_develop_t *dev = self->data;
 
     cairo_save(cri);
     const double lw = 1.0 / zoom_scale;
-    const double dashes[1] = {lw * 4.0};
 
     // makes point sample crosshair gap look nicer
     cairo_set_line_cap(cri, CAIRO_LINE_CAP_SQUARE);
 
-    dt_colorpicker_sample_t *selected_sample = darktable.lib->proxy.colorpicker.selected_sample;
-    const gboolean only_selected_sample =
-        !is_primary_sample && selected_sample && !darktable.lib->proxy.colorpicker.display_samples;
+    // The picker is at the resolution of the preview pixelpipe. This is
+    // width/2 of a preview-pipe pixel in (scaled) user space coordinates.
+    double half_px = 0.5;
+    const double min_half_px_device = 4.0;
 
-    for (; samples; samples = g_slist_next(samples))
+    double x = 0.0;
+    double y = 0.0;
+    // overlays are aligned with pixels for a clean look
+    if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
     {
-        dt_colorpicker_sample_t *sample = samples->data;
-        if (only_selected_sample && (sample != selected_sample))
-            continue;
-
-        // The picker is at the resolution of the preview pixelpipe. This
-        // is width/2 of a preview-pipe pixel in (scaled) user space
-        // coordinates. Use half pixel width so rounding to nearest device
-        // pixel doesn't make uneven centering.
-        double half_px = 0.5;
-        const double min_half_px_device = 4.0;
-        // FIXME: instead of going to all this effort to show how error-prone a preview pipe sample can be, just produce a better point sample
-        gboolean show_preview_pixel_scale = TRUE;
-
-        double x = 0.0;
-        double y = 0.0;
-        // overlays are aligned with pixels for a clean look
-        if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
-        {
-            dt_boundingbox_t fbox;
-            dt_color_picker_transform_box(dev, 2, sample->box, fbox, FALSE);
-            x = fbox[0];
-            y = fbox[1];
-            double w = fbox[2];
-            double h = fbox[3];
-            cairo_user_to_device(cri, &x, &y);
-            cairo_user_to_device(cri, &w, &h);
-            x = round(x + 0.5) - 0.5;
-            y = round(y + 0.5) - 0.5;
-            w = round(w + 0.5) - 0.5;
-            h = round(h + 0.5) - 0.5;
-            cairo_device_to_user(cri, &x, &y);
-            cairo_device_to_user(cri, &w, &h);
-            cairo_rectangle(cri, x, y, w - x, h - y);
-            if (is_primary_sample)
-            {
-                // handles
-                const double hw = 5. / zoom_scale;
-                cairo_rectangle(cri, x - hw, y - hw, 2. * hw, 2. * hw);
-                cairo_rectangle(cri, x - hw, h - hw, 2. * hw, 2. * hw);
-                cairo_rectangle(cri, w - hw, y - hw, 2. * hw, 2. * hw);
-                cairo_rectangle(cri, w - hw, h - hw, 2. * hw, 2. * hw);
-            }
-        }
-        else if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
-        {
-            /* FIXME: to be really accurate, the colorpicker should render precisely over the nearest pixelpipe pixel
+        dt_boundingbox_t fbox;
+        dt_color_picker_transform_box(dev, 2, sample->box, fbox, FALSE);
+        x = fbox[0];
+        y = fbox[1];
+        double w = fbox[2];
+        double h = fbox[3];
+        cairo_user_to_device(cri, &x, &y);
+        cairo_user_to_device(cri, &w, &h);
+        x = round(x + 0.5) - 0.5;
+        y = round(y + 0.5) - 0.5;
+        w = round(w + 0.5) - 0.5;
+        h = round(h + 0.5) - 0.5;
+        cairo_device_to_user(cri, &x, &y);
+        cairo_device_to_user(cri, &w, &h);
+        cairo_rectangle(cri, x, y, w - x, h - y);
+        // handles
+        const double hw = 5. / zoom_scale;
+        cairo_rectangle(cri, x - hw, y - hw, 2. * hw, 2. * hw);
+        cairo_rectangle(cri, x - hw, h - hw, 2. * hw, 2. * hw);
+        cairo_rectangle(cri, w - hw, y - hw, 2. * hw, 2. * hw);
+        cairo_rectangle(cri, w - hw, h - hw, 2. * hw, 2. * hw);
+    }
+    else if (sample->size == DT_COLOR_PICKER_SIZE_POINT)
+    {
+        /* FIXME: to be really accurate, the colorpicker should render precisely over the nearest pixelpipe pixel
          but this gets particularly tricky to do with iop pickers with transformations after them in the pipeline
       */
-            dt_boundingbox_t fbox;
-            dt_color_picker_transform_box(dev, 1, sample->point, fbox, FALSE);
-            x = fbox[0];
-            y = fbox[1];
-            cairo_user_to_device(cri, &x, &y);
-            x = round(x + 0.5) - 0.5;
-            y = round(y + 0.5) - 0.5;
-            // render picker center a reasonable size in device pixels
-            half_px = round(half_px * zoom_scale);
-            if (half_px < min_half_px_device)
-            {
-                half_px = min_half_px_device;
-                show_preview_pixel_scale = FALSE;
-            }
-            // crosshair radius
-            double cr = (is_primary_sample ? 4. : 5.) * half_px;
-            if (sample == selected_sample)
-                cr *= 2;
-            cairo_device_to_user(cri, &x, &y);
-            cairo_device_to_user_distance(cri, &cr, &half_px);
+        dt_boundingbox_t fbox;
+        dt_color_picker_transform_box(dev, 1, sample->point, fbox, FALSE);
+        x = fbox[0];
+        y = fbox[1];
+        cairo_user_to_device(cri, &x, &y);
+        x = round(x + 0.5) - 0.5;
+        y = round(y + 0.5) - 0.5;
+        // render picker center a reasonable size in device pixels
+        half_px = round(half_px * zoom_scale);
+        if (half_px < min_half_px_device)
+            half_px = min_half_px_device;
+        // crosshair radius
+        double cr = 4. * half_px;
+        cairo_device_to_user(cri, &x, &y);
+        cairo_device_to_user_distance(cri, &cr, &half_px);
 
-            // "handles"
-            if (is_primary_sample)
-                cairo_arc(cri, x, y, cr, 0., 2. * M_PI);
-            // crosshair
-            cairo_move_to(cri, x - cr, y);
-            cairo_line_to(cri, x + cr, y);
-            cairo_move_to(cri, x, y - cr);
-            cairo_line_to(cri, x, y + cr);
-        }
-
-        // default is to draw 1 (logical) pixel light lines with 1
-        // (logical) pixel dark outline for legibility
-        const double line_scale = (sample == selected_sample ? 2.0 : 1.0);
-        cairo_set_line_width(cri, lw * 3.0 * line_scale);
-        cairo_set_source_rgba(cri, 0.0, 0.0, 0.0, 0.4);
-        cairo_stroke_preserve(cri);
-
-        cairo_set_line_width(cri, lw * line_scale);
-        cairo_set_dash(cri, dashes,
-                       !is_primary_sample && sample != selected_sample &&
-                           sample->size == DT_LIB_COLORPICKER_SIZE_BOX,
-                       0.0);
-        cairo_set_source_rgba(cri, 1.0, 1.0, 1.0, 0.8);
-        cairo_stroke(cri);
-
-        // draw the actual color sampled
-        // FIXME: if an area sample is selected, when selected should fill it with colorpicker color?
-        // NOTE: The sample may be based on outdated data, but still
-        // display as it will update eventually. If we only drew on valid
-        // data, swatches on point live samples would flicker when the
-        // primary sample was drawn, and the primary sample swatch would
-        // flicker when an iop is adjusted.
-        if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
-        {
-            if (sample == selected_sample)
-                cairo_arc(cri, x, y, half_px * 2., 0., 2. * M_PI);
-            else if (show_preview_pixel_scale)
-                cairo_rectangle(cri, x - half_px, y, half_px * 2., half_px * 2.);
-            else
-                cairo_arc(cri, x, y, half_px, 0., 2. * M_PI);
-
-            set_color(cri, sample->swatch);
-            cairo_fill(cri);
-        }
+        // "handles"
+        cairo_arc(cri, x, y, cr, 0., 2. * M_PI);
+        // crosshair
+        cairo_move_to(cri, x - cr, y);
+        cairo_line_to(cri, x + cr, y);
+        cairo_move_to(cri, x, y - cr);
+        cairo_line_to(cri, x, y + cr);
     }
+
+    // draw a light line with a dark outline for legibility
+    cairo_set_line_width(cri, lw * 3.0);
+    cairo_set_source_rgba(cri, 0.0, 0.0, 0.0, 0.4);
+    cairo_stroke_preserve(cri);
+
+    cairo_set_line_width(cri, lw);
+    cairo_set_source_rgba(cri, 1.0, 1.0, 1.0, 0.8);
+    cairo_stroke(cri);
 
     cairo_restore(cri);
 }
@@ -734,30 +681,13 @@ void expose(dt_view_t *self, cairo_t *cri, const int32_t width, const int32_t he
     cairo_save(cri);
     cairo_clip(cri);
 
-    // Displaying sample areas if enabled
-    if (darktable.lib->proxy.colorpicker.live_samples &&
-        (darktable.lib->proxy.colorpicker.display_samples ||
-         (darktable.lib->proxy.colorpicker.selected_sample &&
-          darktable.lib->proxy.colorpicker.selected_sample !=
-              darktable.lib->proxy.colorpicker.primary_sample)))
-    {
-        dt_print_pipe(DT_DEBUG_EXPOSE, "expose livesamples", port->pipe, NULL, DT_DEVICE_NONE, NULL,
-                      NULL, "%dx%d, px=%d py=%d", width, height, pointerx, pointery);
-        _darkroom_pickers_draw(self, cri, wd, ht, zoom_scale,
-                               darktable.lib->proxy.colorpicker.live_samples, FALSE);
-    }
-
     // draw colorpicker for in focus module or execute module callback hook
-    // FIXME: draw picker in gui_post_expose() hook in
-    // libs/colorpicker.c -- catch would be that live samples would
-    // appear over guides, softproof/gamut text overlay would be hidden
-    // by picker
     if (dt_iop_color_picker_is_visible(dev))
     {
         dt_print_pipe(DT_DEBUG_EXPOSE, "expose picker", port->pipe, NULL, DT_DEVICE_NONE, NULL,
                       NULL, "%dx%d, px=%d py=%d", width, height, pointerx, pointery);
-        GSList samples = {.data = darktable.lib->proxy.colorpicker.primary_sample, .next = NULL};
-        _darkroom_pickers_draw(self, cri, wd, ht, zoom_scale, &samples, TRUE);
+        _darkroom_picker_draw(self, cri, zoom_scale,
+                              darktable.lib->proxy.colorpicker.primary_sample);
     }
 
     cairo_restore(cri);
@@ -3223,6 +3153,10 @@ void enter(dt_view_t *self)
     dt_print(DT_DEBUG_CONTROL, "[run_job+] 11 %f in darkroom mode", dt_get_wtime());
     dt_develop_t *dev = self->data;
 
+    // The removed global color-picker panel used to own this shared sample.
+    // Create it before any IOP GUI or preview pipe can request picker data.
+    dt_iop_color_picker_init();
+
     // Reset shutdown flags on all pipes - they may still be set from previous session
     if (dev->full.pipe)
         dt_atomic_set_int(&dev->full.pipe->shutdown, DT_DEV_PIXELPIPE_STOP_NO);
@@ -3351,7 +3285,6 @@ void enter(dt_view_t *self)
 
     // connect to preference change for callback for button hiding and constrain_zoom
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_PREFERENCES_CHANGE, _preference_changed);
-    dt_iop_color_picker_init();
 
     dt_image_check_camera_missing_sample(&dev->image_storage);
 
@@ -3359,9 +3292,9 @@ void enter(dt_view_t *self)
 
 void leave(dt_view_t *self)
 {
-    dt_iop_color_picker_cleanup();
     if (darktable.lib->proxy.colorpicker.picker_proxy)
         dt_iop_color_picker_reset(darktable.lib->proxy.colorpicker.picker_proxy->module, FALSE);
+    dt_iop_color_picker_cleanup();
 
     DT_CONTROL_SIGNAL_DISCONNECT_ALL(self, "darkroom");
 
@@ -3585,7 +3518,7 @@ void mouse_moved(dt_view_t *self, const double x, const double y, const double p
         _get_zoom_pos(&dev->full, x, y, &zoom_x, &zoom_y, &zoom_scale);
         dt_boundingbox_t pbox = {zoom_x, zoom_y};
 
-        if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+        if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
         {
             dt_pickerpoint_t corner;
             dt_color_picker_transform_box(dev, 1, sample->point, corner, TRUE);
@@ -3596,7 +3529,7 @@ void mouse_moved(dt_view_t *self, const double x, const double y, const double p
             pbox[3] = MIN(1.0, MAX(corner[1], zoom_y) + delta_y);
             dt_color_picker_backtransform_box(dev, 2, pbox, sample->box);
         }
-        else if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
+        else if (sample->size == DT_COLOR_PICKER_SIZE_POINT)
         {
             dt_color_picker_backtransform_box(dev, 1, pbox, sample->point);
         }
@@ -3666,7 +3599,7 @@ int button_released(dt_view_t *self, const double x, const double y, const int w
     if (dt_iop_color_picker_is_visible(dev) && which == GDK_BUTTON_PRIMARY)
     {
         // only sample box picker at end, for speed
-        if (darktable.lib->proxy.colorpicker.primary_sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+        if (darktable.lib->proxy.colorpicker.primary_sample->size == DT_COLOR_PICKER_SIZE_BOX)
         {
             dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
             dt_control_queue_redraw_center();
@@ -3746,12 +3679,12 @@ int button_pressed(dt_view_t *self, double x, double y, double pressure, const i
         // For a Ctrl+Click we do change the color picker from/to area <-> point
         if (which == GDK_BUTTON_PRIMARY && dt_modifier_is(state, GDK_CONTROL_MASK))
         {
-            if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
+            if (sample->size == DT_COLOR_PICKER_SIZE_POINT)
             {
                 // dt_lib_colorpicker_reset_box_area(sample->box);
                 dt_lib_colorpicker_set_box_area(darktable.lib, sample->box);
             }
-            else if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+            else if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
             {
                 dt_lib_colorpicker_set_point(darktable.lib, sample->point);
             }
@@ -3768,7 +3701,7 @@ int button_pressed(dt_view_t *self, double x, double y, double pressure, const i
             sample->point[0] = zoom_x;
             sample->point[1] = zoom_y;
 
-            if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+            if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
             {
                 dt_boundingbox_t sbox;
                 dt_color_picker_transform_box(dev, 2, sample->box, sbox, TRUE);
@@ -3807,46 +3740,7 @@ int button_pressed(dt_view_t *self, double x, double y, double pressure, const i
 
         if (which == GDK_BUTTON_SECONDARY)
         {
-            // apply a live sample's area to the active picker?
-            // FIXME: this is a naive implementation, nicer would be to cycle through overlapping samples then reset
-            dt_iop_color_picker_t *picker = darktable.lib->proxy.colorpicker.picker_proxy;
-            if (darktable.lib->proxy.colorpicker.display_samples)
-            {
-                _get_zoom_pos(&dev->full, x, y, &zoom_x, &zoom_y, &zoom_scale);
-                for (GSList *samples = darktable.lib->proxy.colorpicker.live_samples; samples;
-                     samples = g_slist_next(samples))
-                {
-                    dt_colorpicker_sample_t *live_sample = samples->data;
-                    dt_boundingbox_t sbox;
-                    if (live_sample->size == DT_LIB_COLORPICKER_SIZE_BOX &&
-                        (picker->flags & DT_COLOR_PICKER_AREA))
-                    {
-                        dt_color_picker_transform_box(dev, 2, live_sample->box, sbox, TRUE);
-                        if (zoom_x < sbox[0] || zoom_x > sbox[2] || zoom_y < sbox[1] ||
-                            zoom_y > sbox[3])
-                            continue;
-                        dt_lib_colorpicker_set_box_area(darktable.lib, live_sample->box);
-                    }
-                    else if (live_sample->size == DT_LIB_COLORPICKER_SIZE_POINT &&
-                             (picker->flags & DT_COLOR_PICKER_POINT))
-                    {
-                        // magic values derived from _darkroom_pickers_draw
-                        float slop_px = MAX(26.0f, roundf(3.0f * zoom_scale));
-                        const float slop_x = slop_px / (procw * zoom_scale);
-                        const float slop_y = slop_px / (proch * zoom_scale);
-                        dt_color_picker_transform_box(dev, 1, live_sample->point, sbox, TRUE);
-                        if (!feqf(zoom_x, sbox[0], slop_x) || !feqf(zoom_y, sbox[1], slop_y))
-                            continue;
-                        dt_lib_colorpicker_set_point(darktable.lib, live_sample->point);
-                    }
-                    else
-                        continue;
-                    dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
-                    dt_control_queue_redraw_center();
-                    return 1;
-                }
-            }
-            if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+            if (sample->size == DT_COLOR_PICKER_SIZE_BOX)
             {
                 dt_pickerbox_t box;
                 dt_lib_colorpicker_reset_box_area(box);

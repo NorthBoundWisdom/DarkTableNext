@@ -26,7 +26,6 @@
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
 #include "gui/context_menu.h"
-#include "libs/colorpicker.h"
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(5)
 

@@ -17,6 +17,7 @@
 */
 
 #include "bauhaus/bauhaus.h"
+#include "common/act_on.h"
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/image_cache.h"
@@ -28,6 +29,7 @@
 #include "gui/gtk.h"
 #include "libs/lib.h"
 #include "libs/lib_api.h"
+#include "views/view.h"
 
 #include <ctype.h>
 
@@ -40,6 +42,9 @@ typedef struct dt_lib_navigation_t
     int dragging;
     int zoom_w, zoom_h;
     GtkWidget *zoom;
+    cairo_surface_t *lighttable_surface;
+    dt_imgid_t lighttable_imgid;
+    int lighttable_width, lighttable_height;
 } dt_lib_navigation_t;
 
 /* expose function for navigation module */
@@ -77,7 +82,7 @@ const char *name(dt_lib_module_t *self)
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-    return DT_VIEW_DARKROOM;
+    return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM;
 }
 
 uint32_t container(dt_lib_module_t *self)
@@ -98,6 +103,12 @@ int position(const dt_lib_module_t *self)
 static void _lib_navigation_control_redraw_callback(gpointer instance, dt_lib_module_t *self)
 {
     dt_lib_navigation_t *d = self->data;
+
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+    {
+        gtk_widget_queue_draw(self->widget);
+        return;
+    }
 
     dt_dev_viewport_t *port = &darktable.develop->full;
 
@@ -124,6 +135,41 @@ static void _lib_navigation_control_redraw_callback(gpointer instance, dt_lib_mo
     g_free(zoomline);
 
     gtk_widget_queue_draw(gtk_bin_get_child(GTK_BIN(self->widget)));
+}
+
+static void _lib_navigation_clear_lighttable_surface(dt_lib_navigation_t *d)
+{
+    if (d->lighttable_surface)
+        cairo_surface_destroy(d->lighttable_surface);
+    d->lighttable_surface = NULL;
+    d->lighttable_imgid = NO_IMGID;
+    d->lighttable_width = 0;
+    d->lighttable_height = 0;
+}
+
+static void _lib_navigation_lighttable_image_changed(gpointer instance, dt_lib_module_t *self)
+{
+    if (dt_view_get_current() != DT_VIEW_LIGHTTABLE)
+        return;
+
+    dt_lib_navigation_t *d = self->data;
+    if (d->lighttable_imgid == dt_act_on_get_main_image())
+        return;
+
+    _lib_navigation_clear_lighttable_surface(d);
+    gtk_widget_queue_draw(self->widget);
+}
+
+static void _lib_navigation_lighttable_mipmap_updated(gpointer instance, const dt_imgid_t imgid,
+                                                      dt_lib_module_t *self)
+{
+    dt_lib_navigation_t *d = self->data;
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE &&
+        (!dt_is_valid_imgid(d->lighttable_imgid) || d->lighttable_imgid == imgid))
+    {
+        _lib_navigation_clear_lighttable_surface(d);
+        gtk_widget_queue_draw(self->widget);
+    }
 }
 
 static void _lib_navigation_collapse_callback(dt_action_t *action)
@@ -197,6 +243,7 @@ void gui_init(dt_lib_module_t *self)
     /* initialize ui widgets */
     dt_lib_navigation_t *d = g_malloc0(sizeof(dt_lib_navigation_t));
     self->data = (void *)d;
+    d->lighttable_imgid = NO_IMGID;
 
     /* create drawingarea */
     GtkWidget *thumbnail = dt_ui_resize_wrap(NULL, 0, "plugins/darkroom/navigation/graphheight");
@@ -238,6 +285,14 @@ void gui_init(dt_lib_module_t *self)
                              _lib_navigation_control_redraw_callback);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_CONTROL_NAVIGATION_REDRAW,
                              _lib_navigation_control_redraw_callback);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE,
+                             _lib_navigation_lighttable_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_ACTIVE_IMAGES_CHANGE,
+                             _lib_navigation_lighttable_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_SELECTION_CHANGED,
+                             _lib_navigation_lighttable_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_DEVELOP_MIPMAP_UPDATED,
+                             _lib_navigation_lighttable_mipmap_updated);
 
     DT_BAUHAUS_COMBOBOX_NEW_FULL(d->zoom, darktable.view_manager->proxy.darkroom.view, NULL,
                                  N_("zoom"), _("image zoom level"), -1, _zoom_changed, NULL,
@@ -268,8 +323,19 @@ void gui_init(dt_lib_module_t *self)
     darktable.lib->proxy.navigation.module = self;
 }
 
+void view_enter(dt_lib_module_t *self, dt_view_t *old_view, dt_view_t *new_view)
+{
+    dt_lib_navigation_t *d = self->data;
+    const gboolean lighttable = new_view->view(new_view) == DT_VIEW_LIGHTTABLE;
+    gtk_widget_set_visible(d->zoom, !lighttable);
+    if (lighttable)
+        _lib_navigation_clear_lighttable_surface(d);
+    gtk_widget_queue_draw(self->widget);
+}
+
 void gui_cleanup(dt_lib_module_t *self)
 {
+    _lib_navigation_clear_lighttable_surface(self->data);
     g_free(self->data);
     self->data = NULL;
 }
@@ -280,8 +346,6 @@ static gboolean _lib_navigation_draw_callback(GtkWidget *widget, cairo_t *crf, g
     gtk_widget_get_allocation(widget, &allocation);
     int width = allocation.width, height = allocation.height;
 
-    dt_develop_t *dev = darktable.develop;
-
     /* get the current style */
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
@@ -289,60 +353,100 @@ static gboolean _lib_navigation_draw_callback(GtkWidget *widget, cairo_t *crf, g
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
     gtk_render_background(context, cr, 0, 0, allocation.width, allocation.height);
 
-    /* draw navigation image if available */
-    if (dev->preview_pipe->backbuf && dev->image_storage.id == dev->preview_pipe->output_imgid)
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE)
     {
-        dt_pthread_mutex_t *mutex = &dev->preview_pipe->backbuf_mutex;
-        dt_pthread_mutex_lock(mutex);
+        dt_lib_module_t *self = user_data;
+        dt_lib_navigation_t *d = self->data;
+        const dt_imgid_t imgid = dt_act_on_get_main_image();
+        const int target_width = MAX(1, width - 2 * DT_NAVIGATION_INSET);
+        const int target_height = MAX(1, height - 2 * DT_NAVIGATION_INSET);
 
-        cairo_save(cr);
-        const int wd = dev->preview_pipe->backbuf_width;
-        const int ht = dev->preview_pipe->backbuf_height;
-        const float scale = fminf(width / (float)wd, height / (float)ht);
-
-        const int stride = cairo_format_stride_for_width(CAIRO_FORMAT_RGB24, wd);
-        cairo_surface_t *surface = cairo_image_surface_create_for_data(
-            dev->preview_pipe->backbuf, CAIRO_FORMAT_RGB24, wd, ht, stride);
-        cairo_translate(cr, width / 2.0, height / 2.0f);
-        cairo_scale(cr, scale, scale);
-        cairo_translate(cr, -.5f * wd, -.5f * ht);
-
-        cairo_rectangle(cr, 0, 0, wd, ht);
-        cairo_set_source_surface(cr, surface, 0, 0);
-        cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_GOOD);
-        cairo_fill(cr);
-
-        // draw box where we are
-        float zoom_x, zoom_y, boxw, boxh;
-        if (dt_dev_get_zoom_bounds(&dev->full, &zoom_x, &zoom_y, &boxw, &boxh))
+        if (!dt_is_valid_imgid(imgid))
+            _lib_navigation_clear_lighttable_surface(d);
+        else if (!d->lighttable_surface || d->lighttable_imgid != imgid ||
+                 d->lighttable_width != target_width || d->lighttable_height != target_height)
         {
-            // Add a dark overlay on the picture to make it fade
+            _lib_navigation_clear_lighttable_surface(d);
+            const dt_view_surface_value_t result =
+                dt_view_image_get_surface(imgid, target_width, target_height,
+                                          &d->lighttable_surface, TRUE);
+            if (result == DT_VIEW_SURFACE_OK || result == DT_VIEW_SURFACE_SMALLER)
+            {
+                d->lighttable_imgid = imgid;
+                d->lighttable_width = target_width;
+                d->lighttable_height = target_height;
+            }
+        }
+
+        if (d->lighttable_surface)
+        {
+            const int surface_width = cairo_image_surface_get_width(d->lighttable_surface);
+            const int surface_height = cairo_image_surface_get_height(d->lighttable_surface);
+            cairo_set_source_surface(cr, d->lighttable_surface, (width - surface_width) / 2.0,
+                                     (height - surface_height) / 2.0);
+            cairo_paint(cr);
+        }
+    }
+    else
+    {
+        dt_develop_t *dev = darktable.develop;
+
+        /* draw navigation image if available */
+        if (dev && dev->preview_pipe && dev->preview_pipe->backbuf &&
+            dev->image_storage.id == dev->preview_pipe->output_imgid)
+        {
+            dt_pthread_mutex_t *mutex = &dev->preview_pipe->backbuf_mutex;
+            dt_pthread_mutex_lock(mutex);
+
+            cairo_save(cr);
+            const int wd = dev->preview_pipe->backbuf_width;
+            const int ht = dev->preview_pipe->backbuf_height;
+            const float scale = fminf(width / (float)wd, height / (float)ht);
+
+            const int stride = cairo_format_stride_for_width(CAIRO_FORMAT_RGB24, wd);
+            cairo_surface_t *surface = cairo_image_surface_create_for_data(
+                dev->preview_pipe->backbuf, CAIRO_FORMAT_RGB24, wd, ht, stride);
+            cairo_translate(cr, width / 2.0, height / 2.0f);
+            cairo_scale(cr, scale, scale);
+            cairo_translate(cr, -.5f * wd, -.5f * ht);
+
             cairo_rectangle(cr, 0, 0, wd, ht);
-            cairo_set_source_rgba(cr, 0, 0, 0, 0.5);
+            cairo_set_source_surface(cr, surface, 0, 0);
+            cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_GOOD);
             cairo_fill(cr);
 
-            // Repaint the original image in the area of interest
-            cairo_set_source_surface(cr, surface, 0, 0);
-            cairo_translate(cr, wd * (.5f + zoom_x), ht * (.5f + zoom_y));
-            boxw *= wd;
-            boxh *= ht;
-            cairo_rectangle(cr, -boxw / 2 - 1, -boxh / 2 - 1, boxw + 2, boxh + 2);
-            cairo_clip_preserve(cr);
-            cairo_fill_preserve(cr);
+            // draw box where we are
+            float zoom_x, zoom_y, boxw, boxh;
+            if (dt_dev_get_zoom_bounds(&dev->full, &zoom_x, &zoom_y, &boxw, &boxh))
+            {
+                // Add a dark overlay on the picture to make it fade
+                cairo_rectangle(cr, 0, 0, wd, ht);
+                cairo_set_source_rgba(cr, 0, 0, 0, 0.5);
+                cairo_fill(cr);
 
-            // Paint the external border in black
-            cairo_set_source_rgb(cr, 0., 0., 0.);
-            cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(1));
-            cairo_stroke(cr);
+                // Repaint the original image in the area of interest
+                cairo_set_source_surface(cr, surface, 0, 0);
+                cairo_translate(cr, wd * (.5f + zoom_x), ht * (.5f + zoom_y));
+                boxw *= wd;
+                boxh *= ht;
+                cairo_rectangle(cr, -boxw / 2 - 1, -boxh / 2 - 1, boxw + 2, boxh + 2);
+                cairo_clip_preserve(cr);
+                cairo_fill_preserve(cr);
 
-            // Paint the internal border in white
-            cairo_set_source_rgb(cr, 1., 1., 1.);
-            cairo_rectangle(cr, -boxw / 2, -boxh / 2, boxw, boxh);
-            cairo_stroke(cr);
+                // Paint the external border in black
+                cairo_set_source_rgb(cr, 0., 0., 0.);
+                cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(1));
+                cairo_stroke(cr);
+
+                // Paint the internal border in white
+                cairo_set_source_rgb(cr, 1., 1., 1.);
+                cairo_rectangle(cr, -boxw / 2, -boxh / 2, boxw, boxh);
+                cairo_stroke(cr);
+            }
+            cairo_restore(cr);
+
+            dt_pthread_mutex_unlock(mutex);
         }
-        cairo_restore(cr);
-
-        dt_pthread_mutex_unlock(mutex);
     }
 
     /* blit memsurface into widget */
@@ -357,6 +461,9 @@ static gboolean _lib_navigation_draw_callback(GtkWidget *widget, cairo_t *crf, g
 void _lib_navigation_set_position(dt_lib_module_t *self, const double x, const double y,
                                   const int wd, const int ht)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     dt_lib_navigation_t *d = self->data;
 
     if (d->dragging)
@@ -383,6 +490,9 @@ void _lib_navigation_set_position(dt_lib_module_t *self, const double x, const d
 static gboolean _lib_navigation_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
                                                        dt_lib_module_t *self)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return FALSE;
+
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
     _lib_navigation_set_position(self, event->x, event->y, allocation.width, allocation.height);
@@ -391,6 +501,9 @@ static gboolean _lib_navigation_motion_notify_callback(GtkWidget *widget, GdkEve
 
 static void _zoom_changed(GtkWidget *widget, gpointer user_data)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     int val = dt_bauhaus_combobox_get(widget);
     if (val == -1 && 1 != sscanf(dt_bauhaus_combobox_get_text(widget), "%d", &val))
         return;
@@ -432,8 +545,12 @@ static void _zoom_changed(GtkWidget *widget, gpointer user_data)
 static gboolean _lib_navigation_widget_to_center(GtkEventController *controller, const gdouble in_x,
                                                  const gdouble in_y, gdouble *out_x, gdouble *out_y)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return FALSE;
+
     dt_develop_t *dev = darktable.develop;
-    if (!dev->preview_pipe->backbuf || dev->image_storage.id != dev->preview_pipe->output_imgid)
+    if (!dev || !dev->preview_pipe || !dev->preview_pipe->backbuf ||
+        dev->image_storage.id != dev->preview_pipe->output_imgid)
         return FALSE;
     dt_dev_viewport_t *port = &dev->full;
 
@@ -477,6 +594,9 @@ static void _lib_navigation_scroll_callback(GtkEventControllerScroll *controller
                                             // FIXME: if unused don't pass
                                             dt_lib_module_t *self)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     GdkEvent *event = gtk_get_current_event();
     if (event)
     {
@@ -504,6 +624,12 @@ static gdouble pinch_last_scale = 1.0;
 static void _lib_navigation_pinch_begin_callback(GtkGesture *gesture, GdkEventSequence *sequence,
                                                  dt_lib_module_t *self)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+    {
+        gtk_gesture_set_state(gesture, GTK_EVENT_SEQUENCE_DENIED);
+        return;
+    }
+
     gtk_gesture_set_state(gesture, GTK_EVENT_SEQUENCE_CLAIMED);
     pinch_last_scale = 1.0;
 }
@@ -511,6 +637,9 @@ static void _lib_navigation_pinch_begin_callback(GtkGesture *gesture, GdkEventSe
 static void _lib_navigation_pinch_scale_callback(GtkGesture *gesture, const gdouble scale,
                                                  dt_lib_module_t *self)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     gdouble wx, wy, cx, cy;
     if (gtk_gesture_get_bounding_box_center(gesture, &wx, &wy) &&
         _lib_navigation_widget_to_center(GTK_EVENT_CONTROLLER(gesture), wx, wy, &cx, &cy))
@@ -534,6 +663,9 @@ static void _lib_navigation_pinch_scale_callback(GtkGesture *gesture, const gdou
 static gboolean _lib_navigation_button_press_callback(GtkWidget *widget, GdkEvent *event,
                                                       dt_lib_module_t *self)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return FALSE;
+
     dt_lib_navigation_t *d = self->data;
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
@@ -563,7 +695,7 @@ static gboolean _lib_navigation_button_release_callback(GtkWidget *widget, GdkEv
     dt_lib_navigation_t *d = self->data;
     d->dragging = 0;
 
-    return TRUE;
+    return dt_view_get_current() == DT_VIEW_DARKROOM;
 }
 
 static gboolean _lib_navigation_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,

@@ -29,7 +29,6 @@
 #include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/presets.h"
-#include "libs/colorpicker.h"
 
 DT_MODULE_INTROSPECTION(6, dt_iop_colorzones_params_t)
 
@@ -563,98 +562,6 @@ static void _draw_color_picker(dt_iop_module_t *self, cairo_t *cr, dt_iop_colorz
                                const float *const picker_color, const float *const picker_min,
                                const float *const picker_max)
 {
-    if (self->request_color_pick == DT_REQUEST_COLORPICK_MODULE &&
-        (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker)) ||
-         gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker_set_values))))
-    {
-        // the global live samples ...
-        GSList *samples = darktable.lib->proxy.colorpicker.live_samples;
-        if (samples)
-        {
-            const dt_iop_order_iccprofile_info_t *const histogram_profile =
-                dt_ioppr_get_histogram_profile_info(self->dev);
-            const dt_iop_order_iccprofile_info_t *const work_profile =
-                dt_ioppr_get_iop_work_profile_info(self, self->dev->iop);
-            dt_aligned_pixel_t pick_mean, pick_min, pick_max;
-            dt_iop_colorspace_type_t converted_cst;
-
-            if (work_profile && histogram_profile)
-            {
-                dt_colorpicker_sample_t *sample = NULL;
-                for (; samples; samples = g_slist_next(samples))
-                {
-                    sample = samples->data;
-
-                    float picked_i = -1.0f;
-                    float picked_min_i = -1.0f;
-                    float picked_max_i = -1.0f;
-
-                    // this functions need a 4c image
-                    for (int k = 0; k < 3; k++)
-                    {
-                        pick_mean[k] = sample->scope[DT_PICK_MEAN][k];
-                        pick_min[k] = sample->scope[DT_PICK_MIN][k];
-                        pick_max[k] = sample->scope[DT_PICK_MAX][k];
-                    }
-                    pick_mean[3] = pick_min[3] = pick_max[3] = 1.f;
-
-                    dt_ioppr_transform_image_colorspace_rgb(
-                        pick_mean, pick_mean, 1, 1, histogram_profile, work_profile, "color zones");
-                    dt_ioppr_transform_image_colorspace_rgb(
-                        pick_min, pick_min, 1, 1, histogram_profile, work_profile, "color zones");
-                    dt_ioppr_transform_image_colorspace_rgb(
-                        pick_max, pick_max, 1, 1, histogram_profile, work_profile, "color zones");
-
-                    dt_ioppr_transform_image_colorspace(self, pick_mean, pick_mean, 1, 1,
-                                                        IOP_CS_RGB, IOP_CS_LAB, &converted_cst,
-                                                        work_profile);
-                    dt_ioppr_transform_image_colorspace(self, pick_min, pick_min, 1, 1, IOP_CS_RGB,
-                                                        IOP_CS_LAB, &converted_cst, work_profile);
-                    dt_ioppr_transform_image_colorspace(self, pick_max, pick_max, 1, 1, IOP_CS_RGB,
-                                                        IOP_CS_LAB, &converted_cst, work_profile);
-
-                    dt_Lab_2_LCH(pick_mean, pick_mean);
-                    dt_Lab_2_LCH(pick_min, pick_min);
-                    dt_Lab_2_LCH(pick_max, pick_max);
-
-                    switch (p->channel)
-                    {
-                    // select by channel, abscissa:
-                    case DT_IOP_COLORZONES_L:
-                        picked_i = pick_mean[0] / 100.0f;
-                        picked_min_i = pick_min[0] / 100.0f;
-                        picked_max_i = pick_max[0] / 100.0f;
-                        break;
-                    case DT_IOP_COLORZONES_C:
-                        picked_i = pick_mean[1] / (128.0f * M_SQRT2_F);
-                        picked_min_i = pick_min[1] / (128.0f * M_SQRT2_F);
-                        picked_max_i = pick_max[1] / (128.0f * M_SQRT2_F);
-                        break;
-                    default: // case DT_IOP_COLORZONES_h:
-                        picked_i = pick_mean[2];
-                        picked_min_i = pick_min[2];
-                        picked_max_i = pick_max[2];
-                        break;
-                    }
-
-                    // Convert abcissa to log coordinates if needed
-                    picked_i = _curve_to_mouse(picked_i, g->zoom_factor, g->offset_x);
-                    picked_min_i = _curve_to_mouse(picked_min_i, g->zoom_factor, g->offset_x);
-                    picked_max_i = _curve_to_mouse(picked_max_i, g->zoom_factor, g->offset_x);
-
-                    cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.15);
-                    cairo_rectangle(cr, width * picked_min_i, 0,
-                                    width * fmax(picked_max_i - picked_min_i, 0.0f), height);
-                    cairo_fill(cr);
-                    cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.5);
-                    cairo_move_to(cr, width * picked_i, 0);
-                    cairo_line_to(cr, width * picked_i, height);
-                    cairo_stroke(cr);
-                }
-            }
-        }
-    }
-
     if (self->request_color_pick == DT_REQUEST_COLORPICK_MODULE &&
         (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker)) ||
          gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker_set_values))))

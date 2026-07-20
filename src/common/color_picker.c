@@ -167,7 +167,7 @@ static inline void _color_picker_xtrans(dt_aligned_pixel_t acc, dt_aligned_pixel
 }
 
 static void _color_picker_work_4ch(const float *const source, const dt_iop_roi_t *const roi,
-                                   const int *const box, lib_colorpicker_stats pick,
+                                   const int *const box, dt_colorpicker_stats_t pick,
                                    const dt_iop_order_iccprofile_info_t *const profile,
                                    const picker_worker_4ch worker, const size_t min_for_threads)
 {
@@ -202,7 +202,7 @@ static void _color_picker_work_4ch(const float *const source, const dt_iop_roi_t
 }
 
 static void _color_picker_nomat(const float *const source, const dt_iop_roi_t *const roi,
-                                const int *const box, lib_colorpicker_stats pick,
+                                const int *const box, dt_colorpicker_stats_t pick,
                                 const dt_iop_order_iccprofile_info_t *const profile)
 {
     cmsHPROFILE *input =
@@ -249,7 +249,7 @@ static void _color_picker_nomat(const float *const source, const dt_iop_roi_t *c
 }
 
 static void _color_picker_work_1ch(const float *const pixel, const dt_iop_roi_t *const roi,
-                                   const int *const box, lib_colorpicker_stats pick,
+                                   const int *const box, dt_colorpicker_stats_t pick,
                                    const void *const data, const picker_worker_1ch worker,
                                    const size_t min_for_threads)
 {
@@ -385,7 +385,7 @@ gboolean dt_color_picker_box(dt_iop_module_t *module, const dt_iop_roi_t *roi,
 
     const int width = roi->width;
     const int height = roi->height;
-    const gboolean isbox = sample->size == DT_LIB_COLORPICKER_SIZE_BOX;
+    const gboolean isbox = sample->size == DT_COLOR_PICKER_SIZE_BOX;
 
     /* get absolute pixel coordinates in final preview image.
      we transform back all 4 corner locations to current module coordinates,
@@ -432,7 +432,7 @@ gboolean dt_color_picker_box(dt_iop_module_t *module, const dt_iop_roi_t *roi,
 
 void dt_color_picker_helper(const dt_iop_buffer_dsc_t *dsc, const float *const pixel,
                             const dt_iop_roi_t *roi, const int *const box, const gboolean denoise,
-                            lib_colorpicker_stats pick, const dt_iop_colorspace_type_t image_cst,
+                            dt_colorpicker_stats_t pick, const dt_iop_colorspace_type_t image_cst,
                             const dt_iop_colorspace_type_t picker_cst,
                             const dt_iop_order_iccprofile_info_t *const profile)
 {

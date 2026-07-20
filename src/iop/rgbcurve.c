@@ -29,7 +29,6 @@
 #include "gui/accelerators.h"
 #include "gui/context_menu.h"
 #include "gui/gtk.h"
-#include "libs/colorpicker.h"
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(1)
 #define DT_IOP_RGBCURVE_RES 256
@@ -742,8 +741,6 @@ static gboolean _area_draw_callback(GtkWidget *widget, cairo_t *crf, dt_iop_modu
 {
     dt_iop_rgbcurve_gui_data_t *g = self->gui_data;
     dt_iop_rgbcurve_params_t *p = self->params;
-    dt_develop_t *dev = darktable.develop;
-
     const int ch = g->channel;
     const int nodes = p->curve_num_nodes[ch];
     const int autoscale = p->curve_autoscale;
@@ -908,63 +905,7 @@ static gboolean _area_draw_callback(GtkWidget *widget, cairo_t *crf, dt_iop_modu
 
             dt_aligned_pixel_t picker_mean, picker_min, picker_max;
 
-            // the global live samples ...
-            GSList *samples = darktable.lib->proxy.colorpicker.live_samples;
-            if (samples)
-            {
-                const dt_iop_order_iccprofile_info_t *const histogram_profile =
-                    dt_ioppr_get_histogram_profile_info(dev);
-                if (work_profile && histogram_profile)
-                {
-                    for (; samples; samples = g_slist_next(samples))
-                    {
-                        dt_colorpicker_sample_t *sample = samples->data;
-
-                        // this functions need a 4c image
-                        for (int k = 0; k < 3; k++)
-                        {
-                            picker_mean[k] = sample->scope[DT_PICK_MEAN][k];
-                            picker_min[k] = sample->scope[DT_PICK_MIN][k];
-                            picker_max[k] = sample->scope[DT_PICK_MAX][k];
-                        }
-                        picker_mean[3] = picker_min[3] = picker_max[3] = 1.f;
-
-                        dt_ioppr_transform_image_colorspace_rgb(picker_mean, picker_mean, 1, 1,
-                                                                histogram_profile, work_profile,
-                                                                "rgb curve");
-                        dt_ioppr_transform_image_colorspace_rgb(picker_min, picker_min, 1, 1,
-                                                                histogram_profile, work_profile,
-                                                                "rgb curve");
-                        dt_ioppr_transform_image_colorspace_rgb(picker_max, picker_max, 1, 1,
-                                                                histogram_profile, work_profile,
-                                                                "rgb curve");
-
-                        picker_scale(picker_mean, picker_mean, p, work_profile);
-                        picker_scale(picker_min, picker_min, p, work_profile);
-                        picker_scale(picker_max, picker_max, p, work_profile);
-
-                        // Convert abcissa to log coordinates if needed
-                        picker_min[ch] =
-                            _curve_to_mouse(picker_min[ch], g->zoom_factor, g->offset_x);
-                        picker_max[ch] =
-                            _curve_to_mouse(picker_max[ch], g->zoom_factor, g->offset_x);
-                        picker_mean[ch] =
-                            _curve_to_mouse(picker_mean[ch], g->zoom_factor, g->offset_x);
-
-                        cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.15);
-                        cairo_rectangle(cr, width * picker_min[ch], 0,
-                                        width * fmax(picker_max[ch] - picker_min[ch], 0.0f),
-                                        -height);
-                        cairo_fill(cr);
-                        cairo_set_source_rgba(cr, 0.5, 0.7, 0.5, 0.5);
-                        cairo_move_to(cr, width * picker_mean[ch], 0);
-                        cairo_line_to(cr, width * picker_mean[ch], -height);
-                        cairo_stroke(cr);
-                    }
-                }
-            }
-
-            // ... and the local sample
+            // local sample
             if (self->picked_color_max[ch] >= 0.0f)
             {
                 PangoLayout *layout;

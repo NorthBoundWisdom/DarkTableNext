@@ -589,18 +589,6 @@ dialog .sidebar row:selected:hover label,
   padding: 0.56em;
 }
 
-/* Set duplicate module space in darkroom */
-.dt_duplicate_ui grid,
-.dt_duplicate_ui grid > label
-{
-  margin: 0.28em 0.14em;
-}
-
-.dt_duplicate_ui entry
-{
-  margin: 1em 0 1em 0.5em;
-}
-
 /* Set modules name header */
 #module-header
 {
@@ -1670,27 +1658,6 @@ progressbar progress
 /*---------------------
   - Set color pickers -
   ---------------------*/
-/** Module in darkroom left panel **/
-/* the main color picker button */
-#color-picker-button
-{
-  min-height: 1.5em;
-  min-width: 1.5em;
-  border: 0;
-}
-
-#color-picker-area
-{
-  min-height: 5em;
-  margin-bottom: 0.14em;
-}
-
-#live-sample
-{
-  margin: 0.21em 0.21em 0.21em 0;
-  min-width: 2em;
-}
-
 /* Color picker visibility for levels and rgb levels modules.
    be careful to not change that unless you really now what you do */
 #picker-black

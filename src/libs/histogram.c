@@ -16,11 +16,13 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "common/act_on.h"
 #include "common/darktable.h"
 #include "common/color_picker.h"
 #include "gui/accelerators.h"
 #include "scopes.h"
 #include "scopes/vectorscope.h"
+#include "views/view.h"
 
 // FIXME: is this used?
 #ifdef GDK_WINDOWING_QUARTZ
@@ -49,11 +51,14 @@ const char *name(dt_lib_module_t *self)
 
 dt_view_type_flags_t views(dt_lib_module_t *self)
 {
-    return DT_VIEW_DARKROOM;
+    return DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM;
 }
 
 uint32_t container(dt_lib_module_t *self)
 {
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE)
+        return DT_UI_CONTAINER_PANEL_RIGHT_TOP;
+
     return g_strcmp0(dt_conf_get_string_const("plugins/darkroom/histogram/panel_position"),
                      "right") ?
                DT_UI_CONTAINER_PANEL_LEFT_TOP :
@@ -80,69 +85,31 @@ static void _scope_process(struct dt_lib_module_t *self, const float *const inpu
 
     dt_scopes_t *const s = self->data;
 
+    // The scope proxy belongs to the darkroom pixelpipe. A pipe may finish after
+    // the view has already changed; do not let that result replace lighttable data.
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     // special case, clear the scopes
     if (!input)
     {
         dt_pthread_mutex_lock(&s->lock);
-        // FIXME: is better to do this or just advance update_counter by one?
-        for (dt_scopes_mode_type_t i = 0; i < DT_SCOPES_MODE_N; i++)
-            dt_scopes_call_if_exists(&s->modes[i], clear);
+        if (dt_view_get_current() == DT_VIEW_DARKROOM)
+        {
+            // FIXME: is better to do this or just advance update_counter by one?
+            for (dt_scopes_mode_type_t i = 0; i < DT_SCOPES_MODE_N; i++)
+                dt_scopes_call_if_exists(&s->modes[i], clear);
+        }
         dt_pthread_mutex_unlock(&s->lock);
         return;
     }
 
-    // FIXME: scope goes black when click histogram lib colorpicker on
-    // -- is this meant to happen?
-    //
-    // FIXME: scope doesn't redraw when click histogram lib colorpicker
-    // off -- is this meant to happen?
     dt_histogram_roi_t roi = {.width = width,
                               .height = height,
                               .crop_x = 0,
                               .crop_y = 0,
                               .crop_right = 0,
                               .crop_bottom = 0};
-
-    // Constraining the area if the colorpicker is active in area mode
-    //
-    // FIXME: only need to do colorspace conversion below on roi
-    //
-    // FIXME: if the only time we use roi in histogram to limit area is
-    // here, and if we're always doing a colorspace transform in darkroom and
-    // clip to roi during conversion, then can get rid of all roi code
-    // for common/histogram?  when darkroom colorpicker is active,
-    // gui_module is set to colorout
-    if (dt_view_get_current() == DT_VIEW_DARKROOM &&
-        darktable.lib->proxy.colorpicker.restrict_histogram)
-    {
-        const dt_colorpicker_sample_t *const sample =
-            darktable.lib->proxy.colorpicker.primary_sample;
-        const dt_iop_color_picker_t *proxy = darktable.lib->proxy.colorpicker.picker_proxy;
-        if (proxy && !proxy->module)
-        {
-            // FIXME: for histogram process whole image, then pull point
-            // sample #'s from primary_picker->scope_mean (point) or _mean,
-            // _min, _max (as in rgb curve) and draw them as an overlay
-            //
-            // FIXME: for waveform point sample, could process whole image,
-            // then do an overlay of the point sample from
-            // primary_picker->scope_mean as red/green/blue dots (or short
-            // lines) at appropriate position at the horizontal/vertical
-            // position of sample
-            dt_boundingbox_t pos;
-            const gboolean isbox = sample->size == DT_LIB_COLORPICKER_SIZE_BOX;
-            const gboolean ispoint = sample->size == DT_LIB_COLORPICKER_SIZE_POINT;
-            if (ispoint || isbox)
-            {
-                dt_color_picker_transform_box(darktable.develop, isbox ? 2 : 1,
-                                              isbox ? sample->box : sample->point, pos, TRUE);
-                roi.crop_x = MIN(width, MAX(0, pos[0] * width));
-                roi.crop_y = MIN(height, MAX(0, pos[1] * height));
-                roi.crop_right = width - MIN(width, MAX(0, (isbox ? pos[2] : pos[0]) * width));
-                roi.crop_bottom = height - MIN(height, MAX(0, (isbox ? pos[3] : pos[1]) * height));
-            }
-        }
-    }
 
     // Convert pixelpipe output in display RGB to the histogram profile.
 
@@ -168,16 +135,118 @@ static void _scope_process(struct dt_lib_module_t *self, const float *const inpu
                                             profile_info_out, "final histogram");
     dt_pthread_mutex_lock(&s->lock);
 
-    s->update_counter++;
-    // if using a non-rgb profile_info_out as in cmyk softproofing we pass
-    // DT_COLORSPACE_LIN_REC2020 for calculating the vertex_rgb data.
-    dt_scopes_call(s->cur_mode, process, img_display, &roi,
-                   profile_info_out->type ? profile_info_out : fallback);
+    if (dt_view_get_current() == DT_VIEW_DARKROOM)
+    {
+        s->update_counter++;
+        // if using a non-rgb profile_info_out as in cmyk softproofing we pass
+        // DT_COLORSPACE_LIN_REC2020 for calculating the vertex_rgb data.
+        dt_scopes_call(s->cur_mode, process, img_display, &roi,
+                       profile_info_out->type ? profile_info_out : fallback);
+    }
 
     dt_pthread_mutex_unlock(&s->lock);
     dt_free_align(img_display);
 
     dt_show_times_f(&start, "[histogram]", "final %s", dt_scopes_call(s->cur_mode, name));
+}
+
+static void _lighttable_histogram_clear(dt_scopes_t *s, const dt_imgid_t imgid)
+{
+    dt_pthread_mutex_lock(&s->lock);
+    s->update_counter++;
+    dt_scopes_mode_t *histogram = &s->modes[DT_SCOPES_MODE_HISTOGRAM];
+    dt_scopes_call_if_exists(histogram, clear);
+    histogram->update_counter = s->update_counter;
+    s->lighttable_imgid = imgid;
+    dt_pthread_mutex_unlock(&s->lock);
+}
+
+static void _lighttable_histogram_update(dt_lib_module_t *self)
+{
+    if (dt_view_get_current() != DT_VIEW_LIGHTTABLE)
+        return;
+
+    dt_scopes_t *s = self->data;
+    const dt_imgid_t imgid = dt_act_on_get_main_image();
+    if (!dt_is_valid_imgid(imgid))
+    {
+        _lighttable_histogram_clear(s, NO_IMGID);
+        dt_scopes_refresh(s);
+        return;
+    }
+
+    cairo_surface_t *surface = NULL;
+    const dt_view_surface_value_t result =
+        dt_view_image_get_surface(imgid, 512, 512, &surface, TRUE);
+    if ((result != DT_VIEW_SURFACE_OK && result != DT_VIEW_SURFACE_SMALLER) || !surface ||
+        cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
+    {
+        if (surface)
+            cairo_surface_destroy(surface);
+        _lighttable_histogram_clear(s, imgid);
+        dt_scopes_refresh(s);
+        return;
+    }
+
+    cairo_surface_flush(surface);
+    const int width = cairo_image_surface_get_width(surface);
+    const int height = cairo_image_surface_get_height(surface);
+    const int stride = cairo_image_surface_get_stride(surface);
+    const unsigned char *data = cairo_image_surface_get_data(surface);
+    float *input = dt_alloc_align_float((size_t)4 * width * height);
+
+    if (!input)
+    {
+        cairo_surface_destroy(surface);
+        _lighttable_histogram_clear(s, imgid);
+        dt_scopes_refresh(s);
+        return;
+    }
+
+    DT_OMP_FOR()
+    for (int y = 0; y < height; y++)
+    {
+        const uint32_t *row = (const uint32_t *)(data + (size_t)y * stride);
+        float *out = input + (size_t)y * width * 4;
+        for (int x = 0; x < width; x++, out += 4)
+        {
+            const uint32_t pixel = row[x];
+            out[0] = ((pixel >> 16) & 0xff) / 255.0f;
+            out[1] = ((pixel >> 8) & 0xff) / 255.0f;
+            out[2] = (pixel & 0xff) / 255.0f;
+            out[3] = 1.0f;
+        }
+    }
+
+    dt_histogram_roi_t roi = {.width = width,
+                              .height = height,
+                              .crop_x = 0,
+                              .crop_y = 0,
+                              .crop_right = 0,
+                              .crop_bottom = 0};
+    dt_pthread_mutex_lock(&s->lock);
+    s->update_counter++;
+    dt_scopes_call(&s->modes[DT_SCOPES_MODE_HISTOGRAM], process, input, &roi, NULL);
+    s->lighttable_imgid = imgid;
+    dt_pthread_mutex_unlock(&s->lock);
+
+    dt_free_align(input);
+    cairo_surface_destroy(surface);
+    dt_scopes_refresh(s);
+}
+
+static void _lighttable_histogram_image_changed(gpointer instance, dt_lib_module_t *self)
+{
+    _lighttable_histogram_update(self);
+}
+
+static void _lighttable_histogram_mipmap_updated(gpointer instance, const dt_imgid_t imgid,
+                                                 dt_lib_module_t *self)
+{
+    const dt_scopes_t *s = self->data;
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE &&
+        (!dt_is_valid_imgid(s->lighttable_imgid) || s->lighttable_imgid == imgid))
+        _lighttable_histogram_update(self);
 }
 
 // FIXME: make this default in _drawable_draw_callback() and only if there is a
@@ -206,7 +275,9 @@ static gboolean _drawable_draw_callback(GtkWidget *widget, cairo_t *crf, dt_scop
     dt_times_t start;
     dt_get_perf_times(&start);
 
-    dt_scopes_mode_t *const cur_mode = s->cur_mode;
+    dt_scopes_mode_t *const cur_mode = dt_view_get_current() == DT_VIEW_LIGHTTABLE ?
+                                           &s->modes[DT_SCOPES_MODE_HISTOGRAM] :
+                                           s->cur_mode;
     const dt_develop_t *const dev = darktable.develop;
 
     GtkAllocation allocation;
@@ -232,9 +303,12 @@ static gboolean _drawable_draw_callback(GtkWidget *widget, cairo_t *crf, dt_scop
     dt_scopes_call_if_exists(cur_mode, draw_grid, cr, width, height);
 
     dt_pthread_mutex_lock(&s->lock);
-    // draw scope once the darkroom preview pipe is finished
-    if (dev->image_storage.id == dev->preview_pipe->output_imgid &&
-        (cur_mode->update_counter == s->update_counter))
+    const gboolean lighttable_data = dt_view_get_current() == DT_VIEW_LIGHTTABLE &&
+                                     cur_mode == &s->modes[DT_SCOPES_MODE_HISTOGRAM];
+    const gboolean darkroom_data = dt_view_get_current() == DT_VIEW_DARKROOM && dev &&
+                                   dev->preview_pipe &&
+                                   dev->image_storage.id == dev->preview_pipe->output_imgid;
+    if ((lighttable_data || darkroom_data) && cur_mode->update_counter == s->update_counter)
     {
         if (dt_scopes_func_exists(cur_mode, draw_scope_channels))
             dt_scopes_call(cur_mode, draw_scope_channels, cr, width, height, s->channels);
@@ -259,11 +333,17 @@ static gboolean _drawable_draw_callback(GtkWidget *widget, cairo_t *crf, dt_scop
 
 void lib_histogram_update_tooltip(const dt_scopes_t *const scopes)
 {
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE)
+    {
+        gtk_widget_set_tooltip_text(scopes->scope_draw, _("histogram of the selected image"));
+        return;
+    }
+
     const char *const scope_name = dt_scopes_call(scopes->cur_mode, name);
     gchar *tip = g_strdup_printf("%s\n(%s)\n%s\n%s", _(scope_name),
                                  _("use buttons at top of graph to change type"),
                                  _("click on ❓ and then graph for documentation"),
-                                 _("use color picker module to restrict area"));
+                                 _("drag horizontally to change exposure"));
     if (scopes->highlight == DT_SCOPES_HIGHLIGHT_BLACK_POINT)
         dt_util_str_cat(&tip, "\n%s\n%s", _("drag to change black point"),
                         _("double-click resets"));
@@ -277,6 +357,12 @@ void lib_histogram_update_tooltip(const dt_scopes_t *const scopes)
 static void _drawable_drag_begin(GtkGestureDrag *gesture, const gdouble start_x,
                                  const gdouble start_y, dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+    {
+        dt_gui_deny(gesture);
+        return;
+    }
+
     if (s->highlight != DT_SCOPES_HIGHLIGHT_NONE &&
         dt_scopes_func_exists(s->cur_mode, get_exposure_delta) && dt_gui_claim(gesture))
     {
@@ -322,6 +408,9 @@ static void _drawable_drag_update(GtkGestureDrag *gesture, const gdouble offset_
 static void _drawable_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
                                    const double y, dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     if (s->highlight != DT_SCOPES_HIGHLIGHT_NONE && n_press == 2 && dt_gui_claim(gesture))
         dt_dev_exposure_handle_event(2, 0.0, 0, s->highlight == DT_SCOPES_HIGHLIGHT_BLACK_POINT);
 }
@@ -329,6 +418,12 @@ static void _drawable_button_press(GtkGestureSingle *gesture, const int n_press,
 static void _drawable_motion(GtkEventControllerMotion *controller, const double x, const double y,
                              dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+    {
+        s->highlight = DT_SCOPES_HIGHLIGHT_NONE;
+        return;
+    }
+
     if (s->dragging)
         return;
 
@@ -429,6 +524,9 @@ static void _channel_toggle(GtkWidget *button, dt_scopes_t *s)
 static void _eventbox_scroll_callback(GtkEventControllerScroll *self, const gdouble dx,
                                       const gdouble dy, dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     GdkEvent *event = gtk_get_current_event();
     if (!event)
         return;
@@ -481,6 +579,9 @@ static gboolean _pointer_over_widget(GtkWidget *from, GtkWidget *w, const double
 static void _eventbox_motion_notify_callback(GtkEventControllerMotion *controller, const double x,
                                              const double y, dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+        return;
+
     // This is required in order to correctly display the button tooltips
     //
     // FIXME: it should be ok to update button tooltips only when the
@@ -504,6 +605,15 @@ static void _eventbox_motion_notify_callback(GtkEventControllerMotion *controlle
 static void _eventbox_enter_notify_callback(GtkEventControllerMotion *controller, const double x,
                                             const double y, dt_scopes_t *s)
 {
+    if (dt_view_get_current() != DT_VIEW_DARKROOM)
+    {
+        gtk_widget_hide(s->button_box_left);
+        gtk_widget_hide(s->button_box_right);
+        gtk_widget_hide(s->button_box_split);
+        lib_histogram_update_tooltip(s);
+        return;
+    }
+
     // FIXME: do need to do this, or should this already be updated?
     lib_histogram_update_tooltip(s);
     // right after startup, vectorscope can display color harmony box,
@@ -579,18 +689,23 @@ static void _lib_histogram_preview_updated_callback(gpointer instance, const dt_
 void view_enter(struct dt_lib_module_t *self, struct dt_view_t *old_view,
                 struct dt_view_t *new_view)
 {
-    const dt_scopes_t *s = self->data;
+    dt_scopes_t *s = self->data;
     if (new_view->view(new_view) == DT_VIEW_DARKROOM)
     {
         DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_DEVELOP_PREVIEW_PIPE_FINISHED,
                                  _lib_histogram_preview_updated_callback);
+    }
+    else
+    {
+        s->highlight = DT_SCOPES_HIGHLIGHT_NONE;
+        _lighttable_histogram_update(self);
     }
     // button box should be hidden when enter view, unless mouse is over
     // histogram, in which case gtk kindly generates enter events
     gtk_widget_hide(s->button_box_left);
     gtk_widget_hide(s->button_box_right);
     gtk_widget_hide(s->button_box_split);
-
+    lib_histogram_update_tooltip(s);
 }
 
 void view_leave(struct dt_lib_module_t *self, struct dt_view_t *old_view,
@@ -634,6 +749,7 @@ void gui_init(dt_lib_module_t *self)
     const char *str = dt_conf_get_string_const("plugins/darkroom/histogram/mode");
     s->update_counter = 1;
     s->dragging = FALSE;
+    s->lighttable_imgid = NO_IMGID;
     s->cur_mode = &s->modes[DT_SCOPES_MODE_WAVEFORM]; // failsafe
 
     // FIXME: is there a better way to init this?
@@ -646,7 +762,6 @@ void gui_init(dt_lib_module_t *self)
         if (g_strcmp0(str, dt_scopes_call(&s->modes[i], name)) == 0)
             s->cur_mode = &s->modes[i];
     }
-
     dt_pthread_mutex_init(&s->lock, NULL);
 
     s->channels[DT_SCOPES_RGB_RED] = dt_conf_get_bool("plugins/darkroom/histogram/show_red");
@@ -663,6 +778,15 @@ void gui_init(dt_lib_module_t *self)
     darktable.lib->proxy.histogram.set_type = _lib_histogram_set_type;
     darktable.lib->proxy.histogram.get_sector_angles = _lib_histogram_get_sector_angles;
     darktable.lib->proxy.histogram.set_harmony_callback = _lib_histogram_set_harmony_callback;
+
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE,
+                             _lighttable_histogram_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_ACTIVE_IMAGES_CHANGE,
+                             _lighttable_histogram_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_SELECTION_CHANGED,
+                             _lighttable_histogram_image_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_DEVELOP_MIPMAP_UPDATED,
+                             _lighttable_histogram_mipmap_updated);
 
     // create widgets
     dt_action_t *dark =

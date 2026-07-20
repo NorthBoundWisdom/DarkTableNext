@@ -11,7 +11,7 @@ else()
 endif()
 
 # The modules
-set(MODULES import export copy_history styles tagging image select recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks duplicate ioporder)
+set(MODULES import export copy_history styles tagging image select recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs masks ioporder)
 
 # The tools
 set(MODULES ${MODULES} viewswitcher)
@@ -32,8 +32,12 @@ set(MODULES ${MODULES} image_infos)
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libtimeline${CMAKE_SHARED_MODULE_SUFFIX}")
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/liblog_history${CMAKE_SHARED_MODULE_SUFFIX}")
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libcollect${CMAKE_SHARED_MODULE_SUFFIX}")
+file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libcolorpicker${CMAKE_SHARED_MODULE_SUFFIX}")
+file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libduplicate${CMAKE_SHARED_MODULE_SUFFIX}")
 if(APPLE)
   file(REMOVE "${DARKTABLE_BINDIR}/darktable.app/Contents/Resources/lib/darktable/plugins/lighttable/libcollect${CMAKE_SHARED_MODULE_SUFFIX}")
+  file(REMOVE "${DARKTABLE_BINDIR}/darktable.app/Contents/Resources/lib/darktable/plugins/lighttable/libcolorpicker${CMAKE_SHARED_MODULE_SUFFIX}")
+  file(REMOVE "${DARKTABLE_BINDIR}/darktable.app/Contents/Resources/lib/darktable/plugins/lighttable/libduplicate${CMAKE_SHARED_MODULE_SUFFIX}")
 endif()
 
 # modules
@@ -54,9 +58,7 @@ add_library(history MODULE "history.c")
 add_library(snapshots MODULE "snapshots.c")
 add_library(modulegroups MODULE "modulegroups.c")
 add_library(backgroundjobs MODULE "backgroundjobs.c")
-add_library(colorpicker MODULE "colorpicker.c")
 add_library(masks MODULE "masks.c")
-add_library(duplicate MODULE "duplicate.c")
 add_library(ioporder MODULE "ioporder.c")
 
 # tools

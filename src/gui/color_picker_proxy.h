@@ -45,7 +45,7 @@ typedef enum _iop_color_picker_flags_t
 
 typedef struct dt_iop_color_picker_t
 {
-    // iop which contains this picker, or NULL if primary colorpicker
+    // iop which contains this picker
     dt_iop_module_t *module;
     dt_iop_color_picker_flags_t flags;
     /** requested colorspace for the color picker, valid options are:
@@ -61,8 +61,8 @@ typedef struct dt_iop_color_picker_t
     /** used to avoid recursion when a parameter is modified in the apply() */
     GtkWidget *colorpick;
     // positions are associated with the current picker widget: will set
-    // the picker request for the primary picker when this picker is
-    // activated, and will remember the most recent picker position
+    // the shared picker request when this picker is activated, and remember
+    // the most recent picker position
     dt_pickerpoint_t pick_pos;
     dt_pickerbox_t pick_box;
     gboolean initialized;

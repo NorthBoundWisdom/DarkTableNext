@@ -32,7 +32,6 @@
 #include "develop/masks.h"
 #include "gui/gtk.h"
 #include "imageio/imageio_common.h"
-#include "libs/colorpicker.h"
 #include "libs/lib.h"
 #include "gui/color_picker_proxy.h"
 #include "imageio/imageio_rawspeed.h" // for dt_rawspeed_crop_dcraw_filters
@@ -889,7 +888,7 @@ static void _histogram_collect_cl(const int devid, dt_dev_pixelpipe_iop_t *piece
 #endif
 
 // color picking for module
-// FIXME: make called with: lib_colorpicker_sample_statistics pick
+// FIXME: pass the requested picker statistics explicitly
 static void _pixelpipe_picker(dt_iop_module_t *module, dt_dev_pixelpipe_iop_t *piece,
                               dt_iop_buffer_dsc_t *dsc, const float *pixel, const dt_iop_roi_t *roi,
                               float *picked_color, float *picked_color_min, float *picked_color_max,
@@ -897,7 +896,7 @@ static void _pixelpipe_picker(dt_iop_module_t *module, dt_dev_pixelpipe_iop_t *p
                               const dt_pixelpipe_picker_source_t picker_source)
 {
     int box[4] = {0};
-    lib_colorpicker_stats pick;
+    dt_colorpicker_stats_t pick;
 
     const gboolean nobox = dt_color_picker_box(
         module, roi, darktable.lib->proxy.colorpicker.primary_sample, picker_source, box);
@@ -937,7 +936,7 @@ static void _pixelpipe_picker(dt_iop_module_t *module, dt_dev_pixelpipe_iop_t *p
 // sizes like in image preview an OpenCL picker implementation would
 // help
 //
-// FIXME: make called with: lib_colorpicker_sample_statistics pick
+// FIXME: pass the requested picker statistics explicitly
 static void _pixelpipe_picker_cl(const int devid, dt_iop_module_t *module,
                                  dt_dev_pixelpipe_iop_t *piece, dt_iop_buffer_dsc_t *dsc,
                                  const cl_mem img, const dt_iop_roi_t *roi, float *picked_color,
@@ -1009,7 +1008,7 @@ static void _pixelpipe_picker_cl(const int devid, dt_iop_module_t *module,
     box[2] = region[0];
     box[3] = region[1];
 
-    lib_colorpicker_stats pick;
+    dt_colorpicker_stats_t pick;
 
     dt_color_picker_helper(dsc, pixel, &roi_copy, box,
                            darktable.lib->proxy.colorpicker.primary_sample->denoise, pick,
@@ -1027,61 +1026,6 @@ error:
     dt_free_align(tmpbuf);
 }
 #endif
-
-static void _pixelpipe_pick_samples(dt_develop_t *dev, dt_iop_module_t *module,
-                                    const dt_iop_buffer_dsc_t *dsc, const float *const input,
-                                    const dt_iop_roi_t *roi_in)
-{
-    const dt_iop_order_iccprofile_info_t *const histogram_profile =
-        dt_ioppr_get_histogram_profile_info(dev);
-    const dt_iop_order_iccprofile_info_t *const display_profile = dt_ioppr_add_profile_info_to_list(
-        dev, darktable.color_profiles->display_type, darktable.color_profiles->display_filename,
-        INTENT_RELATIVE_COLORIMETRIC);
-
-    // if we have a primary picker, prepend to the list of any live
-    // samples, so that we don't have to differentiate when looping
-    // through the pixels
-    GSList *samples = darktable.lib->proxy.colorpicker.live_samples;
-    GSList primary;
-    if (darktable.lib->proxy.colorpicker.picker_proxy)
-    {
-        primary.data = darktable.lib->proxy.colorpicker.primary_sample;
-        primary.next = samples;
-        samples = &primary;
-    }
-
-    while (samples)
-    {
-        int box[4];
-        dt_colorpicker_sample_t *sample = samples->data;
-        if (!sample->locked &&
-            !dt_color_picker_box(module, roi_in, sample, PIXELPIPE_PICKER_INPUT, box))
-        {
-            // pixel input is in display profile, hence the sample output will be as well
-            dt_print_pipe(DT_DEBUG_PIPE | DT_DEBUG_PICKER, "pixelpipe pick samples", NULL, module,
-                          DT_DEVICE_NONE, roi_in, NULL, " %sbox %i/%i -- %i/%i",
-                          darktable.lib->proxy.colorpicker.primary_sample->denoise ? "denoised " :
-                                                                                     "",
-                          box[0], box[1], box[2], box[3]);
-
-            dt_color_picker_helper(dsc, input, roi_in, box, sample->denoise, sample->display,
-                                   IOP_CS_RGB, IOP_CS_RGB, display_profile);
-
-            // NOTE: conversions assume that dt_aligned_pixel_t[x] has no
-            // padding, e.g. is equivalent to float[x*4], and that on failure
-            // it's OK not to touch output
-            dt_iop_colorspace_type_t converted_cst;
-            dt_ioppr_transform_image_colorspace(module, sample->display[0], sample->lab[0], 3, 1,
-                                                IOP_CS_RGB, IOP_CS_LAB, &converted_cst,
-                                                display_profile);
-            if (display_profile && histogram_profile)
-                dt_ioppr_transform_image_colorspace_rgb(sample->display[0], sample->scope[0], 3, 1,
-                                                        display_profile, histogram_profile,
-                                                        "primary picker");
-        }
-        samples = g_slist_next(samples);
-    }
-}
 
 // returns TRUE if blend process need the module default colorspace
 static gboolean _transform_for_blend(const dt_iop_module_t *const self,
@@ -2677,13 +2621,6 @@ static gboolean _dev_pixelpipe_process_rec(dt_dev_pixelpipe_t *pipe, dt_develop_
     if (dev->gui_attached && !dev->gui_leaving && pipe == dev->preview_pipe &&
         dt_iop_module_is_gamma(module)) // only gamma provides meaningful RGB data
     {
-        // Pick RGB/Lab for the primary colorpicker and live samples
-        if (darktable.lib->proxy.colorpicker.picker_proxy ||
-            darktable.lib->proxy.colorpicker.live_samples)
-        {
-            _pixelpipe_pick_samples(dev, module, *out_format, (const float *const)input, &roi_in);
-        }
-
         // FIXME: read this from dt_ioppr_get_pipe_output_profile_info()?
         const dt_iop_order_iccprofile_info_t *const display_profile =
             dt_ioppr_add_profile_info_to_list(dev, darktable.color_profiles->display_type,

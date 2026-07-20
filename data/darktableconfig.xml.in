@@ -723,56 +723,6 @@
     <longdescription/>
   </dtconfig>
   <dtconfig>
-    <name>ui_last/colorpicker_model</name>
-    <type>
-      <enum>
-	<option>RGB</option>
-	<option>Lab</option>
-	<option>LCh</option>
-	<option>HSL</option>
-	<option>Hex</option>
-	<option>none</option>
-      </enum>
-    </type>
-    <default>RGB</default>
-    <shortdescription>color model with which to represent primary colorpicker</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>ui_last/colorpicker_mode</name>
-    <type>
-      <enum>
-	<option>mean</option>
-	<option>min</option>
-	<option>max</option>
-      </enum>
-    </type>
-    <default>mean</default>
-    <shortdescription>statistic used to describe colorpicker box</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>ui_last/colorpicker_display_samples</name>
-    <type>boolean</type>
-    <default>false</default>
-    <shortdescription>display live sample areas on image</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>ui_last/colorpicker_restrict_histogram</name>
-    <type>boolean</type>
-    <default>false</default>
-    <shortdescription>restrict histogram to selection</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
-    <name>ui_last/colorpicker_large</name>
-    <type>boolean</type>
-    <default>false</default>
-    <shortdescription>display large colorpicker patch</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
     <name>ui_last/fullscreen</name>
     <type>bool</type>
     <default>false</default>
@@ -3339,20 +3289,6 @@
     <default>0</default>
     <shortdescription>version of the last completed performance configuration</shortdescription>
     <longdescription>what was the last performance configuration which has been completed</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/duplicate/windowheight</name>
-    <type>int</type>
-    <default>400</default>
-    <shortdescription>height of the duplicates view</shortdescription>
-    <longdescription>maximum height the duplicates view in darkroom will grow to before scrolling</longdescription>
-  </dtconfig>
-  <dtconfig>
-    <name>plugins/darkroom/colorpicker/windowheight</name>
-    <type>int</type>
-    <default>200</default>
-    <shortdescription>height of the color picker list</shortdescription>
-    <longdescription>maximum height the color picker samples list in darkroom will grow to before scrolling</longdescription>
   </dtconfig>
   <dtconfig>
     <name>plugins/darkroom/history/windowheight</name>

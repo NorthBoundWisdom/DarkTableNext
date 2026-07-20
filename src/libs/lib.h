@@ -40,23 +40,11 @@ typedef struct dt_lib_t
     /** Proxy functions for communication with views */
     struct
     {
-        /** Colorpicker plugin hooks */
+        /** Shared state for IOP color pickers */
         struct
         {
-            struct dt_lib_module_t *module;
             struct dt_colorpicker_sample_t *primary_sample;
             struct dt_iop_color_picker_t *picker_proxy;
-            GSList *live_samples;
-            struct dt_colorpicker_sample_t *selected_sample;
-            gboolean display_samples;
-            gboolean restrict_histogram;
-            int statistic;
-            void (*update_panel)(struct dt_lib_module_t *self);
-            void (*update_samples)(struct dt_lib_module_t *self);
-            void (*set_sample_box_area)(struct dt_lib_module_t *self, const dt_boundingbox_t size);
-            void (*set_sample_point)(struct dt_lib_module_t *self, const float pos[2]);
-            void (*setup_sample)(struct dt_lib_module_t *self, const gboolean denoise,
-                                 const gboolean pick_output);
         } colorpicker;
 
         /** Histogram processing hooks */
