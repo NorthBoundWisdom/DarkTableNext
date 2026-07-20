@@ -42,6 +42,12 @@
 
 static void _thumb_resize_overlays(dt_thumbnail_t *thumb);
 
+static gboolean _thumb_is_compact_grid(const dt_thumbnail_t *thumb)
+{
+    return thumb->container == DT_THUMBNAIL_CONTAINER_LIGHTTABLE &&
+           thumb->over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED;
+}
+
 static void _set_flag(GtkWidget *w, const GtkStateFlags flag, const gboolean activate)
 {
     if (activate)
@@ -98,7 +104,8 @@ static void _thumb_update_tags_tooltip(dt_thumbnail_t *thumb)
 static void _thumb_update_altered_tooltip(dt_thumbnail_t *thumb)
 {
     thumb->is_altered = dt_image_altered(thumb->imgid);
-    gtk_widget_set_visible(thumb->w_altered, thumb->is_altered);
+    gtk_widget_set_visible(thumb->w_altered,
+                           thumb->is_altered && !_thumb_is_compact_grid(thumb));
     if (thumb->is_altered)
     {
         char *tooltip = dt_history_get_items_as_string(thumb->imgid);
@@ -574,21 +581,31 @@ static void _thumb_set_image_area(dt_thumbnail_t *thumb, const float zoom_ratio)
     if (thumb->over == DT_THUMBNAIL_OVERLAYS_ALWAYS_NORMAL ||
         thumb->over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED)
     {
+        const gboolean compact_grid = _thumb_is_compact_grid(thumb);
         image_w = thumb->width - thumb->img_margin->left - thumb->img_margin->right;
         int w = 0;
         int h = 0;
         gtk_widget_get_size_request(thumb->w_bottom_eb, &w, &h);
         image_h = thumb->height - MAX(0, h);
-        gtk_widget_get_size_request(thumb->w_altered, &w, &h);
-        if (!thumb->zoomable)
+        if (compact_grid)
         {
+            posy = thumb->img_margin->top;
+            image_h -= thumb->img_margin->top + thumb->img_margin->bottom;
+        }
+        else if (!thumb->zoomable)
+        {
+            gtk_widget_get_size_request(thumb->w_altered, &w, &h);
             posy = h + gtk_widget_get_margin_top(thumb->w_altered);
             image_h -= posy;
+            image_h -= thumb->img_margin->top;
+            posy += thumb->img_margin->top;
         }
         else
+        {
             image_h -= thumb->img_margin->bottom;
-        image_h -= thumb->img_margin->top;
-        posy += thumb->img_margin->top;
+            image_h -= thumb->img_margin->top;
+            posy += thumb->img_margin->top;
+        }
     }
     else if (thumb->over == DT_THUMBNAIL_OVERLAYS_MIXED)
     {
@@ -898,9 +915,10 @@ static void _thumb_update_icons(dt_thumbnail_t *thumb)
     // Preview omits rating and zoom controls from its compact information panel.
     // Reject is deliberately toolbar-only: the footer exposes the full flag set.
     const gboolean show_preview_controls = thumb->container != DT_THUMBNAIL_CONTAINER_PREVIEW;
+    const gboolean compact_grid = _thumb_is_compact_grid(thumb);
 
     gtk_widget_set_visible(thumb->w_local_copy, thumb->has_localcopy);
-    gtk_widget_set_visible(thumb->w_altered, thumb->is_altered);
+    gtk_widget_set_visible(thumb->w_altered, thumb->is_altered && !compact_grid);
     gtk_widget_set_visible(thumb->w_group, thumb->is_grouped);
     gtk_widget_set_visible(thumb->w_audio, thumb->has_audio);
     gtk_widget_set_visible(thumb->w_color, thumb->colorlabels != 0);
@@ -908,7 +926,7 @@ static void _thumb_update_icons(dt_thumbnail_t *thumb)
                                               thumb->over == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK));
     gtk_widget_show(thumb->w_bottom_eb);
     gtk_widget_hide(thumb->w_reject);
-    gtk_widget_show(thumb->w_ext);
+    gtk_widget_set_visible(thumb->w_ext, !compact_grid);
 
     // show cursor (filmstrip current-image arrow) only for the active image
     // and when in darkroom.
@@ -940,7 +958,6 @@ static void _thumb_update_icons(dt_thumbnail_t *thumb)
 
     _set_flag(thumb->w_main, GTK_STATE_FLAG_SELECTED, thumb->selected);
 
-    gtk_widget_set_visible(thumb->w_altered, thumb->is_altered);
     _thumb_update_tags_tooltip(thumb);
     gtk_widget_set_visible(thumb->w_tags, thumb->has_tags);
 }
@@ -1809,8 +1826,7 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
     if (thumb->over != DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK)
     {
         gtk_widget_get_size_request(thumb->w_main, &width, &height);
-        const gboolean compact_grid = thumb->container == DT_THUMBNAIL_CONTAINER_LIGHTTABLE &&
-                                      thumb->over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED;
+        const gboolean compact_grid = _thumb_is_compact_grid(thumb);
         // we need to squeeze reject + space + stars + space + colorlabels
         // icons on a thumbnail width that means a width of 4 + MAX_STARS
         // icons size all icons and spaces having a width of 2.5 * r1
