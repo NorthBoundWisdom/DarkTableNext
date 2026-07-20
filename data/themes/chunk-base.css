@@ -2087,6 +2087,13 @@ Details :
   background-color: rgba(220, 220, 220, 0.8);
 }
 
+/* Pinned information must remain visible in Loupe without re-enabling hover. */
+.dt_overlays_pinned.dt_overlays_hover_block #thumb-bottom
+{
+  background-image: none;
+  background-color: rgba(220, 220, 220, 0.8);
+}
+
 /*--------------------
   - Thumbnails infos -
   --------------------*/
@@ -2161,6 +2168,13 @@ Details :
 .dt_overlays_always_extended.dt_fullview #thumb-main:selected #thumb-bottom-label
 {
   color: shade(@thumbnail_font_color,.75);
+}
+
+.dt_overlays_pinned.dt_overlays_hover_block #thumb-bottom-label
+{
+  color: @thumbnail_font_color;
+  padding-left: 0.28em;
+  padding-right: 0.28em;
 }
 
 /* Set red reject icon when visible */

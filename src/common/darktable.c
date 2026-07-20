@@ -30,6 +30,7 @@
 #include "common/exif.h"
 #include "common/pwstorage/pwstorage.h"
 #include "common/selection.h"
+#include "common/styles.h"
 #include "common/system_signal_handling.h"
 #include "bauhaus/bauhaus.h"
 #include "common/action.h"
@@ -1401,6 +1402,9 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         dt_import_default_styles(styledir);
         g_free(styledir);
     }
+    // The per-camera defaults were removed from the bundled resources. Remove
+    // copies imported by earlier versions from the user's style database too.
+    dt_styles_remove_camera_defaults();
 
     // we initialize grouping early because it's needed for collection init
     // idem for folder reachability

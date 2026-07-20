@@ -80,8 +80,13 @@ static gboolean _matches(const gchar *action_id, const gchar *prefix)
 static dt_system_command_menu_t _menu_for_action(const gchar *action_id)
 {
     if (!g_strcmp0(action_id, "global/about") || !g_strcmp0(action_id, "global/preferences") ||
-        !g_strcmp0(action_id, "global/shortcuts") || !g_strcmp0(action_id, "global/quit"))
+        !g_strcmp0(action_id, "global/shortcuts") || !g_strcmp0(action_id, "global/quit") ||
+        !g_strcmp0(action_id, "global/hide application") ||
+        !g_strcmp0(action_id, "global/minimize window"))
         return DT_SYSTEM_COMMAND_MENU_APP;
+
+    if (!g_strcmp0(action_id, "global/close window"))
+        return DT_SYSTEM_COMMAND_MENU_FILE;
 
     if (!g_strcmp0(action_id, "global/documentation") ||
         !g_strcmp0(action_id, "global/homepage"))

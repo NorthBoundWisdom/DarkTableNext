@@ -1059,7 +1059,12 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
             switch (table->mode)
             {
             case DT_THUMBTABLE_MODE_FILEMANAGER:
-                dt_view_manager_switch(darktable.view_manager, "darkroom");
+                dt_selection_select_single(darktable.selection, id);
+                DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_VIEWMANAGER_THUMBTABLE_ACTIVATE, id);
+                dt_view_lighttable_set_preview_state(
+                    darktable.view_manager, TRUE, TRUE, FALSE,
+                    DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO);
+                dt_view_lighttable_change_offset(darktable.view_manager, TRUE, id);
                 break;
 
             case DT_THUMBTABLE_MODE_FILMSTRIP:

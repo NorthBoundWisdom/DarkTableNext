@@ -27,6 +27,12 @@ ABI, scripting, map and tethering workflows, printing, slideshow, remote
 publishing, or old format compatibility. For the complete product boundary,
 see [TODO_CORE_REDUCTION.md](TODO_CORE_REDUCTION.md).
 
+### Bundled styles
+
+The distribution includes only the generic example styles. The historical
+per-camera style catalog is intentionally excluded; users' own styles remain
+supported.
+
 ## Build from source
 
 Use a recent development environment with CMake 3.26 or newer, Ninja,

@@ -1751,3 +1751,30 @@ void dt_import_default_styles(const char *folder)
     dt_database_release_transaction(darktable.db);
     free(entries);
 }
+
+void dt_styles_remove_camera_defaults(void)
+{
+    // Per-camera defaults were identified by this reserved, untranslated
+    // segmented-name prefix. Keep user styles and the generic examples intact.
+    static const char camera_style_pattern[] = "_l10n_darktable|_l10n_camera styles|*";
+    sqlite3_stmt *stmt;
+
+    dt_database_start_transaction(darktable.db);
+
+    DT_DEBUG_SQLITE3_PREPARE_V2(
+        dt_database_get(darktable.db),
+        "DELETE FROM data.style_items WHERE styleid IN "
+        "(SELECT id FROM data.styles WHERE name GLOB ?1)",
+        -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, camera_style_pattern, -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
+                                "DELETE FROM data.styles WHERE name GLOB ?1", -1, &stmt, NULL);
+    DT_DEBUG_SQLITE3_BIND_TEXT(stmt, 1, camera_style_pattern, -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    dt_database_release_transaction(darktable.db);
+}

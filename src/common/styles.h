@@ -138,5 +138,8 @@ void dt_styles_save_to_file(const char *style_name, const char *filedir, const g
 /** load style from file */
 void dt_styles_import_from_file(const char *style_path);
 
+/** remove retired bundled per-camera styles from the style database */
+void dt_styles_remove_camera_defaults(void);
+
 /** register style actions for shortcuts at start time */
 void dt_init_styles_actions();

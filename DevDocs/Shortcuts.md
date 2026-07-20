@@ -65,13 +65,17 @@ these defaults.
 
 | Key | Action ID / scope | Default behavior |
 | --- | --- | --- |
-| `G` | `global/grid` | Enter Lighttable Grid, exit Preview/Culling, preserve densities above 1, and restore density 2 from density 1. |
-| `E` | `global/loupe` | Enter explicit Lighttable Preview at Fit; invoking it again does not exit Preview or change its zoom. |
+| `G` | `global/grid` | Enter Lighttable Grid, exit Preview/Culling, and use the 2–10 images-per-row Grid range. |
+| `E` | `global/loupe` | Enter the single-image Loupe at Fit, with the header, side panels, and filmstrip visible but without pointer hover interactions. The canvas uses a magnifier cursor; a click toggles Fit/100%, a double-click returns to Grid, and `I` pins basic image information at its upper-left. |
 | `C` | `global/compare` | Enter fixed two-image Culling. |
 | `N` | `global/survey` | Enter dynamic Culling driven by the current selection. |
 | `D` | `global/switch views/darkroom` | Enter Darkroom; invoking it in Darkroom is a no-op. |
 | `I` | `lighttable/show infos` | Toggle the persistent information label for Loupe, Compare, and Survey. The state is retained while Grid or Darkroom hides the label and across application restarts. |
 | `Z` | active Lighttable or Darkroom view | Toggle Fit/100% in Loupe/Culling; enter Loupe at 100% from Grid; reuse Darkroom's close-up zoom toggle. |
+
+On macOS, application-wide commands use Command: `⌘Q` quits, `⌘W` closes the main window,
+`⌘H` hides the application, `⌘M` minimizes the window, `⌘,` opens Preferences, and `⌘?` opens
+documentation. These remain available alongside the direct view keys.
 
 The layout tool records a requested `global/grid`, `global/loupe`, `global/compare`, or
 `global/survey` mode before a cross-view transition and applies it only after the

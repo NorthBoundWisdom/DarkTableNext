@@ -284,6 +284,7 @@ static void _loupe_enter(dt_view_t *self, const dt_lighttable_loupe_source_t sou
 
     dt_culling_set_hand_tool(lib->preview, FALSE);
     dt_culling_zoom_fit(lib->preview);
+    dt_culling_set_hover_enabled(lib->preview, source != DT_LIGHTTABLE_LOUPE_PREVIEW);
     lib->preview_sticky = sticky;
     lib->preview->focus = focus;
     lib->loupe_source = source;
@@ -291,6 +292,9 @@ static void _loupe_enter(dt_view_t *self, const dt_lighttable_loupe_source_t sou
                     restriction);
     dt_view_lighttable_update_layout_buttons(darktable.view_manager);
     gtk_widget_show(lib->preview->widget);
+    // The single-image canvas is a zoom target rather than a hoverable
+    // thumbnail. Set its cursor after realization so it is visible on entry.
+    dt_culling_set_hand_tool(lib->preview, FALSE);
 
     dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection =
         lib->preview->navigate_inside_selection;
@@ -306,6 +310,17 @@ static void _loupe_enter(dt_view_t *self, const dt_lighttable_loupe_source_t sou
     dt_culling_update_active_images_list(lib->preview);
 
     dt_ui_restore_panels(darktable.gui->ui);
+    if (source == DT_LIGHTTABLE_LOUPE_PREVIEW)
+    {
+        // Explicit Loupe is the persistent single-image workspace. Make its
+        // chrome visible temporarily; the user's saved panel choices remain
+        // unchanged and are restored on return to Grid.
+        dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_TOP, TRUE, FALSE);
+        dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP, TRUE, FALSE);
+        dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_LEFT, TRUE, FALSE);
+        dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_RIGHT, TRUE, FALSE);
+        dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_BOTTOM, TRUE, FALSE);
+    }
     dt_ui_scrollbars_show(darktable.gui->ui, FALSE);
 }
 
@@ -1091,6 +1106,8 @@ GSList *mouse_actions(const dt_view_t *self)
     if (_loupe_active(lib))
     {
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT, 0, _("zoom to 100% and back"));
+        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_DOUBLE_LEFT, 0,
+                                           _("return to grid"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("switch to next/previous image"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,
@@ -1104,7 +1121,7 @@ GSList *mouse_actions(const dt_view_t *self)
     else if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_DOUBLE_LEFT, 0,
-                                           _("open image in darkroom"));
+                                           _("open image in loupe"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("scroll the collection"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,

@@ -98,6 +98,7 @@ typedef struct dt_culling_t
     // Keep a pinned information overlay independent from the configured
     // overlay mode. The configured mode remains in dt_conf while this is set.
     gboolean overlay_forced;
+    gboolean hover_enabled; // do thumbnails react to pointer hover ?
 } dt_culling_t;
 
 dt_culling_t *dt_culling_new(const dt_culling_mode_t mode);
@@ -136,6 +137,7 @@ gboolean dt_culling_pan_move(dt_culling_t *table, float dx, float dy, int state)
 // enable/disable the preview hand tool. Disabling it also cancels any pending
 // click or drag and restores the widget cursor.
 void dt_culling_set_hand_tool(dt_culling_t *table, const gboolean active);
+void dt_culling_set_hover_enabled(dt_culling_t *table, const gboolean enabled);
 
 // set the overlays type
 void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over);

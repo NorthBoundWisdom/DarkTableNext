@@ -77,6 +77,12 @@
 #define DT_UI_DEFAULT_WINDOW_WIDTH 900
 #define DT_UI_DEFAULT_WINDOW_HEIGHT 500
 
+#ifdef __APPLE__
+#define DT_SYSTEM_COMMAND_PRIMARY_MODIFIER GDK_MOD2_MASK
+#else
+#define DT_SYSTEM_COMMAND_PRIMARY_MODIFIER GDK_CONTROL_MASK
+#endif
+
 #ifdef GDK_WINDOWING_QUARTZ
 // macOS has a fixed DPI of 72
 #define DT_UI_DEFAULT_DPI_RESOLUTION 72
@@ -155,6 +161,37 @@ void dt_gui_remove_class(GtkWidget *widget, const gchar *class_name)
 static void _init_widgets(dt_gui_gtk_t *gui);
 
 static void _init_main_table(GtkWidget *container);
+
+static void _set_main_window_icon(GtkWindow *window)
+{
+#ifdef GDK_WINDOWING_QUARTZ
+    char datadir[PATH_MAX] = {0};
+    dt_loc_get_datadir(datadir, sizeof(datadir));
+
+    char *icon_path =
+        g_build_filename(datadir, "icons", "hicolor", "256x256", "apps", "darktable.png", NULL);
+    GError *error = NULL;
+    GdkPixbuf *icon = gdk_pixbuf_new_from_file(icon_path, &error);
+    if (icon)
+    {
+        // Quartz uses the GTK application's default icon for the Dock.  Set it
+        // explicitly instead of relying on icon-theme name resolution.
+        gtk_window_set_default_icon(icon);
+        gtk_window_set_icon(window, icon);
+        g_object_unref(icon);
+    }
+    else
+    {
+        dt_print(DT_DEBUG_ALWAYS, "[gui] failed to load the macOS application icon from %s: %s",
+                 icon_path, error ? error->message : "unknown error");
+        g_clear_error(&error);
+        gtk_window_set_icon_name(window, "darktable");
+    }
+    g_free(icon_path);
+#else
+    gtk_window_set_icon_name(window, "darktable");
+#endif
+}
 
 static void _fullscreen_key_accel_callback(dt_action_t *action)
 {
@@ -1058,6 +1095,24 @@ static void _quit_callback(dt_action_t *action)
     dt_control_quit();
 }
 
+static void _close_window_command(dt_action_t *action)
+{
+    gtk_window_close(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)));
+    (void)action;
+}
+
+static void _hide_application_command(dt_action_t *action)
+{
+    gtk_widget_hide(dt_ui_main_window(darktable.gui->ui));
+    (void)action;
+}
+
+static void _minimize_window_command(dt_action_t *action)
+{
+    gtk_window_iconify(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)));
+    (void)action;
+}
+
 static gboolean _gui_quit_callback(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
     const dt_view_type_flags_t cv = dt_view_get_current();
@@ -1551,16 +1606,24 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     // register actions for applying styles via shortcuts
     dt_init_styles_actions();
 
-    // register ctrl-q to quit:
+    // Register platform-standard application commands. On macOS the primary
+    // modifier is Command; elsewhere it remains Control.
     dt_action_register(&darktable.control->actions_global, N_("quit"), _quit_callback, GDK_KEY_q,
-                       GDK_CONTROL_MASK);
+                       DT_SYSTEM_COMMAND_PRIMARY_MODIFIER);
+    dt_action_register(&darktable.control->actions_global, N_("close window"),
+                       _close_window_command, GDK_KEY_w, DT_SYSTEM_COMMAND_PRIMARY_MODIFIER);
+    dt_action_register(&darktable.control->actions_global, N_("hide application"),
+                       _hide_application_command, GDK_KEY_h, DT_SYSTEM_COMMAND_PRIMARY_MODIFIER);
+    dt_action_register(&darktable.control->actions_global, N_("minimize window"),
+                       _minimize_window_command, GDK_KEY_m, DT_SYSTEM_COMMAND_PRIMARY_MODIFIER);
     dt_action_register(&darktable.control->actions_global, N_("about"), _about_command, 0, 0);
     dt_action_register(&darktable.control->actions_global, N_("preferences"), _preferences_command,
-                       GDK_KEY_comma, GDK_CONTROL_MASK);
+                       GDK_KEY_comma, DT_SYSTEM_COMMAND_PRIMARY_MODIFIER);
     dt_action_register(&darktable.control->actions_global, N_("shortcuts"), _shortcuts_command, 0,
                        0);
     dt_action_register(&darktable.control->actions_global, N_("documentation"),
-                       _documentation_command, 0, 0);
+                       _documentation_command, GDK_KEY_slash,
+                       DT_SYSTEM_COMMAND_PRIMARY_MODIFIER | GDK_SHIFT_MASK);
     dt_action_register(&darktable.control->actions_global, N_("homepage"), _homepage_command, 0,
                        0);
 
@@ -1777,7 +1840,7 @@ static void _init_widgets(dt_gui_gtk_t *gui)
     // allows for proper window resizing
     gtk_window_set_type_hint(GTK_WINDOW(widget), GDK_WINDOW_TYPE_HINT_NORMAL);
 
-    gtk_window_set_icon_name(GTK_WINDOW(widget), "darktable");
+    _set_main_window_icon(GTK_WINDOW(widget));
     gtk_window_set_title(GTK_WINDOW(widget), "darktable");
 
     g_signal_connect(G_OBJECT(widget), "delete_event", G_CALLBACK(_gui_quit_callback), NULL);

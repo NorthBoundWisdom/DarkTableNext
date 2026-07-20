@@ -948,11 +948,13 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
         event->type == GDK_2BUTTON_PRESS)
     {
         // The first release in a double-click sequence has already performed
-        // the normal Fit/100% toggle. Suppress the second toggle and never
-        // enter Darkroom from a single-image loupe.
+        // the Fit/100% toggle. Suppress the second click, then return from the
+        // single-image Loupe to Grid.
         table->click_candidate = FALSE;
         table->panning = FALSE;
         table->drag_moved = FALSE;
+        dt_view_lighttable_set_preview_state(darktable.view_manager, FALSE, FALSE, FALSE,
+                                             DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO);
         return TRUE;
     }
 
@@ -1139,7 +1141,7 @@ static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event, 
         table->click_candidate = FALSE;
         table->drag_moved = FALSE;
         table->pressed_imgid = NO_IMGID;
-        _set_hand_cursor(table, table->hand_tool ? "grab" : NULL);
+        _set_hand_cursor(table, table->hand_tool ? "grab" : "zoom-in");
 
         if (toggle)
             _toggle_zoom_thumb(table, th, x, y);
@@ -1347,6 +1349,7 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
     table->widget = gtk_layout_new(NULL, NULL);
     table->selection = NO_IMGID;
     table->pressed_imgid = NO_IMGID;
+    table->hover_enabled = TRUE;
     dt_gui_add_class(table->widget, "dt_fullview");
     dt_act_on_set_class(table->widget);
     // TODO dt_gui_add_help_link(table->widget, "lighttable_filemanager");
@@ -2242,6 +2245,7 @@ void dt_culling_full_redraw(dt_culling_t *table, const gboolean force)
         // Apply the effective overlay to reused and newly-created thumbnails.
         // In particular, a pinned information label uses a negative timeout.
         dt_thumbnail_set_overlay(thumb, table->overlays, table->overlays_block_timeout);
+        dt_thumbnail_set_hover_enabled(thumb, table->hover_enabled);
         // we add or move the thumb at the right position
         if (!gtk_widget_get_parent(thumb->w_main))
         {
@@ -2560,7 +2564,18 @@ void dt_culling_set_hand_tool(dt_culling_t *table, const gboolean active)
 
     if (table->hand_tool)
         gtk_widget_grab_focus(table->widget);
-    _set_hand_cursor(table, table->hand_tool ? "grab" : NULL);
+    _set_hand_cursor(table, table->hand_tool ? "grab" :
+                                              table->mode == DT_CULLING_MODE_PREVIEW ? "zoom-in" : NULL);
+}
+
+void dt_culling_set_hover_enabled(dt_culling_t *table, const gboolean enabled)
+{
+    if (!table || table->hover_enabled == enabled)
+        return;
+
+    table->hover_enabled = enabled;
+    for (GList *l = table->list; l; l = g_list_next(l))
+        dt_thumbnail_set_hover_enabled(l->data, enabled);
 }
 
 static void _apply_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over,
@@ -2625,9 +2640,14 @@ void dt_culling_force_overlay(dt_culling_t *table, const gboolean force)
     table->overlay_forced = force;
     if (force)
     {
+        // Pinned information must remain legible even when Loupe disables
+        // thumbnail hover interactions.
+        dt_gui_add_class(table->widget, "dt_overlays_pinned");
         _apply_overlays_mode(table, DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK, -1);
         return;
     }
+
+    dt_gui_remove_class(table->widget, "dt_overlays_pinned");
 
     gchar *txt = g_strdup_printf("plugins/lighttable/overlays/culling/%d", table->mode);
     const dt_thumbnail_overlay_t over = dt_conf_get_int(txt);

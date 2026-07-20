@@ -144,6 +144,7 @@ typedef struct
     dt_thumbnail_selection_mode_t sel_mode; // do we allow to change selection with mouse ?
     gboolean single_click;                  // do we activate on single or double click ?
     gboolean disable_mouseover;             // do we allow to change mouseoverid by mouse move
+    gboolean hover_enabled;                 // do we react visually to pointer hover ?
     gboolean disable_actions;               // do we allow to change rating/etc...
 
     dt_thumbnail_overlay_t over;  // type of overlays
@@ -208,6 +209,7 @@ void dt_thumbnail_image_preview_zoom(dt_thumbnail_t *thumb);
 // do we need to display simple overlays or extended ?
 void dt_thumbnail_set_overlay(dt_thumbnail_t *thumb, dt_thumbnail_overlay_t over,
                               const int timeout);
+void dt_thumbnail_set_hover_enabled(dt_thumbnail_t *thumb, gboolean enabled);
 
 // force reloading image infos
 void dt_thumbnail_reload_infos(dt_thumbnail_t *thumb);

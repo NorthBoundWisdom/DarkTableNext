@@ -461,8 +461,10 @@ add_custom_command(
   COMMENT "Generating configuration min/max/default/type"
 )
 
+# Only the generic example styles are bundled.  Per-camera presets were
+# intentionally removed from the product baseline.
 file(GLOB darktable_STYLES
-     "${DARKTABLE_DATADIR}/styles/*.dtstyle"
+     "${DARKTABLE_DATADIR}/styles/examples*.dtstyle"
 )
 
 add_custom_command(
