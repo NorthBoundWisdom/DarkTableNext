@@ -185,7 +185,8 @@ include_directories(SYSTEM ${OPENCL_PATH})
 # initial compiler flags
 add_definitions("-DHAVE_CONFIG_H")
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(APPLE AND (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
+              CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
         list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_LINK_LIBRARIES stdc++)
         list(APPEND CMAKE_CXX_IMPLICIT_LINK_LIBRARIES c++)
@@ -272,7 +273,7 @@ include_directories(SYSTEM ${LensFun_INCLUDE_DIRS})
 list(APPEND LIBS ${LensFun_LIBRARIES})
 
 find_package(SQLite3 3.26 REQUIRED)
-list(APPEND LIBS SQLite3::SQLite3)
+list(APPEND LIBS SQLite::SQLite3)
 
 foreach(lib ${OUR_LIBS} GIO GThread GModule PangoCairo Rsvg2 PNG JPEG TIFF LCMS2 JsonGlib)
   find_package(${lib} REQUIRED)

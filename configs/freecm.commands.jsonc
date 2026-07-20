@@ -3,6 +3,23 @@
   "commands": {
     "config": [
       {
+        "id": "linux-clang-debug",
+        "label": "Linux Clang Debug",
+        "description": "Configure the linux_clang_debug CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "linux_clang_debug"],
+        "platforms": ["linux"],
+        "default": true
+      },
+      {
+        "id": "linux-clang-release",
+        "label": "Linux Clang Release",
+        "description": "Configure the linux_clang_release CMake preset",
+        "command": "cmake",
+        "args": ["--preset", "linux_clang_release"],
+        "platforms": ["linux"]
+      },
+      {
         "id": "mac-clang-debug",
         "label": "Mac Clang Debug",
         "description": "Configure the mac_clang_debug CMake preset",
@@ -71,6 +88,23 @@
     ],
     "build": [
       {
+        "id": "linux-clang-debug",
+        "label": "Linux Clang Debug",
+        "description": "Build the linux_clang_debug CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "ClangDebug"],
+        "platforms": ["linux"],
+        "default": true
+      },
+      {
+        "id": "linux-clang-release",
+        "label": "Linux Clang Release",
+        "description": "Build the linux_clang_release CMake preset",
+        "command": "cmake",
+        "args": ["--build", "--preset", "clang_release"],
+        "platforms": ["linux"]
+      },
+      {
         "id": "mac-clang-debug",
         "label": "Mac Clang Debug",
         "description": "Build the mac_clang_debug CMake preset",
@@ -138,6 +172,39 @@
       }
     ],
     "run": [
+      {
+        "id": "linux-clang-debug-app",
+        "label": "Linux Clang Debug App",
+        "description": "Build and run the Linux debug application",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "ClangDebug", "--target", "darktable"]
+          },
+          {
+            "command": "./build/linux_clang_debug/bin/darktable",
+            "args": []
+          }
+        ],
+        "platforms": ["linux"],
+        "default": true
+      },
+      {
+        "id": "linux-clang-release-app",
+        "label": "Linux Clang Release App",
+        "description": "Build and run the Linux release application",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "clang_release", "--target", "darktable"]
+          },
+          {
+            "command": "./build/linux_clang_release/bin/darktable",
+            "args": []
+          }
+        ],
+        "platforms": ["linux"]
+      },
       {
         "id": "mac-clang-debug",
         "label": "Mac Clang Debug",
@@ -269,7 +336,227 @@
         "platforms": ["win32"]
       }
     ],
-    "test": [],
+    "test": [
+      {
+        "id": "linux-clang-debug-unit",
+        "label": "Linux Clang Debug Unit Tests",
+        "description": "Build and run unit tests from the linux_clang_debug tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "linux_clang_debug", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "ClangDebug"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/linux_clang_debug",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["linux"],
+        "default": true
+      },
+      {
+        "id": "linux-clang-release-unit",
+        "label": "Linux Clang Release Unit Tests",
+        "description": "Build and run unit tests from the linux_clang_release tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "linux_clang_release", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "clang_release"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/linux_clang_release",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["linux"]
+      },
+      {
+        "id": "mac-clang-debug-unit",
+        "label": "Mac Clang Debug Unit Tests",
+        "description": "Build and run unit tests from the mac_clang_debug tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "mac_clang_debug", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "mac_clang_debug"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/mac_clang_debug",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["darwin"],
+        "default": true
+      },
+      {
+        "id": "mac-clang-release-unit",
+        "label": "Mac Clang Release Unit Tests",
+        "description": "Build and run unit tests from the mac_clang_release tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "mac_clang_release", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "mac_clang_release"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/mac_clang_release",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["darwin"]
+      },
+      {
+        "id": "mac-gcc-debug-unit",
+        "label": "Mac GCC Debug Unit Tests",
+        "description": "Build and run unit tests from the mac_gcc_debug tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "mac_gcc_debug", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "mac_gcc_debug"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/mac_gcc_debug",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["darwin"]
+      },
+      {
+        "id": "win-llvm-debug-unit",
+        "label": "Win LLVM Debug Unit Tests",
+        "description": "Build and run unit tests from the win_llvm_debug tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "win_llvm_debug", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_llvm_debug"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/win_llvm_debug",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["win32"]
+      },
+      {
+        "id": "win-msvc-debug-unit",
+        "label": "Win MSVC Debug Unit Tests",
+        "description": "Build and run unit tests from the win_msvc_debug tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "win_msvc_debug", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_msvc_debug"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/win_msvc_debug",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["win32"],
+        "default": true
+      },
+      {
+        "id": "win-msvc-release-unit",
+        "label": "Win MSVC Release Unit Tests",
+        "description": "Build and run unit tests from the win_msvc_release tree",
+        "steps": [
+          {
+            "command": "cmake",
+            "args": ["--preset", "win_msvc_release", "-DBUILD_TESTING=ON"]
+          },
+          {
+            "command": "cmake",
+            "args": ["--build", "--preset", "win_msvc_release"]
+          },
+          {
+            "command": "ctest",
+            "args": [
+              "--test-dir",
+              "build/win_msvc_release",
+              "--output-on-failure",
+              "-L",
+              "unit",
+              "--no-tests=error"
+            ]
+          }
+        ],
+        "platforms": ["win32"]
+      }
+    ],
     "package": [
       {
         "id": "mac-clang-release",

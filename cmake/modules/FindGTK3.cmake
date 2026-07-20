@@ -31,8 +31,9 @@
 find_package(PkgConfig)
 pkg_check_modules(GTK3 gtk+-3.0)
 
-# Apple and MSVC need pkg-config library names resolved to concrete paths.
-if(APPLE OR WIN32)
+# Resolve pkg-config library names to concrete paths on maintained platforms so
+# mixed system and package-manager prefixes cannot produce an incoherent GTK ABI.
+if(APPLE OR WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	foreach(i ${GTK3_LIBRARIES})
 		find_library(_gtk3_LIBRARY NAMES ${i} HINTS ${GTK3_LIBRARY_DIRS})
 		LIST(APPEND GTK3_LIBRARY ${_gtk3_LIBRARY})

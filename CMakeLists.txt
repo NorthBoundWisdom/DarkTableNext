@@ -124,6 +124,18 @@ else()
   find_package(OpenMP 4.5 REQUIRED)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  foreach(_openmp_library IN LISTS OpenMP_C_LIBRARIES OpenMP_CXX_LIBRARIES)
+    get_filename_component(_openmp_library_extension "${_openmp_library}" LAST_EXT)
+    if(IS_ABSOLUTE "${_openmp_library}" AND
+       _openmp_library_extension STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      get_filename_component(_openmp_library_dir "${_openmp_library}" DIRECTORY)
+      list(APPEND CMAKE_BUILD_RPATH "${_openmp_library_dir}")
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES CMAKE_BUILD_RPATH)
+endif()
+
 # Check for base threading library
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
@@ -310,8 +322,8 @@ if(BUILD_TESTING)
   include_directories(${CMOCKA_INCLUDE_DIR} include)
 endif(BUILD_TESTING)
 
-# macOS uses the POSIX 2008 interfaces throughout the core.
-if(APPLE)
+# macOS and Linux use the POSIX 2008 interfaces throughout the core.
+if(APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
   add_definitions("-D_XOPEN_SOURCE=700")
 endif()
 
