@@ -54,6 +54,7 @@
 #define MAX_NESTED_TRANSACTIONS 5
 /* transaction id */
 static dt_atomic_int _trxid;
+#if !DT_BUILD_DEVMODE
 static int _application_instance_lock_fd = -1;
 static gchar *_application_instance_lockfile = NULL;
 
@@ -95,6 +96,7 @@ static void _application_instance_lock_release(const int fd)
     flock(fd, LOCK_UN);
 #endif
 }
+#endif
 
 typedef struct dt_database_t
 {
@@ -1762,6 +1764,7 @@ void dt_database_destroy(const dt_database_t *db)
 
 void dt_database_release_application_instance_lock()
 {
+#if !DT_BUILD_DEVMODE
     if (_application_instance_lock_fd >= 0)
     {
         _application_instance_lock_release(_application_instance_lock_fd);
@@ -1769,6 +1772,7 @@ void dt_database_release_application_instance_lock()
         _application_instance_lock_fd = -1;
     }
     g_clear_pointer(&_application_instance_lockfile, g_free);
+#endif
 }
 
 sqlite3 *dt_database_get(const dt_database_t *db)

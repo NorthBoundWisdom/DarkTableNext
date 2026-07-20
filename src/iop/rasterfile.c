@@ -559,7 +559,6 @@ void distort_mask(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const fl
 void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
 {
     dt_iop_rasterfile_gui_data_t *g = self->gui_data;
-    dt_iop_rasterfile_params_t *p = self->params;
 
     if (!w || w == g->mode)
         _update_filepath(self);

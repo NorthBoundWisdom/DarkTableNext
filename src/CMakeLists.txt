@@ -625,9 +625,11 @@ if(APPLE)
   add_custom_command(TARGET darktable POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/lib"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/share"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
+    # Previous development bundles may contain directories here, while current
+    # builds create symlinks.  Remove either form before recreating the links.
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_RESOURCES_DIR}/lib"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_RESOURCES_DIR}/share"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
     COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_LIBRARY_ROOT}"
             "${DARKTABLE_APP_RESOURCES_DIR}/lib"
     COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_SHARE_ROOT}"
