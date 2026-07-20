@@ -190,6 +190,67 @@ extern const dt_action_def_t dt_action_def_button;
 extern const dt_action_def_t dt_action_def_entry;
 extern const dt_action_def_t dt_action_def_value;
 
+/** Read-only availability and state information for an action invocation.
+ *
+ * Context-menu providers use this instead of probing an action by executing it.
+ * `value` is the action-specific read-only value when the action exposes one,
+ * otherwise DT_ACTION_NOT_VALID. */
+typedef struct dt_action_status_t
+{
+    gboolean applicable;
+    gboolean enabled;
+    gboolean checked;
+    gboolean inconsistent;
+    float value;
+    const gchar *reason;
+} dt_action_status_t;
+
+/** Return the action definition and element table associated with an action. */
+const dt_action_def_t *dt_action_get_definition(const dt_action_t *action);
+const dt_action_element_def_t *dt_action_get_elements(const dt_action_t *action);
+const dt_action_t *dt_action_get_children(const dt_action_t *action);
+int dt_action_get_element_count(const dt_action_t *action);
+int dt_action_get_effect_count(const dt_action_t *action, dt_action_element_t element);
+int dt_action_get_combo_count(const dt_action_t *action, dt_action_element_t element);
+
+/** Return the views in which an action is applicable according to its owner. */
+dt_view_type_flags_t dt_action_get_views(const dt_action_t *action);
+
+/** Return newly allocated, display-ready labels. The caller owns the result. */
+gchar *dt_action_get_full_id(const dt_action_t *action);
+gchar *dt_action_get_full_label(const dt_action_t *action);
+gchar *dt_action_get_effect_label(const dt_action_t *action, dt_action_element_t element,
+                                  dt_action_effect_t effect);
+gchar *dt_action_get_shortcut_label(const dt_action_t *action, int instance,
+                                    dt_action_element_t element, dt_action_effect_t effect);
+
+/** Find the closest action assigned to widget or one of its ancestors.
+ * `action_widget`, when non-NULL, receives the widget that owns the action. */
+dt_action_t *dt_action_find_widget(GtkWidget *widget, GtkWidget **action_widget);
+
+/** Resolve the relative IOP instance represented by widget for an action. */
+gboolean dt_action_get_instance(const dt_action_t *action, GtkWidget *widget, int *instance);
+
+/** Query an action without changing application state. */
+void dt_action_get_status(dt_action_t *action, int instance, dt_action_element_t element,
+                          dt_action_effect_t effect, dt_action_status_t *status);
+
+/** Attach a domain-owned, side-effect-free status refinement to an Action.
+ * The callback runs after generic view/target validation and may disable an
+ * otherwise valid invocation with a contextual reason. `user_data` remains
+ * owned by the Action owner and must outlive the Action. */
+void dt_action_set_status_callback(dt_action_t *action, dt_action_status_callback_t *callback,
+                                   gpointer user_data);
+
+/** Keep an Action available to an explicit context-menu provider while
+ * suppressing it from generic owner-menu traversal. */
+void dt_action_set_context_menu_provider_only(dt_action_t *action, gboolean provider_only);
+
+/** Invoke an already resolved action. This is the pointer-based equivalent of
+ * dt_action_process() and performs the same current-view validation. */
+float dt_action_invoke(dt_action_t *action, int instance, dt_action_element_t element,
+                       dt_action_effect_t effect, float move_size);
+
 dt_action_t *dt_action_define_iop(dt_iop_module_t *self, const gchar *section, const gchar *label,
                                   GtkWidget *widget, const dt_action_def_t *action_def);
 

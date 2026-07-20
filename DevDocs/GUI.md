@@ -10,6 +10,63 @@ See also:
 
 ---
 
+## Action Context Menus
+
+Registered Action widgets receive their context menu from `src/gui/context_menu.c`; do not add a
+second direct callback merely to duplicate a button, slider or Bauhaus action. The menu resolves the
+nearest `dt_action_t`, derives the IOP instance when needed, queries its current state through
+`dt_action_get_status()`, and invokes it with `dt_action_invoke()`.
+
+- Add an ordinary control with `dt_action_define()` / `dt_action_define_iop()` and its discrete
+  Action effects are automatically available to the control's right-click menu.
+- Keep Action state queries side-effect free. Do not test availability by emitting GTK signals or
+  changing parameters; use widget sensitivity and explicit domain state instead. A domain Action
+  can refine generic target/view state with `dt_action_set_status_callback()`; the callback may
+  disable an invocation and set a concise reason, but must not perform the action.
+- Image providers should mark every hit widget with `dt_gui_context_menu_attach_image()` (or call
+  `dt_gui_context_menu_show_image()` for custom canvas hit tests). It snapshots the intended image
+  list through `dt_act_on_push_context()` for the synchronous Action invocation; job creation must
+  copy IDs before returning to the GTK loop.
+- Darkroom canvas objects (masks, crop, curve nodes and custom IOP drawing areas) remain explicit
+  providers. RGB Curve, Tone Curve, Base Curve and Color Zones are the reference implementations:
+  their payload contains only channel (where applicable), node index and node coordinates, and the
+  Action revalidates that snapshot before using the existing history path. Crop's non-drag secondary
+  click is a single `reset crop` Action item; it resolves the module through its GTK weak target rather
+  than keeping a module pointer in the menu. RGB Levels' active auto-region selection is the simple
+  no-payload case: its canvas menu invokes the existing `auto region` Action's explicit off effect,
+  while a double primary click remains a fast cancellation gesture. Other canvas providers keep their
+  existing right-click drag and creation semantics until they have an equivalent stable hit-test
+  payload.
+- Tree/list providers should put a `GtkTreeRowReference` or weak hit-widget reference in
+  `dt_gui_context_menu_action_item_new()` payload, then resolve it immediately before calling the
+  existing Action business path. Never retain the current selection or a raw row pointer while a
+  menu is open. If a provider must retain a specialized menu item such as a check item,
+  `dt_gui_context_menu_bind_action_item()` binds that existing item to the same frozen Action
+  context. The Mask manager uses this form for group operators while retaining its existing
+  hierarchy and history callbacks.
+- Commands that only make sense with a provider-owned object payload must call
+  `dt_action_set_context_menu_provider_only()`. They remain callable through their provider, but
+  are deliberately omitted from an owning Lib/IOP module's generic menu so users never see a
+  context-free item that cannot act on a target. This applies to tree rows and canvas hit targets
+  alike: mark the curve graph, Color Checker patch or Filmic graph Action itself provider-only when
+  its effects require the provider's node/patch/button snapshot. A provider-only Action also has no
+  generic direct-widget fallback: its provider must be the component that supplies the snapshot.
+- Use `dt_gui_context_menu_attach_provider()` only when a widget must retain a richer native menu.
+  For example, Metadata text fields emit their GTK `populate-popup` menu through this provider and
+  append dynamic values as Action items. A provider returning `FALSE` falls back to the standard
+  Action projection.
+
+The complete coverage plan and remaining provider work are tracked in
+[TODO_CONTEXT_MENUS.md](../TODO_CONTEXT_MENUS.md).
+
+For a runtime Action audit, run the existing **reinitialise input devices** Action. It writes
+`all_actions` in the user configuration directory. Each Action line includes its complete ID, type,
+view mask and target presence; its following invocation lines record element/effect, current enabled
+and checked state, value, reason and shortcut. The audit deliberately emits numeric effect IDs rather
+than dereferencing legacy effect labels, so it remains safe while auditing old modules.
+
+---
+
 ## 1. Constructing the Module UI
 
 ### `gui_init()` Overview

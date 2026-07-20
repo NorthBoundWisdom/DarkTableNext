@@ -23,6 +23,7 @@
 #include "control/signal.h"
 #include "dtgtk/button.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/gtkentry.h"
 #include "gui/metadata_tags.h"
@@ -58,7 +59,14 @@ typedef struct dt_lib_metadata_t
     GList *metadata_to_delete;
     int num_grid_rows;
     gboolean needs_rebuild;
+    dt_action_t *context_set_value_action;
 } dt_lib_metadata_t;
+
+typedef struct dt_metadata_value_context_t
+{
+    GWeakRef textview;
+    gchar *value;
+} dt_metadata_value_context_t;
 
 const char *name(dt_lib_module_t *self)
 {
@@ -516,11 +524,42 @@ void gui_reset(dt_lib_module_t *self)
     _write_metadata(self);
 }
 
-static void _menu_line_activated(GtkMenuItem *menuitem, GtkTextView *textview)
+static void _metadata_value_context_destroy(gpointer data)
 {
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(textview);
-    gtk_text_buffer_set_text(
-        buffer, gtk_label_get_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(menuitem)))), -1);
+    dt_metadata_value_context_t *context = data;
+    if (!context)
+        return;
+
+    g_weak_ref_clear(&context->textview);
+    g_free(context->value);
+    g_free(context);
+}
+
+static void _metadata_set_value_context_action(dt_action_t *action)
+{
+    dt_metadata_value_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (!context)
+        return;
+
+    GtkWidget *widget = g_weak_ref_get(&context->textview);
+    if (!widget)
+        return;
+
+    GtkTextView *textview = GTK_TEXT_VIEW(widget);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(textview), context->value, -1);
+    g_object_unref(widget);
+}
+
+static GtkWidget *_metadata_value_context_item(const gchar *value, GtkTextView *textview,
+                                               dt_lib_metadata_t *d)
+{
+    dt_metadata_value_context_t *context = g_malloc0(sizeof(*context));
+    g_weak_ref_init(&context->textview, G_OBJECT(textview));
+    context->value = g_strdup(value);
+    return dt_gui_context_menu_action_item_new(value, d->context_set_value_action, 0,
+                                                DT_ACTION_ELEMENT_DEFAULT,
+                                                DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                                _metadata_value_context_destroy);
 }
 
 static void _populate_popup_multi(GtkTextView *textview, GtkWidget *popup, dt_lib_module_t *self)
@@ -538,12 +577,26 @@ static void _populate_popup_multi(GtkTextView *textview, GtkWidget *popup, dt_li
 
     for (GList *item = texts; item; item = item->next)
     {
-        GtkWidget *new_line = gtk_menu_item_new_with_label(item->data);
-        g_signal_connect(G_OBJECT(new_line), "activate", G_CALLBACK(_menu_line_activated),
-                         textview);
+        GtkWidget *new_line = _metadata_value_context_item(item->data, textview,
+                                                            (dt_lib_metadata_t *)d);
         gtk_menu_shell_append(GTK_MENU_SHELL(popup), new_line);
     }
     gtk_widget_show_all(popup);
+}
+
+static gboolean _metadata_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
+                                                gpointer user_data)
+{
+    GtkWidget *popup = gtk_menu_new();
+    g_signal_emit_by_name(widget, "populate-popup", popup);
+    gtk_widget_show_all(popup);
+    if (event)
+        gtk_menu_popup_at_pointer(GTK_MENU(popup), (GdkEvent *)event);
+    else
+        dt_gui_menu_popup(GTK_MENU(popup), widget, GDK_GRAVITY_SOUTH_WEST,
+                          GDK_GRAVITY_NORTH_WEST);
+    (void)user_data;
+    return TRUE;
 }
 
 static gboolean _metadata_reset(GtkWidget *label, GdkEventButton *event, GtkWidget *widget)
@@ -578,6 +631,7 @@ static void _add_grid_row(dt_metadata_t *metadata, int row, dt_lib_module_t *sel
 
     GtkWidget *textview = gtk_text_view_new();
     dt_action_define(DT_ACTION(self), NULL, metadata->name, textview, &dt_action_def_entry);
+    dt_gui_context_menu_attach_provider(textview, _metadata_context_menu_provider, self, NULL);
     gtk_widget_set_tooltip_text(
         textview,
         _("metadata text"
@@ -1083,6 +1137,9 @@ void gui_init(dt_lib_module_t *self)
     d->metadata_texts = g_hash_table_new(NULL, NULL);
     d->metadata_counts = g_hash_table_new(NULL, NULL);
     d->metadata_to_delete = NULL;
+    d->context_set_value_action = dt_action_register(DT_ACTION(self), N_("set metadata value"),
+                                                     _metadata_set_value_context_action, 0, 0);
+    dt_action_set_context_menu_provider_only(d->context_set_value_action, TRUE);
 
     GtkWidget *grid = gtk_grid_new();
     d->grid = grid;

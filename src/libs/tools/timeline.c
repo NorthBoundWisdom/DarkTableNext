@@ -23,6 +23,7 @@
 #include "control/control.h"
 #include "develop/develop.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "libs/lib.h"
 #include "libs/lib_api.h"
@@ -67,6 +68,7 @@ typedef struct dt_lib_timeline_t
     dt_datetime_t time_pos;
 
     GtkWidget *timeline;
+    dt_action_t *clear_time_filter_action;
     cairo_surface_t *surface;
     int surface_width;
     int surface_height;
@@ -1114,6 +1116,87 @@ static gboolean _lib_timeline_draw_callback(GtkWidget *widget, cairo_t *wcr, dt_
     return TRUE;
 }
 
+static gboolean _timeline_has_time_filter(void)
+{
+    const int nb_rules = dt_conf_get_int("plugins/lighttable/collect/num_rules");
+    if (nb_rules <= 0)
+        return FALSE;
+
+    char confname[200] = {0};
+    snprintf(confname, sizeof(confname), "plugins/lighttable/collect/item%1d", nb_rules - 1);
+    return dt_conf_get_int(confname) == DT_COLLECTION_PROP_TIME;
+}
+
+static gboolean _timeline_clear_time_filter(dt_lib_module_t *self)
+{
+    if (!self || !self->data || !_timeline_has_time_filter())
+        return FALSE;
+
+    const int nb_rules = dt_conf_get_int("plugins/lighttable/collect/num_rules");
+    dt_conf_set_int("plugins/lighttable/collect/num_rules", nb_rules - 1);
+    dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
+                               DT_COLLECTION_PROP_UNDEF, NULL);
+
+    dt_lib_timeline_t *strip = self->data;
+    strip->selecting = FALSE;
+    return TRUE;
+}
+
+static float _timeline_action_process(gpointer target, const dt_action_element_t element,
+                                      const dt_action_effect_t effect, const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || element != DT_ACTION_ELEMENT_DEFAULT ||
+        effect != DT_ACTION_EFFECT_ACTIVATE || !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_lib_module_t *self = g_object_get_data(G_OBJECT(target), "lib-instance");
+    return _timeline_clear_time_filter(self) ? 1.0f : DT_ACTION_NOT_VALID;
+}
+
+static void _timeline_action_status(const dt_action_t *action, const int instance,
+                                    const int element, const int effect,
+                                    dt_action_status_t *status, gpointer user_data)
+{
+    (void)action;
+    (void)instance;
+    (void)element;
+    (void)effect;
+    (void)user_data;
+    if (!_timeline_has_time_filter())
+    {
+        status->enabled = FALSE;
+        status->reason = _("no active time filter");
+    }
+}
+
+static const dt_action_element_def_t _action_elements_timeline[] = {
+    {NULL, dt_action_effect_activate},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_timeline = {N_("remove time filter"),
+                                                      _timeline_action_process,
+                                                      _action_elements_timeline};
+
+static gboolean _show_timeline_context_menu(dt_lib_module_t *self)
+{
+    if (!self || !self->data)
+        return FALSE;
+
+    dt_lib_timeline_t *strip = self->data;
+    if (!strip->timeline || !strip->clear_time_filter_action)
+        return FALSE;
+
+    GtkWidget *menu = gtk_menu_new();
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                          dt_gui_context_menu_action_item_new(
+                              _("remove time filter"), strip->clear_time_filter_action, 0,
+                              DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_ACTIVATE, NULL, NULL));
+    dt_gui_menu_popup(GTK_MENU(menu), strip->timeline, GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 static gboolean _lib_timeline_button_press_callback(GtkWidget *w, GdkEventButton *e,
                                                     dt_lib_module_t *self)
 {
@@ -1155,22 +1238,7 @@ static gboolean _lib_timeline_button_press_callback(GtkWidget *w, GdkEventButton
     }
     else if (e->button == GDK_BUTTON_SECONDARY)
     {
-        // we remove the last rule if it's a datetime one
-        const int nb_rules = dt_conf_get_int("plugins/lighttable/collect/num_rules");
-        if (nb_rules > 0)
-        {
-            char confname[200] = {0};
-            snprintf(confname, sizeof(confname), "plugins/lighttable/collect/item%1d",
-                     nb_rules - 1);
-            if (dt_conf_get_int(confname) == DT_COLLECTION_PROP_TIME)
-            {
-                dt_conf_set_int("plugins/lighttable/collect/num_rules", nb_rules - 1);
-                dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
-                                           DT_COLLECTION_PROP_UNDEF, NULL);
-
-                strip->selecting = FALSE;
-            }
-        }
+        return _show_timeline_context_menu(self);
     }
 
     return FALSE;
@@ -1465,6 +1533,11 @@ void gui_init(dt_lib_module_t *self)
                      G_CALLBACK(_lib_timeline_motion_notify_callback), self);
     g_signal_connect(G_OBJECT(d->timeline), "leave-notify-event",
                      G_CALLBACK(_lib_timeline_mouse_leave_callback), self);
+    g_object_set_data(G_OBJECT(d->timeline), "lib-instance", self);
+    d->clear_time_filter_action = dt_action_define(DT_ACTION(self), NULL,
+                                                   N_("remove time filter"), d->timeline,
+                                                   &_action_def_timeline);
+    dt_action_set_status_callback(d->clear_time_filter_action, _timeline_action_status, NULL);
 
     gtk_box_pack_start(GTK_BOX(self->widget), d->timeline, TRUE, TRUE, 0);
 

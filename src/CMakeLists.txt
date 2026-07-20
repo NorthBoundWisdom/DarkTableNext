@@ -132,6 +132,7 @@ FILE(GLOB SOURCE_FILES
   "dtgtk/togglebutton.c"
   "gui/about.c"
   "gui/accelerators.c"
+  "gui/context_menu.c"
   "gui/color_picker_proxy.c"
   "gui/workspace.c"
   "gui/gtk.c"
@@ -157,7 +158,7 @@ FILE(GLOB SOURCE_FILES
   "views/view.c"
   )
 
-FILE(GLOB HEADER_FILES "*.h" "common/*.h" "${OPENCL_PATH}/CL/*.h" "control/*.h" "iop/*.h" "libs/*.h" "views/*.h")
+FILE(GLOB HEADER_FILES "*.h" "common/*.h" "${OPENCL_PATH}/CL/*.h" "control/*.h" "gui/*.h" "iop/*.h" "libs/*.h" "views/*.h")
 
 list(APPEND SOURCE_FILES "osx/osx.c" "common/pwstorage/backend_apple_keychain.c" "main.c")
 list(APPEND HEADER_FILES "osx/osx.h" "common/pwstorage/backend_apple_keychain.h")

@@ -24,6 +24,7 @@
 #include "control/conf.h"
 #include "control/control.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/styles.h"
 #include "libs/lib.h"
@@ -46,7 +47,16 @@ typedef struct dt_lib_styles_t
     GtkWidget *create_button, *edit_button, *delete_button;
     GtkWidget *import_button, *export_button, *applymode, *apply_button;
     GtkWidget *hide_preview;
+    dt_action_t *context_apply_action, *context_edit_action;
+    dt_action_t *context_export_action, *context_remove_action;
 } dt_lib_styles_t;
+
+typedef struct dt_styles_row_context_t
+{
+    GWeakRef view;
+    GtkTreeRowReference *row;
+    dt_lib_styles_t *styles;
+} dt_styles_row_context_t;
 
 const char *name(dt_lib_module_t *self)
 {
@@ -80,6 +90,215 @@ typedef enum _styles_columns_t
     DT_STYLES_COL_FULLNAME,
     DT_STYLES_NUM_COLS
 } _styles_columns_t;
+
+static void _apply_clicked(GtkWidget *w, dt_lib_styles_t *d);
+static void _edit_clicked(GtkWidget *w, dt_lib_styles_t *d);
+static void _delete_clicked(GtkWidget *w, dt_lib_styles_t *d);
+static void _export_clicked(GtkWidget *w, dt_lib_styles_t *d);
+
+static void _styles_row_context_destroy(gpointer data)
+{
+    dt_styles_row_context_t *context = data;
+    if (!context)
+        return;
+
+    g_weak_ref_clear(&context->view);
+    if (context->row)
+        gtk_tree_row_reference_free(context->row);
+    g_free(context);
+}
+
+static dt_styles_row_context_t *_styles_row_context_new(dt_lib_styles_t *d)
+{
+    GtkTreePath *path = NULL;
+    GtkTreeViewColumn *column = NULL;
+    gtk_tree_view_get_cursor(d->tree, &path, &column);
+    if (!path)
+        return NULL;
+
+    GtkTreeModel *model = gtk_tree_view_get_model(d->tree);
+    GtkTreeIter iter;
+    gchar *name = NULL;
+    if (gtk_tree_model_get_iter(model, &iter, path))
+        gtk_tree_model_get(model, &iter, DT_STYLES_COL_FULLNAME, &name, -1);
+    if (!name)
+    {
+        gtk_tree_path_free(path);
+        return NULL;
+    }
+    g_free(name);
+
+    dt_styles_row_context_t *context = g_malloc0(sizeof(*context));
+    g_weak_ref_init(&context->view, G_OBJECT(d->tree));
+    context->row = gtk_tree_row_reference_new(model, path);
+    context->styles = d;
+    gtk_tree_path_free(path);
+    return context;
+}
+
+static GtkTreeView *_styles_row_context_select(const dt_action_t *action)
+{
+    dt_styles_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (!context || !context->row || !gtk_tree_row_reference_valid(context->row))
+        return NULL;
+
+    GtkTreeView *view = GTK_TREE_VIEW(g_weak_ref_get(&context->view));
+    if (!view)
+        return NULL;
+
+    GtkTreePath *path = gtk_tree_row_reference_get_path(context->row);
+    if (!path)
+    {
+        g_object_unref(view);
+        return NULL;
+    }
+
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+    gtk_tree_selection_unselect_all(selection);
+    gtk_tree_selection_select_path(selection, path);
+    gtk_tree_view_set_cursor(view, path, NULL, FALSE);
+    gtk_tree_path_free(path);
+    return view;
+}
+
+static void _styles_apply_context_action(dt_action_t *action)
+{
+    GtkTreeView *view = _styles_row_context_select(action);
+    dt_styles_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (view && context)
+        _apply_clicked(NULL, context->styles);
+    if (view)
+        g_object_unref(view);
+}
+
+static void _styles_edit_context_action(dt_action_t *action)
+{
+    GtkTreeView *view = _styles_row_context_select(action);
+    dt_styles_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (view && context)
+        _edit_clicked(NULL, context->styles);
+    if (view)
+        g_object_unref(view);
+}
+
+static void _styles_export_context_action(dt_action_t *action)
+{
+    GtkTreeView *view = _styles_row_context_select(action);
+    dt_styles_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (view && context)
+        _export_clicked(NULL, context->styles);
+    if (view)
+        g_object_unref(view);
+}
+
+static void _styles_remove_context_action(dt_action_t *action)
+{
+    GtkTreeView *view = _styles_row_context_select(action);
+    dt_styles_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (view && context)
+        _delete_clicked(NULL, context->styles);
+    if (view)
+        g_object_unref(view);
+}
+
+static void _styles_apply_context_status(const dt_action_t *action, const int instance,
+                                         const int element, const int effect,
+                                         dt_action_status_t *status, gpointer user_data)
+{
+    (void)action;
+    (void)instance;
+    (void)element;
+    (void)effect;
+    (void)user_data;
+
+    if (!dt_act_on_get_images_nb(TRUE, FALSE))
+    {
+        status->enabled = FALSE;
+        status->reason = _("no images selected");
+    }
+}
+
+static GtkWidget *_styles_context_item(const gchar *label, dt_action_t *action,
+                                       dt_lib_styles_t *d)
+{
+    dt_styles_row_context_t *context = _styles_row_context_new(d);
+    if (!context)
+        return NULL;
+
+    return dt_gui_context_menu_action_item_new(label, action, 0, DT_ACTION_ELEMENT_DEFAULT,
+                                                DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                                _styles_row_context_destroy);
+}
+
+static void _styles_show_context_menu(dt_lib_styles_t *d)
+{
+    GtkWidget *menu = gtk_menu_new();
+    GtkWidget *item = _styles_context_item(_("apply"), d->context_apply_action, d);
+    if (!item)
+    {
+        gtk_widget_destroy(menu);
+        return;
+    }
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    item = _styles_context_item(_("edit..."), d->context_edit_action, d);
+    if (item)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    item = _styles_context_item(_("export..."), d->context_export_action, d);
+    if (item)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+    item = _styles_context_item(_("remove"), d->context_remove_action, d);
+    if (item)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    gtk_widget_show_all(menu);
+    dt_gui_menu_popup(GTK_MENU(menu), GTK_WIDGET(d->tree), GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+}
+
+static gboolean _styles_button_press(GtkWidget *widget, GdkEventButton *event,
+                                     dt_lib_styles_t *d)
+{
+    if (event->type != GDK_BUTTON_PRESS || event->button != GDK_BUTTON_SECONDARY)
+        return FALSE;
+
+    GtkTreePath *path = NULL;
+    if (!gtk_tree_view_get_path_at_pos(d->tree, event->x, event->y, &path, NULL, NULL, NULL))
+        return FALSE;
+
+    GtkTreeModel *model = gtk_tree_view_get_model(d->tree);
+    GtkTreeIter iter;
+    gchar *name = NULL;
+    if (gtk_tree_model_get_iter(model, &iter, path))
+        gtk_tree_model_get(model, &iter, DT_STYLES_COL_FULLNAME, &name, -1);
+    if (!name)
+    {
+        gtk_tree_path_free(path);
+        return FALSE;
+    }
+    g_free(name);
+
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(d->tree);
+    gtk_tree_selection_unselect_all(selection);
+    gtk_tree_selection_select_path(selection, path);
+    gtk_tree_view_set_cursor(d->tree, path, NULL, FALSE);
+    gtk_tree_path_free(path);
+    _styles_show_context_menu(d);
+    return TRUE;
+}
+
+static gboolean _styles_popup_menu(GtkWidget *widget, dt_lib_styles_t *d)
+{
+    (void)widget;
+    dt_styles_row_context_t *context = _styles_row_context_new(d);
+    if (!context)
+        return FALSE;
+    _styles_row_context_destroy(context);
+    _styles_show_context_menu(d);
+    return TRUE;
+}
 
 static gboolean _get_node_for_name(GtkTreeModel *model, const gboolean root, GtkTreeIter *iter,
                                    const gchar *parent_name)
@@ -884,6 +1103,8 @@ void gui_init(dt_lib_module_t *self)
 
     gtk_widget_set_tooltip_text(GTK_WIDGET(d->tree), _("available styles,\ndouble-click to apply"));
     g_signal_connect(d->tree, "row-activated", G_CALLBACK(_styles_row_activated_callback), d);
+    g_signal_connect(d->tree, "button-press-event", G_CALLBACK(_styles_button_press), d);
+    g_signal_connect(d->tree, "popup-menu", G_CALLBACK(_styles_popup_menu), d);
     g_signal_connect(gtk_tree_view_get_selection(GTK_TREE_VIEW(d->tree)), "changed",
                      G_CALLBACK(_tree_selection_changed), self);
 
@@ -947,6 +1168,20 @@ void gui_init(dt_lib_module_t *self)
     d->apply_button =
         dt_action_button_new(self, N_("apply"), _apply_clicked, d,
                              _("apply the selected styles in list above to selected images"), 0, 0);
+
+    d->context_apply_action = dt_action_register(DT_ACTION(self), N_("apply selected style"),
+                                                 _styles_apply_context_action, 0, 0);
+    d->context_edit_action = dt_action_register(DT_ACTION(self), N_("edit selected style"),
+                                                _styles_edit_context_action, 0, 0);
+    d->context_export_action = dt_action_register(DT_ACTION(self), N_("export selected style"),
+                                                  _styles_export_context_action, 0, 0);
+    d->context_remove_action = dt_action_register(DT_ACTION(self), N_("remove selected style"),
+                                                  _styles_remove_context_action, 0, 0);
+    dt_action_set_context_menu_provider_only(d->context_apply_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->context_edit_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->context_export_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->context_remove_action, TRUE);
+    dt_action_set_status_callback(d->context_apply_action, _styles_apply_context_status, NULL);
 
     // add entry completion
     GtkEntryCompletion *completion = gtk_entry_completion_new();

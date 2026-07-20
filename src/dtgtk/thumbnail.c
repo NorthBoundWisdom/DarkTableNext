@@ -37,6 +37,7 @@
 #include "dtgtk/thumbnail_btn.h"
 #include "gui/drag_and_drop.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "views/view.h"
 
 static void _thumb_resize_overlays(dt_thumbnail_t *thumb);
@@ -999,7 +1000,15 @@ static gboolean _event_main_motion(GtkWidget *widget, GdkEventMotion *event, gpo
 
 static gboolean _event_rating_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
-    return TRUE;
+    (void)widget;
+    (void)user_data;
+    return event->button != GDK_BUTTON_SECONDARY;
+}
+
+static dt_imgid_t _thumbnail_context_image_id(gpointer user_data)
+{
+    dt_thumbnail_t *thumb = (dt_thumbnail_t *)user_data;
+    return thumb->imgid;
 }
 
 static gboolean _event_rating_release(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
@@ -1645,6 +1654,15 @@ GtkWidget *dt_thumbnail_create_widget(dt_thumbnail_t *thumb, const float zoom_ra
         gtk_widget_show(thumb->w_zoom);
         gtk_container_add(GTK_CONTAINER(thumb->w_zoom_eb), thumb->w_zoom);
         gtk_overlay_add_overlay(GTK_OVERLAY(overlays_parent), thumb->w_zoom_eb);
+
+        GtkWidget *context_widgets[] = {thumb->w_back,      evt_image,         thumb->w_image,
+                                         thumb->w_bottom_eb, thumb->w_reject,   thumb->w_color,
+                                         thumb->w_group,     thumb->w_audio,    thumb->w_zoom_eb,
+                                         NULL};
+        for (int i = 0; i < MAX_STARS; i++)
+            dt_gui_context_menu_attach_image(thumb->w_stars[i], _thumbnail_context_image_id, thumb);
+        for (GtkWidget **context_widget = context_widgets; *context_widget; context_widget++)
+            dt_gui_context_menu_attach_image(*context_widget, _thumbnail_context_image_id, thumb);
 
         dt_thumbnail_resize(thumb, thumb->width, thumb->height, TRUE, zoom_ratio);
     }

@@ -17,7 +17,9 @@
 */
 
 #include "control/jobs/control_jobs.h"
+#include "common/act_on.h"
 #include "common/collection.h"
+#include "common/colorlabels.h"
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/exif.h"
@@ -27,6 +29,8 @@
 #include "common/image.h"
 #include "common/image_cache.h"
 #include "common/mipmap_cache.h"
+#include "common/metadata.h"
+#include "common/ratings.h"
 #include "common/styles.h"
 #include "common/tags.h"
 #include "common/undo.h"
@@ -109,6 +113,15 @@ typedef struct _images_job_data_t
     gboolean duplicate;
     gboolean overwrite;
 } _images_job_data_t;
+
+typedef enum dt_control_metadata_action_t
+{
+    DT_CONTROL_METADATA_REPLACE = 0,
+    DT_CONTROL_METADATA_MERGE,
+    DT_CONTROL_METADATA_CLEAR
+} dt_control_metadata_action_t;
+
+static dt_imgid_t _metadata_source_imageid = NO_IMGID;
 
 static _images_job_data_t *_dup_images_job_data_t(_images_job_data_t *data)
 {
@@ -1846,6 +1859,151 @@ void dt_control_flip_images(const int32_t cw)
     dt_control_add_job(DT_JOB_QUEUE_USER_FG, _control_generic_images_job_create(
                                                  &_control_flip_images_job_run, N_("flip images"),
                                                  cw, NULL, PROGRESS_CANCELLABLE, TRUE));
+}
+
+void dt_control_group_images(void)
+{
+    GList *imgs = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    if (g_list_length(imgs) < 2)
+    {
+        g_list_free(imgs);
+        return;
+    }
+
+    dt_imgid_t new_group_id =
+        darktable.gui && darktable.gui->grouping ? darktable.gui->expanded_group_id : NO_IMGID;
+    for (const GList *l = imgs; l; l = g_list_next(l))
+    {
+        const dt_imgid_t imgid = GPOINTER_TO_INT(l->data);
+        if (!dt_is_valid_imgid(new_group_id))
+            new_group_id = imgid;
+        dt_grouping_add_to_group(new_group_id, imgid);
+    }
+
+    if (darktable.gui)
+        darktable.gui->expanded_group_id = darktable.gui->grouping ? new_group_id : NO_IMGID;
+    dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
+                               DT_COLLECTION_PROP_UNDEF, imgs);
+    dt_control_queue_redraw_center();
+    g_list_free(imgs);
+}
+
+void dt_control_ungroup_images(void)
+{
+    GList *imgs = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    GList *changed = NULL;
+    for (const GList *l = imgs; l; l = g_list_next(l))
+    {
+        const dt_imgid_t imgid = GPOINTER_TO_INT(l->data);
+        if (dt_is_valid_imgid(dt_grouping_remove_from_group(imgid)))
+            changed = g_list_prepend(changed, GINT_TO_POINTER(imgid));
+    }
+    g_list_free(imgs);
+
+    if (!changed)
+        return;
+
+    changed = g_list_reverse(changed);
+    if (darktable.gui)
+        darktable.gui->expanded_group_id = NO_IMGID;
+    dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
+                               DT_COLLECTION_PROP_UNDEF, changed);
+    dt_control_queue_redraw_center();
+    g_list_free(changed);
+}
+
+void dt_control_copy_metadata_source(void)
+{
+    _metadata_source_imageid = dt_act_on_get_main_image();
+}
+
+gboolean dt_control_can_paste_metadata(void)
+{
+    if (!dt_is_valid_imgid(_metadata_source_imageid))
+        return FALSE;
+
+    const int images = dt_act_on_get_images_nb(FALSE, FALSE);
+    return images > 1 || (images == 1 && _metadata_source_imageid != dt_act_on_get_main_image());
+}
+
+static void _execute_metadata(const dt_control_metadata_action_t action)
+{
+    if (action != DT_CONTROL_METADATA_CLEAR && !dt_is_valid_imgid(_metadata_source_imageid))
+        return;
+
+    const gboolean rating_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/rating");
+    const gboolean colors_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/colors");
+    const gboolean dtmetadata_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/metadata");
+    const gboolean dttag_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/tags");
+    GList *imgs = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    if (!imgs)
+        return;
+
+    const gboolean show_busy = !g_list_shorter_than(imgs, 10);
+    if (show_busy)
+        dt_gui_cursor_set_busy();
+
+    const dt_undo_type_t undo_type =
+        (rating_flag ? DT_UNDO_RATINGS : 0) | (colors_flag ? DT_UNDO_COLORLABELS : 0) |
+        (dtmetadata_flag ? DT_UNDO_METADATA : 0) | (dttag_flag ? DT_UNDO_TAGS : 0);
+    if (undo_type)
+        dt_undo_start_group(darktable.undo, undo_type);
+
+    if (rating_flag)
+    {
+        const int stars = action == DT_CONTROL_METADATA_CLEAR ? 0 :
+                                                                  dt_ratings_get(_metadata_source_imageid);
+        dt_ratings_apply_on_list(imgs, stars, TRUE);
+    }
+    if (colors_flag)
+    {
+        const int colors =
+            action == DT_CONTROL_METADATA_CLEAR ? 0 : dt_colorlabels_get_labels(_metadata_source_imageid);
+        dt_colorlabels_set_labels(imgs, colors, action != DT_CONTROL_METADATA_MERGE, TRUE);
+    }
+    if (dtmetadata_flag)
+    {
+        GList *metadata = action == DT_CONTROL_METADATA_CLEAR ? NULL :
+                                                                 dt_metadata_get_list_id(_metadata_source_imageid);
+        dt_metadata_set_list_id(imgs, metadata, action != DT_CONTROL_METADATA_MERGE, TRUE);
+        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
+        g_list_free_full(metadata, g_free);
+    }
+    if (dttag_flag)
+    {
+        GList *tags = action == DT_CONTROL_METADATA_CLEAR ? NULL :
+                                                             dt_tag_get_tags(_metadata_source_imageid, TRUE);
+        if (dt_tag_set_tags(tags, imgs, TRUE, action != DT_CONTROL_METADATA_MERGE, TRUE))
+            DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_TAG_CHANGED);
+        g_list_free(tags);
+    }
+
+    if (undo_type)
+    {
+        dt_undo_end_group(darktable.undo);
+        dt_image_synch_xmps(imgs);
+        dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
+                                   DT_COLLECTION_PROP_METADATA, imgs);
+        dt_control_queue_redraw_center();
+    }
+    g_list_free(imgs);
+
+    if (show_busy)
+        dt_gui_cursor_clear_busy();
+}
+
+void dt_control_paste_metadata(void)
+{
+    if (!dt_control_can_paste_metadata())
+        return;
+
+    const int mode = dt_conf_get_int("plugins/lighttable/copy_metadata/pastemode");
+    _execute_metadata(mode == 0 ? DT_CONTROL_METADATA_MERGE : DT_CONTROL_METADATA_REPLACE);
+}
+
+void dt_control_clear_metadata(void)
+{
+    _execute_metadata(DT_CONTROL_METADATA_CLEAR);
 }
 
 void dt_control_monochrome_images(const int32_t mode)

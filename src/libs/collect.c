@@ -30,6 +30,7 @@
 #include "dtgtk/button.h"
 #include "dtgtk/thumbtable.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/preferences_dialogs.h"
 #include "libs/lib.h"
@@ -95,6 +96,9 @@ typedef struct dt_lib_collect_t
     gboolean inited;
 
     GtkWidget *history_box;
+
+    dt_action_t *update_path_action;
+    dt_action_t *remove_action;
 } dt_lib_collect_t;
 
 typedef struct dt_lib_collect_params_rule_t
@@ -469,23 +473,118 @@ static void view_popup_menu_onRemove(GtkWidget *menuitem, gpointer userdata)
     }
 }
 
+typedef struct dt_collect_row_context_t
+{
+    GWeakRef view;
+    GtkTreeRowReference *row;
+} dt_collect_row_context_t;
+
+static void _collect_row_context_destroy(gpointer data)
+{
+    dt_collect_row_context_t *context = data;
+    if (!context)
+        return;
+
+    if (context->row)
+        gtk_tree_row_reference_free(context->row);
+    g_weak_ref_clear(&context->view);
+    g_free(context);
+}
+
+static dt_collect_row_context_t *_collect_row_context_new(GtkTreeView *view)
+{
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+    GtkTreeModel *model = gtk_tree_view_get_model(view);
+    GtkTreeIter iter;
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return NULL;
+
+    GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+    dt_collect_row_context_t *context = g_malloc0(sizeof(*context));
+    g_weak_ref_init(&context->view, view);
+    context->row = gtk_tree_row_reference_new(model, path);
+    gtk_tree_path_free(path);
+    return context;
+}
+
+static GtkTreeView *_collect_row_context_select(dt_collect_row_context_t *context)
+{
+    if (!context || !context->row)
+        return NULL;
+
+    GtkTreeView *view = g_weak_ref_get(&context->view);
+    if (!view)
+        return NULL;
+
+    GtkTreePath *path = gtk_tree_row_reference_get_path(context->row);
+    if (!path)
+    {
+        g_object_unref(view);
+        return NULL;
+    }
+
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+    gtk_tree_selection_unselect_all(selection);
+    gtk_tree_selection_select_path(selection, path);
+    gtk_tree_path_free(path);
+    return view;
+}
+
+static void _collect_update_path_action(dt_action_t *action)
+{
+    dt_collect_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    GtkTreeView *view = _collect_row_context_select(context);
+    if (view)
+    {
+        view_popup_menu_onSearchFilmroll(NULL, view);
+        g_object_unref(view);
+    }
+}
+
+static void _collect_remove_action(dt_action_t *action)
+{
+    dt_collect_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    GtkTreeView *view = _collect_row_context_select(context);
+    if (view)
+    {
+        view_popup_menu_onRemove(NULL, view);
+        g_object_unref(view);
+    }
+}
+
 static void view_popup_menu(GtkWidget *treeview, GdkEventButton *event, dt_lib_collect_t *d)
 {
-    GtkWidget *menu, *menuitem;
+    GtkWidget *menu;
 
     menu = gtk_menu_new();
 
-    menuitem = gtk_menu_item_new_with_label(_("update path to files..."));
-    g_signal_connect(menuitem, "activate", G_CALLBACK(view_popup_menu_onSearchFilmroll), treeview);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    dt_collect_row_context_t *context = _collect_row_context_new(GTK_TREE_VIEW(treeview));
+    if (!context)
+    {
+        gtk_widget_destroy(menu);
+        return;
+    }
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(_("update path to files..."), d->update_path_action, 0,
+                                            DT_ACTION_ELEMENT_DEFAULT,
+                                            DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                            _collect_row_context_destroy));
 
-    menuitem = gtk_menu_item_new_with_label(_("remove..."));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    g_signal_connect(menuitem, "activate", G_CALLBACK(view_popup_menu_onRemove), treeview);
+    context = _collect_row_context_new(GTK_TREE_VIEW(treeview));
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(_("remove..."), d->remove_action, 0,
+                                            DT_ACTION_ELEMENT_DEFAULT,
+                                            DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                            _collect_row_context_destroy));
 
     gtk_widget_show_all(GTK_WIDGET(menu));
-
-    gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+    if (event)
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+    else
+        dt_gui_menu_popup(GTK_MENU(menu), treeview, GDK_GRAVITY_SOUTH_WEST,
+                          GDK_GRAVITY_NORTH_WEST);
 }
 
 static gboolean view_onButtonPressed(GtkWidget *treeview, GdkEventButton *event,
@@ -582,7 +681,8 @@ static gboolean view_onButtonPressed(GtkWidget *treeview, GdkEventButton *event,
 
 static gboolean view_onPopupMenu(GtkWidget *treeview, dt_lib_collect_t *d)
 {
-    if (d->view_rule != DT_COLLECTION_PROP_FOLDERS)
+    if (d->view_rule != DT_COLLECTION_PROP_FOLDERS &&
+        d->view_rule != DT_COLLECTION_PROP_FILMROLL)
     {
         return FALSE;
     }
@@ -3577,6 +3677,14 @@ void gui_init(dt_lib_module_t *self)
 
     dt_action_register(DT_ACTION(self), N_("jump back to previous collection"), _history_previous,
                        GDK_KEY_k, GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    d->update_path_action =
+        dt_action_register(DT_ACTION(self), N_("update path to files"), _collect_update_path_action,
+                           0, 0);
+    d->remove_action =
+        dt_action_register(DT_ACTION(self), N_("remove collection source"), _collect_remove_action,
+                           0, 0);
+    dt_action_set_context_menu_provider_only(d->update_path_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->remove_action, TRUE);
 }
 
 void gui_cleanup(dt_lib_module_t *self)

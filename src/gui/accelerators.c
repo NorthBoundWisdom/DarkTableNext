@@ -17,6 +17,7 @@
 */
 
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "common/action.h"
 #include "common/darktable.h"
 #include "common/file_location.h"
@@ -116,6 +117,7 @@ static guint _previous_move = DT_SHORTCUT_MOVE_NONE;
 static dt_action_t *_selected_action = NULL;
 static dt_shortcut_t *_selected_shortcut = NULL;
 static GQuark _action_quark = 0;
+static guint _context_action_invocation = 0;
 
 #define ELEMENT_IS(type, shortcut, elements)                                                       \
     ((elements) && (elements)[(shortcut)->element].effects == dt_action_effect_##type)
@@ -147,15 +149,20 @@ const gchar *dt_action_effect_preset_iop[] = {N_("apply"), N_("apply on new inst
 
 const gchar *dt_action_effect_entry[] = {N_("focus"), N_("start"), N_("end"), N_("clear"), NULL};
 
-const dt_action_element_def_t dt_action_elements_hold[] = {{NULL, dt_action_effect_hold}};
+/* Every Action element table is terminated by an entry with no effects.  Context-menu
+   projection iterates by effects so single-element tables need an explicit sentinel too. */
+const dt_action_element_def_t dt_action_elements_hold[] = {{NULL, dt_action_effect_hold}, {NULL}};
 
-const dt_action_element_def_t _action_elements_toggle[] = {{NULL, dt_action_effect_toggle}};
+const dt_action_element_def_t _action_elements_toggle[] = {{NULL, dt_action_effect_toggle},
+                                                            {NULL}};
 
-const dt_action_element_def_t _action_elements_button[] = {{NULL, dt_action_effect_activate}};
+const dt_action_element_def_t _action_elements_button[] = {{NULL, dt_action_effect_activate},
+                                                            {NULL}};
 
-const dt_action_element_def_t _action_elements_entry[] = {{NULL, dt_action_effect_entry}};
+const dt_action_element_def_t _action_elements_entry[] = {{NULL, dt_action_effect_entry}, {NULL}};
 
-const dt_action_element_def_t _action_elements_value_fallback[] = {{NULL, dt_action_effect_value}};
+const dt_action_element_def_t _action_elements_value_fallback[] = {
+    {NULL, dt_action_effect_value}, {NULL}};
 
 static float _action_process_toggle(gpointer target, dt_action_element_t element,
                                     dt_action_effect_t effect, float move_size)
@@ -375,6 +382,11 @@ static const dt_action_def_t *_action_find_definition(dt_action_t *action)
         return NULL;
 }
 
+const dt_action_def_t *dt_action_get_definition(const dt_action_t *action)
+{
+    return _action_find_definition((dt_action_t *)action);
+}
+
 static const dt_action_element_def_t *_action_find_elements(dt_action_t *action)
 {
     const dt_action_def_t *definition = _action_find_definition(action);
@@ -383,6 +395,83 @@ static const dt_action_element_def_t *_action_find_elements(dt_action_t *action)
         return NULL;
     else
         return definition->elements;
+}
+
+const dt_action_element_def_t *dt_action_get_elements(const dt_action_t *action)
+{
+    return _action_find_elements((dt_action_t *)action);
+}
+
+const dt_action_t *dt_action_get_children(const dt_action_t *action)
+{
+    if (!action || action->type > DT_ACTION_TYPE_SECTION)
+        return NULL;
+
+    return action->target;
+}
+
+static const dt_action_element_def_t *_action_get_element(const dt_action_t *action,
+                                                           const dt_action_element_t element)
+{
+    const dt_action_element_def_t *elements = dt_action_get_elements(action);
+    if (!elements || element < 0)
+        return NULL;
+
+    for (int current = 0; elements[current].effects; current++)
+        if (current == element)
+            return &elements[current];
+
+    return NULL;
+}
+
+int dt_action_get_element_count(const dt_action_t *action)
+{
+    const dt_action_element_def_t *elements = dt_action_get_elements(action);
+    int count = 0;
+    while (elements && elements[count].effects)
+        count++;
+    return count;
+}
+
+int dt_action_get_effect_count(const dt_action_t *action, const dt_action_element_t element)
+{
+    const dt_action_element_def_t *definition = _action_get_element(action, element);
+    int count = 0;
+    while (definition && definition->effects[count])
+        count++;
+    return count;
+}
+
+int dt_action_get_combo_count(const dt_action_t *action, const dt_action_element_t element)
+{
+    const dt_action_element_def_t *definition = _action_get_element(action, element);
+    if (!definition || definition->effects != dt_action_effect_selection)
+        return 0;
+
+    dt_introspection_type_enum_tuple_t *values =
+        g_hash_table_lookup(darktable.bauhaus->combo_introspection, action);
+    if (values)
+    {
+        int count = 0;
+        while (values[count].name)
+            count++;
+        return count;
+    }
+
+    gchar **strings = g_hash_table_lookup(darktable.bauhaus->combo_list, action);
+    if (strings)
+    {
+        int count = 0;
+        while (strings[count])
+            count++;
+        return count;
+    }
+
+    if (action->type >= DT_ACTION_TYPE_WIDGET && GTK_IS_WIDGET(action->target) &&
+        DT_IS_BAUHAUS_WIDGET(action->target))
+        return dt_bauhaus_combobox_length(action->target);
+
+    return 0;
 }
 
 static const gchar *_action_find_effect_combo(dt_action_t *ac, const dt_action_element_def_t *el,
@@ -413,9 +502,46 @@ static const gchar *_action_find_effect_combo(dt_action_t *ac, const dt_action_e
     return NULL;
 }
 
+gchar *dt_action_get_effect_label(const dt_action_t *action, const dt_action_element_t element,
+                                  const dt_action_effect_t effect)
+{
+    const dt_action_element_def_t *definition = _action_get_element(action, element);
+    if (!definition)
+        return NULL;
+
+    const gchar *combo = _action_find_effect_combo((dt_action_t *)action, definition, effect);
+    if (combo)
+        return g_strdup(Q_(combo));
+
+    const gchar **effects = definition->effects;
+    if (effect < 0 || !effects[effect])
+        return NULL;
+
+    return g_strdup(Q_(effects[effect]));
+}
+
 dt_action_t *dt_action_widget(GtkWidget *widget)
 {
     return widget ? g_object_get_qdata(G_OBJECT(widget), _action_quark) : NULL;
+}
+
+dt_action_t *dt_action_find_widget(GtkWidget *widget, GtkWidget **action_widget)
+{
+    if (action_widget)
+        *action_widget = NULL;
+
+    for (GtkWidget *current = widget; current; current = gtk_widget_get_parent(current))
+    {
+        dt_action_t *action = dt_action_widget(current);
+        if (action)
+        {
+            if (action_widget)
+                *action_widget = current;
+            return action;
+        }
+    }
+
+    return NULL;
 }
 
 static gboolean _is_kp_key(guint keycode)
@@ -512,6 +638,11 @@ static gchar *_action_full_id(dt_action_t *action)
     return full_label;
 }
 
+gchar *dt_action_get_full_id(const dt_action_t *action)
+{
+    return action ? _action_full_id((dt_action_t *)action) : NULL;
+}
+
 static gchar *_action_full_label(dt_action_t *action)
 {
     if (action->owner)
@@ -523,6 +654,11 @@ static gchar *_action_full_label(dt_action_t *action)
     }
     else
         return g_strdup(action->label);
+}
+
+gchar *dt_action_get_full_label(const dt_action_t *action)
+{
+    return action ? _action_full_label((dt_action_t *)action) : NULL;
 }
 
 static void _action_distinct_label(gchar **label, dt_action_t *action, gchar *instance)
@@ -551,13 +687,51 @@ static void _action_distinct_label(gchar **label, dt_action_t *action, gchar *in
     _action_distinct_label(label, action->owner, instance);
 }
 
+static void _dump_action_invocation(FILE *f, dt_action_t *action, const int element,
+                                    const int effect)
+{
+    dt_action_status_t status;
+    dt_action_get_status(action, 0, element, effect, &status);
+    gchar *shortcut = dt_action_get_shortcut_label(action, 0, element, effect);
+    fprintf(f,
+            "  element=%d effect=%d applicable=%d enabled=%d checked=%d inconsistent=%d value=%g"
+            " shortcut=%s reason=%s\n",
+            element, effect, status.applicable, status.enabled, status.checked, status.inconsistent,
+            status.value, shortcut ? shortcut : "", status.reason ? status.reason : "");
+    g_free(shortcut);
+}
+
 static void _dump_actions(FILE *f, dt_action_t *action)
 {
     while (action)
     {
         gchar *label = _action_full_id(action);
-        fprintf(f, "%s %s %d\n", label, !action->target ? "*" : "", action->type);
+        fprintf(f, "%s target=%s type=%d views=0x%x\n", label,
+                !action->target ? "missing" : "present", action->type,
+                dt_action_get_views(action));
         g_free(label);
+
+        const int elements = dt_action_get_element_count(action);
+        if (!elements)
+        {
+            _dump_action_invocation(f, action, DT_ACTION_ELEMENT_DEFAULT,
+                                    DT_ACTION_EFFECT_DEFAULT_KEY);
+        }
+        else
+        {
+            for (int element = 0; element < elements; element++)
+            {
+                const int effects = dt_action_get_effect_count(action, element);
+                for (int effect = 0; effect < effects; effect++)
+                    _dump_action_invocation(f, action, element, effect);
+
+                const int combos = dt_action_get_combo_count(action, element);
+                for (int combo = 0; combo < combos; combo++)
+                    _dump_action_invocation(f, action, element,
+                                            DT_ACTION_EFFECT_COMBO_SEPARATOR + 1 + combo);
+            }
+        }
+
         if (action->type <= DT_ACTION_TYPE_SECTION)
             _dump_actions(f, action->target);
         action = action->next;
@@ -731,6 +905,31 @@ static gchar *_shortcut_description(dt_shortcut_t *s)
     return hint + (hint[0] == ' ' ? 1 : 0);
 }
 
+gchar *dt_action_get_shortcut_label(const dt_action_t *action, const int instance,
+                                    const dt_action_element_t element,
+                                    const dt_action_effect_t effect)
+{
+    if (!action)
+        return NULL;
+
+    const dt_view_type_flags_t current_view = dt_view_get_current();
+    gchar *label = NULL;
+    for (GSequenceIter *iter = g_sequence_get_begin_iter(darktable.control->shortcuts);
+         !g_sequence_iter_is_end(iter); iter = g_sequence_iter_next(iter))
+    {
+        dt_shortcut_t *shortcut = g_sequence_get(iter);
+        if (shortcut->action != action || !(shortcut->views & current_view) ||
+            shortcut->instance != instance || shortcut->element != element ||
+            shortcut->effect != effect || _shortcut_is_speed(shortcut))
+            continue;
+
+        const gchar *description = _shortcut_description(shortcut);
+        dt_util_str_cat(&label, "%s%s", label ? " / " : "", description);
+    }
+
+    return label;
+}
+
 static gchar *_action_description(dt_shortcut_t *s, int components)
 {
     static gchar hint[1024];
@@ -847,6 +1046,15 @@ static gboolean _find_relative_instance(dt_action_t *action, GtkWidget *widget, 
     }
 
     return TRUE;
+}
+
+gboolean dt_action_get_instance(const dt_action_t *action, GtkWidget *widget, int *instance)
+{
+    if (!instance)
+        return FALSE;
+
+    *instance = 0;
+    return _find_relative_instance((dt_action_t *)action, widget, instance);
 }
 
 static void _tooltip_reposition(GtkWidget *widget, GdkRectangle *allocation, gpointer user_data)
@@ -1065,11 +1273,11 @@ gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolea
     return TRUE;
 }
 
-static dt_view_type_flags_t _find_views(dt_action_t *action)
+dt_view_type_flags_t dt_action_get_views(const dt_action_t *action)
 {
     dt_view_type_flags_t vws = 0;
 
-    dt_action_t *owner = action;
+    dt_action_t *owner = (dt_action_t *)action;
     while (owner && owner->type >= DT_ACTION_TYPE_SECTION)
         owner = owner->owner;
 
@@ -1097,10 +1305,11 @@ static dt_view_type_flags_t _find_views(dt_action_t *action)
             else if (owner == &darktable.control->actions_thumb)
             {
                 vws = DT_VIEW_DARKROOM;
-                if (!g_ascii_strcasecmp(action->id, "rating") ||
+                if (action->type == DT_ACTION_TYPE_COMMAND ||
+                    !g_ascii_strcasecmp(action->id, "rating") ||
                     !g_ascii_strcasecmp(action->id, "color label"))
                     vws |=
-                        DT_VIEW_LIGHTTABLE; // lighttable has copy/paste history shortcuts in separate lib
+                        DT_VIEW_LIGHTTABLE;
             }
             else
                 dt_print(DT_DEBUG_ALWAYS, "[find_views] views for category '%s' unknown",
@@ -1250,7 +1459,7 @@ static gboolean _insert_shortcut(dt_shortcut_t *shortcut, const gboolean confirm
 
     dt_shortcut_t *s = calloc(sizeof(dt_shortcut_t), 1);
     *s = *shortcut;
-    const dt_view_type_flags_t real_views = s->views = _find_views(s->action);
+    const dt_view_type_flags_t real_views = s->views = dt_action_get_views(s->action);
 
     const dt_view_type_flags_t view = dt_view_get_current();
 
@@ -3562,11 +3771,8 @@ static gboolean _shortcut_match(dt_shortcut_t *f, gchar **fb_log)
     return f->action != NULL && !f->move;
 }
 
-static float _process_action(dt_action_t *action, int instance, dt_action_element_t element,
-                             dt_action_effect_t effect, float move_size, gchar **fb_log)
+static gpointer _action_resolve_target(dt_action_t *action, const int instance)
 {
-    float return_value = DT_ACTION_NOT_VALID;
-
     dt_action_t *owner = action;
     while (owner && owner->type >= DT_ACTION_TYPE_SECTION)
         owner = owner->owner;
@@ -3590,7 +3796,7 @@ static float _process_action(dt_action_t *action, int instance, dt_action_elemen
                         dt_ui_get_container(darktable.gui->ui, DT_UI_CONTAINER_PANEL_RIGHT_CENTER);
             }
             if (!action_target)
-                return return_value;
+                return NULL;
         }
         else if (instance)
         {
@@ -3629,6 +3835,20 @@ static float _process_action(dt_action_t *action, int instance, dt_action_elemen
         }
     }
 
+    return action_target;
+}
+
+static float _process_action(dt_action_t *action, int instance, dt_action_element_t element,
+                             dt_action_effect_t effect, float move_size, gchar **fb_log)
+{
+    float return_value = DT_ACTION_NOT_VALID;
+
+    dt_action_t *owner = action;
+    while (owner && owner->type >= DT_ACTION_TYPE_SECTION)
+        owner = owner->owner;
+
+    gpointer action_target = _action_resolve_target(action, instance);
+
     if (action->type == DT_ACTION_TYPE_COMMAND && action->target && DT_PERFORM_ACTION(move_size))
     {
         ((dt_action_callback_t *)action->target)(action);
@@ -3656,7 +3876,8 @@ static float _process_action(dt_action_t *action, int instance, dt_action_elemen
 
         if (definition && definition->process &&
             (action->type < DT_ACTION_TYPE_WIDGET || definition->no_widget ||
-             (action_target && !dt_action_widget_invisible(action_target))))
+             (action_target && (_context_action_invocation ||
+                                !dt_action_widget_invisible(action_target)))))
         {
             if (DT_PERFORM_ACTION(move_size) &&
                 (definition->elements[element].effects != dt_action_effect_value ||
@@ -3680,6 +3901,156 @@ static float _process_action(dt_action_t *action, int instance, dt_action_elemen
     }
 
     return return_value;
+}
+
+static gboolean _action_effect_is_valid(const dt_action_t *action,
+                                        const dt_action_element_t element,
+                                        const dt_action_effect_t effect)
+{
+    const dt_action_element_def_t *definition = _action_get_element(action, element);
+    if (!definition)
+        return action && action->type == DT_ACTION_TYPE_COMMAND &&
+               element == DT_ACTION_ELEMENT_DEFAULT && effect == DT_ACTION_EFFECT_DEFAULT_KEY;
+
+    if (effect < 0)
+        return effect == DT_ACTION_EFFECT_DEFAULT_MOVE;
+
+    const int effects = dt_action_get_effect_count(action, element);
+    if (effect < effects)
+        return TRUE;
+
+    const int combo_effect = effect - DT_ACTION_EFFECT_COMBO_SEPARATOR - 1;
+    return definition->effects == dt_action_effect_selection && combo_effect >= 0 &&
+           combo_effect < dt_action_get_combo_count(action, element);
+}
+
+void dt_action_get_status(dt_action_t *action, const int instance,
+                          const dt_action_element_t element, const dt_action_effect_t effect,
+                          dt_action_status_t *status)
+{
+    if (!status)
+        return;
+
+    *status = (dt_action_status_t){.value = DT_ACTION_NOT_VALID};
+    if (!action)
+    {
+        status->reason = _("action is unavailable");
+        return;
+    }
+
+    status->applicable = (dt_action_get_views(action) & dt_view_get_current()) != 0;
+    if (!status->applicable)
+    {
+        status->reason = _("not available in this view");
+        return;
+    }
+
+    if (!_action_effect_is_valid(action, element, effect))
+    {
+        status->reason = _("action is not supported");
+        return;
+    }
+
+    gpointer target = _action_resolve_target(action, instance);
+    if (action->type == DT_ACTION_TYPE_COMMAND)
+    {
+        status->enabled = action->target != NULL;
+    }
+    else if (action->type == DT_ACTION_TYPE_PRESET)
+    {
+        status->enabled = target != NULL;
+    }
+    else if (action->type == DT_ACTION_TYPE_IOP && target)
+    {
+        const dt_iop_module_t *module = target;
+        status->enabled = TRUE;
+        if (element == DT_ACTION_ELEMENT_SHOW)
+            status->checked = module->expanded;
+        else if (element == DT_ACTION_ELEMENT_ENABLE)
+            status->checked = module->off &&
+                              gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(module->off));
+        else if (element == DT_ACTION_ELEMENT_FOCUS)
+            status->checked = dt_dev_gui_module() == module;
+        status->value = status->checked;
+    }
+    else if (action->type == DT_ACTION_TYPE_LIB && target)
+    {
+        const dt_lib_module_t *module = target;
+        status->enabled = TRUE;
+        if (element == DT_ACTION_ELEMENT_SHOW && module->expander)
+            status->checked = dtgtk_expander_get_expanded(DTGTK_EXPANDER(module->expander));
+        status->value = status->checked;
+    }
+    else if (action->type >= DT_ACTION_TYPE_WIDGET && dt_action_get_definition(action) &&
+             !dt_action_get_definition(action)->no_widget && GTK_IS_WIDGET(target))
+    {
+        GtkWidget *widget = target;
+        status->enabled = gtk_widget_get_sensitive(widget);
+
+        if (GTK_IS_TOGGLE_BUTTON(widget))
+        {
+            status->checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+            status->value = status->checked;
+        }
+        else if (DT_IS_BAUHAUS_WIDGET(widget))
+        {
+            switch (dt_bauhaus_widget_get_type(widget))
+            {
+            case DT_BAUHAUS_SLIDER:
+                status->value = dt_bauhaus_slider_get(widget);
+                break;
+            case DT_BAUHAUS_COMBOBOX:
+                status->value = dt_bauhaus_combobox_get(widget);
+                if (effect > DT_ACTION_EFFECT_COMBO_SEPARATOR)
+                    status->checked = status->value ==
+                                      effect - DT_ACTION_EFFECT_COMBO_SEPARATOR - 1;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Lib/IOP actions and non-widget action definitions own their target.
+        status->enabled = target != NULL;
+    }
+
+    if (status->applicable && status->enabled && action->status_callback)
+        action->status_callback(action, instance, element, effect, status, action->status_data);
+
+    if (!status->enabled && !status->reason)
+        status->reason = _("target is unavailable");
+}
+
+void dt_action_set_status_callback(dt_action_t *action, dt_action_status_callback_t *callback,
+                                   gpointer user_data)
+{
+    if (!action)
+        return;
+
+    action->status_callback = callback;
+    action->status_data = user_data;
+}
+
+void dt_action_set_context_menu_provider_only(dt_action_t *action, const gboolean provider_only)
+{
+    if (action)
+        action->context_menu_provider_only = provider_only;
+}
+
+float dt_action_invoke(dt_action_t *action, const int instance, const dt_action_element_t element,
+                       const dt_action_effect_t effect, const float move_size)
+{
+    dt_action_status_t status;
+    dt_action_get_status(action, instance, element, effect, &status);
+    if (!status.applicable || !status.enabled)
+        return DT_ACTION_NOT_VALID;
+
+    _context_action_invocation++;
+    const float result = _process_action(action, instance, element, effect, move_size, NULL);
+    _context_action_invocation--;
+    return result;
 }
 
 static void _ungrab_grab_widget()
@@ -3778,7 +4149,7 @@ float dt_action_process(const gchar *action, int instance, const gchar *element,
         return DT_ACTION_NOT_VALID;
     }
 
-    const dt_view_type_flags_t vws = _find_views(ac);
+    const dt_view_type_flags_t vws = dt_action_get_views(ac);
     if (!(vws & dt_view_get_current()))
     {
         if (DT_PERFORM_ACTION(move_size))
@@ -4591,6 +4962,7 @@ dt_action_t *dt_action_define(dt_action_t *owner, const gchar *section, const gc
             gtk_widget_set_has_tooltip(widget, TRUE);
             g_signal_connect(G_OBJECT(widget), "leave-notify-event",
                              G_CALLBACK(_reset_element_on_leave), NULL);
+            dt_gui_context_menu_attach(widget);
         }
     }
 

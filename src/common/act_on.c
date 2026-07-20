@@ -28,6 +28,33 @@
 #include <glib.h>
 #include <sqlite3.h>
 
+struct dt_act_on_context_t
+{
+    GList *images;
+    dt_imgid_t main_image;
+    struct dt_act_on_context_t *previous;
+};
+
+static dt_act_on_context_t *_action_context = NULL;
+
+dt_act_on_context_t *dt_act_on_push_context(const GList *images, const dt_imgid_t main_image)
+{
+    dt_act_on_context_t *context = g_malloc0(sizeof(*context));
+    context->images = g_list_copy((GList *)images);
+    context->main_image = main_image;
+    context->previous = _action_context;
+    _action_context = context;
+    return context;
+}
+
+void dt_act_on_pop_context(dt_act_on_context_t *context)
+{
+    g_return_if_fail(context == _action_context);
+    _action_context = context->previous;
+    g_list_free(context->images);
+    g_free(context);
+}
+
 // get the algorithm set in preference
 dt_act_on_algorithm_t dt_act_on_get_algorithm()
 {
@@ -365,6 +392,9 @@ static gboolean _cache_update(const gboolean only_visible, const gboolean force,
 GList *dt_act_on_get_images(const gboolean only_visible, const gboolean force,
                             const gboolean ordered)
 {
+    if (_action_context)
+        return g_list_copy(_action_context->images);
+
     // we first update the cache if needed
     _cache_update(only_visible, force, ordered);
 
@@ -521,6 +551,9 @@ static gchar *_get_query_selection(const gboolean only_visible)
 }
 gchar *dt_act_on_get_query(const gboolean only_visible)
 {
+    if (_action_context)
+        return _get_query_from_list(_action_context->images);
+
     if (dt_act_on_get_algorithm() == DT_ACT_ON_HOVER)
         return _get_query_hover(only_visible);
     else
@@ -636,6 +669,9 @@ static dt_imgid_t _get_main_image_selection()
 }
 dt_imgid_t dt_act_on_get_main_image()
 {
+    if (_action_context)
+        return _action_context->main_image;
+
     if (dt_act_on_get_algorithm() == DT_ACT_ON_HOVER)
         return _get_main_image_hover();
     else
@@ -645,6 +681,9 @@ dt_imgid_t dt_act_on_get_main_image()
 // get only the number of images to act on
 int dt_act_on_get_images_nb(const gboolean only_visible, const gboolean force)
 {
+    if (_action_context)
+        return g_list_length(_action_context->images);
+
     // if the cache is valid (whatever the ordering) we return its value
     if (!force)
     {

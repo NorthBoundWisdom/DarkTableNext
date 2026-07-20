@@ -26,6 +26,7 @@
 #include "dtgtk/button.h"
 #include "gui/preferences_dialogs.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/drag_and_drop.h"
 #include "libs/lib.h"
@@ -73,6 +74,23 @@ typedef struct dt_lib_tagging_t
         gboolean tag_source;
     } drag;
     gboolean update_selected_tags;
+
+    dt_action_t *attached_attach_all_action;
+    dt_action_t *attached_detach_action;
+    dt_action_t *attached_find_action;
+    dt_action_t *attached_copy_action;
+    dt_action_t *dictionary_attach_action;
+    dt_action_t *dictionary_detach_action;
+    dt_action_t *dictionary_create_action;
+    dt_action_t *dictionary_delete_tag_action;
+    dt_action_t *dictionary_delete_node_action;
+    dt_action_t *dictionary_edit_action;
+    dt_action_t *dictionary_change_path_action;
+    dt_action_t *dictionary_set_as_tag_action;
+    dt_action_t *dictionary_copy_entry_action;
+    dt_action_t *dictionary_copy_action;
+    dt_action_t *dictionary_goto_collection_action;
+    dt_action_t *dictionary_goto_back_action;
 } dt_lib_tagging_t;
 
 typedef struct dt_tag_op_t
@@ -102,6 +120,13 @@ typedef enum dt_tag_sort_id
     DT_TAG_SORT_NAME_ID,
     DT_TAG_SORT_COUNT_ID
 } dt_tag_sort_id;
+
+typedef struct dt_tagging_row_context_t
+{
+    dt_lib_module_t *self;
+    GWeakRef view;
+    GtkTreeRowReference *row;
+} dt_tagging_row_context_t;
 
 static void _save_last_tag_used(const char *tags, dt_lib_tagging_t *d);
 
@@ -1348,10 +1373,116 @@ static void _pop_menu_attached_clipboard(GtkWidget *menuitem, dt_lib_module_t *s
     g_free(path);
 }
 
+static void _tagging_row_context_destroy(gpointer data)
+{
+    dt_tagging_row_context_t *context = data;
+    if (!context)
+        return;
+
+    if (context->row)
+        gtk_tree_row_reference_free(context->row);
+    g_weak_ref_clear(&context->view);
+    g_free(context);
+}
+
+static dt_tagging_row_context_t *_tagging_row_context_new(dt_lib_module_t *self,
+                                                            GtkTreeView *view)
+{
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+    GtkTreeModel *model = gtk_tree_view_get_model(view);
+    GtkTreeIter iter;
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return NULL;
+
+    GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
+    dt_tagging_row_context_t *context = g_malloc0(sizeof(*context));
+    context->self = self;
+    g_weak_ref_init(&context->view, view);
+    context->row = gtk_tree_row_reference_new(model, path);
+    gtk_tree_path_free(path);
+    return context;
+}
+
+static gboolean _tagging_row_context_select(const dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (!context)
+        return TRUE;
+    if (!context->row)
+        return FALSE;
+
+    GtkTreeView *view = g_weak_ref_get(&context->view);
+    if (!view)
+        return FALSE;
+
+    GtkTreePath *path = gtk_tree_row_reference_get_path(context->row);
+    if (!path)
+    {
+        g_object_unref(view);
+        return FALSE;
+    }
+
+    GtkTreeSelection *selection = gtk_tree_view_get_selection(view);
+    gtk_tree_selection_unselect_all(selection);
+    gtk_tree_selection_select_path(selection, path);
+    gtk_tree_path_free(path);
+    g_object_unref(view);
+    return TRUE;
+}
+
+static GtkWidget *_tagging_context_item(const gchar *label, dt_action_t *action,
+                                        dt_lib_module_t *self, GtkTreeView *view)
+{
+    dt_tagging_row_context_t *context = _tagging_row_context_new(self, view);
+    if (!context)
+        return NULL;
+
+    return dt_gui_context_menu_action_item_new(label, action, 0, DT_ACTION_ELEMENT_DEFAULT,
+                                                DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                                _tagging_row_context_destroy);
+}
+
+static void _append_tagging_context_item(GtkMenuShell *menu, const gchar *label,
+                                         dt_action_t *action, dt_lib_module_t *self,
+                                         GtkTreeView *view)
+{
+    GtkWidget *item = _tagging_context_item(label, action, self, view);
+    if (item)
+        gtk_menu_shell_append(menu, item);
+}
+
+static void _attached_attach_all_action(dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (context && _tagging_row_context_select(action))
+        _pop_menu_attached_attach_to_all(NULL, context->self);
+}
+
+static void _attached_detach_action(dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (context && _tagging_row_context_select(action))
+        _pop_menu_attached_detach(NULL, context->self);
+}
+
+static void _attached_find_action(dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (context && _tagging_row_context_select(action))
+        _pop_menu_attached_find(NULL, context->self);
+}
+
+static void _attached_copy_action(dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (context && _tagging_row_context_select(action))
+        _pop_menu_attached_clipboard(NULL, context->self);
+}
+
 static void _pop_menu_attached(GtkWidget *treeview, GdkEventButton *event, dt_lib_module_t *self)
 {
     dt_lib_tagging_t *d = self->data;
-    GtkWidget *menu, *menuitem;
+    GtkWidget *menu;
     menu = gtk_menu_new();
 
     GtkTreeIter iter;
@@ -1364,29 +1495,31 @@ static void _pop_menu_attached(GtkWidget *treeview, GdkEventButton *event, dt_li
         gtk_tree_model_get(model, &iter, DT_LIB_TAGGING_COL_SEL, &sel, -1);
         if (sel == DT_TS_SOME_IMAGES)
         {
-            menuitem = gtk_menu_item_new_with_label(_("attach tag to all"));
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_attached_attach_to_all),
-                             self);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-            menuitem = gtk_separator_menu_item_new();
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+            GtkWidget *item = _tagging_context_item(_("attach tag to all"),
+                                                     d->attached_attach_all_action, self,
+                                                     d->attached_view);
+            if (item)
+            {
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+            }
         }
     }
 
-    menuitem = gtk_menu_item_new_with_label(_("detach tag"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_attached_detach), self);
-
-    menuitem = gtk_menu_item_new_with_label(_("find tag"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_attached_find), self);
-    menuitem = gtk_menu_item_new_with_label(_("copy to clipboard"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-    g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_attached_clipboard), self);
+    _append_tagging_context_item(GTK_MENU_SHELL(menu), _("detach tag"), d->attached_detach_action,
+                                 self, d->attached_view);
+    _append_tagging_context_item(GTK_MENU_SHELL(menu), _("find tag"), d->attached_find_action,
+                                 self, d->attached_view);
+    _append_tagging_context_item(GTK_MENU_SHELL(menu), _("copy to clipboard"),
+                                 d->attached_copy_action, self, d->attached_view);
 
     gtk_widget_show_all(GTK_WIDGET(menu));
 
-    gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+    if (event)
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+    else
+        dt_gui_menu_popup(GTK_MENU(menu), treeview, GDK_GRAVITY_SOUTH_WEST,
+                          GDK_GRAVITY_NORTH_WEST);
 }
 
 static gboolean _click_on_view_attached(GtkWidget *view, GdkEventButton *event,
@@ -1452,6 +1585,15 @@ static gboolean _attached_key_pressed(GtkWidget *view, GdkEventKey *event, dt_li
         GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
         switch (event->keyval)
         {
+        case GDK_KEY_Menu:
+        case GDK_KEY_F10:
+            if (event->keyval == GDK_KEY_Menu || dt_modifier_is(event->state, GDK_SHIFT_MASK))
+            {
+                _pop_menu_attached(view, NULL, self);
+                gtk_tree_path_free(path);
+                return TRUE;
+            }
+            break;
         case GDK_KEY_Delete:
         case GDK_KEY_KP_Delete:
             _detach_selected_tag(GTK_TREE_VIEW(view), self);
@@ -2374,6 +2516,96 @@ static void _pop_menu_dictionary_set_as_tag(GtkWidget *menuitem, dt_lib_module_t
     g_free(tagname);
 }
 
+static dt_lib_module_t *_tagging_context_self(dt_action_t *action)
+{
+    dt_tagging_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    return context && _tagging_row_context_select(action) ? context->self : NULL;
+}
+
+static void _dictionary_attach_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_attach_tag(NULL, self);
+}
+
+static void _dictionary_detach_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_detach_tag(NULL, self);
+}
+
+static void _dictionary_create_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_create_tag(NULL, self);
+}
+
+static void _dictionary_delete_tag_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_delete_tag(NULL, self, FALSE);
+}
+
+static void _dictionary_delete_node_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_delete_node(NULL, self);
+}
+
+static void _dictionary_edit_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_edit_tag(NULL, self);
+}
+
+static void _dictionary_change_path_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_change_path(NULL, self);
+}
+
+static void _dictionary_set_as_tag_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_set_as_tag(NULL, self);
+}
+
+static void _dictionary_copy_entry_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_copy_tag(NULL, self);
+}
+
+static void _dictionary_copy_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_clipboard(NULL, self);
+}
+
+static void _dictionary_goto_collection_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_goto_tag_collection(NULL, self);
+}
+
+static void _dictionary_goto_back_action(dt_action_t *action)
+{
+    dt_lib_module_t *self = _tagging_context_self(action);
+    if (self)
+        _pop_menu_dictionary_goto_collection_back(NULL, self);
+}
+
 static void _pop_menu_dictionary(GtkWidget *treeview, GdkEventButton *event, dt_lib_module_t *self)
 {
     dt_lib_tagging_t *d = self->data;
@@ -2391,53 +2623,42 @@ static void _pop_menu_dictionary(GtkWidget *treeview, GdkEventButton *event, dt_
 
         if (tagid)
         {
-            menuitem = gtk_menu_item_new_with_label(_("attach tag"));
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_attach_tag),
-                             self);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-            menuitem = gtk_menu_item_new_with_label(_("detach tag"));
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_detach_tag),
-                             self);
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("attach tag"),
+                                         d->dictionary_attach_action, self, d->dictionary_view);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("detach tag"),
+                                         d->dictionary_detach_action, self, d->dictionary_view);
 
             menuitem = gtk_separator_menu_item_new();
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
         }
         if (d->tree_flag || !d->suggestion_flag)
         {
-            menuitem = gtk_menu_item_new_with_label(_("create tag..."));
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_create_tag),
-                             self);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("create tag..."),
+                                         d->dictionary_create_action, self, d->dictionary_view);
 
             if (tagid)
             {
-                menuitem = gtk_menu_item_new_with_label(_("delete tag"));
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-                g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_delete_tag),
-                                 self);
+                _append_tagging_context_item(GTK_MENU_SHELL(menu), _("delete tag"),
+                                             d->dictionary_delete_tag_action, self,
+                                             d->dictionary_view);
             }
 
             if (gtk_tree_model_iter_children(model, &child, &iter))
             {
-                menuitem = gtk_menu_item_new_with_label(_("delete node"));
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-                g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_delete_node),
-                                 self);
+                _append_tagging_context_item(GTK_MENU_SHELL(menu), _("delete node"),
+                                             d->dictionary_delete_node_action, self,
+                                             d->dictionary_view);
             }
 
-            menuitem = gtk_menu_item_new_with_label(_("edit..."));
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_edit_tag), self);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("edit..."),
+                                         d->dictionary_edit_action, self, d->dictionary_view);
         }
 
         if (d->tree_flag)
         {
-            menuitem = gtk_menu_item_new_with_label(_("change path..."));
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_change_path),
-                             self);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("change path..."),
+                                         d->dictionary_change_path_action, self,
+                                         d->dictionary_view);
         }
 
         if (d->tree_flag && !tagid)
@@ -2445,10 +2666,9 @@ static void _pop_menu_dictionary(GtkWidget *treeview, GdkEventButton *event, dt_
             menuitem = gtk_separator_menu_item_new();
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-            menuitem = gtk_menu_item_new_with_label(_("set as a tag"));
-            gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-            g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_set_as_tag),
-                             self);
+            _append_tagging_context_item(GTK_MENU_SHELL(menu), _("set as a tag"),
+                                         d->dictionary_set_as_tag_action, self,
+                                         d->dictionary_view);
         }
 
         if (!d->suggestion_flag)
@@ -2457,13 +2677,10 @@ static void _pop_menu_dictionary(GtkWidget *treeview, GdkEventButton *event, dt_
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
         }
 
-        menuitem = gtk_menu_item_new_with_label(_("copy to entry"));
-        g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_copy_tag), self);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-        menuitem = gtk_menu_item_new_with_label(_("copy to clipboard"));
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-        g_signal_connect(menuitem, "activate", G_CALLBACK(_pop_menu_dictionary_clipboard), self);
+        _append_tagging_context_item(GTK_MENU_SHELL(menu), _("copy to entry"),
+                                     d->dictionary_copy_entry_action, self, d->dictionary_view);
+        _append_tagging_context_item(GTK_MENU_SHELL(menu), _("copy to clipboard"),
+                                     d->dictionary_copy_action, self, d->dictionary_view);
 
         if (d->collection[0])
         {
@@ -2482,22 +2699,24 @@ static void _pop_menu_dictionary(GtkWidget *treeview, GdkEventButton *event, dt_
             gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
             if (count)
             {
-                menuitem = gtk_menu_item_new_with_label(_("go to tag collection"));
-                g_signal_connect(menuitem, "activate",
-                                 G_CALLBACK(_pop_menu_dictionary_goto_tag_collection), self);
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+                _append_tagging_context_item(GTK_MENU_SHELL(menu), _("go to tag collection"),
+                                             d->dictionary_goto_collection_action, self,
+                                             d->dictionary_view);
             }
             if (d->collection[0])
             {
-                menuitem = gtk_menu_item_new_with_label(_("go back to work"));
-                g_signal_connect(menuitem, "activate",
-                                 G_CALLBACK(_pop_menu_dictionary_goto_collection_back), self);
-                gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+                _append_tagging_context_item(GTK_MENU_SHELL(menu), _("go back to work"),
+                                             d->dictionary_goto_back_action, self,
+                                             d->dictionary_view);
             }
         }
         gtk_widget_show_all(GTK_WIDGET(menu));
 
-        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+        if (event)
+            gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+        else
+            dt_gui_menu_popup(GTK_MENU(menu), treeview, GDK_GRAVITY_SOUTH_WEST,
+                              GDK_GRAVITY_NORTH_WEST);
     }
 }
 
@@ -2579,6 +2798,15 @@ static gboolean _dictionary_key_pressed(GtkWidget *view, GdkEventKey *event, dt_
         GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
         switch (event->keyval)
         {
+        case GDK_KEY_Menu:
+        case GDK_KEY_F10:
+            if (event->keyval == GDK_KEY_Menu || dt_modifier_is(event->state, GDK_SHIFT_MASK))
+            {
+                _pop_menu_dictionary(view, NULL, self);
+                gtk_tree_path_free(path);
+                return TRUE;
+            }
+            break;
         case GDK_KEY_Return:
         case GDK_KEY_KP_Enter:
         {
@@ -3534,6 +3762,60 @@ void gui_init(dt_lib_module_t *self)
                        GDK_CONTROL_MASK);
     dt_action_register(DT_ACTION(self), N_("redo last tag"), _lib_tagging_tag_redo, GDK_KEY_t,
                        GDK_MOD1_MASK);
+
+    dt_action_t *attached_actions = dt_action_section(DT_ACTION(self), N_("attached tag"));
+    d->attached_attach_all_action = dt_action_register(
+        attached_actions, N_("attach tag to all"), _attached_attach_all_action, 0, 0);
+    d->attached_detach_action =
+        dt_action_register(attached_actions, N_("detach tag"), _attached_detach_action, 0, 0);
+    d->attached_find_action =
+        dt_action_register(attached_actions, N_("find tag"), _attached_find_action, 0, 0);
+    d->attached_copy_action = dt_action_register(attached_actions, N_("copy tag to clipboard"),
+                                                  _attached_copy_action, 0, 0);
+
+    dt_action_t *dictionary_actions = dt_action_section(DT_ACTION(self), N_("tag dictionary"));
+    d->dictionary_attach_action =
+        dt_action_register(dictionary_actions, N_("attach tag"), _dictionary_attach_action, 0, 0);
+    d->dictionary_detach_action =
+        dt_action_register(dictionary_actions, N_("detach tag"), _dictionary_detach_action, 0, 0);
+    d->dictionary_create_action = dt_action_register(dictionary_actions, N_("create tag"),
+                                                      _dictionary_create_action, 0, 0);
+    d->dictionary_delete_tag_action = dt_action_register(dictionary_actions, N_("delete tag"),
+                                                          _dictionary_delete_tag_action, 0, 0);
+    d->dictionary_delete_node_action = dt_action_register(dictionary_actions, N_("delete node"),
+                                                           _dictionary_delete_node_action, 0, 0);
+    d->dictionary_edit_action =
+        dt_action_register(dictionary_actions, N_("edit tag"), _dictionary_edit_action, 0, 0);
+    d->dictionary_change_path_action = dt_action_register(dictionary_actions, N_("change path"),
+                                                           _dictionary_change_path_action, 0, 0);
+    d->dictionary_set_as_tag_action = dt_action_register(dictionary_actions, N_("set as a tag"),
+                                                          _dictionary_set_as_tag_action, 0, 0);
+    d->dictionary_copy_entry_action = dt_action_register(dictionary_actions, N_("copy to entry"),
+                                                          _dictionary_copy_entry_action, 0, 0);
+    d->dictionary_copy_action = dt_action_register(dictionary_actions, N_("copy to clipboard"),
+                                                    _dictionary_copy_action, 0, 0);
+    d->dictionary_goto_collection_action =
+        dt_action_register(dictionary_actions, N_("go to tag collection"),
+                           _dictionary_goto_collection_action, 0, 0);
+    d->dictionary_goto_back_action = dt_action_register(dictionary_actions, N_("go back to work"),
+                                                         _dictionary_goto_back_action, 0, 0);
+
+    dt_action_set_context_menu_provider_only(d->attached_attach_all_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->attached_detach_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->attached_find_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->attached_copy_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_attach_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_detach_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_create_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_delete_tag_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_delete_node_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_edit_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_change_path_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_set_as_tag_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_copy_entry_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_copy_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_goto_collection_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->dictionary_goto_back_action, TRUE);
 }
 
 void gui_cleanup(dt_lib_module_t *self)

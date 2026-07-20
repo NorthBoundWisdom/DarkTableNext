@@ -39,6 +39,8 @@ typedef enum dt_act_on_algorithm_t
     DT_ACT_ON_SELECTION
 } dt_act_on_algorithm_t;
 
+typedef struct dt_act_on_context_t dt_act_on_context_t;
+
 // get the algorithm used to get the act_on images
 dt_act_on_algorithm_t dt_act_on_get_algorithm();
 
@@ -56,6 +58,11 @@ dt_imgid_t dt_act_on_get_main_image();
 
 // get only the number of images to act on
 int dt_act_on_get_images_nb(const gboolean only_visible, const gboolean force);
+
+/** Temporarily bind actions to a stable image snapshot.  The context is
+ * main-thread only and must be popped before returning to the GTK loop. */
+dt_act_on_context_t *dt_act_on_push_context(const GList *images, dt_imgid_t main_image);
+void dt_act_on_pop_context(dt_act_on_context_t *context);
 
 // reset the cache
 void dt_act_on_reset_cache(const gboolean only_visible);

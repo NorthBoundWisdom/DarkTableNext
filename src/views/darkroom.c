@@ -2378,7 +2378,7 @@ static float _action_process_move(gpointer target, const dt_action_element_t ele
     return 0; // FIXME return position (%)
 }
 
-const dt_action_element_def_t _action_elements_move[] = {{NULL, dt_action_effect_value}};
+const dt_action_element_def_t _action_elements_move[] = {{NULL, dt_action_effect_value}, {NULL}};
 
 const dt_action_def_t _action_def_move = {N_("move"), _action_process_move, _action_elements_move,
                                           NULL, TRUE};
@@ -2654,7 +2654,8 @@ static float _action_callback_cycle_modules(gpointer widget, dt_action_element_t
 }
 
 static const dt_action_element_def_t _action_elements_cycle_modules[] = {
-    {NULL, dt_action_effect_cycle}};
+    {NULL, dt_action_effect_cycle},
+    {NULL}};
 
 static const dt_action_def_t _action_def_cycle_modules = {
     N_("cycle modules"), _action_callback_cycle_modules, _action_elements_cycle_modules, NULL,

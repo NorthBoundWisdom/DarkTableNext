@@ -20,7 +20,7 @@ This guide maps the existing Image Operation (IOP) modules and darkroom implemen
 ### GUI Development
 | File | Description |
 |------|-------------|
-| **[GUI.md](GUI.md)** | GUI architecture: UI construction, events/callbacks, thread safety, reparenting |
+| **[GUI.md](GUI.md)** | GUI architecture: UI construction, events/callbacks, Action context menus, thread safety, reparenting |
 | **[imageop_gui.md](imageop_gui.md)** | Widget creation functions (`dt_bauhaus_*_from_params`, buttons, sections) |
 | **[sliders.md](sliders.md)** | Slider configuration (ranges, formatting, color stops, recipes) |
 | **[Notebook_UI.md](Notebook_UI.md)** | Creating tabbed interfaces with `GtkNotebook` |

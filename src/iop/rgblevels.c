@@ -25,6 +25,7 @@
 #include "dtgtk/drawingarea.h"
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
+#include "gui/context_menu.h"
 #include "libs/colorpicker.h"
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(5)
@@ -140,6 +141,32 @@ static void _turn_selregion_picker_off(dt_iop_module_t *self)
 {
     _turn_select_region_off(self);
     dt_iop_color_picker_reset(self, TRUE);
+}
+
+static gboolean _show_selregion_context_menu(dt_iop_module_t *self)
+{
+    dt_iop_rgblevels_gui_data_t *g = self ? self->gui_data : NULL;
+    if (!g || !g->bt_select_region || !g->area)
+        return FALSE;
+
+    GtkWidget *action_widget = NULL;
+    dt_action_t *action = dt_action_find_widget(g->bt_select_region, &action_widget);
+    if (!action)
+        return FALSE;
+
+    int instance = 0;
+    dt_action_get_instance(action, action_widget, &instance);
+
+    GtkWidget *menu = gtk_menu_new();
+    GtkWidget *item = gtk_menu_item_new_with_label(_("cancel auto-region selection"));
+    dt_gui_context_menu_bind_action_item(GTK_MENU_ITEM(item), action, instance,
+                                         DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_OFF, NULL,
+                                         NULL);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    /* button_pressed() is running for the Darkroom canvas event, so the
+       current event gives gtk_menu_popup_at_pointer() the actual image hit. */
+    dt_gui_menu_popup(GTK_MENU(menu), NULL, 0, 0);
+    return TRUE;
 }
 
 static void _develop_ui_pipe_finished_callback(gpointer instance, dt_iop_module_t *self)
@@ -298,6 +325,9 @@ int button_pressed(dt_iop_module_t *self, const float pzx, const float pzy, cons
         if ((which == GDK_BUTTON_SECONDARY) ||
             (which == GDK_BUTTON_PRIMARY && type == GDK_2BUTTON_PRESS))
         {
+            if (which == GDK_BUTTON_SECONDARY && _show_selregion_context_menu(self))
+                return 1;
+
             _turn_selregion_picker_off(self);
 
             handled = 1;
@@ -1062,7 +1092,7 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(g->bt_select_region,
                                 _("apply auto levels based on a region defined by the user\n"
                                   "click and drag to draw the area\n"
-                                  "right-click to cancel"));
+                                  "right-click for cancellation options"));
 
     dt_gui_box_add(
         self->widget, g->channel_tabs, g->area,

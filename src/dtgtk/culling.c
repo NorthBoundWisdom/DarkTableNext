@@ -24,8 +24,11 @@
 #include "common/debug.h"
 #include "common/selection.h"
 #include "control/control.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "views/view.h"
+
+#include <gdk/gdkkeysyms.h>
 
 #define FULL_PREVIEW_IN_MEMORY_LIMIT 9
 #define ZOOM_MAX 100000.0f
@@ -806,6 +809,13 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
 {
     dt_culling_t *table = (dt_culling_t *)user_data;
 
+    const dt_imgid_t id = dt_control_get_mouse_over_id();
+    if (event->type == GDK_BUTTON_PRESS && event->button == GDK_BUTTON_SECONDARY)
+    {
+        dt_gui_context_menu_show_image(widget, id);
+        return TRUE;
+    }
+
     if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_BUTTON_PRESS)
     {
         // make sure any edition field loses the focus
@@ -830,7 +840,6 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
         return TRUE;
     }
 
-    const dt_imgid_t id = dt_control_get_mouse_over_id();
     if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY &&
         event->type == GDK_2BUTTON_PRESS)
     {
@@ -852,6 +861,18 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
     table->pan_y = event->y_root;
     table->panning = TRUE;
     return TRUE;
+}
+
+static gboolean _event_key_press(GtkWidget *widget, GdkEventKey *event, dt_culling_t *table)
+{
+    if (event->keyval != GDK_KEY_Menu &&
+        (event->keyval != GDK_KEY_F10 || !(event->state & GDK_SHIFT_MASK)))
+        return FALSE;
+
+    const dt_imgid_t image = dt_is_valid_imgid(table->selection) ?
+                                 table->selection :
+                                 dt_control_get_mouse_over_id();
+    return dt_gui_context_menu_show_image(widget, image);
 }
 
 static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data)
@@ -1169,6 +1190,8 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
     g_signal_connect(G_OBJECT(table->widget), "enter-notify-event", G_CALLBACK(_event_enter_notify),
                      table);
     g_signal_connect(G_OBJECT(table->widget), "button-press-event", G_CALLBACK(_event_button_press),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "key-press-event", G_CALLBACK(_event_key_press),
                      table);
     g_signal_connect(G_OBJECT(table->widget), "motion-notify-event",
                      G_CALLBACK(_event_motion_notify), table);

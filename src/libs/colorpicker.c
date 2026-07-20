@@ -29,6 +29,7 @@
 #include "dtgtk/togglebutton.h"
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "libs/lib.h"
 #include "libs/lib_api.h"
@@ -65,7 +66,21 @@ typedef struct dt_lib_colorpicker_t
     GtkWidget *display_samples_check_box;
     dt_colorpicker_sample_t primary_sample;
     dt_colorpicker_sample_t *target_sample;
+    dt_action_t *live_sample_action;
 } dt_lib_colorpicker_t;
+
+typedef enum dt_lib_colorpicker_live_sample_operation_t
+{
+    DT_LIB_COLORPICKER_LIVE_SAMPLE_LOAD,
+    DT_LIB_COLORPICKER_LIVE_SAMPLE_TOGGLE_LOCK,
+    DT_LIB_COLORPICKER_LIVE_SAMPLE_REMOVE,
+} dt_lib_colorpicker_live_sample_operation_t;
+
+typedef struct dt_lib_colorpicker_live_sample_context_t
+{
+    GWeakRef color_patch;
+    dt_lib_colorpicker_live_sample_operation_t operation;
+} dt_lib_colorpicker_live_sample_context_t;
 
 const char *name(dt_lib_module_t *self)
 {
@@ -477,6 +492,14 @@ static gboolean _sample_leave_callback(GtkWidget *widget, GdkEvent *event, gpoin
 
 static void _remove_sample(dt_colorpicker_sample_t *sample)
 {
+    dt_lib_module_t *self = darktable.lib->proxy.colorpicker.module;
+    if (self && self->data)
+    {
+        dt_lib_colorpicker_t *data = self->data;
+        if (data->target_sample == sample)
+            data->target_sample = NULL;
+    }
+
     gtk_widget_destroy(sample->container);
     darktable.lib->proxy.colorpicker.live_samples =
         g_slist_remove(darktable.lib->proxy.colorpicker.live_samples, (gpointer)sample);
@@ -489,6 +512,155 @@ static void _remove_sample_cb(GtkButton *widget, dt_colorpicker_sample_t *sample
     dt_dev_invalidate_all(darktable.develop);
 }
 
+static dt_lib_colorpicker_live_sample_context_t *_live_sample_context_new(
+    GtkWidget *color_patch, const dt_lib_colorpicker_live_sample_operation_t operation)
+{
+    dt_lib_colorpicker_live_sample_context_t *context =
+        g_new0(dt_lib_colorpicker_live_sample_context_t, 1);
+    g_weak_ref_init(&context->color_patch, color_patch);
+    context->operation = operation;
+    return context;
+}
+
+static void _live_sample_context_free(dt_lib_colorpicker_live_sample_context_t *context)
+{
+    if (!context)
+        return;
+
+    g_weak_ref_clear(&context->color_patch);
+    g_free(context);
+}
+
+static dt_colorpicker_sample_t *_live_sample_context_get(
+    dt_lib_colorpicker_live_sample_context_t *context)
+{
+    if (!context)
+        return NULL;
+
+    GtkWidget *color_patch = g_weak_ref_get(&context->color_patch);
+    if (!color_patch)
+        return NULL;
+
+    dt_colorpicker_sample_t *sample =
+        g_object_get_data(G_OBJECT(color_patch), "dt-colorpicker-live-sample");
+    const gboolean valid =
+        sample && sample->color_patch == color_patch &&
+        g_slist_find(darktable.lib->proxy.colorpicker.live_samples, sample) != NULL;
+    g_object_unref(color_patch);
+    return valid ? sample : NULL;
+}
+
+static void _live_sample_load(dt_lib_module_t *self, dt_colorpicker_sample_t *sample)
+{
+    dt_iop_color_picker_t *picker = darktable.lib->proxy.colorpicker.picker_proxy;
+    dt_lib_colorpicker_t *data = self->data;
+
+    const gboolean is_active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(data->picker_button));
+    const gboolean simulate_event = !is_active || data->target_sample;
+
+    if (data->target_sample)
+    {
+        // A live sample is being edited: copy the primary selection back into the clicked sample.
+        memcpy(&sample->point, &data->primary_sample.point, sizeof(data->primary_sample.point));
+        memcpy(&sample->box, &data->primary_sample.box, sizeof(data->primary_sample.box));
+
+        sample->size = data->primary_sample.size;
+        data->target_sample->copied = FALSE;
+        data->target_sample = NULL;
+    }
+    else
+    {
+        // Start editing the clicked sample in the primary picker.
+        data->target_sample = sample;
+        sample->copied = TRUE;
+        darktable.lib->proxy.colorpicker.module = self;
+
+        if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
+            _set_sample_point(self, sample->point);
+        else if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
+            _set_sample_box_area(self, sample->box);
+    }
+
+    if (simulate_event)
+    {
+        dt_gui_simulate_button_event(
+            data->picker_button, GDK_BUTTON_PRESS,
+            // button 1 creates a point and button 3 creates an area selection
+            data->primary_sample.size == DT_LIB_COLORPICKER_SIZE_POINT ? 1 : 3);
+    }
+
+    if (picker && picker->module)
+        picker->module->dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
+    else
+        dt_dev_invalidate_all(darktable.develop);
+    dt_control_queue_redraw_center();
+}
+
+static void _live_sample_action(dt_action_t *action)
+{
+    dt_lib_colorpicker_live_sample_context_t *context =
+        dt_gui_context_menu_get_action_payload(action);
+    dt_lib_module_t *self = darktable.lib->proxy.colorpicker.module;
+    dt_colorpicker_sample_t *sample = _live_sample_context_get(context);
+    if (!self || !self->data || !sample)
+        return;
+
+    switch (context->operation)
+    {
+    case DT_LIB_COLORPICKER_LIVE_SAMPLE_LOAD:
+        _live_sample_load(self, sample);
+        break;
+    case DT_LIB_COLORPICKER_LIVE_SAMPLE_TOGGLE_LOCK:
+        sample->locked = !sample->locked;
+        gtk_widget_queue_draw(sample->color_patch);
+        break;
+    case DT_LIB_COLORPICKER_LIVE_SAMPLE_REMOVE:
+        _remove_sample(sample);
+        dt_dev_invalidate_all(darktable.develop);
+        dt_control_queue_redraw_center();
+        break;
+    }
+}
+
+static gboolean _live_sample_context_menu_provider(GtkWidget *widget,
+                                                    const GdkEventButton *event,
+                                                    gpointer user_data)
+{
+    (void)event;
+    dt_colorpicker_sample_t *sample = user_data;
+    dt_lib_module_t *self = darktable.lib->proxy.colorpicker.module;
+    if (!self || !self->data || !sample || sample->color_patch != widget ||
+        !g_slist_find(darktable.lib->proxy.colorpicker.live_samples, sample))
+        return TRUE;
+
+    dt_lib_colorpicker_t *data = self->data;
+    GtkWidget *menu = gtk_menu_new();
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(
+            _("load sample area into active color picker"), data->live_sample_action, 0,
+            DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_DEFAULT_KEY,
+            _live_sample_context_new(widget, DT_LIB_COLORPICKER_LIVE_SAMPLE_LOAD),
+            (GDestroyNotify)_live_sample_context_free));
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(
+            sample->locked ? _("unlock sample") : _("lock sample"), data->live_sample_action, 0,
+            DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_DEFAULT_KEY,
+            _live_sample_context_new(widget, DT_LIB_COLORPICKER_LIVE_SAMPLE_TOGGLE_LOCK),
+            (GDestroyNotify)_live_sample_context_free));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(
+            _("remove sample"), data->live_sample_action, 0, DT_ACTION_ELEMENT_DEFAULT,
+            DT_ACTION_EFFECT_DEFAULT_KEY,
+            _live_sample_context_new(widget, DT_LIB_COLORPICKER_LIVE_SAMPLE_REMOVE),
+            (GDestroyNotify)_live_sample_context_free));
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 static gboolean _live_sample_button(GtkWidget *widget, GdkEventButton *event,
                                     dt_colorpicker_sample_t *sample)
 {
@@ -498,60 +670,7 @@ static gboolean _live_sample_button(GtkWidget *widget, GdkEventButton *event,
         gtk_widget_queue_draw(widget);
     }
     else if (event->button == GDK_BUTTON_SECONDARY)
-    {
-        // copy to active picker
-        dt_lib_module_t *self = darktable.lib->proxy.colorpicker.module;
-        dt_iop_color_picker_t *picker = darktable.lib->proxy.colorpicker.picker_proxy;
-        dt_lib_colorpicker_t *data = self->data;
-
-        const gboolean is_active =
-            gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(data->picker_button));
-        const gboolean simulate_event = !is_active || data->target_sample;
-
-        if (data->target_sample)
-        {
-            // we have a target sample, so we are editing a live sample.
-            // copy back the edited sample (primary_sample) into the target
-            // sample on which we clicked.
-            memcpy(&sample->point, &data->primary_sample.point, sizeof(data->primary_sample.point));
-            memcpy(&sample->box, &data->primary_sample.box, sizeof(data->primary_sample.box));
-
-            sample->size = data->primary_sample.size;
-            data->target_sample->copied = FALSE;
-            data->target_sample = NULL;
-        }
-        else
-        {
-            // we don't have a target sample, copy the sample into
-            // the primary sample to be edited.
-            data->target_sample = sample;
-            sample->copied = TRUE;
-            darktable.lib->proxy.colorpicker.module = self;
-
-            if (sample->size == DT_LIB_COLORPICKER_SIZE_POINT)
-                _set_sample_point(self, sample->point);
-            else if (sample->size == DT_LIB_COLORPICKER_SIZE_BOX)
-                _set_sample_box_area(self, sample->box);
-        }
-
-        if (simulate_event)
-        {
-            dt_gui_simulate_button_event(
-                data->picker_button, GDK_BUTTON_PRESS,
-                /* button 1 to create use a point and 3 for a box */
-                data->primary_sample.size == DT_LIB_COLORPICKER_SIZE_POINT ? 1 : 3);
-        }
-
-        if (picker && picker->module)
-        {
-            picker->module->dev->preview_pipe->status = DT_DEV_PIXELPIPE_DIRTY;
-        }
-        else
-        {
-            dt_dev_invalidate_all(darktable.develop);
-        }
-        dt_control_queue_redraw_center();
-    }
+        return _live_sample_context_menu_provider(widget, event, sample);
     return FALSE;
 }
 
@@ -586,9 +705,12 @@ static void _add_sample(GtkButton *widget, dt_lib_module_t *self)
     gtk_widget_set_tooltip_text(sample->color_patch,
                                 _("hover to highlight sample on canvas,\n"
                                   "click to lock sample,\n"
-                                  "right-click to load sample area into active color picker"));
+                                  "right-click for sample actions"));
+    g_object_set_data(G_OBJECT(sample->color_patch), "dt-colorpicker-live-sample", sample);
     g_signal_connect(G_OBJECT(sample->color_patch), "button-press-event",
                      G_CALLBACK(_live_sample_button), sample);
+    dt_gui_context_menu_attach_provider(sample->color_patch, _live_sample_context_menu_provider,
+                                        sample, NULL);
     g_signal_connect(G_OBJECT(sample->color_patch), "draw", G_CALLBACK(_sample_draw_callback),
                      sample);
 
@@ -655,6 +777,9 @@ void gui_init(dt_lib_module_t *self)
 
     dt_lib_colorpicker_reset_box_area(data->primary_sample.box);
     dt_lib_colorpicker_reset_point(data->primary_sample.point);
+    data->live_sample_action = dt_action_register(DT_ACTION(self), N_("live sample action"),
+                                                  _live_sample_action, 0, 0);
+    dt_action_set_context_menu_provider_only(data->live_sample_action, TRUE);
 
     // Initializing proxy functions and data
     darktable.lib->proxy.colorpicker.module = self;

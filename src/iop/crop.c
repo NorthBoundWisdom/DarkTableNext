@@ -29,6 +29,7 @@
 #include "develop/imageop_gui.h"
 #include "dtgtk/expander.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/guides.h"
 #include "gui/presets.h"
@@ -107,6 +108,7 @@ typedef struct dt_iop_crop_gui_data_t
     gboolean preview_ready;
     gint64 focus_time;
     dt_gui_collapsible_section_t cs;
+    dt_action_t *reset_action;
 } dt_iop_crop_gui_data_t;
 
 typedef struct dt_iop_crop_data_t
@@ -968,6 +970,65 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
     _commit_box(self, g, p, TRUE);
 }
 
+static gboolean _reset_crop(dt_iop_module_t *self)
+{
+    if (!self || !self->gui_data)
+        return FALSE;
+
+    dt_iop_crop_gui_data_t *g = self->gui_data;
+    if (!g->preview_ready)
+        return FALSE;
+
+    g->clip_x = 0.0f;
+    g->clip_y = 0.0f;
+    g->clip_w = 1.0f;
+    g->clip_h = 1.0f;
+    _aspect_apply(self, GRAB_BOTTOM_RIGHT);
+    gui_changed(self, NULL, NULL);
+    return TRUE;
+}
+
+static float _crop_action_process(gpointer target, const dt_action_element_t element,
+                                  const dt_action_effect_t effect, const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || element != DT_ACTION_ELEMENT_DEFAULT ||
+        effect != DT_ACTION_EFFECT_ACTIVATE || !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    return _reset_crop(self) ? 1.0f : DT_ACTION_NOT_VALID;
+}
+
+static const dt_action_element_def_t _action_elements_crop_reset[] = {
+    {NULL, dt_action_effect_activate},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_crop_reset = {N_("crop"), _crop_action_process,
+                                                       _action_elements_crop_reset};
+
+static gboolean _show_crop_context_menu(dt_iop_module_t *self)
+{
+    if (!self || !self->gui_data)
+        return FALSE;
+
+    dt_iop_crop_gui_data_t *g = self->gui_data;
+    if (!g->reset_action || !g->cs.container)
+        return FALSE;
+
+    int instance = 0;
+    dt_action_get_instance(g->reset_action, GTK_WIDGET(g->cs.container), &instance);
+
+    GtkWidget *menu = gtk_menu_new();
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                          dt_gui_context_menu_action_item_new(
+                              _("reset crop"), g->reset_action, instance,
+                              DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_ACTIVATE, NULL, NULL));
+    dt_gui_menu_popup(GTK_MENU(menu), GTK_WIDGET(g->cs.container), GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 void gui_reset(dt_iop_module_t *self)
 {
     /* reset aspect preset to default */
@@ -1269,6 +1330,10 @@ void gui_init(dt_iop_module_t *self)
                                    GTK_BOX(box_enabled), DT_ACTION(self));
 
     self->widget = GTK_WIDGET(g->cs.container);
+    g_object_set_data(G_OBJECT(g->cs.container), "iop-instance", self);
+    g->reset_action = dt_action_define_iop(self, NULL, N_("reset crop"),
+                                           GTK_WIDGET(g->cs.container),
+                                           &_action_def_crop_reset);
 
     g->cx = dt_bauhaus_slider_from_params(self, "cx");
     dt_bauhaus_slider_set_digits(g->cx, 4);
@@ -1762,14 +1827,7 @@ int button_pressed(dt_iop_module_t *self, const float bzx, const float bzy, cons
     }
     else if (which == GDK_BUTTON_SECONDARY)
     {
-        // we reset cropping
-        g->clip_x = 0.0f;
-        g->clip_y = 0.0f;
-        g->clip_w = 1.0f;
-        g->clip_h = 1.0f;
-        _aspect_apply(self, GRAB_BOTTOM_RIGHT);
-        gui_changed(self, NULL, NULL);
-        return 1;
+        return _show_crop_context_menu(self);
     }
     else
         return 0;

@@ -45,6 +45,7 @@
 #include "dtgtk/paint.h"
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/presets.h"
 #include "iop/gaussian_elimination.h"
@@ -3612,6 +3613,122 @@ static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_mo
     return FALSE;
 }
 
+enum
+{
+    _FILMIC_GRAPH_TOGGLE_LABELS = -1,
+};
+
+static float _filmic_graph_action_process(gpointer target, const dt_action_element_t element,
+                                          const dt_action_effect_t effect, const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || element != DT_ACTION_ELEMENT_DEFAULT ||
+        effect != DT_ACTION_EFFECT_ACTIVATE || !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    dt_action_t *action = dt_action_find_widget(GTK_WIDGET(target), NULL);
+    const gint *operation = dt_gui_context_menu_get_action_payload(action);
+    if (!self || !self->gui_data || !operation)
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
+    if (*operation == _FILMIC_GRAPH_TOGGLE_LABELS)
+    {
+        g->gui_show_labels = !g->gui_show_labels;
+        dt_conf_set_int("plugins/darkroom/filmicrgb/graph_show_labels", g->gui_show_labels);
+    }
+    else if (*operation >= DT_FILMIC_GUI_LOOK && *operation < DT_FILMIC_GUI_LAST)
+    {
+        g->gui_mode = *operation;
+        dt_conf_set_int("plugins/darkroom/filmicrgb/graph_view", g->gui_mode);
+    }
+    else
+        return DT_ACTION_NOT_VALID;
+
+    gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return 1.0f;
+}
+
+static const dt_action_element_def_t _action_elements_filmic_graph[] = {
+    {NULL, dt_action_effect_activate},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_filmic_graph = {
+    N_("graph"), _filmic_graph_action_process, _action_elements_filmic_graph};
+
+static dt_iop_filmicrgb_gui_button_t _filmic_graph_button_at(
+    const dt_iop_filmicrgb_gui_data_t *g, const GdkEventButton *event)
+{
+    if (!event || !g->gui_sizes_inited)
+        return g->active_button;
+
+    for (int button = 0; button < DT_FILMIC_GUI_BUTTON_LAST; button++)
+    {
+        const dt_iop_filmicrgb_gui_button_data_t *bounds = &g->buttons[button];
+        if (event->x > bounds->left && event->x < bounds->right && event->y > bounds->top &&
+            event->y < bounds->bottom)
+            return button;
+    }
+    return DT_FILMIC_GUI_BUTTON_LAST;
+}
+
+static gboolean _filmic_graph_context_menu_provider(GtkWidget *widget,
+                                                     const GdkEventButton *event,
+                                                     gpointer user_data)
+{
+    (void)user_data;
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(widget), "iop-instance");
+    if (!self || !self->gui_data)
+        return TRUE;
+
+    dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
+    const dt_iop_filmicrgb_gui_button_t button = _filmic_graph_button_at(g, event);
+    if (button != DT_FILMIC_GUI_BUTTON_TYPE && button != DT_FILMIC_GUI_BUTTON_LABELS)
+        return TRUE;
+
+    dt_action_t *action = dt_action_find_widget(widget, NULL);
+    if (!action)
+        return TRUE;
+
+    int instance = 0;
+    dt_action_get_instance(action, widget, &instance);
+    GtkWidget *menu = gtk_menu_new();
+    if (button == DT_FILMIC_GUI_BUTTON_TYPE)
+    {
+        const gchar *labels[DT_FILMIC_GUI_LAST] = {
+            _("look only"), _("look + mapping (lin)"), _("look + mapping (log)"),
+            _("dynamic range mapping")};
+        GSList *group = NULL;
+        for (int mode = DT_FILMIC_GUI_LOOK; mode < DT_FILMIC_GUI_LAST; mode++)
+        {
+            GtkWidget *item = gtk_radio_menu_item_new_with_label(group, labels[mode]);
+            group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(item));
+            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), g->gui_mode == mode);
+            gint *operation = g_new(gint, 1);
+            *operation = mode;
+            dt_gui_context_menu_bind_action_item(GTK_MENU_ITEM(item), action, instance,
+                                                 DT_ACTION_ELEMENT_DEFAULT,
+                                                 DT_ACTION_EFFECT_ACTIVATE, operation, g_free);
+            gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        }
+    }
+    else
+    {
+        GtkWidget *item = gtk_check_menu_item_new_with_label(_("show axis labels"));
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), g->gui_show_labels);
+        gint *operation = g_new(gint, 1);
+        *operation = _FILMIC_GRAPH_TOGGLE_LABELS;
+        dt_gui_context_menu_bind_action_item(GTK_MENU_ITEM(item), action, instance,
+                                             DT_ACTION_ELEMENT_DEFAULT,
+                                             DT_ACTION_EFFECT_ACTIVATE, operation, g_free);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    }
+
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event,
                                   dt_iop_module_t *self)
 {
@@ -3668,31 +3785,7 @@ static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event
             }
         }
         else if (event->button == GDK_BUTTON_SECONDARY)
-        {
-            // simple right click cycles through modes in negative direction
-            if (g->active_button == DT_FILMIC_GUI_BUTTON_TYPE)
-            {
-                if (g->gui_mode == DT_FILMIC_GUI_LOOK)
-                    g->gui_mode = DT_FILMIC_GUI_RANGES;
-                else
-                    g->gui_mode--;
-
-                gtk_widget_queue_draw(GTK_WIDGET(g->area));
-                dt_conf_set_int("plugins/darkroom/filmicrgb/graph_view", g->gui_mode);
-                return TRUE;
-            }
-            else if (g->active_button == DT_FILMIC_GUI_BUTTON_LABELS)
-            {
-                g->gui_show_labels = !g->gui_show_labels;
-                gtk_widget_queue_draw(GTK_WIDGET(g->area));
-                dt_conf_set_int("plugins/darkroom/filmicrgb/graph_show_labels", g->gui_show_labels);
-                return TRUE;
-            }
-            else
-            {
-                return FALSE;
-            }
-        }
+            return _filmic_graph_context_menu_provider(widget, event, NULL);
     }
 
     return FALSE;
@@ -3803,7 +3896,11 @@ void gui_init(dt_iop_module_t *self)
     g->area =
         GTK_DRAWING_AREA(dt_ui_resize_wrap(NULL, 0, "plugins/darkroom/filmicrgb/graphheight"));
     g_object_set_data(G_OBJECT(g->area), "iop-instance", self);
-    dt_action_define_iop(self, NULL, N_("graph"), GTK_WIDGET(g->area), NULL);
+    dt_action_t *graph_action = dt_action_define_iop(self, NULL, N_("graph"), GTK_WIDGET(g->area),
+                                                      &_action_def_filmic_graph);
+    dt_action_set_context_menu_provider_only(graph_action, TRUE);
+    dt_gui_context_menu_attach_provider(GTK_WIDGET(g->area), _filmic_graph_context_menu_provider,
+                                        NULL, NULL);
 
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
     g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(dt_iop_tonecurve_draw), self);

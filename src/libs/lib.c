@@ -26,6 +26,7 @@
 #include "dtgtk/button.h"
 #include "dtgtk/expander.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/drag_and_drop.h"
 #include "gui/gtk.h"
 #include "gui/presets.h"
@@ -968,7 +969,8 @@ static gboolean _lib_plugin_arrow_button_press(GtkWidget *w, GdkEventButton *e, 
     }
     else if (e->button == GDK_BUTTON_SECONDARY)
     {
-        if (gtk_widget_get_sensitive(module->presets_button))
+        if (!dt_gui_context_menu_show_for_widget(w) &&
+            gtk_widget_get_sensitive(module->presets_button))
             _presets_popup_callback(NULL, NULL, module);
 
         return TRUE;
@@ -981,6 +983,14 @@ static gboolean _lib_plugin_header_button_release(GtkWidget *w, GdkEventButton *
 {
     if (GTK_IS_BUTTON(gtk_get_event_widget((GdkEvent *)e)))
         return FALSE;
+
+    if (e->button == GDK_BUTTON_SECONDARY)
+    {
+        /* The Action handler attached to the header event box already opened
+           the full module menu on button press. */
+        return TRUE;
+    }
+
     return _lib_plugin_arrow_button_press(w, e, user_data);
 }
 
@@ -1189,6 +1199,7 @@ GtkWidget *dt_lib_gui_get_expander(dt_lib_module_t *module)
     /* setup the header box */
     g_signal_connect(G_OBJECT(header_evb), "button-release-event",
                      G_CALLBACK(_lib_plugin_header_button_release), module);
+    dt_action_define(&module->actions, NULL, NULL, header_evb, NULL);
     g_signal_connect(G_OBJECT(header_evb), "enter-notify-event",
                      G_CALLBACK(_header_enter_notify_callback),
                      GINT_TO_POINTER(DT_ACTION_ELEMENT_SHOW));
@@ -1198,6 +1209,7 @@ GtkWidget *dt_lib_gui_get_expander(dt_lib_module_t *module)
                      G_CALLBACK(_body_enter_leave_callback), module);
     g_signal_connect(G_OBJECT(body_evb), "leave-notify-event",
                      G_CALLBACK(_body_enter_leave_callback), module);
+    dt_action_define(&module->actions, NULL, NULL, body_evb, NULL);
 
     /*
    * initialize the header widgets

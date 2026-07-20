@@ -26,6 +26,8 @@
 #include "dtgtk/drawingarea.h"
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
+#include "gui/context_menu.h"
+#include "gui/gtk.h"
 #include "gui/presets.h"
 #include "libs/colorpicker.h"
 
@@ -97,6 +99,14 @@ typedef struct dt_iop_colorzones_gui_data_t
     int edit_by_area;
     gboolean display_mask;
 } dt_iop_colorzones_gui_data_t;
+
+typedef struct dt_iop_colorzones_node_context_t
+{
+    int channel;
+    int node;
+    float x;
+    float y;
+} dt_iop_colorzones_node_context_t;
 
 typedef struct dt_iop_colorzones_data_t
 {
@@ -1940,23 +1950,68 @@ void color_picker_apply(dt_iop_module_t *self, GtkWidget *picker, dt_dev_pixelpi
     dt_control_queue_redraw_widget(self->widget);
 }
 
-const dt_action_element_def_t _action_elements_zones[] = {{N_("red"), dt_action_effect_value},
-                                                          {N_("orange"), dt_action_effect_value},
-                                                          {N_("yellow"), dt_action_effect_value},
-                                                          {N_("green"), dt_action_effect_value},
-                                                          {N_("aqua"), dt_action_effect_value},
-                                                          {N_("blue"), dt_action_effect_value},
-                                                          {N_("purple"), dt_action_effect_value},
-                                                          {N_("magenta"), dt_action_effect_value},
-                                                          {NULL}};
+enum
+{
+    _ACTION_COLORZONES_DELETE_NODE = DT_IOP_COLORZONES_BANDS,
+    _ACTION_COLORZONES_RESET_NODE,
+};
+
+const dt_action_element_def_t _action_elements_zones[] = {
+    {N_("red"), dt_action_effect_value},
+    {N_("orange"), dt_action_effect_value},
+    {N_("yellow"), dt_action_effect_value},
+    {N_("green"), dt_action_effect_value},
+    {N_("aqua"), dt_action_effect_value},
+    {N_("blue"), dt_action_effect_value},
+    {N_("purple"), dt_action_effect_value},
+    {N_("magenta"), dt_action_effect_value},
+    {N_("selected node"), dt_action_effect_activate},
+    {N_("reset selected node"), dt_action_effect_activate},
+    {NULL},
+};
+
+static gboolean _colorzones_context_node_action(
+    dt_iop_module_t *self, const dt_iop_colorzones_node_context_t *context, const gboolean zero)
+{
+    dt_iop_colorzones_gui_data_t *g = self->gui_data;
+    dt_iop_colorzones_params_t *p = self->params;
+    if (!context || context->channel < 0 || context->channel >= DT_IOP_COLORZONES_MAX_CHANNELS ||
+        context->node < 0 || context->node >= p->curve_num_nodes[context->channel] ||
+        fabsf(p->curve[context->channel][context->node].x - context->x) > 1e-6f ||
+        fabsf(p->curve[context->channel][context->node].y - context->y) > 1e-6f)
+        return FALSE;
+
+    _delete_node(self, p->curve[context->channel], &p->curve_num_nodes[context->channel],
+                 context->node, zero);
+    if (context->channel == g->channel)
+        g->selected = -2; // avoid re-inserting the old node immediately after the menu closes
+    return TRUE;
+}
 
 static float _action_process_zones(gpointer target, dt_action_element_t element,
                                    dt_action_effect_t effect, float move_size)
 {
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    if (!self || !self->gui_data)
+        return DT_ACTION_NOT_VALID;
+
+    if (element == _ACTION_COLORZONES_DELETE_NODE || element == _ACTION_COLORZONES_RESET_NODE)
+    {
+        if (!DT_PERFORM_ACTION(move_size) || effect != DT_ACTION_EFFECT_ACTIVATE)
+            return DT_ACTION_NOT_VALID;
+
+        dt_action_t *action = dt_action_find_widget(GTK_WIDGET(target), NULL);
+        const dt_iop_colorzones_node_context_t *context =
+            dt_gui_context_menu_get_action_payload(action);
+        return _colorzones_context_node_action(self, context,
+                                               element == _ACTION_COLORZONES_RESET_NODE) ?
+                   1.0f :
+                   DT_ACTION_NOT_VALID;
+    }
+
     if (element >= DT_IOP_COLORZONES_BANDS)
         return DT_ACTION_NOT_VALID;
 
-    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
     dt_iop_colorzones_gui_data_t *g = self->gui_data;
     dt_iop_colorzones_params_t *p = self->params;
 
@@ -2013,6 +2068,63 @@ static float _action_process_zones(gpointer target, dt_action_element_t element,
 
 const dt_action_def_t _action_def_zones = {N_("color zones"), _action_process_zones,
                                            _action_elements_zones};
+
+static gboolean _colorzones_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
+                                                   gpointer user_data)
+{
+    (void)event;
+    (void)user_data;
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(widget), "iop-instance");
+    if (!self || !self->gui_data)
+        return FALSE;
+    if (darktable.develop->darkroom_skip_mouse_events)
+        return TRUE;
+
+    dt_action_t *action = dt_action_find_widget(widget, NULL);
+    if (!action)
+        return FALSE;
+
+    int instance = 0;
+    dt_action_get_instance(action, widget, &instance);
+
+    GtkWidget *menu = gtk_menu_new();
+    dt_gui_context_menu_append_action_elements(GTK_MENU_SHELL(menu), action, instance, 0,
+                                               DT_IOP_COLORZONES_BANDS);
+
+    dt_iop_colorzones_gui_data_t *g = self->gui_data;
+    dt_iop_colorzones_params_t *p = self->params;
+    if (g->selected >= 0 && g->selected < p->curve_num_nodes[g->channel])
+    {
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+        const dt_iop_colorzones_node_t node = p->curve[g->channel][g->selected];
+        dt_iop_colorzones_node_context_t *context =
+            g_new(dt_iop_colorzones_node_context_t, 1);
+        *context = (dt_iop_colorzones_node_context_t){.channel = g->channel,
+                                                       .node = g->selected,
+                                                       .x = node.x,
+                                                       .y = node.y};
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                              dt_gui_context_menu_action_item_new(
+                                  _("remove selected node"), action, instance,
+                                  _ACTION_COLORZONES_DELETE_NODE,
+                                  DT_ACTION_EFFECT_ACTIVATE, context, g_free));
+
+        context = g_new(dt_iop_colorzones_node_context_t, 1);
+        *context = (dt_iop_colorzones_node_context_t){.channel = g->channel,
+                                                       .node = g->selected,
+                                                       .x = node.x,
+                                                       .y = node.y};
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                              dt_gui_context_menu_action_item_new(
+                                  _("reset selected node"), action, instance,
+                                  _ACTION_COLORZONES_RESET_NODE,
+                                  DT_ACTION_EFFECT_ACTIVATE, context, g_free));
+    }
+
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
 
 void gui_reset(dt_iop_module_t *self)
 {
@@ -2148,7 +2260,9 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(g->strength, _("make effect stronger or weaker"));
 
     g_object_set_data(G_OBJECT(g->area), "iop-instance", self);
-    dt_action_define_iop(self, NULL, N_("graph"), GTK_WIDGET(g->area), &_action_def_zones);
+    dt_action_t *graph_action =
+        dt_action_define_iop(self, NULL, N_("graph"), GTK_WIDGET(g->area), &_action_def_zones);
+    dt_action_set_context_menu_provider_only(graph_action, TRUE);
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
     g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(_area_draw_callback), self);
     g_signal_connect(G_OBJECT(g->area), "button-press-event",
@@ -2162,6 +2276,8 @@ void gui_init(dt_iop_module_t *self)
     g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(_area_scrolled_callback), self);
     g_signal_connect(G_OBJECT(g->area), "key-press-event", G_CALLBACK(_area_key_press_callback),
                      self);
+    dt_gui_context_menu_attach_provider(GTK_WIDGET(g->area), _colorzones_context_menu_provider,
+                                        NULL, NULL);
 
     gtk_widget_add_events(GTK_WIDGET(g->bottom_area), GDK_BUTTON_PRESS_MASK);
     g_signal_connect(G_OBJECT(g->bottom_area), "draw", G_CALLBACK(_bottom_area_draw_callback),

@@ -102,6 +102,7 @@ FreeCM 管理的 `build/dependency_*` 目录。
 ## 路线图与资料
 
 - [核心收缩与重写计划](TODO_CORE_REDUCTION.md)
+- [动态上下文菜单计划与覆盖状态](TODO_CONTEXT_MENUS.md)
 - [开发者源码导读](DevDocs/README.md)
 - [GPU Phase 0 基线与准入规范](DevDocs/GPU_Baseline.md)
 - [0.9.0 发布说明](RELEASE_NOTES.md)

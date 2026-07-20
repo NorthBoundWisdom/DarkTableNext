@@ -34,6 +34,7 @@
 #include "gui/gtk.h"
 #include "gui/presets.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "iop/iop_api.h"
 
 #include <regex.h>
@@ -89,6 +90,13 @@ typedef struct dt_iop_basecurve_gui_data_t
     float loglogscale;
     GtkWidget *logbase;
 } dt_iop_basecurve_gui_data_t;
+
+typedef struct dt_iop_basecurve_node_context_t
+{
+    int node;
+    float x;
+    float y;
+} dt_iop_basecurve_node_context_t;
 
 typedef struct basecurve_preset_t
 {
@@ -1601,11 +1609,159 @@ static gboolean dt_iop_basecurve_motion_notify(GtkWidget *widget, GdkEventMotion
     return TRUE;
 }
 
+static gboolean _reset_basecurve(dt_iop_module_t *self, GtkWidget *widget)
+{
+    dt_iop_basecurve_params_t *p = self->params;
+    const dt_iop_basecurve_params_t *const d = self->default_params;
+    dt_iop_basecurve_gui_data_t *g = self->gui_data;
+    const int ch = 0;
+
+    p->basecurve_nodes[ch] = d->basecurve_nodes[ch];
+    p->basecurve_type[ch] = d->basecurve_type[ch];
+    for (int k = 0; k < d->basecurve_nodes[ch]; k++)
+    {
+        p->basecurve[ch][k].x = d->basecurve[ch][k].x;
+        p->basecurve[ch][k].y = d->basecurve[ch][k].y;
+    }
+    g->selected = -2; // avoid motion notify re-inserting immediately.
+    dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget);
+    gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return TRUE;
+}
+
+static gboolean _remove_basecurve_node(dt_iop_module_t *self, GtkWidget *widget,
+                                       const dt_iop_basecurve_node_context_t *context)
+{
+    dt_iop_basecurve_params_t *p = self->params;
+    dt_iop_basecurve_gui_data_t *g = self->gui_data;
+    const int ch = 0;
+    int selected = g->selected;
+
+    if (context)
+    {
+        selected = context->node;
+        if (selected < 0 || selected >= p->basecurve_nodes[ch] ||
+            fabsf(p->basecurve[ch][selected].x - context->x) > 1e-6f ||
+            fabsf(p->basecurve[ch][selected].y - context->y) > 1e-6f)
+            return FALSE;
+    }
+    else if (selected < 0 || selected >= p->basecurve_nodes[ch])
+        return FALSE;
+
+    const int nodes = p->basecurve_nodes[ch];
+    dt_iop_basecurve_node_t *basecurve = p->basecurve[ch];
+    if (selected == 0 || selected == nodes - 1)
+    {
+        const float reset_value = selected == 0 ? 0.f : 1.f;
+        basecurve[selected].y = basecurve[selected].x = reset_value;
+    }
+    else
+    {
+        for (int k = selected; k < nodes - 1; k++)
+        {
+            basecurve[k].x = basecurve[k + 1].x;
+            basecurve[k].y = basecurve[k + 1].y;
+        }
+        basecurve[nodes - 1].x = basecurve[nodes - 1].y = 0;
+        g->selected = -2; // avoid re-insertion of that point immediately after this
+        p->basecurve_nodes[ch]--;
+    }
+
+    gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget);
+    return TRUE;
+}
+
+enum
+{
+    _ACTION_BASECURVE_NODE = 0,
+    _ACTION_BASECURVE_RESET,
+};
+
+static float _basecurve_action_process(gpointer target, const dt_action_element_t element,
+                                       const dt_action_effect_t effect, const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    if (!self || !self->gui_data)
+        return DT_ACTION_NOT_VALID;
+
+    dt_action_t *action = dt_action_find_widget(GTK_WIDGET(target), NULL);
+    const dt_iop_basecurve_node_context_t *context =
+        dt_gui_context_menu_get_action_payload(action);
+    gboolean changed = FALSE;
+    if (element == _ACTION_BASECURVE_NODE && effect == DT_ACTION_EFFECT_ACTIVATE)
+        changed = _remove_basecurve_node(self, target, context);
+    else if (element == _ACTION_BASECURVE_RESET && effect == DT_ACTION_EFFECT_RESET && context)
+        changed = _reset_basecurve(self, target);
+
+    return changed ? 1.0f : DT_ACTION_NOT_VALID;
+}
+
+static const dt_action_element_def_t _action_elements_basecurve[] = {
+    {N_("selected node"), dt_action_effect_activate},
+    {N_("curve"), dt_action_effect_value},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_basecurve = {N_("curve"), _basecurve_action_process,
+                                                      _action_elements_basecurve};
+
+static gboolean _basecurve_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
+                                                  gpointer user_data)
+{
+    (void)event;
+    (void)user_data;
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(widget), "iop-instance");
+    if (!self || !self->gui_data)
+        return FALSE;
+
+    dt_action_t *action = dt_action_find_widget(widget, NULL);
+    if (!action)
+        return FALSE;
+
+    int instance = 0;
+    dt_action_get_instance(action, widget, &instance);
+
+    dt_iop_basecurve_gui_data_t *g = self->gui_data;
+    dt_iop_basecurve_params_t *p = self->params;
+    const int ch = 0;
+    GtkWidget *menu = gtk_menu_new();
+    if (g->selected >= 0 && g->selected < p->basecurve_nodes[ch])
+    {
+        const dt_iop_basecurve_node_t node = p->basecurve[ch][g->selected];
+        dt_iop_basecurve_node_context_t *context =
+            g_new(dt_iop_basecurve_node_context_t, 1);
+        *context = (dt_iop_basecurve_node_context_t){.node = g->selected,
+                                                      .x = node.x,
+                                                      .y = node.y};
+        const gchar *label =
+            (g->selected == 0 || g->selected == p->basecurve_nodes[ch] - 1) ?
+                _("reset selected endpoint") :
+                _("remove selected node");
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                              dt_gui_context_menu_action_item_new(
+                                  label, action, instance, _ACTION_BASECURVE_NODE,
+                                  DT_ACTION_EFFECT_ACTIVATE, context, g_free));
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+    }
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                          dt_gui_context_menu_action_item_new(
+                              _("reset current curve"), action, instance, _ACTION_BASECURVE_RESET,
+                              DT_ACTION_EFFECT_RESET,
+                              g_new0(dt_iop_basecurve_node_context_t, 1), g_free));
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 static gboolean dt_iop_basecurve_button_press(GtkWidget *widget, GdkEventButton *event,
                                               dt_iop_module_t *self)
 {
     dt_iop_basecurve_params_t *p = self->params;
-    const dt_iop_basecurve_params_t *const d = self->default_params;
     dt_iop_basecurve_gui_data_t *g = self->gui_data;
 
     int ch = 0;
@@ -1679,42 +1835,14 @@ static gboolean dt_iop_basecurve_button_press(GtkWidget *widget, GdkEventButton 
         }
         else if (event->type == GDK_2BUTTON_PRESS)
         {
-            // reset current curve
-            p->basecurve_nodes[ch] = d->basecurve_nodes[ch];
-            p->basecurve_type[ch] = d->basecurve_type[ch];
-            for (int k = 0; k < d->basecurve_nodes[ch]; k++)
-            {
-                p->basecurve[ch][k].x = d->basecurve[ch][k].x;
-                p->basecurve[ch][k].y = d->basecurve[ch][k].y;
-            }
-            g->selected = -2; // avoid motion notify re-inserting immediately.
-            dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget);
-            gtk_widget_queue_draw(GTK_WIDGET(g->area));
+            _reset_basecurve(self, widget);
             return TRUE;
         }
     }
     else if (event->button == GDK_BUTTON_SECONDARY && g->selected >= 0)
     {
-        if (g->selected == 0 || g->selected == nodes - 1)
-        {
-            float reset_value = g->selected == 0 ? 0 : 1;
-            basecurve[g->selected].y = basecurve[g->selected].x = reset_value;
-            gtk_widget_queue_draw(GTK_WIDGET(g->area));
-            dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget);
-            return TRUE;
-        }
-
-        for (int k = g->selected; k < nodes - 1; k++)
-        {
-            basecurve[k].x = basecurve[k + 1].x;
-            basecurve[k].y = basecurve[k + 1].y;
-        }
-        basecurve[nodes - 1].x = basecurve[nodes - 1].y = 0;
-        g->selected = -2; // avoid re-insertion of that point immediately after this
-        p->basecurve_nodes[ch]--;
-        gtk_widget_queue_draw(GTK_WIDGET(g->area));
-        dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget);
-        return TRUE;
+        // Fallback for teardown. The provider normally consumes the event first.
+        return _remove_basecurve_node(self, widget, NULL);
     }
     return FALSE;
 }
@@ -1849,7 +1977,9 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->area),
                                 _("abscissa: input, ordinate: output. works on RGB channels"));
     g_object_set_data(G_OBJECT(g->area), "iop-instance", self);
-    dt_action_define_iop(self, NULL, N_("curve"), GTK_WIDGET(g->area), NULL);
+    dt_action_t *curve_action = dt_action_define_iop(self, NULL, N_("curve"), GTK_WIDGET(g->area),
+                                                      &_action_def_basecurve);
+    dt_action_set_context_menu_provider_only(curve_action, TRUE);
 
     self->widget = dt_gui_vbox(g->area);
 
@@ -1905,6 +2035,8 @@ void gui_init(dt_iop_module_t *self)
     g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(_scrolled), self);
     g_signal_connect(G_OBJECT(g->area), "key-press-event", G_CALLBACK(dt_iop_basecurve_key_press),
                      self);
+    dt_gui_context_menu_attach_provider(GTK_WIDGET(g->area), _basecurve_context_menu_provider,
+                                        NULL, NULL);
 }
 
 void gui_cleanup(dt_iop_module_t *self)

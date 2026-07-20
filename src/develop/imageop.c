@@ -42,6 +42,7 @@
 #include "dtgtk/icon.h"
 #include "gui/accelerators.h"
 #include "gui/color_picker_proxy.h"
+#include "gui/context_menu.h"
 #include "gui/drag_and_drop.h"
 #include "gui/gtk.h"
 #include "gui/guides.h"
@@ -72,6 +73,14 @@ typedef struct dt_iop_gui_multi_show_t
 {
     gboolean close, up, down, new;
 } dt_iop_gui_multi_show_t;
+
+enum
+{
+    // Multi-instance effect values after show, move up and move down.
+    DT_ACTION_EFFECT_NEW = 3,
+    DT_ACTION_EFFECT_RENAME = 5,
+    DT_ACTION_EFFECT_DUPLICATE = 6,
+};
 
 void dt_iop_load_default_params(dt_iop_module_t *module)
 {
@@ -946,8 +955,50 @@ static gboolean _gui_multiinstance_callback(GtkButton *button, GdkEventButton *e
 {
     if (event && event->button == GDK_BUTTON_SECONDARY)
     {
-        if (!(module->flags() & IOP_FLAGS_ONE_INSTANCE))
-            _gui_copy_callback(button, module);
+        dt_action_t *action = dt_action_find_widget(GTK_WIDGET(button), NULL);
+        int instance = 0;
+        if (action)
+            dt_action_get_instance(action, GTK_WIDGET(button), &instance);
+
+        GtkMenu *menu = GTK_MENU(gtk_menu_new());
+        dt_iop_gui_multi_show_t multi_show;
+        _get_multi_show(module, &multi_show);
+        const struct
+        {
+            const gchar *label;
+            dt_action_effect_t effect;
+            gboolean enabled;
+        } actions[] = {{N_("new instance"), DT_ACTION_EFFECT_NEW, multi_show.new},
+                       {N_("duplicate instance"), DT_ACTION_EFFECT_DUPLICATE, multi_show.new},
+                       {N_("move up"), DT_ACTION_EFFECT_DEFAULT_UP, multi_show.up},
+                       {N_("move down"), DT_ACTION_EFFECT_DEFAULT_DOWN, multi_show.down},
+                       {N_("delete"), DT_ACTION_EFFECT_DELETE, multi_show.close},
+                       {N_("rename"), DT_ACTION_EFFECT_RENAME, TRUE}};
+
+        if (action)
+        {
+            for (size_t i = 0; i < G_N_ELEMENTS(actions); i++)
+            {
+                if (i == 4)
+                    gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+
+                GtkWidget *item = dt_gui_context_menu_action_item_new(
+                    Q_(actions[i].label), action, instance, DT_ACTION_ELEMENT_INSTANCE,
+                    actions[i].effect, NULL, NULL);
+                gtk_widget_set_sensitive(item, actions[i].enabled);
+                if (!actions[i].enabled)
+                    gtk_widget_set_tooltip_text(item, _("not currently available"));
+                gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+            }
+            dt_gui_menu_popup(menu, GTK_WIDGET(button), GDK_GRAVITY_SOUTH_WEST,
+                              GDK_GRAVITY_NORTH_WEST);
+        }
+        else
+        {
+            gtk_widget_destroy(GTK_WIDGET(menu));
+            if (!(module->flags() & IOP_FLAGS_ONE_INSTANCE))
+                _gui_copy_callback(button, module);
+        }
         return TRUE;
     }
     else if (event && event->button == GDK_BUTTON_MIDDLE)
@@ -2213,7 +2264,11 @@ static gboolean _iop_plugin_body_button_press(GtkWidget *w, GdkEventButton *e, g
     }
     else if (e->button == GDK_BUTTON_SECONDARY)
     {
-        _presets_popup_callback(NULL, NULL, module);
+        /* An otherwise unoccupied module body is an IOP Action target. Use
+           the common menu to expose its complete discrete operation set;
+           individual header buttons retain their specialised gestures. */
+        if (!dt_gui_context_menu_show_for_widget(w))
+            _presets_popup_callback(NULL, NULL, module);
 
         return TRUE;
     }
@@ -2257,8 +2312,8 @@ static gboolean _iop_plugin_header_button_release(GtkWidget *w, GdkEventButton *
     }
     else if (e->button == GDK_BUTTON_SECONDARY)
     {
-        _presets_popup_callback(NULL, NULL, module);
-
+        /* The Action handler attached to the header event box already opened
+           the full module menu on button press. */
         return TRUE;
     }
     return FALSE;
@@ -2781,6 +2836,7 @@ void dt_iop_gui_set_expander(dt_iop_module_t *module)
     /* setup the header box */
     g_signal_connect(G_OBJECT(header_evb), "button-release-event",
                      G_CALLBACK(_iop_plugin_header_button_release), module);
+    dt_action_define(&module->so->actions, NULL, NULL, header_evb, NULL);
     gtk_widget_add_events(header_evb, GDK_POINTER_MOTION_MASK);
     g_signal_connect(G_OBJECT(header_evb), "enter-notify-event",
                      G_CALLBACK(_header_motion_notify_show_callback), module);
@@ -2790,6 +2846,7 @@ void dt_iop_gui_set_expander(dt_iop_module_t *module)
     /* connect mouse button callbacks for focus and presets */
     g_signal_connect(G_OBJECT(body_evb), "button-press-event",
                      G_CALLBACK(_iop_plugin_body_button_press), module);
+    dt_action_define(&module->so->actions, NULL, NULL, body_evb, NULL);
     gtk_widget_add_events(body_evb, GDK_POINTER_MOTION_MASK);
     g_signal_connect(G_OBJECT(body_evb), "enter-notify-event",
                      G_CALLBACK(_header_motion_notify_show_callback), module);
@@ -2843,7 +2900,7 @@ void dt_iop_gui_set_expander(dt_iop_module_t *module)
     if (!(module->flags() & IOP_FLAGS_ONE_INSTANCE))
         gtk_widget_set_tooltip_text(
             module->multimenu_button,
-            _("multiple instance actions\nright-click creates new instance"));
+            _("multiple instance actions\nright-click for all instance actions"));
 
     if (!(module->flags() & IOP_FLAGS_ONE_INSTANCE))
         gtk_widget_set_tooltip_text(module->presets_button,
@@ -3578,18 +3635,6 @@ gboolean dt_iop_module_is_skipped(const dt_develop_t *dev, const dt_iop_module_t
            (dev->gui_module->operation_tags_filter() & module->operation_tags()) &&
            (dev->gui_module->iop_order < module->iop_order);
 }
-
-enum
-{
-    // Multi-instance
-    //DT_ACTION_EFFECT_SHOW,
-    //DT_ACTION_EFFECT_UP,
-    //DT_ACTION_EFFECT_DOWN,
-    DT_ACTION_EFFECT_NEW = 3,
-    //DT_ACTION_EFFECT_DELETE = 4,
-    DT_ACTION_EFFECT_RENAME = 5,
-    DT_ACTION_EFFECT_DUPLICATE = 6,
-};
 
 static float _action_process(gpointer target, const dt_action_element_t element,
                              const dt_action_effect_t effect, float move_size)

@@ -29,6 +29,7 @@
 #include "develop/tiling.h"
 #include "dtgtk/drawingarea.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/presets.h"
 #include "iop/iop_api.h"
@@ -1240,10 +1241,204 @@ static gboolean checker_motion_notify(GtkWidget *widget, GdkEventMotion *event,
                "altered patches are marked with an outline\n"
                "click to select\n"
                "double-click to reset\n"
-               "right-click to delete patch\n"
+               "right-click to open the patch menu\n"
                "shift+click while color picking to replace patch"),
              p->source_L[patch], p->source_a[patch], p->source_b[patch]);
     gtk_widget_set_tooltip_text(g->area, tooltip);
+    return TRUE;
+}
+
+typedef struct dt_iop_colorchecker_patch_context_t
+{
+    int patch;
+    float source_L, source_a, source_b;
+    float target_L, target_a, target_b;
+} dt_iop_colorchecker_patch_context_t;
+
+enum
+{
+    _ACTION_COLORCHECKER_RESET_PATCH,
+    _ACTION_COLORCHECKER_REMOVE_PATCH,
+};
+
+static int _colorchecker_patch_at_position(const dt_iop_colorchecker_params_t *p,
+                                           GtkWidget *widget, const double x, const double y)
+{
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    if (allocation.width <= 0 || allocation.height <= 0)
+        return -1;
+
+    const int cells_x = p->num_patches > 24 ? 7 : 6;
+    const int cells_y = p->num_patches > 24 ? 7 : 4;
+    const int column = CLAMP((int)(CLAMP(x, 0, allocation.width) * cells_x / allocation.width),
+                             0, cells_x - 1);
+    const int row = CLAMP((int)(CLAMP(y, 0, allocation.height) * cells_y / allocation.height), 0,
+                          cells_y - 1);
+    const int patch = column + cells_x * row;
+    return patch < p->num_patches ? patch : -1;
+}
+
+static dt_iop_colorchecker_patch_context_t *_colorchecker_patch_context_new(
+    const dt_iop_colorchecker_params_t *p, const int patch)
+{
+    if (patch < 0 || patch >= p->num_patches)
+        return NULL;
+
+    dt_iop_colorchecker_patch_context_t *context = g_new(dt_iop_colorchecker_patch_context_t, 1);
+    *context = (dt_iop_colorchecker_patch_context_t){.patch = patch,
+                                                      .source_L = p->source_L[patch],
+                                                      .source_a = p->source_a[patch],
+                                                      .source_b = p->source_b[patch],
+                                                      .target_L = p->target_L[patch],
+                                                      .target_a = p->target_a[patch],
+                                                      .target_b = p->target_b[patch]};
+    return context;
+}
+
+static gboolean _colorchecker_patch_context_matches(const dt_iop_colorchecker_params_t *p,
+                                                    const dt_iop_colorchecker_patch_context_t *context)
+{
+    const int patch = context ? context->patch : -1;
+    return patch >= 0 && patch < p->num_patches && p->source_L[patch] == context->source_L &&
+           p->source_a[patch] == context->source_a && p->source_b[patch] == context->source_b &&
+           p->target_L[patch] == context->target_L && p->target_a[patch] == context->target_a &&
+           p->target_b[patch] == context->target_b;
+}
+
+static gboolean _colorchecker_reset_patch(
+    dt_iop_module_t *self, const dt_iop_colorchecker_patch_context_t *context)
+{
+    dt_iop_colorchecker_params_t *p = self->params;
+    dt_iop_colorchecker_gui_data_t *g = self->gui_data;
+    if (!_colorchecker_patch_context_matches(p, context))
+        return FALSE;
+
+    const int patch = context->patch;
+    p->target_L[patch] = p->source_L[patch];
+    p->target_a[patch] = p->source_a[patch];
+    p->target_b[patch] = p->source_b[patch];
+    dt_dev_add_history_item(darktable.develop, self, TRUE);
+    DT_ENTER_GUI_UPDATE();
+    _colorchecker_update_sliders(self);
+    DT_LEAVE_GUI_UPDATE();
+    gtk_widget_queue_draw(g->area);
+    return TRUE;
+}
+
+static gboolean _colorchecker_remove_patch(
+    dt_iop_module_t *self, const dt_iop_colorchecker_patch_context_t *context)
+{
+    dt_iop_colorchecker_params_t *p = self->params;
+    dt_iop_colorchecker_gui_data_t *g = self->gui_data;
+    if (!_colorchecker_patch_context_matches(p, context))
+        return FALSE;
+
+    const int patch = context->patch;
+    const int remaining = p->num_patches - patch - 1;
+    memmove(p->target_L + patch, p->target_L + patch + 1, sizeof(float) * remaining);
+    memmove(p->target_a + patch, p->target_a + patch + 1, sizeof(float) * remaining);
+    memmove(p->target_b + patch, p->target_b + patch + 1, sizeof(float) * remaining);
+    memmove(p->source_L + patch, p->source_L + patch + 1, sizeof(float) * remaining);
+    memmove(p->source_a + patch, p->source_a + patch + 1, sizeof(float) * remaining);
+    memmove(p->source_b + patch, p->source_b + patch + 1, sizeof(float) * remaining);
+    p->num_patches--;
+    dt_dev_add_history_item(darktable.develop, self, TRUE);
+    DT_ENTER_GUI_UPDATE();
+    if (p->num_patches > 0)
+    {
+        g->patch = CLAMP(g->patch, 0, p->num_patches - 1);
+        g->drawn_patch = CLAMP(g->drawn_patch, 0, p->num_patches - 1);
+        _colorchecker_rebuild_patch_list(self);
+        dt_bauhaus_combobox_set(g->combobox_patch, g->patch);
+        _colorchecker_update_sliders(self);
+    }
+    else
+    {
+        g->patch = -1;
+        g->drawn_patch = -1;
+        dt_bauhaus_combobox_clear(g->combobox_patch);
+    }
+    DT_LEAVE_GUI_UPDATE();
+    gtk_widget_queue_draw(g->area);
+    return TRUE;
+}
+
+static float _colorchecker_patch_action_process(gpointer target, const dt_action_element_t element,
+                                                const dt_action_effect_t effect,
+                                                const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || effect != DT_ACTION_EFFECT_ACTIVATE ||
+        !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    dt_action_t *action = dt_action_find_widget(GTK_WIDGET(target), NULL);
+    const dt_iop_colorchecker_patch_context_t *context =
+        dt_gui_context_menu_get_action_payload(action);
+    if (!self || !context)
+        return DT_ACTION_NOT_VALID;
+
+    const gboolean changed = element == _ACTION_COLORCHECKER_RESET_PATCH ?
+                                 _colorchecker_reset_patch(self, context) :
+                             element == _ACTION_COLORCHECKER_REMOVE_PATCH ?
+                                 _colorchecker_remove_patch(self, context) :
+                                                                          FALSE;
+    return changed ? 1.0f : DT_ACTION_NOT_VALID;
+}
+
+static const dt_action_element_def_t _action_elements_colorchecker_patch[] = {
+    {N_("reset patch"), dt_action_effect_activate},
+    {N_("remove patch"), dt_action_effect_activate},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_colorchecker_patch = {
+    N_("patch"), _colorchecker_patch_action_process, _action_elements_colorchecker_patch};
+
+static gboolean _colorchecker_patch_context_menu_provider(GtkWidget *widget,
+                                                           const GdkEventButton *event,
+                                                           gpointer user_data)
+{
+    (void)user_data;
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(widget), "iop-instance");
+    if (!self || !self->gui_data)
+        return TRUE;
+
+    dt_iop_colorchecker_params_t *p = self->params;
+    dt_iop_colorchecker_gui_data_t *g = self->gui_data;
+    const int patch = event ? _colorchecker_patch_at_position(p, widget, event->x, event->y) :
+                              g->patch;
+    dt_iop_colorchecker_patch_context_t *context = _colorchecker_patch_context_new(p, patch);
+    if (!context)
+        return TRUE;
+
+    dt_action_t *action = dt_action_find_widget(widget, NULL);
+    if (!action)
+    {
+        g_free(context);
+        return TRUE;
+    }
+
+    int instance = 0;
+    dt_action_get_instance(action, widget, &instance);
+    dt_iop_colorchecker_patch_context_t *reset_context =
+        g_new(dt_iop_colorchecker_patch_context_t, 1);
+    *reset_context = *context;
+
+    GtkWidget *menu = gtk_menu_new();
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(_("reset patch"), action, instance,
+                                            _ACTION_COLORCHECKER_RESET_PATCH,
+                                            DT_ACTION_EFFECT_ACTIVATE,
+                                            reset_context, g_free));
+    gtk_menu_shell_append(
+        GTK_MENU_SHELL(menu),
+        dt_gui_context_menu_action_item_new(_("remove patch"), action, instance,
+                                            _ACTION_COLORCHECKER_REMOVE_PATCH,
+                                            DT_ACTION_EFFECT_ACTIVATE, context, g_free));
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST, GDK_GRAVITY_NORTH_WEST);
     return TRUE;
 }
 
@@ -1281,32 +1476,8 @@ static gboolean checker_button_press(GtkWidget *widget, GdkEventButton *event,
         gtk_widget_queue_draw(g->area);
         return TRUE;
     }
-    else if (event->button == GDK_BUTTON_SECONDARY && (patch < p->num_patches))
-    {
-        // right click: delete patch, move others up
-        if (patch < 0 || patch >= p->num_patches)
-            return FALSE;
-        memmove(p->target_L + patch, p->target_L + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        memmove(p->target_a + patch, p->target_a + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        memmove(p->target_b + patch, p->target_b + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        memmove(p->source_L + patch, p->source_L + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        memmove(p->source_a + patch, p->source_a + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        memmove(p->source_b + patch, p->source_b + patch + 1,
-                sizeof(float) * (p->num_patches - 1 - patch));
-        p->num_patches--;
-        dt_dev_add_history_item(darktable.develop, self, TRUE);
-        DT_ENTER_GUI_UPDATE();
-        _colorchecker_rebuild_patch_list(self);
-        _colorchecker_update_sliders(self);
-        DT_LEAVE_GUI_UPDATE();
-        gtk_widget_queue_draw(g->area);
-        return TRUE;
-    }
+    else if (event->button == GDK_BUTTON_SECONDARY)
+        return _colorchecker_patch_context_menu_provider(widget, event, NULL);
     else if ((event->button == GDK_BUTTON_PRIMARY) &&
              dt_modifier_is(event->state, GDK_SHIFT_MASK) &&
              (self->request_color_pick == DT_REQUEST_COLORPICK_MODULE))
@@ -1370,6 +1541,11 @@ void gui_init(dt_iop_module_t *self)
                      self);
     g_signal_connect(G_OBJECT(g->area), "motion-notify-event", G_CALLBACK(checker_motion_notify),
                      self);
+    dt_action_t *patch_action =
+        dt_action_define_iop(self, NULL, N_("patch"), g->area, &_action_def_colorchecker_patch);
+    dt_action_set_context_menu_provider_only(patch_action, TRUE);
+    dt_gui_context_menu_attach_provider(g->area, _colorchecker_patch_context_menu_provider, NULL,
+                                        NULL);
 
     g->patch = 0;
     g->drawn_patch = -1;

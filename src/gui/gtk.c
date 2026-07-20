@@ -3911,7 +3911,8 @@ const dt_action_element_def_t _action_elements_tabs_all_rgb[] = {
     {N_("red"), dt_action_effect_tabs},
     {N_("green"), dt_action_effect_tabs},
     {N_("blue"), dt_action_effect_tabs},
-    {NULL, dt_action_effect_tabs}};
+    {NULL, dt_action_effect_tabs},
+    {NULL}};
 
 const dt_action_def_t dt_action_def_tabs_all_rgb = {N_("tabs"), _action_process_tabs,
                                                     _action_elements_tabs_all_rgb};

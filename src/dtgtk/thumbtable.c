@@ -23,15 +23,22 @@
 #include "common/colorlabels.h"
 #include "common/debug.h"
 #include "common/history.h"
+#include "common/grouping.h"
+#include "common/image.h"
 #include "common/image_cache.h"
 #include "common/ratings.h"
 #include "common/selection.h"
 #include "common/undo.h"
 #include "control/control.h"
+#include "control/jobs/control_jobs.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/drag_and_drop.h"
 #include "views/view.h"
 #include "bauhaus/bauhaus.h"
+
+#include <gdk/gdkkeysyms.h>
+#include <glib/gstdio.h>
 
 #ifdef GDK_WINDOWING_QUARTZ
 #include "osx/osx.h"
@@ -1331,6 +1338,9 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
 
     const dt_imgid_t id = dt_control_get_mouse_over_id();
 
+    if (event->type == GDK_BUTTON_PRESS && event->button == GDK_BUTTON_SECONDARY)
+        return dt_gui_context_menu_show_image(widget, id);
+
     if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY)
     {
         //  double-click
@@ -1412,6 +1422,20 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
             table->drag_thumb->moved = FALSE;
     }
     return TRUE;
+}
+
+static gboolean _event_key_press(GtkWidget *widget, GdkEventKey *event, dt_thumbtable_t *table)
+{
+    (void)table;
+    if (event->keyval != GDK_KEY_Menu &&
+        (event->keyval != GDK_KEY_F10 || !(event->state & GDK_SHIFT_MASK)))
+        return FALSE;
+
+    GList *selection = dt_selection_get_list(darktable.selection, FALSE, FALSE);
+    const dt_imgid_t image = selection ? GPOINTER_TO_INT(selection->data) :
+                                         dt_control_get_mouse_over_id();
+    g_list_free(selection);
+    return dt_gui_context_menu_show_image(widget, image);
 }
 
 static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event,
@@ -2423,6 +2447,8 @@ dt_thumbtable_t *dt_thumbtable_new()
                      table);
     g_signal_connect(G_OBJECT(table->widget), "button-press-event", G_CALLBACK(_event_button_press),
                      table);
+    g_signal_connect(G_OBJECT(table->widget), "key-press-event", G_CALLBACK(_event_key_press),
+                     table);
     g_signal_connect(G_OBJECT(table->widget), "motion-notify-event",
                      G_CALLBACK(_event_motion_notify), table);
     g_signal_connect(G_OBJECT(table->widget), "button-release-event",
@@ -2831,6 +2857,18 @@ static void _accel_hist_discard(dt_action_t *action)
     dt_control_discard_history(imgs);
 }
 
+static void _accel_hist_compress(dt_action_t *action)
+{
+    GList *imgs = dt_act_on_get_images(TRUE, TRUE, FALSE);
+    dt_control_compress_history(imgs);
+}
+
+static void _accel_write_sidecar_files(dt_action_t *action)
+{
+    (void)action;
+    dt_control_write_sidecar_files();
+}
+
 static void _accel_duplicate(dt_action_t *action)
 {
     dt_undo_start_group(darktable.undo, DT_UNDO_DUPLICATE);
@@ -2880,25 +2918,306 @@ static void _accel_select_untouched(dt_action_t *action)
     dt_selection_select_unaltered(darktable.selection);
 }
 
+static void _accel_remove_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_remove_images();
+}
+
+static void _accel_delete_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_delete_images();
+}
+
+static void _accel_move_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_move_images();
+}
+
+static void _accel_copy_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_copy_images();
+}
+
+static void _accel_merge_hdr(dt_action_t *action)
+{
+    (void)action;
+    dt_control_merge_hdr();
+}
+
+static void _accel_duplicate_images(dt_action_t *action)
+{
+    dt_control_duplicate_images(g_strcmp0(action->id, "duplicate selected images virgin") == 0);
+}
+
+static void _accel_rotate_images(dt_action_t *action)
+{
+    const int32_t rotation = g_str_has_suffix(action->id, "CCW") ? 1 :
+                             g_str_has_suffix(action->id, "CW")  ? 0 :
+                                                                      2;
+    dt_control_flip_images(rotation);
+}
+
+static void _accel_local_copy_images(dt_action_t *action)
+{
+    if (!g_strcmp0(action->id, "copy selected images locally"))
+        dt_control_set_local_copy_images();
+    else
+        dt_control_reset_local_copy_images();
+}
+
+static void _accel_refresh_exif(dt_action_t *action)
+{
+    (void)action;
+    dt_control_refresh_exif();
+}
+
+static void _accel_set_monochrome(dt_action_t *action)
+{
+    dt_control_monochrome_images(!g_strcmp0(action->id, "set selected images monochrome") ? 2 : 0);
+}
+
+static void _accel_group_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_group_images();
+}
+
+static void _accel_ungroup_images(dt_action_t *action)
+{
+    (void)action;
+    dt_control_ungroup_images();
+}
+
+static void _accel_copy_metadata(dt_action_t *action)
+{
+    (void)action;
+    dt_control_copy_metadata_source();
+}
+
+static void _accel_paste_metadata(dt_action_t *action)
+{
+    (void)action;
+    dt_control_paste_metadata();
+}
+
+static void _accel_clear_metadata(dt_action_t *action)
+{
+    (void)action;
+    dt_control_clear_metadata();
+}
+
+static void _disable_thumb_action(dt_action_status_t *status, const gchar *reason)
+{
+    status->enabled = FALSE;
+    status->reason = reason;
+}
+
+static gboolean _thumb_context_has_grouped_image(void)
+{
+    GList *images = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    gboolean grouped = FALSE;
+    for (const GList *l = images; l && !grouped; l = g_list_next(l))
+    {
+        GList *group = dt_grouping_get_group_images(GPOINTER_TO_INT(l->data));
+        grouped = g_list_length(group) > 1;
+        g_list_free(group);
+    }
+    g_list_free(images);
+    return grouped;
+}
+
+static gboolean _thumb_context_all_raw_images(void)
+{
+    GList *images = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    gboolean all_raw = images != NULL;
+    for (const GList *l = images; l && all_raw; l = g_list_next(l))
+    {
+        const dt_image_t *image = dt_image_cache_get(GPOINTER_TO_INT(l->data), 'r');
+        all_raw = image && dt_image_is_raw(image);
+        if (image)
+            dt_image_cache_read_release(image);
+    }
+    g_list_free(images);
+    return all_raw;
+}
+
+static gboolean _thumb_context_source_directories_writable(void)
+{
+    GList *images = dt_act_on_get_images(FALSE, TRUE, FALSE);
+    gboolean writable = images != NULL;
+    for (const GList *l = images; l && writable; l = g_list_next(l))
+    {
+        char path[PATH_MAX] = {0};
+        gboolean from_cache = TRUE;
+        dt_image_full_path(GPOINTER_TO_INT(l->data), path, sizeof(path), &from_cache);
+        gchar *directory = path[0] ? g_path_get_dirname(path) : NULL;
+        writable = directory && g_access(directory, W_OK | X_OK) == 0;
+        g_free(directory);
+    }
+    g_list_free(images);
+    return writable;
+}
+
+static gboolean _thumb_context_has_blocking_job(void)
+{
+    const dt_lib_module_t *progress = darktable.control->progress_system.proxy.module;
+    return progress && progress->widget && GTK_IS_WIDGET(progress->widget) &&
+           gtk_widget_has_grab(progress->widget);
+}
+
+static void _thumb_action_status(const dt_action_t *action, const int instance, const int element,
+                                 const int effect, dt_action_status_t *status, gpointer user_data)
+{
+    (void)instance;
+    (void)element;
+    (void)effect;
+    (void)user_data;
+
+    const int images = dt_act_on_get_images_nb(TRUE, FALSE);
+    if (!images)
+    {
+        _disable_thumb_action(status, _("no images selected"));
+        return;
+    }
+
+    if (_thumb_context_has_blocking_job())
+    {
+        _disable_thumb_action(status, _("a blocking task is running"));
+        return;
+    }
+
+    if (!g_strcmp0(action->id, "copy history") ||
+        !g_strcmp0(action->id, "copy history parts") ||
+        !g_strcmp0(action->id, "copy selected image metadata"))
+    {
+        if (images != 1)
+            _disable_thumb_action(status, _("select exactly one image"));
+        return;
+    }
+
+    if (!g_strcmp0(action->id, "paste history") ||
+        !g_strcmp0(action->id, "paste history parts"))
+    {
+        const dt_imgid_t copied = darktable.view_manager->copy_paste.copied_imageid;
+        if (!dt_is_valid_imgid(copied))
+            _disable_thumb_action(status, _("no copied history"));
+        else if (images == 1 && copied == dt_act_on_get_main_image())
+            _disable_thumb_action(status, _("history source is selected"));
+        return;
+    }
+
+    if (!g_strcmp0(action->id, "paste selected image metadata") &&
+        !dt_control_can_paste_metadata())
+    {
+        _disable_thumb_action(status, _("no compatible copied metadata"));
+        return;
+    }
+
+    if ((!g_strcmp0(action->id, "delete selected images") ||
+         !g_strcmp0(action->id, "move selected images") ||
+         !g_strcmp0(action->id, "write sidecar files")) &&
+        !_thumb_context_source_directories_writable())
+    {
+        _disable_thumb_action(status, _("a selected image directory is read-only"));
+        return;
+    }
+
+    if (!g_strcmp0(action->id, "create HDR from selected images"))
+    {
+        if (images < 2)
+            _disable_thumb_action(status, _("select at least two images"));
+        else if (!_thumb_context_all_raw_images())
+            _disable_thumb_action(status, _("HDR merge requires raw images"));
+    }
+    else if (!g_strcmp0(action->id, "group selected images") && images < 2)
+        _disable_thumb_action(status, _("select at least two images"));
+    else if (!g_strcmp0(action->id, "ungroup selected images") &&
+             !_thumb_context_has_grouped_image())
+        _disable_thumb_action(status, _("no grouped images selected"));
+}
+
+static dt_action_t *_register_thumb_image_action(dt_action_t *owner, const gchar *label,
+                                                  dt_action_callback_t callback, const guint key,
+                                                  const GdkModifierType mods)
+{
+    dt_action_t *action = dt_action_register(owner, label, callback, key, mods);
+    dt_action_set_status_callback(action, _thumb_action_status, NULL);
+    return action;
+}
+
 // init all accels
 static void _thumbtable_init_accels()
 {
     dt_action_t *thumb_actions = &darktable.control->actions_thumb;
 
     /* setup history key accelerators */
-    dt_action_register(thumb_actions, N_("copy history"), _accel_copy, GDK_KEY_c, GDK_CONTROL_MASK);
-    dt_action_register(thumb_actions, N_("copy history parts"), _accel_copy_parts, GDK_KEY_c,
-                       GDK_CONTROL_MASK | GDK_SHIFT_MASK);
-    dt_action_register(thumb_actions, N_("paste history"), _accel_paste, GDK_KEY_v,
-                       GDK_CONTROL_MASK);
-    dt_action_register(thumb_actions, N_("paste history parts"), _accel_paste_parts, GDK_KEY_v,
-                       GDK_CONTROL_MASK | GDK_SHIFT_MASK);
-    dt_action_register(thumb_actions, N_("discard history"), _accel_hist_discard, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("copy history"), _accel_copy, GDK_KEY_c,
+                                 GDK_CONTROL_MASK);
+    _register_thumb_image_action(thumb_actions, N_("copy history parts"), _accel_copy_parts,
+                                 GDK_KEY_c, GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    _register_thumb_image_action(thumb_actions, N_("paste history"), _accel_paste, GDK_KEY_v,
+                                 GDK_CONTROL_MASK);
+    _register_thumb_image_action(thumb_actions, N_("paste history parts"), _accel_paste_parts,
+                                 GDK_KEY_v, GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    _register_thumb_image_action(thumb_actions, N_("compress history"), _accel_hist_compress, 0,
+                                 0);
+    _register_thumb_image_action(thumb_actions, N_("discard history"), _accel_hist_discard, 0,
+                                 0);
+    _register_thumb_image_action(thumb_actions, N_("write sidecar files"),
+                                 _accel_write_sidecar_files, 0, 0);
 
     dt_action_register(thumb_actions, N_("duplicate image"), _accel_duplicate, GDK_KEY_d,
                        GDK_CONTROL_MASK);
     dt_action_register(thumb_actions, N_("duplicate image virgin"), _accel_duplicate, GDK_KEY_d,
                        GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+
+    /* Image operations are registered here as well as in their panel widgets so that a
+       thumbnail context menu never needs to call a button callback directly. */
+    _register_thumb_image_action(thumb_actions, N_("create HDR from selected images"),
+                                 _accel_merge_hdr, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("duplicate selected images"),
+                                 _accel_duplicate_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("duplicate selected images virgin"),
+                                 _accel_duplicate_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("move selected images"), _accel_move_images, 0,
+                                 0);
+    _register_thumb_image_action(thumb_actions, N_("copy selected images"), _accel_copy_images, 0,
+                                 0);
+    _register_thumb_image_action(thumb_actions, N_("remove selected images from library"),
+                                 _accel_remove_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("delete selected images"), _accel_delete_images,
+                                 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("rotate selected images 90 degrees CCW"),
+                                 _accel_rotate_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("rotate selected images 90 degrees CW"),
+                                 _accel_rotate_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("reset selected images rotation"),
+                                 _accel_rotate_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("copy selected images locally"),
+                                 _accel_local_copy_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("resync selected images local copy"),
+                                 _accel_local_copy_images, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("refresh selected images EXIF"),
+                                 _accel_refresh_exif, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("set selected images monochrome"),
+                                 _accel_set_monochrome, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("set selected images color"),
+                                 _accel_set_monochrome, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("group selected images"), _accel_group_images,
+                                 GDK_KEY_g, GDK_CONTROL_MASK);
+    _register_thumb_image_action(thumb_actions, N_("ungroup selected images"),
+                                 _accel_ungroup_images, GDK_KEY_g,
+                                 GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    _register_thumb_image_action(thumb_actions, N_("copy selected image metadata"),
+                                 _accel_copy_metadata, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("paste selected image metadata"),
+                                 _accel_paste_metadata, 0, 0);
+    _register_thumb_image_action(thumb_actions, N_("clear selected image metadata"),
+                                 _accel_clear_metadata, 0, 0);
 
     /* setup selection accelerators */
     dt_action_register(thumb_actions, N_("select all"), _accel_select_all, GDK_KEY_a,

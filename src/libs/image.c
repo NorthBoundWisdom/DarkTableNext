@@ -23,7 +23,6 @@
 #include "common/image_cache.h"
 #include "common/ratings.h"
 #include "common/colorlabels.h"
-#include "common/grouping.h"
 #include "common/undo.h"
 #include "common/metadata.h"
 #include "common/tags.h"
@@ -52,7 +51,6 @@ typedef struct dt_lib_image_t
     GtkWidget *copy_metadata_button, *paste_metadata_button, *clear_metadata_button;
     GtkWidget *rating_flag, *colors_flag, *metadata_flag, *tags_flag;
     GtkWidget *page1; // retained for extension pages
-    dt_imgid_t imageid;
 } dt_lib_image_t;
 
 const char *name(dt_lib_module_t *self)
@@ -68,64 +66,6 @@ dt_view_type_flags_t views(dt_lib_module_t *self)
 uint32_t container(dt_lib_module_t *self)
 {
     return DT_UI_CONTAINER_PANEL_RIGHT_CENTER;
-}
-
-/** merges all the selected images into a single group.  if there is
- * an expanded group and grouping is on, then they will be joined there, otherwise a new
- * one will be created. */
-static void _group_helper_function(void)
-{
-    dt_imgid_t new_group_id = darktable.gui->grouping ? darktable.gui->expanded_group_id : NO_IMGID;
-
-    GList *imgs = NULL;
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT imgid FROM main.selected_images", -1, &stmt, NULL);
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        dt_imgid_t id = sqlite3_column_int(stmt, 0);
-        if (!dt_is_valid_imgid(new_group_id))
-            new_group_id = id;
-        dt_grouping_add_to_group(new_group_id, id);
-        imgs = g_list_prepend(imgs, GINT_TO_POINTER(id));
-    }
-    imgs = g_list_reverse(imgs); // list was built in reverse order, so un-reverse it
-    sqlite3_finalize(stmt);
-    if (darktable.gui->grouping)
-        darktable.gui->expanded_group_id = new_group_id;
-    else
-        darktable.gui->expanded_group_id = NO_IMGID;
-    dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
-                               DT_COLLECTION_PROP_UNDEF, imgs);
-    dt_control_queue_redraw_center();
-}
-
-/** removes the selected images from their current group. */
-static void _ungroup_helper_function(void)
-{
-    GList *imgs = NULL;
-    sqlite3_stmt *stmt;
-    DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
-                                "SELECT imgid FROM main.selected_images", -1, &stmt, NULL);
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        const int id = sqlite3_column_int(stmt, 0);
-        const int new_group_id = dt_grouping_remove_from_group(id);
-        if (dt_is_valid_imgid(new_group_id))
-        {
-            // new_!dt_is_valid_imgid(group_id) if image to be ungrouped was
-            // a single image and no change to any group was made
-            imgs = g_list_prepend(imgs, GINT_TO_POINTER(id));
-        }
-    }
-    sqlite3_finalize(stmt);
-    if (imgs != NULL)
-    {
-        darktable.gui->expanded_group_id = NO_IMGID;
-        dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
-                                   DT_COLLECTION_PROP_UNDEF, g_list_reverse(imgs));
-        dt_control_queue_redraw_center();
-    }
 }
 
 static void _duplicate_virgin(dt_action_t *action)
@@ -156,9 +96,9 @@ static void button_clicked(GtkWidget *widget, gpointer user_data)
     else if (i == 9)
         dt_control_copy_images();
     else if (i == 10)
-        _group_helper_function();
+        dt_control_group_images();
     else if (i == 11)
-        _ungroup_helper_function();
+        dt_control_ungroup_images();
     else if (i == 12)
         dt_control_set_local_copy_images();
     else if (i == 13)
@@ -176,9 +116,7 @@ void gui_update(dt_lib_module_t *self)
     const gboolean act_on_one = (nbimgs == 1);
     const gboolean act_on_mult = (nbimgs > 1);
     const uint32_t selected_cnt = dt_collection_get_selected_count();
-    const gboolean can_paste =
-        dt_is_valid_imgid(d->imageid) &&
-        (act_on_mult || (act_on_one && (d->imageid != dt_act_on_get_main_image())));
+    const gboolean can_paste = dt_control_can_paste_metadata();
 
     gtk_widget_set_sensitive(GTK_WIDGET(d->remove_button), act_on_any);
     gtk_widget_set_sensitive(GTK_WIDGET(d->delete_button), act_on_any);
@@ -288,97 +226,25 @@ int position(const dt_lib_module_t *self)
     return 700;
 }
 
-typedef enum dt_metadata_actions_t
-{
-    DT_MA_REPLACE = 0,
-    DT_MA_MERGE,
-    DT_MA_CLEAR
-} dt_metadata_actions_t;
-
-static void _execute_metadata(dt_lib_module_t *self, const int action)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean rating_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/rating");
-    const gboolean colors_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/colors");
-    const gboolean dtmetadata_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/metadata");
-    const gboolean dttag_flag = dt_conf_get_bool("plugins/lighttable/copy_metadata/tags");
-    const dt_imgid_t imageid = d->imageid;
-    GList *imgs = dt_act_on_get_images(FALSE, TRUE, FALSE);
-    if (imgs)
-    {
-        gboolean show_busy = !g_list_shorter_than(imgs, 10);
-        if (show_busy)
-            dt_gui_cursor_set_busy();
-        // for all the above actions, we don't use the grpu_on tag, as
-        // grouped images have already been added to image list
-        const dt_undo_type_t undo_type =
-            (rating_flag ? DT_UNDO_RATINGS : 0) | (colors_flag ? DT_UNDO_COLORLABELS : 0) |
-            (dtmetadata_flag ? DT_UNDO_METADATA : 0) | (dttag_flag ? DT_UNDO_TAGS : 0);
-
-        if (undo_type)
-            dt_undo_start_group(darktable.undo, undo_type);
-
-        if (rating_flag)
-        {
-            const int stars = (action == DT_MA_CLEAR) ? 0 : dt_ratings_get(imageid);
-            dt_ratings_apply_on_list(imgs, stars, TRUE);
-        }
-        if (colors_flag)
-        {
-            const int colors = (action == DT_MA_CLEAR) ? 0 : dt_colorlabels_get_labels(imageid);
-            dt_colorlabels_set_labels(imgs, colors, action != DT_MA_MERGE, TRUE);
-        }
-        if (dtmetadata_flag)
-        {
-            GList *metadata = (action == DT_MA_CLEAR) ? NULL : dt_metadata_get_list_id(imageid);
-            dt_metadata_set_list_id(imgs, metadata, action != DT_MA_MERGE, TRUE);
-            DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE);
-            g_list_free_full(metadata, g_free);
-        }
-        if (dttag_flag)
-        {
-            // affect only user tags (not dt tags)
-            GList *tags = (action == DT_MA_CLEAR) ? NULL : dt_tag_get_tags(imageid, TRUE);
-            if (dt_tag_set_tags(tags, imgs, TRUE, action != DT_MA_MERGE, TRUE))
-                DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_TAG_CHANGED);
-            g_list_free(tags);
-        }
-
-        if (undo_type)
-        {
-            dt_undo_end_group(darktable.undo);
-            dt_image_synch_xmps(imgs);
-            dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD,
-                                       DT_COLLECTION_PROP_METADATA, imgs);
-            dt_control_queue_redraw_center();
-        }
-        else
-        {
-            g_list_free(imgs);
-        }
-        if (show_busy)
-            dt_gui_cursor_clear_busy();
-    }
-}
-
 static void _copy_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
 {
-    dt_lib_image_t *d = self->data;
-
-    d->imageid = dt_act_on_get_main_image();
-
+    (void)widget;
+    dt_control_copy_metadata_source();
     dt_lib_gui_queue_update(self);
 }
 
 static void _paste_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
 {
-    const int mode = dt_conf_get_int("plugins/lighttable/copy_metadata/pastemode");
-    _execute_metadata(self, mode == 0 ? DT_MA_MERGE : DT_MA_REPLACE);
+    (void)widget;
+    (void)self;
+    dt_control_paste_metadata();
 }
 
 static void _clear_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
 {
-    _execute_metadata(self, DT_MA_CLEAR);
+    (void)widget;
+    (void)self;
+    dt_control_clear_metadata();
 }
 
 static void _set_monochrome_callback(GtkWidget *widget, dt_lib_module_t *self)
@@ -597,15 +463,12 @@ void gui_init(dt_lib_module_t *self)
     dt_action_register(DT_ACTION(self), N_("duplicate virgin"), _duplicate_virgin, GDK_KEY_d,
                        GDK_CONTROL_MASK | GDK_SHIFT_MASK);
 
-    d->imageid = 0;
     _image_preference_changed(NULL, self); // update delete button label/tooltip
 }
 #undef ellipsize_button
 
 void gui_reset(dt_lib_module_t *self)
 {
-    dt_lib_image_t *d = self->data;
-    d->imageid = 0;
     dt_lib_gui_queue_update(self);
 }
 

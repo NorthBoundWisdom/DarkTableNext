@@ -27,6 +27,8 @@
 #include "gui/color_picker_proxy.h"
 #include "gui/presets.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
+#include "gui/gtk.h"
 #include "libs/colorpicker.h"
 
 #define DT_GUI_CURVE_EDITOR_INSET DT_PIXEL_APPLY_DPI(1)
@@ -97,6 +99,17 @@ typedef struct dt_iop_rgbcurve_gui_data_t
     float zoom_factor;
     float offset_x, offset_y;
 } dt_iop_rgbcurve_gui_data_t;
+
+/* A curve node is not a GtkWidget.  Context menus therefore keep only its
+   immutable curve coordinates and index; the Action target remains the
+   drawing-area weak target managed by the accelerator layer. */
+typedef struct dt_iop_rgbcurve_node_context_t
+{
+    int channel;
+    int node;
+    float x;
+    float y;
+} dt_iop_rgbcurve_node_context_t;
 
 typedef struct dt_iop_rgbcurve_data_t
 {
@@ -1236,18 +1249,200 @@ finally:
     return TRUE;
 }
 
+static gboolean _reset_curve(dt_iop_module_t *self, GtkWidget *widget, const int ch)
+{
+    dt_iop_rgbcurve_params_t *p = self->params;
+    const dt_iop_rgbcurve_params_t *const d = self->default_params;
+    dt_iop_rgbcurve_gui_data_t *g = self->gui_data;
+
+    // if autoscale is on: allow only reset of L curve
+    if (!((p->curve_autoscale != DT_S_SCALE_MANUAL_RGB) && ch != DT_IOP_RGBCURVE_R))
+    {
+        p->curve_num_nodes[ch] = d->curve_num_nodes[ch];
+        p->curve_type[ch] = d->curve_type[ch];
+        for (int k = 0; k < d->curve_num_nodes[ch]; k++)
+        {
+            p->curve_nodes[ch][k].x = d->curve_nodes[ch][k].x;
+            p->curve_nodes[ch][k].y = d->curve_nodes[ch][k].y;
+        }
+        if (ch == g->channel)
+            g->selected = -2; // avoid motion notify re-inserting immediately.
+        dt_bauhaus_combobox_set(g->interpolator, p->curve_type[DT_IOP_RGBCURVE_R]);
+        dt_iop_color_picker_reset(self, TRUE);
+        dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
+        gtk_widget_queue_draw(GTK_WIDGET(g->area));
+        return TRUE;
+    }
+
+    if (ch != DT_IOP_RGBCURVE_R)
+    {
+        p->curve_autoscale = DT_S_SCALE_MANUAL_RGB;
+        if (ch == g->channel)
+            g->selected = -2; // avoid motion notify re-inserting immediately.
+        dt_bauhaus_combobox_set(g->autoscale, 1);
+        dt_iop_color_picker_reset(self, TRUE);
+        dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
+        gtk_widget_queue_draw(GTK_WIDGET(g->area));
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean _remove_curve_node(dt_iop_module_t *self, GtkWidget *widget,
+                                   const dt_iop_rgbcurve_node_context_t *context)
+{
+    dt_iop_rgbcurve_params_t *p = self->params;
+    dt_iop_rgbcurve_gui_data_t *g = self->gui_data;
+    int ch = g->channel;
+    int selected = g->selected;
+
+    if (context)
+    {
+        ch = context->channel;
+        selected = context->node;
+        if (ch < 0 || ch >= DT_IOP_RGBCURVE_MAX_CHANNELS || selected < 0 ||
+            selected >= p->curve_num_nodes[ch] ||
+            fabsf(p->curve_nodes[ch][selected].x - context->x) > 1e-6f ||
+            fabsf(p->curve_nodes[ch][selected].y - context->y) > 1e-6f)
+            return FALSE;
+    }
+    else if (selected < 0 || selected >= p->curve_num_nodes[ch])
+        return FALSE;
+
+    const int nodes = p->curve_num_nodes[ch];
+    dt_iop_rgbcurve_node_t *curve_nodes = p->curve_nodes[ch];
+    if (selected == 0 || selected == nodes - 1)
+    {
+        const float reset_value = selected == 0 ? 0.f : 1.f;
+        curve_nodes[selected].y = curve_nodes[selected].x = reset_value;
+    }
+    else
+    {
+        for (int k = selected; k < nodes - 1; k++)
+        {
+            curve_nodes[k].x = curve_nodes[k + 1].x;
+            curve_nodes[k].y = curve_nodes[k + 1].y;
+        }
+        curve_nodes[nodes - 1].x = curve_nodes[nodes - 1].y = 0;
+        if (ch == g->channel)
+            g->selected = -2; // avoid re-insertion of that point immediately after this
+        p->curve_num_nodes[ch]--;
+    }
+
+    dt_iop_color_picker_reset(self, TRUE);
+    dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
+    gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return TRUE;
+}
+
+enum
+{
+    _ACTION_CURVE_NODE = 0,
+    _ACTION_CURVE_RESET,
+};
+
+static float _curve_action_process(gpointer target, const dt_action_element_t element,
+                                   const dt_action_effect_t effect, const float move_size)
+{
+    if (!DT_PERFORM_ACTION(move_size) || !GTK_IS_WIDGET(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    if (!self || !self->gui_data)
+        return DT_ACTION_NOT_VALID;
+
+    dt_action_t *action = dt_action_find_widget(GTK_WIDGET(target), NULL);
+    const dt_iop_rgbcurve_node_context_t *context =
+        dt_gui_context_menu_get_action_payload(action);
+    gboolean changed = FALSE;
+    if (element == _ACTION_CURVE_NODE && effect == DT_ACTION_EFFECT_ACTIVATE)
+        changed = _remove_curve_node(self, target, context);
+    else if (element == _ACTION_CURVE_RESET && effect == DT_ACTION_EFFECT_RESET && context)
+        changed = _reset_curve(self, target, context->channel);
+
+    return changed ? 1.0f : DT_ACTION_NOT_VALID;
+}
+
+static const dt_action_element_def_t _action_elements_curve[] = {
+    {N_("selected node"), dt_action_effect_activate},
+    {N_("curve"), dt_action_effect_value},
+    {NULL},
+};
+
+static const dt_action_def_t _action_def_curve = {N_("curve"), _curve_action_process,
+                                                  _action_elements_curve};
+
+static gboolean _curve_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
+                                              gpointer user_data)
+{
+    (void)event;
+    (void)user_data;
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(widget), "iop-instance");
+    if (!self || !self->gui_data)
+        return FALSE;
+    if (darktable.develop->darkroom_skip_mouse_events)
+        return TRUE;
+
+    dt_action_t *action = dt_action_find_widget(widget, NULL);
+    if (!action)
+        return FALSE;
+
+    int instance = 0;
+    dt_action_get_instance(action, widget, &instance);
+
+    dt_iop_rgbcurve_gui_data_t *g = self->gui_data;
+    dt_iop_rgbcurve_params_t *p = self->params;
+    GtkWidget *menu = gtk_menu_new();
+    gboolean has_node = FALSE;
+    if (g->selected >= 0 && g->selected < p->curve_num_nodes[g->channel])
+    {
+        const dt_iop_rgbcurve_node_t node = p->curve_nodes[g->channel][g->selected];
+        dt_iop_rgbcurve_node_context_t *context =
+            g_new(dt_iop_rgbcurve_node_context_t, 1);
+        *context = (dt_iop_rgbcurve_node_context_t){.channel = g->channel,
+                                                     .node = g->selected,
+                                                     .x = node.x,
+                                                     .y = node.y};
+        const gchar *label = (g->selected == 0 || g->selected == p->curve_num_nodes[g->channel] - 1)
+                                 ? _("reset selected endpoint") :
+                                 _("remove selected node");
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                              dt_gui_context_menu_action_item_new(
+                                  label, action, instance, _ACTION_CURVE_NODE,
+                                  DT_ACTION_EFFECT_ACTIVATE, context, g_free));
+        has_node = TRUE;
+    }
+
+    if (has_node)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
+
+    dt_iop_rgbcurve_node_context_t *context = g_new0(dt_iop_rgbcurve_node_context_t, 1);
+    context->channel = g->channel;
+    const gchar *reset_label =
+        p->curve_autoscale != DT_S_SCALE_MANUAL_RGB && g->channel != DT_IOP_RGBCURVE_R ?
+            _("enable independent channels") :
+            _("reset current curve");
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),
+                          dt_gui_context_menu_action_item_new(
+                              reset_label, action, instance, _ACTION_CURVE_RESET,
+                              DT_ACTION_EFFECT_RESET, context, g_free));
+
+    dt_gui_menu_popup(GTK_MENU(menu), widget, GDK_GRAVITY_SOUTH_WEST,
+                      GDK_GRAVITY_NORTH_WEST);
+    return TRUE;
+}
+
 static gboolean _area_button_press_callback(GtkWidget *widget, GdkEventButton *event,
                                             dt_iop_module_t *self)
 {
     dt_iop_rgbcurve_params_t *p = self->params;
-    const dt_iop_rgbcurve_params_t *const d = self->default_params;
     dt_iop_rgbcurve_gui_data_t *g = self->gui_data;
 
     if (darktable.develop->darkroom_skip_mouse_events)
         return TRUE;
 
     const int ch = g->channel;
-    const int autoscale = p->curve_autoscale;
     const int nodes = p->curve_num_nodes[ch];
     dt_iop_rgbcurve_node_t *curve_nodes = p->curve_nodes[ch];
 
@@ -1319,62 +1514,15 @@ static gboolean _area_button_press_callback(GtkWidget *widget, GdkEventButton *e
         }
         else if (event->type == GDK_2BUTTON_PRESS)
         {
-            // reset current curve
-            // if autoscale is on: allow only reset of L curve
-            if (!((autoscale != DT_S_SCALE_MANUAL_RGB) && ch != DT_IOP_RGBCURVE_R))
-            {
-                p->curve_num_nodes[ch] = d->curve_num_nodes[ch];
-                p->curve_type[ch] = d->curve_type[ch];
-                for (int k = 0; k < d->curve_num_nodes[ch]; k++)
-                {
-                    p->curve_nodes[ch][k].x = d->curve_nodes[ch][k].x;
-                    p->curve_nodes[ch][k].y = d->curve_nodes[ch][k].y;
-                }
-                g->selected = -2; // avoid motion notify re-inserting immediately.
-                dt_bauhaus_combobox_set(g->interpolator, p->curve_type[DT_IOP_RGBCURVE_R]);
-                dt_iop_color_picker_reset(self, TRUE);
-                dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
-                gtk_widget_queue_draw(GTK_WIDGET(g->area));
-            }
-            else
-            {
-                if (ch != DT_IOP_RGBCURVE_R)
-                {
-                    p->curve_autoscale = DT_S_SCALE_MANUAL_RGB;
-                    g->selected = -2; // avoid motion notify re-inserting immediately.
-                    dt_bauhaus_combobox_set(g->autoscale, 1);
-                    dt_iop_color_picker_reset(self, TRUE);
-                    dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
-                    gtk_widget_queue_draw(GTK_WIDGET(g->area));
-                }
-            }
+            _reset_curve(self, widget, ch);
             return TRUE;
         }
     }
     else if (event->button == GDK_BUTTON_SECONDARY && g->selected >= 0)
     {
-        if (g->selected == 0 || g->selected == nodes - 1)
-        {
-            const float reset_value = g->selected == 0 ? 0.f : 1.f;
-            curve_nodes[g->selected].y = curve_nodes[g->selected].x = reset_value;
-            dt_iop_color_picker_reset(self, TRUE);
-            dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
-            gtk_widget_queue_draw(GTK_WIDGET(g->area));
-            return TRUE;
-        }
-
-        for (int k = g->selected; k < nodes - 1; k++)
-        {
-            curve_nodes[k].x = curve_nodes[k + 1].x;
-            curve_nodes[k].y = curve_nodes[k + 1].y;
-        }
-        curve_nodes[nodes - 1].x = curve_nodes[nodes - 1].y = 0;
-        g->selected = -2; // avoid re-insertion of that point immediately after this
-        p->curve_num_nodes[ch]--;
-        dt_iop_color_picker_reset(self, TRUE);
-        dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
-        gtk_widget_queue_draw(GTK_WIDGET(g->area));
-        return TRUE;
+        // Kept as a fallback while the Action provider is unavailable (for example while a
+        // module is being destroyed). Normally the provider consumes this event first.
+        return _remove_curve_node(self, widget, NULL);
     }
     return FALSE;
 }
@@ -1463,7 +1611,9 @@ void gui_init(dt_iop_module_t *self)
 
     g->area = GTK_DRAWING_AREA(dtgtk_drawing_area_new_with_height(0));
     g_object_set_data(G_OBJECT(g->area), "iop-instance", self);
-    dt_action_define_iop(self, NULL, N_("curve"), GTK_WIDGET(g->area), NULL);
+    dt_action_t *curve_action =
+        dt_action_define_iop(self, NULL, N_("curve"), GTK_WIDGET(g->area), &_action_def_curve);
+    dt_action_set_context_menu_provider_only(curve_action, TRUE);
 
     // FIXME: that tooltip goes in the way of the numbers when you hover
     // a node to get a reading
@@ -1485,6 +1635,8 @@ void gui_init(dt_iop_module_t *self)
     g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(_area_scrolled_callback), self);
     g_signal_connect(G_OBJECT(g->area), "key-press-event", G_CALLBACK(_area_key_press_callback),
                      self);
+    dt_gui_context_menu_attach_provider(GTK_WIDGET(g->area), _curve_context_menu_provider, NULL,
+                                        NULL);
 
     g->interpolator = dt_bauhaus_combobox_new_interpolation(self);
     gtk_widget_set_tooltip_text(

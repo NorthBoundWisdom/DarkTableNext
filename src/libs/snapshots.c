@@ -25,6 +25,7 @@
 #include "control/control.h"
 #include "develop/develop.h"
 #include "gui/accelerators.h"
+#include "gui/context_menu.h"
 #include "gui/gtk.h"
 #include "gui/draw.h"
 #include "libs/lib.h"
@@ -82,7 +83,14 @@ typedef struct dt_lib_snapshots_t
     gboolean rotsym_lightup;
 
     GtkWidget *take_button, *sidebyside_button;
+    dt_action_t *context_show_action, *context_restore_action, *context_rename_action;
 } dt_lib_snapshots_t;
+
+typedef struct dt_snapshot_row_context_t
+{
+    dt_lib_module_t *self;
+    GWeakRef button;
+} dt_snapshot_row_context_t;
 
 /* callback for take snapshot */
 static void _lib_snapshots_add_button_clicked_callback(GtkWidget *widget, dt_lib_module_t *self);
@@ -90,6 +98,153 @@ static void _lib_snapshots_add_button_clicked_callback(GtkWidget *widget, dt_lib
 static void _lib_snapshots_toggled_callback(GtkToggleButton *widget, dt_lib_module_t *self);
 
 static void _lib_snapshots_restore_callback(GtkButton *widget, dt_lib_module_t *self);
+
+static int _lib_snapshots_get_activated(dt_lib_module_t *self, GtkWidget *widget);
+
+static void _snapshot_row_context_destroy(gpointer data)
+{
+    dt_snapshot_row_context_t *context = data;
+    if (!context)
+        return;
+
+    g_weak_ref_clear(&context->button);
+    g_free(context);
+}
+
+static dt_snapshot_row_context_t *_snapshot_row_context_new(dt_lib_module_t *self,
+                                                             GtkWidget *button)
+{
+    if (!self || !button)
+        return NULL;
+
+    dt_snapshot_row_context_t *context = g_malloc0(sizeof(*context));
+    context->self = self;
+    g_weak_ref_init(&context->button, G_OBJECT(button));
+    return context;
+}
+
+static int _snapshot_row_context_index(const dt_action_t *action, GtkWidget **button)
+{
+    dt_snapshot_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (!context || !context->self || !context->self->data)
+        return -1;
+
+    GtkWidget *snapshot_button = g_weak_ref_get(&context->button);
+    if (!snapshot_button)
+        return -1;
+
+    const int index = _lib_snapshots_get_activated(context->self, snapshot_button);
+    if (index < 0)
+    {
+        g_object_unref(snapshot_button);
+        return -1;
+    }
+
+    if (button)
+        *button = snapshot_button;
+    else
+        g_object_unref(snapshot_button);
+    return index;
+}
+
+static void _snapshot_show_context_action(dt_action_t *action)
+{
+    GtkWidget *button = NULL;
+    if (_snapshot_row_context_index(action, &button) >= 0)
+    {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), TRUE);
+        g_object_unref(button);
+    }
+}
+
+static void _snapshot_restore_context_action(dt_action_t *action)
+{
+    GtkWidget *button = NULL;
+    const int index = _snapshot_row_context_index(action, &button);
+    dt_snapshot_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (index >= 0 && context)
+    {
+        dt_lib_snapshots_t *snapshots = context->self->data;
+        _lib_snapshots_restore_callback(GTK_BUTTON(snapshots->snapshot[index].restore_button),
+                                        context->self);
+    }
+    if (button)
+        g_object_unref(button);
+}
+
+static void _snapshot_rename_context_action(dt_action_t *action)
+{
+    GtkWidget *button = NULL;
+    const int index = _snapshot_row_context_index(action, &button);
+    dt_snapshot_row_context_t *context = dt_gui_context_menu_get_action_payload(action);
+    if (index >= 0 && context)
+    {
+        dt_lib_snapshots_t *snapshots = context->self->data;
+        gtk_widget_hide(snapshots->snapshot[index].name);
+        gtk_widget_show(snapshots->snapshot[index].entry);
+        gtk_widget_grab_focus(snapshots->snapshot[index].entry);
+    }
+    if (button)
+        g_object_unref(button);
+}
+
+static GtkWidget *_snapshot_context_item(const gchar *label, dt_action_t *action,
+                                         dt_lib_module_t *self, GtkWidget *button)
+{
+    dt_snapshot_row_context_t *context = _snapshot_row_context_new(self, button);
+    if (!context)
+        return NULL;
+
+    return dt_gui_context_menu_action_item_new(label, action, 0, DT_ACTION_ELEMENT_DEFAULT,
+                                                DT_ACTION_EFFECT_DEFAULT_KEY, context,
+                                                _snapshot_row_context_destroy);
+}
+
+static void _snapshot_show_context_menu(dt_lib_module_t *self, GtkWidget *button,
+                                        GdkEventButton *event)
+{
+    dt_lib_snapshots_t *d = self->data;
+    GtkWidget *menu = gtk_menu_new();
+    GtkWidget *item = _snapshot_context_item(_("show snapshot"), d->context_show_action, self,
+                                             button);
+    if (!item)
+    {
+        gtk_widget_destroy(menu);
+        return;
+    }
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    item = _snapshot_context_item(_("restore snapshot"), d->context_restore_action, self, button);
+    if (item)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    item = _snapshot_context_item(_("rename snapshot"), d->context_rename_action, self, button);
+    if (item)
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+
+    gtk_widget_show_all(menu);
+    if (event)
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
+    else
+        dt_gui_menu_popup(GTK_MENU(menu), button, GDK_GRAVITY_SOUTH_WEST,
+                          GDK_GRAVITY_NORTH_WEST);
+}
+
+static gboolean _snapshot_button_press_context(GtkWidget *widget, GdkEventButton *event,
+                                               dt_lib_module_t *self)
+{
+    if (event->type != GDK_BUTTON_PRESS || event->button != GDK_BUTTON_SECONDARY ||
+        dt_modifier_is(event->state, GDK_CONTROL_MASK))
+        return FALSE;
+
+    _snapshot_show_context_menu(self, widget, event);
+    return TRUE;
+}
+
+static gboolean _snapshot_popup_menu(GtkWidget *widget, dt_lib_module_t *self)
+{
+    _snapshot_show_context_menu(self, widget, NULL);
+    return TRUE;
+}
 
 const char *name(dt_lib_module_t *self)
 {
@@ -549,6 +704,9 @@ static void _init_snapshot_entry(dt_lib_module_t *self, dt_lib_snapshot_t *s)
                      self);
     g_signal_connect(G_OBJECT(s->button), "button-press-event",
                      G_CALLBACK(_lib_button_button_pressed_callback), self);
+    g_signal_connect(G_OBJECT(s->button), "button-press-event",
+                     G_CALLBACK(_snapshot_button_press_context), self);
+    g_signal_connect(G_OBJECT(s->button), "popup-menu", G_CALLBACK(_snapshot_popup_menu), self);
 
     s->num = gtk_label_new("");
     gtk_widget_set_name(s->num, "history-number");
@@ -760,6 +918,16 @@ void gui_init(dt_lib_module_t *self)
     d->expose_again_timeout_id = 0;
     d->num_snapshots = 0;
     darktable.lib->proxy.snapshots.enabled = FALSE;
+
+    d->context_show_action = dt_action_register(DT_ACTION(self), N_("show snapshot"),
+                                                _snapshot_show_context_action, 0, 0);
+    d->context_restore_action = dt_action_register(DT_ACTION(self), N_("restore snapshot"),
+                                                   _snapshot_restore_context_action, 0, 0);
+    d->context_rename_action = dt_action_register(DT_ACTION(self), N_("rename snapshot"),
+                                                  _snapshot_rename_context_action, 0, 0);
+    dt_action_set_context_menu_provider_only(d->context_show_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->context_restore_action, TRUE);
+    dt_action_set_context_menu_provider_only(d->context_rename_action, TRUE);
 
     /* initialize ui containers */
     self->widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);

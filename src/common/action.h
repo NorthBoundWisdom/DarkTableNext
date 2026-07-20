@@ -48,6 +48,18 @@ typedef enum dt_action_type_t
     // === dynamically assign widget type numbers from here
 } dt_action_type_t;
 
+struct dt_action_t;
+struct dt_action_status_t;
+
+/** Optional read-only availability refinement for a concrete Action invocation.
+ *
+ * The accelerator layer establishes the generic target and view state first.
+ * A domain owner may then only refine that result for contextual callers, for
+ * example when an image operation needs a selection or copied history. */
+typedef void dt_action_status_callback_t(const struct dt_action_t *action, int instance,
+                                         int element, int effect,
+                                         struct dt_action_status_t *status, gpointer user_data);
+
 typedef struct dt_action_t
 {
     dt_action_type_t type;
@@ -57,6 +69,13 @@ typedef struct dt_action_t
     gpointer target;           // widget, section, command
     struct dt_action_t *owner; // iop, lib, view, global
     struct dt_action_t *next;
+
+    dt_action_status_callback_t *status_callback;
+    gpointer status_data;
+
+    /** This Action needs provider-owned object context and must therefore not
+     * be projected from an owning module's generic context menu. */
+    gboolean context_menu_provider_only;
 } dt_action_t;
 
 #define DT_ACTION(p) (p ? (dt_action_t *)&p->actions : NULL)
