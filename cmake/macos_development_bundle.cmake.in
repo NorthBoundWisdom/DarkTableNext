@@ -8,7 +8,6 @@ set(_frameworks "${_contents}/Frameworks")
 set(_source_library_root "@DARKTABLE_APP_LIBRARY_ROOT@")
 set(_source_share_root "@DARKTABLE_APP_SHARE_ROOT@")
 set(_source_core "@DARKTABLE_BINDIR@/libdarktable.dylib")
-set(_stamp "@DARKTABLE_DEVELOPMENT_BUNDLE_STAMP@")
 set(_entitlements "@CMAKE_SOURCE_DIR@/packaging/macos/entitlements.plist")
 
 function(_sign_development_code _path)
@@ -38,9 +37,8 @@ if(NOT EXISTS "${_source_core}")
   message(FATAL_ERROR "development core library is missing: ${_source_core}")
 endif()
 
-# The darktable target initially creates convenience symlinks so a targeted
-# executable build remains usable.  A complete build replaces only these exact
-# bundle-local paths with owned files before signing.
+# Recreate the bundle-owned project code on every executable link before
+# signing.  The target's module dependencies ensure these sources are current.
 file(REMOVE_RECURSE "${_resources}/lib")
 file(MAKE_DIRECTORY "${_resources}/lib/darktable")
 file(GLOB_RECURSE _source_modules LIST_DIRECTORIES FALSE
@@ -75,5 +73,3 @@ endforeach()
 
 _sign_development_code("${_frameworks}/libdarktable.dylib")
 _sign_development_code("${_bundle}" --entitlements "${_entitlements}")
-
-file(TOUCH "${_stamp}")

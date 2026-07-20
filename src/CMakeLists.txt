@@ -625,47 +625,37 @@ if(APPLE)
   set_target_properties(darktable PROPERTIES
                         INSTALL_RPATH "${RPATH_ORIGIN}/../Resources/lib/darktable")
 
-  add_custom_command(TARGET darktable POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
-    # Previous development bundles may contain directories here, while current
-    # builds create symlinks.  Remove either form before recreating the links.
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_RESOURCES_DIR}/lib"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_RESOURCES_DIR}/share"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_LIBRARY_ROOT}"
-            "${DARKTABLE_APP_RESOURCES_DIR}/lib"
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_SHARE_ROOT}"
-            "${DARKTABLE_APP_RESOURCES_DIR}/share"
-    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_BINDIR}/libdarktable.dylib"
-            "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
-    COMMENT "Assembling macOS application bundle"
-  )
-
   # Loading freshly linked Mach-O modules from outside the application bundle
   # makes macOS assess every file independently on first use.  That turns a full
   # rebuild into a long first launch even though later launches are fast.  The
-  # normal development build therefore gets the same code ownership shape as the
-  # packaged application: project modules and libdarktable are copied into the
-  # bundle and signed from the inside out.  Homebrew dependencies remain external
-  # for fast iteration and are collected only by package-macos.
+  # darktable target therefore owns the complete development bundle: it first
+  # builds every loadable module, then copies project code into the bundle and
+  # signs it from the inside out.  Module outputs are also link dependencies so
+  # an incremental module rebuild retriggers bundle assembly and signing.
+  # Homebrew dependencies remain external for fast iteration and are collected
+  # only by package-macos.
   get_property(DARKTABLE_LOADABLE_MODULE_TARGETS GLOBAL PROPERTY DT_LOADABLE_MODULE_TARGETS)
-  set(DARKTABLE_DEVELOPMENT_BUNDLE_STAMP
-      "${DARKTABLE_BINDIR}/.darktable-development-bundle.stamp")
+  set(DARKTABLE_LOADABLE_MODULE_FILES)
+  foreach(_darktable_module_target IN LISTS DARKTABLE_LOADABLE_MODULE_TARGETS)
+    add_dependencies(darktable "${_darktable_module_target}")
+    list(APPEND DARKTABLE_LOADABLE_MODULE_FILES
+         "$<TARGET_FILE:${_darktable_module_target}>")
+  endforeach()
+
   configure_file(
       "${CMAKE_SOURCE_DIR}/cmake/macos_development_bundle.cmake.in"
       "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
       @ONLY)
-  add_custom_command(
-    OUTPUT "${DARKTABLE_DEVELOPMENT_BUNDLE_STAMP}"
+  set_property(TARGET darktable APPEND PROPERTY LINK_DEPENDS
+               ${DARKTABLE_LOADABLE_MODULE_FILES}
+               "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
+               "${DARKTABLE_DATADIR}/icons/hicolor/index.theme"
+               "${CMAKE_SOURCE_DIR}/packaging/macos/entitlements.plist")
+  add_custom_command(TARGET darktable POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
-    DEPENDS darktable ${DARKTABLE_LOADABLE_MODULE_TARGETS}
-            "${CMAKE_SOURCE_DIR}/cmake/macos_development_bundle.cmake.in"
-            "${CMAKE_SOURCE_DIR}/packaging/macos/entitlements.plist"
     COMMENT "Embedding and signing development application modules"
     VERBATIM)
-  add_custom_target(darktable-development-bundle ALL
-                    DEPENDS "${DARKTABLE_DEVELOPMENT_BUNDLE_STAMP}")
+  add_custom_target(darktable-development-bundle DEPENDS darktable)
 
   install(TARGETS darktable BUNDLE DESTINATION . COMPONENT DTApplication)
 else()

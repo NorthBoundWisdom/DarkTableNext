@@ -3,6 +3,15 @@
 #
 set(FIXED_SIZES "16x16" "22x22" "24x24" "32x32" "48x48" "64x64" "256x256" "scalable")
 set(THEME hicolor)
+file(MAKE_DIRECTORY ${DARKTABLE_DATADIR}/icons/${THEME})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/hicolor.index.theme
+               ${DARKTABLE_DATADIR}/icons/${THEME}/index.theme COPYONLY)
+if(APPLE OR WIN32)
+	install(FILES hicolor.index.theme
+	        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/${THEME}
+	        RENAME index.theme
+	        COMPONENT DTApplication)
+endif()
 foreach(pixmap_size ${FIXED_SIZES})
 	# install apps icons
 	FILE(GLOB PIXMAP_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${pixmap_size}/*.png ${CMAKE_CURRENT_SOURCE_DIR}/${pixmap_size}/*.svg)
