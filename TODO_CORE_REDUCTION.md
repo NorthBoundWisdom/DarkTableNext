@@ -14,6 +14,8 @@
 - [x] 删除 Lighttable 时间线；底部改为与中央 grid 共享 collection/selection 的横向照片浏览条。
 - [x] 删除 Darkroom 的 duplicate manager 与全局 color picker/live samples 旧面板；已有多版本数据、
       Lighttable duplicate 操作和各处理模块内的吸管取色能力保持不变。
+- [x] 删除 Lighttable “actions on selection” 中重复的 metadata 页签，将其复制/粘贴范围、合并模式、
+      EXIF 刷新和单色标记操作合并到 metadata editor；图片操作面板不再保留单页 notebook。
 - [x] Lighttable 将 Grid 与单图 Loupe 作为两个显式状态：`G` 返回响应式 Grid，`E` 或底栏方框按钮进入保留 filmstrip 和面板的 Loupe。Loupe 单击图片在 Fit 与原始像素 100% 间切换，放大后按住空格并左键拖动平移；双击返回 Grid，Grid 双击进入 Loupe，不再通过密度 1 隐式切换状态。
 - [x] 删除 Lighttable 底栏的焦点峰值、显示 ICC 配置和日志历史按钮；焦点峰值保留快捷键与
       `View` 菜单状态项，日志历史迁至 `View` 菜单，颜色管理与峰值检测底层保持不变。

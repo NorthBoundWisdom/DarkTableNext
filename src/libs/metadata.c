@@ -16,10 +16,13 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "bauhaus/bauhaus.h"
 #include "common/metadata.h"
 #include "common/collection.h"
 #include "common/darktable.h"
 #include "common/debug.h"
+#include "common/image_cache.h"
+#include "control/jobs/control_jobs.h"
 #include "control/signal.h"
 #include "dtgtk/button.h"
 #include "gui/accelerators.h"
@@ -52,6 +55,8 @@ typedef struct dt_lib_metadata_t
     GHashTable *metadata_counts;
     GList *setting_names;
     GtkWidget *grid, *button_box, *apply_button, *cancel_button, *delete_button;
+    GtkWidget *copy_metadata_button, *paste_metadata_button, *clear_metadata_button;
+    GtkWidget *refresh_button, *set_monochrome_button, *set_color_button;
     GtkWidget *dialog;
     GtkListStore *liststore;
     GtkTreeView *tree_view;
@@ -75,7 +80,7 @@ const char *name(dt_lib_module_t *self)
 
 const char *description(dt_lib_module_t *self)
 {
-    return _("modify text metadata fields of\n"
+    return _("modify, copy, and apply metadata for\n"
              "the currently selected images");
 }
 
@@ -239,11 +244,100 @@ static void _reset_count_entry(gpointer key, gpointer value, gpointer user_data)
     g_hash_table_replace(d->metadata_counts, key, GINT_TO_POINTER(0));
 }
 
+static void _copy_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    dt_control_copy_metadata_source();
+    dt_lib_gui_queue_update(self);
+}
+
+static void _paste_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    dt_control_paste_metadata();
+    dt_lib_gui_queue_update(self);
+}
+
+static void _clear_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    dt_control_clear_metadata();
+    dt_lib_gui_queue_update(self);
+}
+
+static void _refresh_exif_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    (void)self;
+    dt_control_refresh_exif();
+}
+
+static void _set_monochrome_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    (void)self;
+    dt_control_monochrome_images(2);
+}
+
+static void _set_color_callback(GtkWidget *widget, dt_lib_module_t *self)
+{
+    (void)widget;
+    (void)self;
+    dt_control_monochrome_images(0);
+}
+
+static void _copy_metadata_flag_callback(GtkToggleButton *button, const char *setting)
+{
+    dt_conf_set_bool(setting, gtk_toggle_button_get_active(button));
+}
+
+static void _pastemode_combobox_changed(GtkWidget *widget, gpointer user_data)
+{
+    (void)user_data;
+    dt_conf_set_int("plugins/lighttable/copy_metadata/pastemode", dt_bauhaus_combobox_get(widget));
+}
+
+static void _update_selection_actions(dt_lib_module_t *self)
+{
+    dt_lib_metadata_t *d = self->data;
+    const int nbimgs = dt_act_on_get_images_nb(FALSE, FALSE);
+    const gboolean act_on_any = nbimgs > 0;
+
+    gtk_widget_set_sensitive(d->copy_metadata_button, nbimgs == 1);
+    gtk_widget_set_sensitive(d->paste_metadata_button, dt_control_can_paste_metadata());
+    gtk_widget_set_sensitive(d->clear_metadata_button, act_on_any);
+    gtk_widget_set_sensitive(d->refresh_button, act_on_any);
+
+    if (nbimgs > 1)
+    {
+        gtk_widget_set_sensitive(d->set_monochrome_button, TRUE);
+        gtk_widget_set_sensitive(d->set_color_button, TRUE);
+    }
+    else if (nbimgs == 1)
+    {
+        const dt_imgid_t imgid = dt_act_on_get_main_image();
+        if (dt_is_valid_imgid(imgid))
+        {
+            dt_image_t *img = dt_image_cache_get(imgid, 'r');
+            const gboolean is_bw = dt_image_monochrome_flags(img) != 0;
+            dt_image_cache_read_release(img);
+            gtk_widget_set_sensitive(d->set_monochrome_button, !is_bw);
+            gtk_widget_set_sensitive(d->set_color_button, is_bw);
+            return;
+        }
+    }
+
+    gtk_widget_set_sensitive(d->set_monochrome_button, FALSE);
+    gtk_widget_set_sensitive(d->set_color_button, FALSE);
+}
+
 void gui_update(dt_lib_module_t *self)
 {
     dt_lib_metadata_t *d = self->data;
 
     GList *imgs = dt_act_on_get_images(FALSE, FALSE, FALSE);
+
+    _update_selection_actions(self);
 
     // first we want to make sure the list of images to act on has changed
     // this is not the case if mouse hover change but still stay in selection for ex.
@@ -1129,6 +1223,18 @@ void set_preferences(void *menu, dt_lib_module_t *self)
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
 }
 
+static GtkWidget *_copy_metadata_flag_button(dt_lib_module_t *self, const gchar *label,
+                                             const gchar *setting, const gchar *tooltip)
+{
+    GtkWidget *flag = gtk_check_button_new_with_label(_(label));
+    gtk_widget_set_tooltip_text(flag, tooltip);
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(flag))), PANGO_ELLIPSIZE_END);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(flag), dt_conf_get_bool(setting));
+    dt_action_define(DT_ACTION(self), N_("copy options"), label, flag, &dt_action_def_toggle);
+    g_signal_connect(flag, "clicked", G_CALLBACK(_copy_metadata_flag_callback), (gpointer)setting);
+    return flag;
+}
+
 void gui_init(dt_lib_module_t *self)
 {
     dt_lib_metadata_t *d = calloc(1, sizeof(dt_lib_metadata_t));
@@ -1151,7 +1257,64 @@ void gui_init(dt_lib_module_t *self)
     d->cancel_button = dt_action_button_new(self, N_("cancel"), _cancel_button_clicked, self,
                                             _("ignore changed metadata"), 0, 0);
     d->button_box = dt_gui_hbox(d->apply_button, d->cancel_button);
-    self->widget = dt_gui_vbox(grid, d->button_box);
+
+    GtkWidget *selection_actions = gtk_grid_new();
+    gtk_grid_set_column_homogeneous(GTK_GRID(selection_actions), TRUE);
+    int row = 0;
+
+    GtkWidget *flag = _copy_metadata_flag_button(
+        self, N_("ratings"), "plugins/lighttable/copy_metadata/rating", _("select ratings metadata"));
+    gtk_grid_attach(GTK_GRID(selection_actions), flag, 0, row, 3, 1);
+    flag = _copy_metadata_flag_button(
+        self, N_("colors"), "plugins/lighttable/copy_metadata/colors", _("select colors metadata"));
+    gtk_grid_attach(GTK_GRID(selection_actions), flag, 3, row++, 3, 1);
+    flag = _copy_metadata_flag_button(
+        self, N_("tags"), "plugins/lighttable/copy_metadata/tags", _("select tags metadata"));
+    gtk_grid_attach(GTK_GRID(selection_actions), flag, 0, row, 3, 1);
+    flag = _copy_metadata_flag_button(
+        self, N_("metadata"), "plugins/lighttable/copy_metadata/metadata",
+        _("select text metadata from this editor"));
+    gtk_grid_attach(GTK_GRID(selection_actions), flag, 3, row++, 3, 1);
+
+    d->copy_metadata_button =
+        dt_action_button_new(self, N_("copy"), _copy_metadata_callback, self,
+                             _("set the selected image as source of metadata"), 0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->copy_metadata_button, 0, row, 2, 1);
+    d->paste_metadata_button =
+        dt_action_button_new(self, N_("paste"), _paste_metadata_callback, self,
+                             _("paste selected metadata on selected images"), 0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->paste_metadata_button, 2, row, 2, 1);
+    d->clear_metadata_button =
+        dt_action_button_new(self, N_("clear"), _clear_metadata_callback, self,
+                             _("clear selected metadata on selected images"), 0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->clear_metadata_button, 4, row++, 2, 1);
+
+    GtkWidget *pastemode = NULL;
+    DT_BAUHAUS_COMBOBOX_NEW_FULL(pastemode, self, N_("copy options"), N_("mode"),
+                                 _("how to handle existing metadata"),
+                                 dt_conf_get_int("plugins/lighttable/copy_metadata/pastemode"),
+                                 _pastemode_combobox_changed, self, N_("merge"), N_("overwrite"));
+    gtk_grid_attach(GTK_GRID(selection_actions), pastemode, 0, row++, 6, 1);
+
+    d->refresh_button = dt_action_button_new(
+        self, N_("refresh EXIF"), _refresh_exif_callback, self,
+        _("update all image information to match changes to file\n"
+          "warning: resets star ratings unless you select\n"
+          "'ignore EXIF rating' in the 'import' module"),
+        0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->refresh_button, 0, row++, 6, 1);
+
+    d->set_monochrome_button = dt_action_button_new(
+        self, N_("monochrome"), _set_monochrome_callback, self,
+        _("set selection as monochrome images and activate monochrome workflow"), 0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->set_monochrome_button, 0, row, 3, 1);
+    d->set_color_button = dt_action_button_new(self, N_("color"), _set_color_callback, self,
+                                               _("set selection as color images"), 0, 0);
+    gtk_grid_attach(GTK_GRID(selection_actions), d->set_color_button, 3, row, 3, 1);
+
+    self->widget = dt_gui_vbox(grid, d->button_box,
+                                dt_ui_section_label_new(C_("section", "selection metadata actions")),
+                                selection_actions);
     _fill_grid(self);
 
     /* lets signup for mouse over image change signals */

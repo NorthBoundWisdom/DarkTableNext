@@ -16,16 +16,11 @@
     along with darktable.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bauhaus/bauhaus.h"
 #include "common/collection.h"
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/image_cache.h"
-#include "common/ratings.h"
-#include "common/colorlabels.h"
 #include "common/undo.h"
-#include "common/metadata.h"
-#include "common/tags.h"
 #include "control/control.h"
 #include "control/jobs.h"
 #include "control/jobs/control_jobs.h"
@@ -47,10 +42,6 @@ typedef struct dt_lib_image_t
     GtkWidget *delete_button, *create_hdr_button;
     GtkWidget *duplicate_button, *reset_button, *move_button, *copy_button;
     GtkWidget *group_button, *ungroup_button, *cache_button, *uncache_button;
-    GtkWidget *refresh_button, *set_monochrome_button, *set_color_button;
-    GtkWidget *copy_metadata_button, *paste_metadata_button, *clear_metadata_button;
-    GtkWidget *rating_flag, *colors_flag, *metadata_flag, *tags_flag;
-    GtkWidget *page1; // retained for extension pages
 } dt_lib_image_t;
 
 const char *name(dt_lib_module_t *self)
@@ -103,8 +94,6 @@ static void button_clicked(GtkWidget *widget, gpointer user_data)
         dt_control_set_local_copy_images();
     else if (i == 13)
         dt_control_reset_local_copy_images();
-    else if (i == 14)
-        dt_control_refresh_exif();
 }
 
 void gui_update(dt_lib_module_t *self)
@@ -113,10 +102,7 @@ void gui_update(dt_lib_module_t *self)
     const int nbimgs = dt_act_on_get_images_nb(FALSE, FALSE);
 
     const gboolean act_on_any = (nbimgs > 0);
-    const gboolean act_on_one = (nbimgs == 1);
-    const gboolean act_on_mult = (nbimgs > 1);
     const uint32_t selected_cnt = dt_collection_get_selected_count();
-    const gboolean can_paste = dt_control_can_paste_metadata();
 
     gtk_widget_set_sensitive(GTK_WIDGET(d->remove_button), act_on_any);
     gtk_widget_set_sensitive(GTK_WIDGET(d->delete_button), act_on_any);
@@ -136,23 +122,12 @@ void gui_update(dt_lib_module_t *self)
 
     gtk_widget_set_sensitive(GTK_WIDGET(d->group_button), selected_cnt > 1);
 
-    gtk_widget_set_sensitive(GTK_WIDGET(d->copy_metadata_button), act_on_one);
-    gtk_widget_set_sensitive(GTK_WIDGET(d->paste_metadata_button), can_paste);
-    gtk_widget_set_sensitive(GTK_WIDGET(d->clear_metadata_button), act_on_any);
-
-    gtk_widget_set_sensitive(GTK_WIDGET(d->refresh_button), act_on_any);
-    if (act_on_mult)
-    {
+    if (nbimgs > 1)
         gtk_widget_set_sensitive(GTK_WIDGET(d->ungroup_button), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(d->set_monochrome_button), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(d->set_color_button), TRUE);
-    }
     else if (!act_on_any)
     {
         // no images to act on!
         gtk_widget_set_sensitive(GTK_WIDGET(d->ungroup_button), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(d->set_monochrome_button), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(d->set_color_button), FALSE);
     }
     else
     {
@@ -161,11 +136,8 @@ void gui_update(dt_lib_module_t *self)
         if (dt_is_valid_imgid(imgid))
         {
             dt_image_t *img = dt_image_cache_get(imgid, 'r');
-            const gboolean is_bw = (dt_image_monochrome_flags(img) != 0);
             const int img_group_id = img->group_id;
             dt_image_cache_read_release(img);
-            gtk_widget_set_sensitive(GTK_WIDGET(d->set_monochrome_button), !is_bw);
-            gtk_widget_set_sensitive(GTK_WIDGET(d->set_color_button), is_bw);
             sqlite3_stmt *stmt;
             DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db),
                                         "SELECT COUNT(id)"
@@ -186,8 +158,6 @@ void gui_update(dt_lib_module_t *self)
         }
         else
         {
-            gtk_widget_set_sensitive(GTK_WIDGET(d->set_monochrome_button), FALSE);
-            gtk_widget_set_sensitive(GTK_WIDGET(d->set_color_button), FALSE);
             gtk_widget_set_sensitive(GTK_WIDGET(d->ungroup_button), FALSE);
         }
     }
@@ -226,92 +196,16 @@ int position(const dt_lib_module_t *self)
     return 700;
 }
 
-static void _copy_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    (void)widget;
-    dt_control_copy_metadata_source();
-    dt_lib_gui_queue_update(self);
-}
-
-static void _paste_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    (void)widget;
-    (void)self;
-    dt_control_paste_metadata();
-}
-
-static void _clear_metadata_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    (void)widget;
-    (void)self;
-    dt_control_clear_metadata();
-}
-
-static void _set_monochrome_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_control_monochrome_images(2);
-}
-
-static void _set_color_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_control_monochrome_images(0);
-}
-
-static void _rating_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->rating_flag));
-    dt_conf_set_bool("plugins/lighttable/copy_metadata/rating", flag);
-}
-
-static void _colors_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->colors_flag));
-    dt_conf_set_bool("plugins/lighttable/copy_metadata/colors", flag);
-}
-
-static void _metadata_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->metadata_flag));
-    dt_conf_set_bool("plugins/lighttable/copy_metadata/metadata", flag);
-}
-
-static void _tags_flag_callback(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_image_t *d = self->data;
-    const gboolean flag = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(d->tags_flag));
-    dt_conf_set_bool("plugins/lighttable/copy_metadata/tags", flag);
-}
-
-static void _pastemode_combobox_changed(GtkWidget *widget, gpointer user_data)
-{
-    const int mode = dt_bauhaus_combobox_get(widget);
-    dt_conf_set_int("plugins/lighttable/copy_metadata/pastemode", mode);
-}
-
-#define ellipsize_button(button)                                                                   \
-    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(button))), PANGO_ELLIPSIZE_END);
-
 void gui_init(dt_lib_module_t *self)
 {
     dt_lib_image_t *d = malloc(sizeof(dt_lib_image_t));
     self->data = (void *)d;
 
-    static struct dt_action_def_t notebook_def = {};
-    self->widget = GTK_WIDGET(dt_ui_notebook_new(&notebook_def));
-    dt_action_define(DT_ACTION(self), NULL, N_("page"), GTK_WIDGET(self->widget), &notebook_def);
+    self->widget = gtk_grid_new();
     dt_gui_add_help_link(self->widget, "image");
 
-    GtkWidget *page1 = dt_ui_notebook_page(GTK_NOTEBOOK(self->widget), N_("images"), NULL);
-    GtkWidget *page2 = dt_ui_notebook_page(GTK_NOTEBOOK(self->widget), N_("metadata"), NULL);
-
     // images operations
-    d->page1 = gtk_grid_new();
-
-    GtkGrid *grid = GTK_GRID(d->page1);
-    gtk_container_add(GTK_CONTAINER(page1), d->page1);
+    GtkGrid *grid = GTK_GRID(self->widget);
     gtk_grid_set_column_homogeneous(grid, TRUE);
     int line = 0;
 
@@ -388,73 +282,6 @@ void gui_init(dt_lib_module_t *self)
         _("remove selected images from the group"), GDK_KEY_g, GDK_CONTROL_MASK | GDK_SHIFT_MASK);
     gtk_grid_attach(grid, d->ungroup_button, 2, line++, 2, 1);
 
-    // metadata operations
-    grid = GTK_GRID(gtk_grid_new());
-    gtk_container_add(GTK_CONTAINER(page2), GTK_WIDGET(grid));
-    gtk_grid_set_column_homogeneous(grid, TRUE);
-
-    dt_lib_module_t *meta = (dt_lib_module_t *)dt_action_section(DT_ACTION(self), N_("metadata"));
-    line = -1;
-#define META_FLAG_BUTTON(label, item, left, tooltip)                                               \
-    {                                                                                              \
-        GtkWidget *flag = gtk_check_button_new_with_label(_(label));                               \
-        d->item##_flag = flag;                                                                     \
-        gtk_widget_set_tooltip_text(flag, tooltip);                                                \
-        ellipsize_button(flag);                                                                    \
-        gtk_grid_attach(grid, flag, left, !left ? ++line : line, 3, 1);                            \
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(flag),                                      \
-                                     dt_conf_get_bool("plugins/lighttable/copy_metadata/" #item)); \
-        dt_action_define(DT_ACTION(meta), N_("flags"), label, flag, &dt_action_def_toggle);        \
-        g_signal_connect(G_OBJECT(flag), "clicked", G_CALLBACK(_##item##_flag_callback), self);    \
-    }
-
-    META_FLAG_BUTTON(N_("ratings"), rating, 0, _("select ratings metadata"));
-    META_FLAG_BUTTON(N_("colors"), colors, 3, _("select colors metadata"));
-    META_FLAG_BUTTON(N_("tags"), tags, 0, _("select tags metadata"));
-    META_FLAG_BUTTON(N_("metadata"), metadata, 0,
-                     _("select darktable metadata (from metadata editor module)"));
-
-    d->copy_metadata_button =
-        dt_action_button_new(meta, N_("copy"), _copy_metadata_callback, self,
-                             _("set the selected image as source of metadata"), 0, 0);
-    gtk_grid_attach(grid, d->copy_metadata_button, 0, ++line, 2, 1);
-    g_signal_connect(G_OBJECT(d->copy_metadata_button), "clicked",
-                     G_CALLBACK(_copy_metadata_callback), self);
-
-    d->paste_metadata_button =
-        dt_action_button_new(meta, N_("paste"), _paste_metadata_callback, self,
-                             _("paste selected metadata on selected images"), 0, 0);
-    gtk_grid_attach(grid, d->paste_metadata_button, 2, line, 2, 1);
-
-    d->clear_metadata_button =
-        dt_action_button_new(meta, N_("clear"), _clear_metadata_callback, self,
-                             _("clear selected metadata on selected images"), 0, 0);
-    gtk_grid_attach(grid, d->clear_metadata_button, 4, line++, 2, 1);
-
-    GtkWidget *pastemode = NULL;
-    DT_BAUHAUS_COMBOBOX_NEW_FULL(pastemode, meta, NULL, N_("mode"),
-                                 _("how to handle existing metadata"),
-                                 dt_conf_get_int("plugins/lighttable/copy_metadata/pastemode"),
-                                 _pastemode_combobox_changed, self, N_("merge"), N_("overwrite"));
-    gtk_grid_attach(grid, pastemode, 0, line++, 6, 1);
-
-    d->refresh_button =
-        dt_action_button_new(meta, N_("refresh EXIF"), button_clicked, GINT_TO_POINTER(14),
-                             _("update all image information to match changes to file\n"
-                               "warning: resets star ratings unless you select\n"
-                               "'ignore EXIF rating' in the 'import' module"),
-                             0, 0);
-    gtk_grid_attach(grid, d->refresh_button, 0, line++, 6, 1);
-
-    d->set_monochrome_button = dt_action_button_new(
-        meta, N_("monochrome"), _set_monochrome_callback, self,
-        _("set selection as monochrome images and activate monochrome workflow"), 0, 0);
-    gtk_grid_attach(grid, d->set_monochrome_button, 0, line, 3, 1);
-
-    d->set_color_button = dt_action_button_new(meta, N_("color"), _set_color_callback, self,
-                                               _("set selection as color images"), 0, 0);
-    gtk_grid_attach(grid, d->set_color_button, 3, line++, 3, 1);
-
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_PREFERENCES_CHANGE, _image_preference_changed);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_SELECTION_CHANGED, _image_selection_changed_callback);
     DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE, _mouse_over_image_callback);
@@ -465,7 +292,6 @@ void gui_init(dt_lib_module_t *self)
 
     _image_preference_changed(NULL, self); // update delete button label/tooltip
 }
-#undef ellipsize_button
 
 void gui_reset(dt_lib_module_t *self)
 {
