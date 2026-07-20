@@ -139,6 +139,16 @@
       }
     ],
     "test": [],
-    "package": []
+    "package": [
+      {
+        "id": "mac-clang-release",
+        "label": "macOS DMG (Clang Release)",
+        "description": "Stage the native app and create an ad-hoc-signed macOS DMG through FreeCM",
+        "command": "cmake",
+        "args": ["--build", "--preset", "mac_clang_release", "--target", "package-macos"],
+        "platforms": ["darwin"],
+        "default": true
+      }
+    ]
   }
 }

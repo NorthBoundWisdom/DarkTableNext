@@ -90,8 +90,10 @@ CPU/OpenCL 结果、数据库 schema 或文件格式。产品范围继续以
   会在主循环空闲时同步原生 accelerators。
 - 已删除不可达的 `MAC_INTEGRATION` 菜单和进度条残留；当前只有此一菜单实现。
 - 开发构建的 `bin/darktable` 保持为稳定命令行入口，但会 `exec` 同目录
-  `darktable.app/Contents/MacOS/darktable`。标准 `Info.plist` 声明
-  `org.darktable.darktable`，并把 build tree 的 `lib`、`share` 和核心 dylib 以 bundle 内链接提供。
+  `darktable.app/Contents/MacOS/darktable`。`darktable.app` 是 CMake 原生 `MACOSX_BUNDLE`，
+  标准 `Info.plist` 声明 `org.darktable.darktable` 和 `darktable.icns`；并把 build tree 的 `lib`、
+  `share` 和核心 dylib 以 bundle 内链接提供。`cmake --install` 会把这些项目自身运行时文件
+  改为 bundle 内的实体副本，供 staging 与发布流程使用。
   这避免裸 Mach-O 没有 bundle identifier，致使 Paletro、KeyClu 一类按应用身份筛选的
   Accessibility 客户端完全忽略菜单的问题。
 

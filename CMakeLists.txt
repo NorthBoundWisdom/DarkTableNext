@@ -259,9 +259,69 @@ include(data/supported_extensions.cmake) # this file needs to be included first 
 add_subdirectory(src "${DARKTABLE_BINDIR}") # directory needs to be there before data directory so that the correct CSS file gets installed
 add_subdirectory(data "${DARKTABLE_DATADIR}")
 
-# This contains fixup_bundle
-# And adding a separate subderectory as a last one will make sure
-# that fixup_bundle will run _after_ all files has been installed
+# FreeCM owns the final macOS deployment step.  Prepare a clean staging prefix
+# through the normal install graph first, then hand its native application
+# bundle to the generic (non-Qt) macOS packager.
+set(DARKTABLE_PACKAGE_ROOT "${CMAKE_BINARY_DIR}/package")
+set(DARKTABLE_PACKAGE_STAGE "${DARKTABLE_PACKAGE_ROOT}/stage")
+set(DARKTABLE_PACKAGE_DIST_DIR "${DARKTABLE_PACKAGE_ROOT}/dist")
+set(DT_MACOS_CODESIGN_IDENTITY "-" CACHE STRING
+    "codesign identity for the macOS package ('-' keeps developer builds ad hoc signed)")
+find_program(DT_PKG_CONFIG_EXECUTABLE pkg-config REQUIRED)
+execute_process(
+    COMMAND "${DT_PKG_CONFIG_EXECUTABLE}" --variable=gdk_pixbuf_moduledir gdk-pixbuf-2.0
+    OUTPUT_VARIABLE DARKTABLE_GDK_PIXBUF_MODULE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY)
+if(NOT IS_DIRECTORY "${DARKTABLE_GDK_PIXBUF_MODULE_DIR}")
+  message(FATAL_ERROR
+      "gdk-pixbuf loader directory was not found: ${DARKTABLE_GDK_PIXBUF_MODULE_DIR}")
+endif()
+get_filename_component(DARKTABLE_GDK_PIXBUF_MODULE_ROOT
+    "${DARKTABLE_GDK_PIXBUF_MODULE_DIR}" DIRECTORY)
+set(DARKTABLE_GDK_PIXBUF_MODULE_CACHE
+    "${DARKTABLE_GDK_PIXBUF_MODULE_ROOT}/loaders.cache")
+if(NOT EXISTS "${DARKTABLE_GDK_PIXBUF_MODULE_CACHE}")
+  message(FATAL_ERROR
+      "gdk-pixbuf loader cache was not found: ${DARKTABLE_GDK_PIXBUF_MODULE_CACHE}")
+endif()
+if(CMAKE_OSX_ARCHITECTURES)
+  list(JOIN CMAKE_OSX_ARCHITECTURES "-" DARKTABLE_PACKAGE_ARCH)
+else()
+  set(DARKTABLE_PACKAGE_ARCH "${CMAKE_HOST_SYSTEM_PROCESSOR}")
+endif()
+set(DARKTABLE_PACKAGE_DMG
+    "${CMAKE_BINARY_DIR}/darktable-${PROJECT_VERSION}-macos-${DARKTABLE_PACKAGE_ARCH}.dmg")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/package.json.in"
+    "${DARKTABLE_PACKAGE_ROOT}/package.json"
+    @ONLY)
+
+add_custom_target(prepare-macos-package
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "${DARKTABLE_PACKAGE_STAGE}"
+    COMMAND "${CMAKE_COMMAND}" --install "${CMAKE_BINARY_DIR}" --prefix "${DARKTABLE_PACKAGE_STAGE}"
+    DEPENDS darktable
+    COMMENT "Preparing the darktable macOS package staging bundle"
+    VERBATIM
+    USES_TERMINAL)
+
+include("${CMAKE_SOURCE_DIR}/FreeCM/repomgrcpp/cmake/CppKitPackage.cmake")
+cppkit_add_package_deploy(prepare-macos-package
+    CONFIG "${DARKTABLE_PACKAGE_ROOT}/package.json"
+    PLATFORM mac
+    TARGET_NAME package-macos)
+
+# The native app target is installed by src/CMakeLists.txt.  All project
+# libraries, modules and data have been installed by this point, so the final
+# script can replace the build-tree convenience links with real bundle
+# contents.  FreeCM then adds the third-party GTK/Homebrew dependency closure.
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos_bundle_install.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/macos_bundle_install.cmake"
+    @ONLY)
+install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/macos_bundle_install.cmake"
+        COMPONENT DTApplication)
+
 # uninstall target
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"

@@ -76,8 +76,104 @@ char *dt_osx_get_bundle_res_path()
     return result;
 }
 
+static char *_dt_osx_create_gdk_pixbuf_loader_cache(const char *resources_dir,
+                                                     const char *loaders_dir)
+{
+    char *template_path =
+        g_build_filename(resources_dir, "gtk-runtime", "gdk-pixbuf", "loaders.cache", NULL);
+    if (!g_file_test(template_path, G_FILE_TEST_IS_REGULAR))
+    {
+        g_free(template_path);
+        return NULL;
+    }
+
+    char *template_contents = NULL;
+    gsize template_length = 0;
+    GError *error = NULL;
+    if (!g_file_get_contents(template_path, &template_contents, &template_length, &error))
+    {
+        g_clear_error(&error);
+        g_free(template_path);
+        return NULL;
+    }
+    g_free(template_path);
+
+    char *cache_dir = g_build_filename(g_get_user_cache_dir(), "darktable", NULL);
+    if (g_mkdir_with_parents(cache_dir, 0700) != 0)
+    {
+        g_free(cache_dir);
+        g_free(template_contents);
+        return NULL;
+    }
+    char *cache_path = g_build_filename(cache_dir, "gdk-pixbuf-loaders.cache", NULL);
+    g_free(cache_dir);
+
+    gchar **lines = g_strsplit(template_contents, "\n", -1);
+    GString *relocated_cache = g_string_sized_new(template_length);
+    for (gchar **line = lines; *line; line++)
+    {
+        const char *last_slash =
+            (**line == '\"' && (*line)[1] == '/') ? g_strrstr(*line, "/") : NULL;
+        if (last_slash)
+        {
+            // A loader record starts with its absolute module path.  Keep its
+            // filename and metadata intact, but resolve it from this bundle.
+            g_string_append_c(relocated_cache, '\"');
+            g_string_append(relocated_cache, loaders_dir);
+            g_string_append(relocated_cache, last_slash);
+        }
+        else
+        {
+            g_string_append(relocated_cache, *line);
+        }
+        if (*(line + 1))
+            g_string_append_c(relocated_cache, '\n');
+    }
+    g_strfreev(lines);
+    g_free(template_contents);
+
+    const gboolean wrote_cache =
+        g_file_set_contents(cache_path, relocated_cache->str, relocated_cache->len, &error);
+    g_string_free(relocated_cache, TRUE);
+    if (!wrote_cache)
+    {
+        g_clear_error(&error);
+        g_free(cache_path);
+        return NULL;
+    }
+    return cache_path;
+}
+
 void dt_osx_prepare_environment()
 {
+    char *resources_dir = dt_osx_get_bundle_res_path();
+    if (!resources_dir)
+        return;
+
+    char *loaders_dir =
+        g_build_filename(resources_dir, "gtk-runtime", "gdk-pixbuf", "loaders", NULL);
+    if (!g_file_test(loaders_dir, G_FILE_TEST_IS_DIR))
+    {
+        g_free(loaders_dir);
+        g_free(resources_dir);
+        return;
+    }
+
+    if (!g_getenv("GDK_PIXBUF_MODULEDIR"))
+        g_setenv("GDK_PIXBUF_MODULEDIR", loaders_dir, TRUE);
+
+    if (!g_getenv("GDK_PIXBUF_MODULE_FILE"))
+    {
+        char *cache_path = _dt_osx_create_gdk_pixbuf_loader_cache(resources_dir, loaders_dir);
+        if (cache_path)
+        {
+            g_setenv("GDK_PIXBUF_MODULE_FILE", cache_path, TRUE);
+            g_free(cache_path);
+        }
+    }
+
+    g_free(loaders_dir);
+    g_free(resources_dir);
 }
 
 void dt_osx_focus_window()

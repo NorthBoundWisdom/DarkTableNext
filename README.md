@@ -52,9 +52,24 @@ cmake --build --preset mac_clang_debug
 ./build/mac_clang_debug/bin/darktable --version
 ```
 
-`bin/darktable` 是开发构建的稳定启动入口。它会启动同目录 `darktable.app` 内的可执行文件，
-因此直接从终端运行时也保有标准的 macOS bundle 身份、菜单栏和 Accessibility 命令发现；不要直接
-调用 `.darktable-runtime/darktable`。
+`bin/darktable` 是开发构建的稳定启动入口。它会启动 CMake 原生生成的同目录
+`darktable.app`，因此直接从终端运行时也保有标准的 macOS bundle 身份、图标、菜单栏和
+Accessibility 命令发现；也可用 `open build/mac_clang_debug/bin/darktable.app` 按 LaunchServices
+路径启动。
+
+要生成可验收的 macOS DMG，先配置 release preset，再调用 FreeCM 接线的打包目标：
+
+```sh
+cmake --preset mac_clang_release
+cmake --build --preset mac_clang_release --target package-macos
+open build/mac_clang_release/darktable-0.9.0-macos-arm64.dmg
+```
+
+该目标先经正常 CMake install graph 将 DarkTableNext 的核心动态库、模块和数据复制进
+`darktable.app/Contents/Resources`，并携带可重定位的 GTK 图像加载器；再由 FreeCM 的 `native`
+macOS packager 收集允许的 Homebrew Mach-O 依赖、重写 rpath、签名并制作带 `/Applications` 链接的
+DMG。默认是 ad-hoc 签名，适合本机验收；正式对外发布时，在配置阶段传入
+`-DDT_MACOS_CODESIGN_IDENTITY="Developer ID Application: …"`，并在发布环境完成公证。
 
 ### 开发构建的模块重链
 

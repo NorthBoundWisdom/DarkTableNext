@@ -10,6 +10,8 @@
   <string>org.darktable.darktable</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
+  <key>CFBundleIconFile</key>
+  <string>darktable.icns</string>
   <key>CFBundleName</key>
   <string>darktable</string>
   <key>CFBundlePackageType</key>
@@ -18,6 +20,8 @@
   <string>@PROJECT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@PROJECT_VERSION@</string>
+  <key>NSPrincipalClass</key>
+  <string>NSApplication</string>
   <key>NSHighResolutionCapable</key>
   <true/>
 </dict>

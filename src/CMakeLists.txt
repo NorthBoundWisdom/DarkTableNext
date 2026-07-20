@@ -540,12 +540,12 @@ endif(BUILD_TESTING)
 #
 # build darktable executable
 #
-set(DARKTABLE_RUNTIME_STAGING_DIR "${DARKTABLE_BINDIR}/.darktable-runtime")
 set(DARKTABLE_APP_BUNDLE_DIR "${DARKTABLE_BINDIR}/darktable.app")
-set(DARKTABLE_APP_EXECUTABLE "${DARKTABLE_APP_BUNDLE_DIR}/Contents/MacOS/darktable")
 set(DARKTABLE_APP_RESOURCES_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Resources")
 set(DARKTABLE_APP_FRAMEWORKS_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Frameworks")
 set(DARKTABLE_LAUNCHER "${DARKTABLE_BINDIR}/darktable")
+set(DARKTABLE_APP_ICON_FILE "darktable.icns")
+set(DARKTABLE_APP_ICON_SOURCE "${CMAKE_SOURCE_DIR}/data/pixmaps/macos/${DARKTABLE_APP_ICON_FILE}")
 get_filename_component(DARKTABLE_APP_LIBRARY_ROOT "${DARKTABLE_LIBDIR}/.." ABSOLUTE)
 get_filename_component(DARKTABLE_APP_SHARE_ROOT "${DARKTABLE_DATADIR}/.." ABSOLUTE)
 
@@ -555,19 +555,25 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-launcher.in" "${DARKTABLE_
 file(CHMOD "${DARKTABLE_LAUNCHER}"
      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-add_executable(darktable main.c)
-set_target_properties(darktable PROPERTIES LINKER_LANGUAGE C)
-set_target_properties(darktable PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_RUNTIME_STAGING_DIR}")
+set_source_files_properties("${DARKTABLE_APP_ICON_SOURCE}" PROPERTIES
+                            MACOSX_PACKAGE_LOCATION "Resources")
+add_executable(darktable MACOSX_BUNDLE main.c "${DARKTABLE_APP_ICON_SOURCE}")
+set_target_properties(darktable PROPERTIES
+                      LINKER_LANGUAGE C
+                      MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist"
+                      MACOSX_BUNDLE_ICON_FILE "${DARKTABLE_APP_ICON_FILE}"
+                      RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_BINDIR}")
 set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Security -framework CoreFoundation")
 target_link_libraries(darktable lib_darktable)
-set_target_properties(darktable PROPERTIES INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
+# The installed application loads its core library from the same bundle.  The
+# relative module rpaths keep their existing layout when lib/darktable is
+# copied below Contents/Resources by macos_bundle_install.cmake.in.
+set_target_properties(darktable PROPERTIES
+                      INSTALL_RPATH "${RPATH_ORIGIN}/../Resources/lib/darktable")
 
 add_custom_command(TARGET darktable POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:darktable>" "${DARKTABLE_APP_EXECUTABLE}"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist"
-          "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Info.plist"
   COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/lib"
   COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/share"
   COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
@@ -580,7 +586,7 @@ add_custom_command(TARGET darktable POST_BUILD
   COMMENT "Assembling macOS application bundle"
 )
 
-install(TARGETS darktable DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
+install(TARGETS darktable BUNDLE DESTINATION . COMPONENT DTApplication)
 
 
 dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)
