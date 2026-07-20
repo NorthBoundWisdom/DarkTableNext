@@ -290,7 +290,7 @@ static void _transform_lcms2(struct dt_iop_module_t *self, const float *const im
     {
         *converted_cst = cst_from;
         dt_print(DT_DEBUG_ALWAYS, "[_transform_lcms2] invalid conversion from %s to %s",
-                 dt_colorspaces_get_name(cst_from, NULL), dt_colorspaces_get_name(cst_to, NULL));
+                 dt_iop_colorspace_to_name(cst_from), dt_iop_colorspace_to_name(cst_to));
     }
 }
 
