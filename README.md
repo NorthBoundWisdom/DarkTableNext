@@ -167,6 +167,7 @@ submodules. Permanent dependency changes belong in the lock template,
 | `src/` | Application code, image pipeline, IOPs, and GTK user interface |
 | `cmake/` | CMake modules and build policy |
 | `configs/` | FreeCM source-root configuration and workflow scripts |
+| `scripts/` | Read-only development and migration audit scripts |
 | `data/` | Runtime resources and configuration data |
 | `benchmarks/` | Reproducible performance and GPU-baseline tools |
 | `DevDocs/` | Developer documentation and source maps |

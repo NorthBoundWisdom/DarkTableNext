@@ -105,8 +105,40 @@ pkg-config --modversion gtk4
 - 主题由 `data/themes/` 的 4 个 CSS 文件构成。选择器依赖 EventBox、TreeView、MenuItem 等
   GTK 3 节点名，并通过 style context 向自绘控件提供颜色，必须与控件移植同步处理。
 
-需要维护一个可重复的 `tools/` 静态盘点脚本，至少统计本节类别并列出高频文件。脚本只检查
-受版本控制源码，不扫描 FreeCM、构建树或依赖 checkout。
+`scripts/gtk4_audit.sh --format markdown` 是可重复的静态盘点入口，统计本节类别并限定检查
+`src/` 自有源码；它不扫描 FreeCM、构建树或依赖 checkout。开始实施、产品范围冻结和最终切换
+前都必须重跑，并将差异更新到本节。
+
+### 阶段 0 已完成的 macOS 基线（2026-07-21）
+
+- [x] 通过 `brew update` 后以 `brew install --force-bottle gtk4` 安装 Homebrew `gtk4` 4.22.4；
+      `brew info --json=v2 gtk4` 确认 `poured_from_bottle: true`，没有从 GTK 源码构建。
+- [x] `pkg-config --modversion gtk4` 返回 4.22.4，`brew linkage --test gtk4` 与
+      `brew missing gtk4` 均无错误输出；实际版本和最小 API 目标已记录在本文开头。
+- [x] 增加 `scripts/gtk4_audit.sh`，其当前输出复现上述 GTK/GDK 头、类型、事件、菜单、树、
+      对话框、容器、窗口、拖放、尺寸、样式和 main-loop 静态基线。
+
+脚本采用其固定的合并正则表达式，当前可重复输出如下；它是后续各批次应比较的版本化数值
+快照（匹配数与文件数可能包含同一文件中的多个 API）：
+
+| 类别 | 匹配数 | 文件数 |
+| --- | ---: | ---: |
+| 直接 GTK/GDK 头包含 | 129 | 115 |
+| 自定义 GTK 类型定义 | 12 | 12 |
+| TreeView/TreeModel/cell renderer | 2331 | 28 |
+| 旧 GdkEvent 类型或回调 | 425 | 72 |
+| 显式 widget 事件 mask | 62 | 31 |
+| GtkMenu/MenuShell | 397 | 36 |
+| 同步 gtk_dialog_run | 44 | 21 |
+| GtkFileChooser | 90 | 13 |
+| GtkContainer 通用 API | 170 | 52 |
+| GtkBox pack API | 312 | 34 |
+| show_all/widget destroy | 231 | 54 |
+| GdkWindow/widget_get_window | 131 | 17 |
+| 旧拖放/selection data | 78 | 12 |
+| allocation/旧尺寸 API | 209 | 49 |
+| GtkStyleContext 旧 getter | 158 | 28 |
+| 旧 GTK main loop API | 10 | 4 |
 
 ## 所有权、生命周期与线程边界
 
@@ -132,8 +164,8 @@ pkg-config --modversion gtk4
 
 - [ ] 完成核心删减计划中的 UI/IOP 保留清单；对每个仍在构建和注册表可达的 UI 模块标记
       “保留并移植 / 先删除 / 暂缓决定”，禁止移植确认将删除的模块。
-- [ ] 把本节静态盘点固化为脚本和版本化摘要，补齐被宏、函数指针、C++ 包装或运行时 signal
-      名称隐藏的 GTK 使用。
+- [x] 把本节静态盘点固化为 `scripts/gtk4_audit.sh` 和版本化摘要；后续每个迁移批次补齐被宏、
+      函数指针、C++ 包装或运行时 signal 名称隐藏的 GTK 使用。
 - [ ] 以当前 GTK 3.24 构建运行 `G_ENABLE_DIAGNOSTIC=1`，记录属性、signal、CSS 和对象生命周期
       警告；先消除基线自身的 critical/warning，避免切换后无法区分新旧问题。
 - [ ] 固化 UI 行为清单和参考截图：首次启动/数据库错误、Lighttable Grid/Loupe/filmstrip、
@@ -141,8 +173,8 @@ pkg-config --modversion gtk4
       第二窗口、后台任务与取消。
 - [ ] 为 Lighttable/Darkroom 的代表性图片记录缩放、滚动、选择、颜色配置、峰值内存、首帧和
       交互延迟基线；使用现有 CPU 金样确认 UI 迁移前后的导出结果一致。
-- [ ] 按“正式开工的 Homebrew 版本规则”安装并记录最新可用 `gtk4` bottle，再在 Windows vcpkg
-      和 Linux 目标包源上分别证明相容 GTK 4、GLib、Pango、Cairo、GdkPixbuf、Graphene/GSK
+- [ ] 已完成 macOS Homebrew `gtk4` 4.22.4 bottle、pkg-config 和 linkage 证明；继续在 Windows
+      vcpkg 和 Linux 目标包源上证明相容 GTK 4、GLib、Pango、Cairo、GdkPixbuf、Graphene/GSK
       及运行时工具可获取。记录实际版本、架构、license、debug/release 产物和部署闭包。
 - [ ] 明确最低 macOS、Windows 和 Linux 发行版/运行库版本。若最新 GTK 稳定版迫使提高系统
       基线，先更新产品和发布文档，不允许某个平台静默停留 GTK 3。
