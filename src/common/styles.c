@@ -1741,7 +1741,7 @@ void dt_import_default_styles(const char *folder)
         if (bname && !dt_styles_exists(bname))
         {
             if (darktable.gui)
-                dt_print(DT_DEBUG_ALWAYS, "[styles] importing default style '%s'", filename);
+                dt_print(DT_DEBUG_CONTROL, "[styles] importing default style '%s'", filename);
             dt_styles_import_from_file(filename);
         }
         g_free(bname);
