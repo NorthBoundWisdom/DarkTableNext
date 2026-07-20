@@ -313,6 +313,12 @@ static void _thumbs_move(dt_culling_t *table, const int move)
 
     if (new_offset != table->offset)
     {
+        if (table->mode == DT_CULLING_MODE_PREVIEW)
+        {
+            dt_culling_set_hand_tool(table, FALSE);
+            dt_culling_zoom_end(table);
+            dt_culling_zoom_fit(table);
+        }
         table->offset = new_offset;
         dt_culling_full_redraw(table, TRUE);
         _thumbs_refocus(table);
@@ -552,6 +558,28 @@ static gboolean _zoom_thumb_max(dt_thumbnail_t *th, const float x_culling, const
     return _zoom_to_x_root(th, x_culling, y_culling, ZOOM_MAX, FALSE);
 }
 
+static void _toggle_zoom_thumb(dt_culling_t *table, dt_thumbnail_t *th, const float x_culling,
+                               const float y_culling)
+{
+    const float zoom_100 = dt_thumbnail_get_zoom100(th);
+
+    // Native pixels are already smaller than the fitted viewport. Do not
+    // enlarge them just to make the Fit/100% toggle appear to do something.
+    if (zoom_100 <= 1.0f)
+        return;
+
+    if (th->zoom < zoom_100)
+    {
+        if (_zoom_thumb_max(th, x_culling, y_culling))
+            _set_table_zoom_ratio(table, th);
+    }
+    else
+    {
+        table->zoom_ratio = IMG_TO_FIT;
+        _zoom_thumb_fit(th);
+    }
+}
+
 // toggle zoom max / zoom fit of image currently having mouse over id
 static void _toggle_zoom_current(dt_culling_t *table, const float x_culling, const float y_culling)
 {
@@ -561,10 +589,7 @@ static void _toggle_zoom_current(dt_culling_t *table, const float x_culling, con
         dt_thumbnail_t *th = l->data;
         if (th->imgid == id)
         {
-            if (th->zoom_100 < 1.0 || th->zoom < th->zoom_100)
-                _zoom_thumb_max(th, x_culling, y_culling);
-            else
-                _zoom_thumb_fit(th);
+            _toggle_zoom_thumb(table, th, x_culling, y_culling);
             break;
         }
     }
@@ -805,6 +830,64 @@ static gboolean _event_enter_notify(GtkWidget *widget, GdkEventCrossing *event, 
     return TRUE;
 }
 
+static void _set_hand_cursor(dt_culling_t *table, const char *name)
+{
+    GdkWindow *window = gtk_widget_get_window(table->widget);
+    if (!window)
+        return;
+
+    GdkCursor *cursor =
+        name ? gdk_cursor_new_from_name(gdk_window_get_display(window), name) : NULL;
+    gdk_window_set_cursor(window, cursor);
+    if (cursor)
+        g_object_unref(cursor);
+}
+
+static dt_thumbnail_t *_thumb_at_image_position(dt_culling_t *table, const double x, const double y)
+{
+    for (GList *l = table->list; l; l = g_list_next(l))
+    {
+        dt_thumbnail_t *th = l->data;
+        gint image_x = 0;
+        gint image_y = 0;
+        if (!gtk_widget_translate_coordinates(th->w_image, table->widget, 0, 0, &image_x, &image_y))
+            continue;
+
+        const int width = gtk_widget_get_allocated_width(th->w_image);
+        const int height = gtk_widget_get_allocated_height(th->w_image);
+        if (x >= image_x && x < image_x + width && y >= image_y && y < image_y + height)
+            return th;
+    }
+
+    return NULL;
+}
+
+static void _event_to_culling_position(dt_culling_t *table, const double x_root,
+                                       const double y_root, float *x, float *y)
+{
+    int origin_x = 0;
+    int origin_y = 0;
+    GdkWindow *window = gtk_widget_get_window(table->widget);
+    if (window)
+        gdk_window_get_origin(window, &origin_x, &origin_y);
+    *x = x_root - origin_x;
+    *y = y_root - origin_y;
+}
+
+static gboolean _event_focus_out(GtkWidget *widget, GdkEventFocus *event, gpointer user_data)
+{
+    dt_culling_set_hand_tool((dt_culling_t *)user_data, FALSE);
+    (void)widget;
+    (void)event;
+    return FALSE;
+}
+
+static void _event_unmap(GtkWidget *widget, gpointer user_data)
+{
+    dt_culling_set_hand_tool((dt_culling_t *)user_data, FALSE);
+    (void)widget;
+}
+
 static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
     dt_culling_t *table = (dt_culling_t *)user_data;
@@ -819,7 +902,8 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
     if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_BUTTON_PRESS)
     {
         // make sure any edition field loses the focus
-        gtk_widget_grab_focus(dt_ui_center(darktable.gui->ui));
+        gtk_widget_grab_focus(
+            table->mode == DT_CULLING_MODE_PREVIEW ? widget : dt_ui_center(darktable.gui->ui));
     }
 
     if (event->button == GDK_BUTTON_MIDDLE)
@@ -840,6 +924,18 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
         return TRUE;
     }
 
+    if (table->mode == DT_CULLING_MODE_PREVIEW && event->button == GDK_BUTTON_PRIMARY &&
+        event->type == GDK_2BUTTON_PRESS)
+    {
+        // The first release in a double-click sequence has already performed
+        // the normal Fit/100% toggle. Suppress the second toggle and never
+        // enter Darkroom from a single-image loupe.
+        table->click_candidate = FALSE;
+        table->panning = FALSE;
+        table->drag_moved = FALSE;
+        return TRUE;
+    }
+
     if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY &&
         event->type == GDK_2BUTTON_PRESS)
     {
@@ -854,6 +950,27 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event, gp
             dt_act_on_reset_cache(TRUE);
             dt_act_on_reset_cache(FALSE);
         }
+        return TRUE;
+    }
+
+    if (table->mode == DT_CULLING_MODE_PREVIEW && event->button == GDK_BUTTON_PRIMARY &&
+        event->type == GDK_BUTTON_PRESS)
+    {
+        gtk_widget_grab_focus(widget);
+
+        float x = 0.0f;
+        float y = 0.0f;
+        _event_to_culling_position(table, event->x_root, event->y_root, &x, &y);
+        dt_thumbnail_t *th = _thumb_at_image_position(table, x, y);
+
+        table->pan_x = event->x_root;
+        table->pan_y = event->y_root;
+        table->press_x = event->x_root;
+        table->press_y = event->y_root;
+        table->pressed_imgid = th ? th->imgid : NO_IMGID;
+        table->drag_moved = FALSE;
+        table->click_candidate = th && !table->hand_tool;
+        table->panning = th && table->hand_tool && th->zoom > 1.0f;
         return TRUE;
     }
 
@@ -879,6 +996,27 @@ static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event, g
 {
     dt_culling_t *table = (dt_culling_t *)user_data;
     table->mouse_inside = TRUE;
+
+    if (table->mode == DT_CULLING_MODE_PREVIEW && (table->click_candidate || table->panning))
+    {
+        const double dx = event->x_root - table->press_x;
+        const double dy = event->y_root - table->press_y;
+        if (dx * dx + dy * dy > 9.0)
+        {
+            table->click_candidate = FALSE;
+            table->drag_moved = TRUE;
+            if (table->panning)
+                _set_hand_cursor(table, "grabbing");
+        }
+    }
+
+    if (table->mode == DT_CULLING_MODE_PREVIEW && (!table->hand_tool || !table->panning))
+    {
+        table->pan_x = event->x_root;
+        table->pan_y = event->y_root;
+        return FALSE;
+    }
+
     if (!table->panning)
     {
         table->pan_x = event->x_root;
@@ -967,6 +1105,27 @@ static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event, g
 static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
     dt_culling_t *table = (dt_culling_t *)user_data;
+
+    if (table->mode == DT_CULLING_MODE_PREVIEW && event->button == GDK_BUTTON_PRIMARY)
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+        _event_to_culling_position(table, event->x_root, event->y_root, &x, &y);
+        dt_thumbnail_t *th = _thumb_at_image_position(table, x, y);
+        const gboolean toggle = table->click_candidate && !table->drag_moved && !table->hand_tool &&
+                                th && th->imgid == table->pressed_imgid;
+
+        table->panning = FALSE;
+        table->click_candidate = FALSE;
+        table->drag_moved = FALSE;
+        table->pressed_imgid = NO_IMGID;
+        _set_hand_cursor(table, table->hand_tool ? "grab" : NULL);
+
+        if (toggle)
+            _toggle_zoom_thumb(table, th, x, y);
+        return TRUE;
+    }
+
     table->panning = FALSE;
 
     const dt_imgid_t overid = dt_control_get_mouse_over_id();
@@ -1114,6 +1273,12 @@ static void _dt_filmstrip_change(gpointer instance, const dt_imgid_t imgid, gpoi
     if (!gtk_widget_get_visible(table->widget))
         return;
 
+    if (table->mode == DT_CULLING_MODE_PREVIEW)
+    {
+        dt_culling_set_hand_tool(table, FALSE);
+        dt_culling_zoom_end(table);
+        dt_culling_zoom_fit(table);
+    }
     table->offset = _thumb_get_rowid(imgid);
     dt_culling_full_redraw(table, TRUE);
     _thumbs_refocus(table);
@@ -1148,6 +1313,7 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
     table->zoom_ratio = IMG_TO_FIT;
     table->widget = gtk_layout_new(NULL, NULL);
     table->selection = NO_IMGID;
+    table->pressed_imgid = NO_IMGID;
     dt_gui_add_class(table->widget, "dt_fullview");
     dt_act_on_set_class(table->widget);
     // TODO dt_gui_add_help_link(table->widget, "lighttable_filemanager");
@@ -1197,6 +1363,9 @@ dt_culling_t *dt_culling_new(const dt_culling_mode_t mode)
                      G_CALLBACK(_event_motion_notify), table);
     g_signal_connect(G_OBJECT(table->widget), "button-release-event",
                      G_CALLBACK(_event_button_release), table);
+    g_signal_connect(G_OBJECT(table->widget), "focus-out-event", G_CALLBACK(_event_focus_out),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "unmap", G_CALLBACK(_event_unmap), table);
 
     // we register globals signals
     DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_MOUSE_OVER_IMAGE_CHANGE, _dt_mouse_over_image_callback,
@@ -1238,6 +1407,8 @@ void dt_culling_init(dt_culling_t *table, const int fallback_offset,
     table->selection_sync = FALSE;
     table->zoom_ratio = IMG_TO_FIT;
     table->view_width = 0; // in order to force a full redraw
+    dt_culling_set_hand_tool(table, FALSE);
+    dt_culling_zoom_end(table);
 
     if (restriction == DT_LIGHTTABLE_CULLING_RESTRICTION_SELECTION)
         table->navigate_inside_selection = TRUE;
@@ -2170,6 +2341,12 @@ gboolean dt_culling_key_move(dt_culling_t *table, const dt_culling_move_t move)
 
 void dt_culling_change_offset_image(dt_culling_t *table, const dt_imgid_t imgid)
 {
+    if (table->mode == DT_CULLING_MODE_PREVIEW)
+    {
+        dt_culling_set_hand_tool(table, FALSE);
+        dt_culling_zoom_end(table);
+        dt_culling_zoom_fit(table);
+    }
     table->offset = _thumb_get_rowid(imgid);
     dt_culling_full_redraw(table, TRUE);
     _thumbs_refocus(table);
@@ -2315,6 +2492,22 @@ gboolean dt_culling_pan_move(dt_culling_t *table, const float dx, const float dy
     }
 
     return TRUE;
+}
+
+void dt_culling_set_hand_tool(dt_culling_t *table, const gboolean active)
+{
+    if (!table)
+        return;
+
+    table->hand_tool = active && table->mode == DT_CULLING_MODE_PREVIEW;
+    table->panning = FALSE;
+    table->click_candidate = FALSE;
+    table->drag_moved = FALSE;
+    table->pressed_imgid = NO_IMGID;
+
+    if (table->hand_tool)
+        gtk_widget_grab_focus(table->widget);
+    _set_hand_cursor(table, table->hand_tool ? "grab" : NULL);
 }
 
 // change the type of overlays that should be shown

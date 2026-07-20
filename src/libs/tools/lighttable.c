@@ -579,6 +579,9 @@ static void _set_zoom(dt_lib_module_t *self, const int old_zoom, const int new_z
     {
         dt_conf_set_int("plugins/lighttable/images_in_row", new_zoom);
         dt_thumbtable_zoom_changed(dt_ui_thumbtable(darktable.gui->ui), old_zoom, new_zoom);
+        // At density 1 the grid is detached behind automatic Loupe, so the
+        // thumbtable itself cannot schedule the expose that restores density 2.
+        dt_control_queue_redraw_center();
     }
 }
 

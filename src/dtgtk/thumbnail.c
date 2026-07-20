@@ -895,15 +895,19 @@ static gboolean _event_image_draw(GtkWidget *widget, cairo_t *cr, gpointer user_
 
 static void _thumb_update_icons(dt_thumbnail_t *thumb)
 {
+    // Preview omits reject, rating, and zoom controls from its compact information panel.
+    // Those controls remain available in the filmstrip, grid, and multi-image Culling.
+    const gboolean show_preview_controls = thumb->container != DT_THUMBNAIL_CONTAINER_PREVIEW;
+
     gtk_widget_set_visible(thumb->w_local_copy, thumb->has_localcopy);
     gtk_widget_set_visible(thumb->w_altered, thumb->is_altered);
     gtk_widget_set_visible(thumb->w_group, thumb->is_grouped);
     gtk_widget_set_visible(thumb->w_audio, thumb->has_audio);
     gtk_widget_set_visible(thumb->w_color, thumb->colorlabels != 0);
-    gtk_widget_set_visible(thumb->w_zoom_eb,
-                           (thumb->zoomable && thumb->over == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK));
+    gtk_widget_set_visible(thumb->w_zoom_eb, (show_preview_controls && thumb->zoomable &&
+                                              thumb->over == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK));
     gtk_widget_show(thumb->w_bottom_eb);
-    gtk_widget_show(thumb->w_reject);
+    gtk_widget_set_visible(thumb->w_reject, show_preview_controls);
     gtk_widget_show(thumb->w_ext);
 
     // show cursor (filmstrip current-image arrow) only for the active image
@@ -921,7 +925,7 @@ static void _thumb_update_icons(dt_thumbnail_t *thumb)
     gtk_widget_set_visible(thumb->w_cursor, show_cursor);
 
     for (int i = 0; i < MAX_STARS; i++)
-        gtk_widget_show(thumb->w_stars[i]);
+        gtk_widget_set_visible(thumb->w_stars[i], show_preview_controls);
 
     _set_flag(thumb->w_main, GTK_STATE_FLAG_PRELIGHT, thumb->mouse_over);
     _set_flag(thumb->w_main, GTK_STATE_FLAG_ACTIVE, show_active);
@@ -1907,17 +1911,20 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
     else
     {
         gtk_widget_get_size_request(thumb->w_image, &width, &height);
-        int w = 0;
-        int h = 0;
-        gtk_widget_get_size_request(thumb->w_image_box, &w, &h);
-        const int px = (w - width) / 2;
-        const int py = (h - height) / 2;
+        int image_box_width = 0;
+        int image_box_height = 0;
+        gtk_widget_get_size_request(thumb->w_image_box, &image_box_width, &image_box_height);
+        const gboolean preview = thumb->container == DT_THUMBNAIL_CONTAINER_PREVIEW;
+        const int overlay_width = preview ? image_box_width : width;
+        const int overlay_height = preview ? image_box_height : height;
+        const int px = preview ? 0 : (image_box_width - width) / 2;
+        const int py = preview ? 0 : (image_box_height - height) / 2;
 
         // we need to squeeze 5 stars + 1 reject + 1 colorlabels symbols
         // on a thumbnail width all icons having a width of 3.0 * r1 => 21
         // * r1 we want r1 spaces at extremities, after reject, before
         // colorlables => 4 * r1
-        const float r1 = fminf(max_size / 2.0f, width / 25.0f);
+        const float r1 = (preview ? 0.75f : 1.0f) * fminf(max_size / 2.0f, overlay_width / 25.0f);
 
         // file extension
         gtk_widget_set_margin_top(thumb->w_ext, 0.03 * width + py);
@@ -1930,9 +1937,10 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
         gtk_label_set_attributes(GTK_LABEL(thumb->w_bottom), attrlist);
         gtk_label_set_attributes(GTK_LABEL(thumb->w_zoom), attrlist);
         pango_attr_list_unref(attrlist);
-        w = 0;
-        h = 0;
-        pango_layout_get_pixel_size(gtk_label_get_layout(GTK_LABEL(thumb->w_bottom)), &w, &h);
+        int info_width = 0;
+        int info_height = 0;
+        pango_layout_get_pixel_size(gtk_label_get_layout(GTK_LABEL(thumb->w_bottom)), &info_width,
+                                    &info_height);
         // for the position, we use css margin and use it as per thousand (and not pixels)
         GtkBorder *margins = gtk_border_new();
         GtkBorder *borders = gtk_border_new();
@@ -1945,21 +1953,30 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
         const int padding = r1;
         const int padding_t = 0.8 * r1; // reduced to compensate label top
                                         // margin applied by gtk
-        const int margin_t = height * margins->top / 1000;
-        const int margin_l = width * margins->left / 1000;
-        const int border_t = borders->top;
-        const int border_l = borders->left;
+        const int margin_t = overlay_height * margins->top / 1000;
+        const int margin_l = overlay_width * margins->left / 1000;
+        const int border_t = preview ? 0 : borders->top;
+        const int border_l = preview ? 0 : borders->left;
         const float icon_size = 3.0 * r1;
         const float icon_size2 = 2.0 * r1;
-        const int line2 = padding_t + h + padding - icon_size / 8.0 + margin_t + border_t;
+        const int line2 = padding_t + info_height + padding - icon_size / 8.0 + margin_t + border_t;
         const int line3 = line2 + icon_size - icon_size / 8.0 + padding - icon_size / 8.0;
         gtk_border_free(margins);
         gtk_border_free(borders);
 
-        const int min_width = 2.0 * padding - icon_size / 4.0 + 2 * r1 + 7 * icon_size;
-        gtk_widget_set_size_request(thumb->w_bottom_eb,
-                                    CLAMP(w + padding_t * 2.0, min_width, width),
-                                    line3 - margin_t - border_t + icon_size2 + padding);
+        if (preview)
+        {
+            gtk_widget_set_size_request(thumb->w_bottom_eb,
+                                        MIN(info_width + 2 * padding_t, overlay_width),
+                                        info_height + 2 * padding_t);
+        }
+        else
+        {
+            const int min_width = 2.0 * padding - icon_size / 4.0 + 2 * r1 + 7 * icon_size;
+            gtk_widget_set_size_request(thumb->w_bottom_eb,
+                                        CLAMP(info_width + padding_t * 2.0, min_width, width),
+                                        line3 - margin_t - border_t + icon_size2 + padding);
+        }
 
         gtk_label_set_xalign(GTK_LABEL(thumb->w_bottom), 0);
         gtk_label_set_yalign(GTK_LABEL(thumb->w_bottom), 0);

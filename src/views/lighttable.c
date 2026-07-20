@@ -59,6 +59,13 @@
 
 DT_MODULE(1)
 
+typedef enum dt_lighttable_loupe_source_t
+{
+    DT_LIGHTTABLE_LOUPE_NONE = 0,
+    DT_LIGHTTABLE_LOUPE_AUTO,
+    DT_LIGHTTABLE_LOUPE_PREVIEW
+} dt_lighttable_loupe_source_t;
+
 /**
  * this organises the whole library:
  * previously imported film rolls..
@@ -71,11 +78,21 @@ typedef struct dt_library_t
 
     dt_lighttable_layout_t current_layout;
 
-    int preview_sticky;       // are we in sticky preview mode
-    gboolean preview_state;   // are we in preview mode (always combined with another layout)
+    int preview_sticky;                        // are we in sticky preview mode
+    dt_lighttable_loupe_source_t loupe_source; // automatic density-1 or explicit preview
     gboolean already_started; // is it the first start of lighttable. Used by culling
     int thumbtable_offset;    // last thumbtable offset before entering culling
 } dt_library_t;
+
+static gboolean _loupe_active(const dt_library_t *lib)
+{
+    return lib->loupe_source != DT_LIGHTTABLE_LOUPE_NONE;
+}
+
+static gboolean _explicit_preview(const dt_library_t *lib)
+{
+    return lib->loupe_source == DT_LIGHTTABLE_LOUPE_PREVIEW;
+}
 
 const char *name(const dt_view_t *self)
 {
@@ -97,16 +114,23 @@ static void _show_filmstrip(void)
     gtk_widget_queue_draw(filmstrip->widget);
 }
 
-// exit the full preview mode
-static void _preview_quit(dt_view_t *self)
+// Exit either automatic Loupe or explicit Preview and restore the underlying layout.
+static void _loupe_quit(dt_view_t *self)
 {
     dt_library_t *lib = self->data;
+    const gboolean automatic = lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO;
+    const dt_imgid_t current_imgid = lib->preview->offset_imgid;
+
+    dt_culling_set_hand_tool(lib->preview, FALSE);
+    dt_culling_zoom_end(lib->preview);
+    dt_culling_zoom_fit(lib->preview);
     gtk_widget_hide(lib->preview->widget);
-    if (lib->preview->selection_sync)
+    if ((automatic || lib->preview->selection_sync) && dt_is_valid_imgid(current_imgid))
     {
-        dt_selection_select_single(darktable.selection, lib->preview->offset_imgid);
+        dt_selection_select_single(darktable.selection, current_imgid);
     }
-    lib->preview_state = FALSE;
+    lib->loupe_source = DT_LIGHTTABLE_LOUPE_NONE;
+    dt_view_lighttable_update_layout_buttons(darktable.view_manager);
     // restore panels
     dt_ui_restore_panels(darktable.gui->ui);
 
@@ -128,15 +152,21 @@ static void _preview_quit(dt_view_t *self)
         dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection = FALSE;
         _show_filmstrip();
 
-        // set offset back
-        dt_thumbtable_set_offset(dt_ui_thumbtable(darktable.gui->ui), lib->thumbtable_offset, TRUE);
-
         // restore the grid thumbtable
         dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
                                  dt_ui_center_base(darktable.gui->ui),
                                  DT_THUMBTABLE_MODE_FILEMANAGER);
+        if (dt_is_valid_imgid(current_imgid))
+            dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui), current_imgid,
+                                           FALSE);
+        else
+            dt_thumbtable_set_offset(dt_ui_thumbtable(darktable.gui->ui), lib->thumbtable_offset,
+                                     FALSE);
         gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
         dt_thumbtable_full_redraw(dt_ui_thumbtable(darktable.gui->ui), TRUE);
+        if (dt_is_valid_imgid(current_imgid))
+            dt_thumbtable_ensure_imgid_visibility(dt_ui_thumbtable(darktable.gui->ui),
+                                                  current_imgid);
     }
 }
 
@@ -150,9 +180,9 @@ static void _lighttable_check_layout(dt_view_t *self)
     if (lib->current_layout == layout)
         return;
 
-    // if we are in full preview mode, we first need to exit this mode
-    if (lib->preview_state)
-        _preview_quit(self);
+    // A layout change always ends either kind of single-image Loupe.
+    if (_loupe_active(lib))
+        _loupe_quit(self);
 
     lib->current_layout = layout;
 
@@ -223,8 +253,7 @@ static void _lighttable_check_layout(dt_view_t *self)
 
     lib->already_started = TRUE;
 
-    if (layout == DT_LIGHTTABLE_LAYOUT_CULLING || layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC ||
-        lib->preview_state)
+    if (layout == DT_LIGHTTABLE_LAYOUT_CULLING || layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
     {
         dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
                                  dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
@@ -240,15 +269,72 @@ static void _lighttable_check_layout(dt_view_t *self)
     }
 }
 
+static void _loupe_enter(dt_view_t *self, const dt_lighttable_loupe_source_t source,
+                         const gboolean sticky, const gboolean focus,
+                         const dt_lighttable_culling_restriction_t restriction)
+{
+    dt_library_t *lib = self->data;
+    const gboolean was_active = _loupe_active(lib);
+
+    if (!was_active)
+        lib->thumbtable_offset = dt_thumbtable_get_offset(dt_ui_thumbtable(darktable.gui->ui));
+
+    gtk_widget_hide(dt_ui_thumbtable(darktable.gui->ui)->widget);
+    gtk_widget_hide(lib->culling->widget);
+
+    dt_culling_set_hand_tool(lib->preview, FALSE);
+    dt_culling_zoom_fit(lib->preview);
+    lib->preview_sticky = sticky;
+    lib->preview->focus = focus;
+    lib->loupe_source = source;
+    dt_culling_init(lib->preview, was_active ? lib->preview->offset : lib->thumbtable_offset,
+                    restriction);
+    dt_view_lighttable_update_layout_buttons(darktable.view_manager);
+    gtk_widget_show(lib->preview->widget);
+
+    dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection =
+        lib->preview->navigate_inside_selection;
+
+    // The main thumbtable stays detached while the dedicated bottom browser
+    // follows the active Loupe image.
+    dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
+                             dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
+    _show_filmstrip();
+    dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui), lib->preview->offset_imgid,
+                                   TRUE);
+
+    dt_culling_update_active_images_list(lib->preview);
+
+    dt_ui_restore_panels(darktable.gui->ui);
+    dt_ui_scrollbars_show(darktable.gui->ui, FALSE);
+}
+
+static void _lighttable_sync_auto_loupe(dt_view_t *self)
+{
+    dt_library_t *lib = self->data;
+    const gboolean requested = lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
+                               dt_view_lighttable_get_zoom(darktable.view_manager) == 1;
+
+    if (requested && lib->loupe_source == DT_LIGHTTABLE_LOUPE_NONE)
+    {
+        _loupe_enter(self, DT_LIGHTTABLE_LOUPE_AUTO, FALSE, FALSE,
+                     DT_LIGHTTABLE_CULLING_RESTRICTION_COLLECTION);
+    }
+    else if (!requested && lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO)
+    {
+        _loupe_quit(self);
+    }
+}
+
 static void _lighttable_change_offset(dt_view_t *self, const gboolean reset, const dt_imgid_t imgid)
 {
     dt_library_t *lib = self->data;
 
-    // full_preview change
-    if (lib->preview_state)
+    // single-image Loupe/Preview change
+    if (_loupe_active(lib))
     {
         // we only do the change if the offset is different
-        if (lib->culling->offset_imgid != imgid)
+        if (lib->preview->offset_imgid != imgid)
             dt_culling_change_offset_image(lib->preview, imgid);
     }
 
@@ -283,9 +369,15 @@ static void _culling_preview_refresh(dt_view_t *self)
     // change overlays if needed for culling and preview
     _culling_preview_reload_overlays(self);
 
-    // full_preview change
-    if (lib->preview_state)
+    // single-image Loupe/Preview change
+    if (_loupe_active(lib))
     {
+        // A collection refresh can replace the current image without changing
+        // its row offset (for example after deleting it). Treat that as an
+        // image switch so the replacement cannot inherit Loupe interaction.
+        dt_culling_set_hand_tool(lib->preview, FALSE);
+        dt_culling_zoom_end(lib->preview);
+        dt_culling_zoom_fit(lib->preview);
         dt_culling_full_redraw(lib->preview, TRUE);
     }
 
@@ -300,7 +392,7 @@ static void _culling_preview_refresh(dt_view_t *self)
 static gboolean _preview_get_state(dt_view_t *self)
 {
     dt_library_t *lib = self->data;
-    return lib->preview_state;
+    return _explicit_preview(lib);
 }
 
 static dt_imgid_t _culling_get_selection(dt_view_t *self)
@@ -320,7 +412,7 @@ static void _culling_restricted_set_state(dt_view_t *self,
                                           const dt_lighttable_culling_restriction_t state)
 {
     dt_library_t *lib = self->data;
-    if (lib->preview_state)
+    if (_explicit_preview(lib))
     {
         lib->preview->navigate_inside_selection =
             (state == DT_LIGHTTABLE_CULLING_RESTRICTION_SELECTION);
@@ -336,7 +428,7 @@ static dt_lighttable_culling_restriction_t _culling_restricted_get_state(dt_view
 {
     const dt_library_t *lib = self->data;
     gboolean inside = FALSE;
-    if (lib->preview_state)
+    if (_explicit_preview(lib))
     {
         inside = lib->preview->navigate_inside_selection;
     }
@@ -355,6 +447,7 @@ static dt_lighttable_culling_restriction_t _culling_restricted_get_state(dt_view
 void cleanup(dt_view_t *self)
 {
     dt_library_t *lib = self->data;
+    dt_culling_set_hand_tool(lib->preview, FALSE);
     free(lib->culling);
     free(lib->preview);
     free(self->data);
@@ -368,14 +461,16 @@ void expose(dt_view_t *self, cairo_t *cr, const int32_t width, const int32_t hei
     const double start = dt_get_debug_wtime();
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    // Let's show full preview if in that state...
+    // Apply layout changes first, then derive automatic Loupe solely from the
+    // filemanager density setting.
     _lighttable_check_layout(self);
+    _lighttable_sync_auto_loupe(self);
 
     if (!darktable.collection || dt_collection_get_count_no_group(darktable.collection) <= 0)
     {
         // thumbtable displays an help message
     }
-    else if (lib->preview_state)
+    else if (_loupe_active(lib))
     {
         if (!gtk_widget_get_visible(lib->preview->widget))
             gtk_widget_show(lib->preview->widget);
@@ -422,7 +517,7 @@ void enter(dt_view_t *self)
         _culling_preview_reload_overlays;
 
     // we want to reacquire the thumbtable if needed
-    if (!lib->preview_state)
+    if (!_loupe_active(lib))
     {
         if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
         {
@@ -442,11 +537,11 @@ void enter(dt_view_t *self)
 
     // The bottom photo browser remains available for every Lighttable layout.
     if (layout == DT_LIGHTTABLE_LAYOUT_CULLING || layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC ||
-        lib->preview_state)
+        _loupe_active(lib))
     {
         _show_filmstrip();
 
-        if (lib->preview_state)
+        if (_loupe_active(lib))
             dt_culling_update_active_images_list(lib->preview);
         else
             dt_culling_update_active_images_list(lib->culling);
@@ -460,55 +555,32 @@ void enter(dt_view_t *self)
     dt_ui_restore_panels(darktable.gui->ui);
 }
 
-static void _preview_enter(dt_view_t *self, const gboolean sticky, const gboolean focus,
-                           const dt_lighttable_culling_restriction_t restriction)
-{
-    dt_library_t *lib = self->data;
-
-    // record current offset
-    lib->thumbtable_offset = dt_thumbtable_get_offset(dt_ui_thumbtable(darktable.gui->ui));
-    // ensure that thumbtable or culling is not visible in the main view
-    gtk_widget_hide(dt_ui_thumbtable(darktable.gui->ui)->widget);
-    gtk_widget_hide(lib->culling->widget);
-
-    lib->preview_sticky = sticky;
-    lib->preview->focus = focus;
-    lib->preview_state = TRUE;
-    dt_culling_init(lib->preview, lib->thumbtable_offset, restriction);
-    dt_view_lighttable_update_layout_buttons(darktable.view_manager);
-    gtk_widget_show(lib->preview->widget);
-
-    dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection =
-        lib->preview->navigate_inside_selection;
-
-    // Keep the bottom photo browser synchronized with the active culling image.
-    dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                             dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
-    _show_filmstrip();
-    dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui), lib->preview->offset_imgid,
-                                   TRUE);
-
-    // set the active image
-    g_slist_free(darktable.view_manager->active_images);
-    darktable.view_manager->active_images =
-        g_slist_prepend(NULL, GINT_TO_POINTER(lib->preview->offset_imgid));
-    DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_ACTIVE_IMAGES_CHANGE);
-
-    // restore panels
-    dt_ui_restore_panels(darktable.gui->ui);
-
-    // we don't need the scrollbars
-    dt_ui_scrollbars_show(darktable.gui->ui, FALSE);
-}
-
 static void _preview_set_state(dt_view_t *self, const gboolean state, const gboolean sticky,
                                const gboolean focus,
                                const dt_lighttable_culling_restriction_t restriction)
 {
+    dt_library_t *lib = self->data;
     if (state)
-        _preview_enter(self, sticky, focus, restriction);
+        _loupe_enter(self, DT_LIGHTTABLE_LOUPE_PREVIEW, sticky, focus, restriction);
+    else if (_explicit_preview(lib) && lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
+             dt_view_lighttable_get_zoom(darktable.view_manager) == 1)
+    {
+        // Explicit Preview closes back into the density-owned Loupe without
+        // flashing or rebuilding the square grid underneath it.
+        dt_culling_set_hand_tool(lib->preview, FALSE);
+        dt_culling_zoom_end(lib->preview);
+        dt_culling_zoom_fit(lib->preview);
+        lib->preview_sticky = FALSE;
+        lib->preview->focus = FALSE;
+        lib->loupe_source = DT_LIGHTTABLE_LOUPE_AUTO;
+        dt_view_lighttable_update_layout_buttons(darktable.view_manager);
+        dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
+                                 dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
+        _show_filmstrip();
+        dt_ui_restore_panels(darktable.gui->ui);
+    }
     else
-        _preview_quit(self);
+        _loupe_quit(self);
 }
 
 void init(dt_view_t *self)
@@ -553,13 +625,21 @@ void leave(dt_view_t *self)
     }
 
     // we hide culling and preview too
+    dt_culling_set_hand_tool(lib->preview, FALSE);
+    dt_culling_zoom_end(lib->preview);
+    dt_culling_zoom_fit(lib->preview);
     gtk_widget_hide(lib->culling->widget);
     gtk_widget_hide(lib->preview->widget);
 
     // exit preview mode if non-sticky
-    if (lib->preview_state && lib->preview_sticky == 0)
+    if (_explicit_preview(lib) && lib->preview_sticky == 0)
     {
-        _preview_quit(self);
+        _loupe_quit(self);
+    }
+    else if (lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO)
+    {
+        // Automatic Loupe is derived again on the next Lighttable expose.
+        lib->loupe_source = DT_LIGHTTABLE_LOUPE_NONE;
     }
 
     // we remove the thumbtable from main view
@@ -570,14 +650,16 @@ void leave(dt_view_t *self)
 
 void reset(dt_view_t *self)
 {
+    dt_library_t *lib = self->data;
+    dt_culling_set_hand_tool(lib->preview, FALSE);
     dt_control_set_mouse_over_id(NO_IMGID);
 }
 
-// Return the active dt_culling_t for gesture dispatch: the preview widget when in
-// preview mode, the culling widget when in a culling layout, NULL otherwise.
+// Return the active dt_culling_t for gesture dispatch: the single-image widget
+// for automatic Loupe or Preview, the culling widget for a culling layout.
 static dt_culling_t *_active_culling(const dt_library_t *lib)
 {
-    if (lib->preview_state)
+    if (_loupe_active(lib))
     {
         return lib->preview;
     }
@@ -598,8 +680,8 @@ gboolean gesture_pan(dt_view_t *self, const double x, const double y, const doub
     dt_culling_t *table = _active_culling(lib);
     dt_print(DT_DEBUG_INPUT,
              "[lighttable pan] x=%.1f y=%.1f dx=%.3f dy=%.3f state=0x%x"
-             " layout=%d preview=%d table=%s",
-             x, y, dx, dy, state, lib->current_layout, lib->preview_state,
+             " layout=%d loupe=%d table=%s",
+             x, y, dx, dy, state, lib->current_layout, lib->loupe_source,
              table ? "active" : "NULL (not in culling/preview)");
     if (!table)
         return FALSE;
@@ -631,9 +713,8 @@ gboolean gesture_pinch(dt_view_t *self, const double x, const double y, const do
 
     dt_print(DT_DEBUG_INPUT,
              "[lighttable pinch] phase=%d x=%.1f y=%.1f dx=%.3f dy=%.3f"
-             " scale=%.6f prev_scale=%.6f state=0x%x layout=%d preview=%d",
-             phase, x, y, dx, dy, scale, prev_scale, state, lib->current_layout,
-             lib->preview_state);
+             " scale=%.6f prev_scale=%.6f state=0x%x layout=%d loupe=%d",
+             phase, x, y, dx, dy, scale, prev_scale, state, lib->current_layout, lib->loupe_source);
 
     if (phase == GDK_TOUCHPAD_GESTURE_PHASE_BEGIN)
     {
@@ -709,7 +790,8 @@ void scrollbar_changed(dt_view_t *self, const double x, const double y)
 {
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
+    const dt_library_t *lib = self->data;
+    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER && !_loupe_active(lib))
         dt_thumbtable_scrollbar_changed(dt_ui_thumbtable(darktable.gui->ui), x, y);
 }
 
@@ -717,8 +799,8 @@ static void _overlays_force(dt_view_t *self, const gboolean show)
 {
     dt_library_t *lib = self->data;
 
-    // full_preview change
-    if (lib->preview_state && (!show || lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_NONE ||
+    // single-image Loupe/Preview change
+    if (_loupe_active(lib) && (!show || lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_NONE ||
                                lib->preview->overlays == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK))
     {
         dt_culling_force_overlay(lib->preview, show);
@@ -752,7 +834,7 @@ static float _action_process_infos(gpointer target, const dt_action_element_t el
         }
     }
 
-    return lib->preview_state;
+    return _loupe_active(lib);
 }
 
 const dt_action_element_def_t _action_elements_infos[] = {{NULL, dt_action_effect_hold}, {NULL}};
@@ -789,7 +871,7 @@ static float _action_process_move(gpointer target, const dt_action_element_t ele
     // navigation accels for thumbtable layouts this can't be "normal"
     // key accels because it's usually arrow keys and lot of other
     // widgets will capture them before the usual accel is triggered
-    if (!lib->preview_state && layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
+    if (!_loupe_active(lib) && layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
         dt_thumbtable_move_t move = DT_THUMBTABLE_MOVE_NONE;
         const gboolean select = element == DT_ACTION_ELEMENT_SELECT;
@@ -823,7 +905,7 @@ static float _action_process_move(gpointer target, const dt_action_element_t ele
             gtk_widget_queue_draw(dt_ui_center(darktable.gui->ui));
         }
     }
-    else if (lib->preview_state || layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
+    else if (_loupe_active(lib) || layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
              layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
     {
         dt_culling_move_t move = DT_CULLING_MOVE_NONE;
@@ -847,7 +929,7 @@ static float _action_process_move(gpointer target, const dt_action_element_t ele
         if (move != DT_CULLING_MOVE_NONE)
         {
             // for this layout navigation keys are managed directly by thumbtable
-            if (lib->preview_state)
+            if (_loupe_active(lib))
                 dt_culling_key_move(lib->preview, move);
             else
                 dt_culling_key_move(lib->culling, move);
@@ -927,7 +1009,7 @@ static void _accel_culling_zoom_100(dt_action_t *action)
     dt_library_t *lib = self->data;
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    if (lib->preview_state)
+    if (_loupe_active(lib))
         dt_culling_zoom_max(lib->preview);
     else if (layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
              layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
@@ -940,7 +1022,7 @@ static void _accel_culling_zoom_fit(dt_action_t *action)
     dt_library_t *lib = self->data;
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    if (lib->preview_state)
+    if (_loupe_active(lib))
         dt_culling_zoom_fit(lib->preview);
     else if (layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
              layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
@@ -953,6 +1035,41 @@ static void _accel_select_toggle(dt_action_t *action)
     dt_selection_toggle(darktable.selection, id);
 }
 
+static float _action_process_select_or_hand(gpointer target, const dt_action_element_t element,
+                                            const dt_action_effect_t effect, const float move_size)
+{
+    dt_library_t *lib = darktable.view_manager->proxy.lighttable.view->data;
+
+    if (DT_PERFORM_ACTION(move_size))
+    {
+        if (_loupe_active(lib))
+        {
+            switch (effect)
+            {
+            case DT_ACTION_EFFECT_ON:
+                dt_culling_set_hand_tool(lib->preview, TRUE);
+                break;
+            case DT_ACTION_EFFECT_OFF:
+                dt_culling_set_hand_tool(lib->preview, FALSE);
+                break;
+            default:
+                dt_culling_set_hand_tool(lib->preview, !lib->preview->hand_tool);
+                break;
+            }
+        }
+        else if (effect != DT_ACTION_EFFECT_OFF)
+        {
+            _accel_select_toggle(NULL);
+        }
+    }
+
+    return _loupe_active(lib) ? lib->preview->hand_tool : 0.0f;
+}
+
+static const dt_action_def_t _action_def_select_or_hand = {N_("select image or hand tool"),
+                                                           _action_process_select_or_hand,
+                                                           dt_action_elements_hold, NULL, TRUE};
+
 static void _accel_select_single(dt_action_t *action)
 {
     const dt_imgid_t id = dt_control_get_mouse_over_id();
@@ -964,11 +1081,9 @@ GSList *mouse_actions(const dt_view_t *self)
     dt_library_t *lib = self->data;
     GSList *lm = NULL;
 
-    lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_DOUBLE_LEFT, 0,
-                                       _("open image in darkroom"));
-
-    if (lib->preview_state)
+    if (_loupe_active(lib))
     {
+        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT, 0, _("zoom to 100% and back"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("switch to next/previous image"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,
@@ -977,10 +1092,12 @@ GSList *mouse_actions(const dt_view_t *self)
                                            /* xgettext:no-c-format */
                                            0, _("zoom to 100% and back"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT_DRAG, 0,
-                                           _("pan a zoomed image"));
+                                           _("hold space to pan a zoomed image"));
     }
     else if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
+        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_DOUBLE_LEFT, 0,
+                                           _("open image in darkroom"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("scroll the collection"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,
@@ -1001,6 +1118,8 @@ GSList *mouse_actions(const dt_view_t *self)
     else if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
              lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
     {
+        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_DOUBLE_LEFT, 0,
+                                           _("open image in darkroom"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("scroll the collection"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,
@@ -1080,8 +1199,8 @@ void gui_init(dt_view_t *self)
 
     dt_action_register(DT_ACTION(self), N_("reset first image offset"), _accel_reset_first_offset,
                        0, 0);
-    dt_action_register(DT_ACTION(self), N_("select toggle image"), _accel_select_toggle,
-                       GDK_KEY_space, 0);
+    ac = dt_action_define(sa, NULL, N_("select toggle image"), NULL, &_action_def_select_or_hand);
+    dt_shortcut_register(ac, DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_HOLD, GDK_KEY_space, 0);
     dt_action_register(DT_ACTION(self), N_("select single image"), _accel_select_single,
                        GDK_KEY_Return, 0);
 

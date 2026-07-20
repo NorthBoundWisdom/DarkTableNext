@@ -1087,6 +1087,28 @@ static void _about_command(dt_action_t *action)
     (void)action;
 }
 
+static void _preferences_command(dt_action_t *action)
+{
+    dt_gui_preferences_show();
+    (void)action;
+}
+
+static void _shortcuts_command(dt_action_t *action)
+{
+    GtkWidget *dialog = gtk_dialog_new_with_buttons(
+        _("shortcuts"), GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)),
+        GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, NULL, NULL);
+    dt_gui_dialog_restore_size(GTK_DIALOG(dialog), "shortcuts");
+#ifdef GDK_WINDOWING_QUARTZ
+    dt_osx_disallow_fullscreen(dialog);
+#endif
+    dt_gui_dialog_add(GTK_DIALOG(dialog), dt_shortcuts_prefs(NULL));
+    gtk_widget_show_all(dialog);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    (void)action;
+}
+
 static void _documentation_command(dt_action_t *action)
 {
     GtkWidget *anchor = gtk_button_new();
@@ -1529,6 +1551,10 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     dt_action_register(&darktable.control->actions_global, N_("quit"), _quit_callback, GDK_KEY_q,
                        GDK_CONTROL_MASK);
     dt_action_register(&darktable.control->actions_global, N_("about"), _about_command, 0, 0);
+    dt_action_register(&darktable.control->actions_global, N_("preferences"), _preferences_command,
+                       GDK_KEY_comma, GDK_CONTROL_MASK);
+    dt_action_register(&darktable.control->actions_global, N_("shortcuts"), _shortcuts_command, 0,
+                       0);
     dt_action_register(&darktable.control->actions_global, N_("documentation"),
                        _documentation_command, 0, 0);
     dt_action_register(&darktable.control->actions_global, N_("homepage"), _homepage_command, 0,

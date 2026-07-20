@@ -85,6 +85,15 @@ typedef struct dt_culling_t
     gboolean show_tooltips;          // are tooltips visible ?
 
     dt_imgid_t selection; // image selected inside culling (used with selection act_on algorithm)
+
+    // Preview-only loupe interaction. Keep these internal fields at the end so
+    // existing dt_culling_t member offsets used by loadable modules stay stable.
+    gboolean hand_tool;
+    gboolean click_candidate;
+    gboolean drag_moved;
+    dt_imgid_t pressed_imgid;
+    double press_x;
+    double press_y;
 } dt_culling_t;
 
 dt_culling_t *dt_culling_new(const dt_culling_mode_t mode);
@@ -118,6 +127,10 @@ void dt_culling_zoom_end(dt_culling_t *table);
 // translate all zoomed thumbnails by (dx, dy) screen pixels.
 // state is used to optionally restrict panning to the hovered image (GDK_SHIFT_MASK).
 gboolean dt_culling_pan_move(dt_culling_t *table, float dx, float dy, int state);
+
+// enable/disable the preview hand tool. Disabling it also cancels any pending
+// click or drag and restores the widget cursor.
+void dt_culling_set_hand_tool(dt_culling_t *table, const gboolean active);
 
 // set the overlays type
 void dt_culling_set_overlays_mode(dt_culling_t *table, const dt_thumbnail_overlay_t over);
