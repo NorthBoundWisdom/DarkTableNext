@@ -43,7 +43,11 @@
 #include <strings.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/statvfs.h>
+#endif
 
 #define DT_MIPMAP_CACHE_FILE_MAGIC 0xD71337
 #define DT_MIPMAP_CACHE_FILE_VERSION 23
@@ -647,25 +651,40 @@ static void _mipmap_cache_deallocate_dynamic(void *data, dt_cache_entry_t *entry
                     if (!g_file_test(filename, G_FILE_TEST_EXISTS) && (f = g_fopen(filename, "wb")))
                     {
                         // first check the disk isn't full
-                        struct statvfs vfsbuf;
-                        if (!statvfs(filename, &vfsbuf))
-                        {
-                            const int64_t free_mb = ((vfsbuf.f_frsize * vfsbuf.f_bavail) >> 20);
-                            if (free_mb < 100)
-                            {
-                                dt_print(DT_DEBUG_ALWAYS,
-                                         "[mipmap_cache] aborting image write as only %" PRId64
-                                         " MB free to write %s",
-                                         free_mb, filename);
-                                goto write_error;
-                            }
-                        }
-                        else
+#ifdef _WIN32
+                        const gunichar2 *wide_filename = g_utf8_to_utf16(filename, -1, NULL, NULL, NULL);
+                        ULARGE_INTEGER available_bytes = {0};
+                        const gboolean have_free_space =
+                            wide_filename
+                            && GetDiskFreeSpaceExW((LPCWSTR)wide_filename, &available_bytes, NULL, NULL);
+                        g_free((gpointer)wide_filename);
+                        if (!have_free_space)
                         {
                             dt_print(
                                 DT_DEBUG_ALWAYS,
                                 "[mipmap_cache] aborting image write since couldn't determine free space available to write %s",
                                 filename);
+                            goto write_error;
+                        }
+                        const int64_t free_mb = (int64_t)(available_bytes.QuadPart >> 20);
+#else
+                        struct statvfs vfsbuf;
+                        if (statvfs(filename, &vfsbuf))
+                        {
+                            dt_print(
+                                DT_DEBUG_ALWAYS,
+                                "[mipmap_cache] aborting image write since couldn't determine free space available to write %s",
+                                filename);
+                            goto write_error;
+                        }
+                        const int64_t free_mb = ((vfsbuf.f_frsize * vfsbuf.f_bavail) >> 20);
+#endif
+                        if (free_mb < 100)
+                        {
+                            dt_print(DT_DEBUG_ALWAYS,
+                                     "[mipmap_cache] aborting image write as only %" PRId64
+                                     " MB free to write %s",
+                                     free_mb, filename);
                             goto write_error;
                         }
 
@@ -1067,7 +1086,7 @@ void dt_mipmap_cache_get_with_caller(dt_mipmap_buffer_t *buf, const dt_imgid_t i
             dsc = (dt_mipmap_buffer_dsc_t *)buf->cache_entry->data;
         }
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(_WIN32)
         const pthread_t writer = dt_pthread_rwlock_get_writer(&(buf->cache_entry->lock));
         if (mode == 'w')
         {

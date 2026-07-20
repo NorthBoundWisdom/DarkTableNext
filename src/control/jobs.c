@@ -558,7 +558,7 @@ static void *_control_worker_kicker(void *ptr)
     dt_pthread_setname("kicker");
     while (dt_control_running())
     {
-        sleep(2);
+        g_usleep(2 * G_USEC_PER_SEC);
         dt_pthread_mutex_lock(&control->cond_mutex);
         pthread_cond_broadcast(&control->cond);
         dt_pthread_mutex_unlock(&control->cond_mutex);

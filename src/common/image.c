@@ -47,7 +47,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#ifndef _MSC_VER
 #include <glob.h>
+#endif
 #include <glib/gstdio.h>
 
 typedef struct dt_undo_monochrome_t
@@ -1453,6 +1455,59 @@ GList *dt_image_find_duplicates(const char *filename)
     const size_t gp_len = strlen(glob_pattern);
     if (fn_len + gp_len + xmp_len < sizeof(pattern)) // enough space to build pattern?
     {
+#ifdef _MSC_VER
+        // MSVC has no POSIX glob(). Restrict the directory scan to the same
+        // pattern as the Unix path: the original basename, an underscore,
+        // at least two ASCII digits, then the original extension and .xmp.
+        gchar *directory = g_path_get_dirname(filename);
+        gchar *basename = g_path_get_basename(filename);
+        const char *basename_ext = strrchr(basename, '.');
+        if (!basename_ext)
+            basename_ext = basename + strlen(basename);
+
+        const size_t basename_stem_len = basename_ext - basename;
+        const size_t basename_ext_len = strlen(basename_ext);
+        const size_t basename_len = strlen(basename);
+        const size_t suffix_len = basename_ext_len + xmp_len;
+        gchar *filename_prefix = g_strndup(filename, fn_len - basename_len);
+        GDir *dir = g_dir_open(directory, 0, NULL);
+
+        if (dir)
+        {
+            const gchar *entry = NULL;
+            while ((entry = g_dir_read_name(dir)))
+            {
+                const size_t entry_len = strlen(entry);
+                if (entry_len < basename_stem_len + 3 + suffix_len
+                    || strncmp(entry, basename, basename_stem_len)
+                    || entry[basename_stem_len] != '_')
+                    continue;
+
+                const char *digits = entry + basename_stem_len + 1;
+                const char *digits_end = entry + entry_len - suffix_len;
+                if (memcmp(digits_end, basename_ext, basename_ext_len)
+                    || memcmp(digits_end + basename_ext_len, xmp, xmp_len))
+                    continue;
+
+                gboolean valid = TRUE;
+                for (const char *digit = digits; digit < digits_end; digit++)
+                {
+                    if (!g_ascii_isdigit(*digit))
+                    {
+                        valid = FALSE;
+                        break;
+                    }
+                }
+                if (valid)
+                    files = g_list_prepend(files, g_strconcat(filename_prefix, entry, NULL));
+            }
+            g_dir_close(dir);
+        }
+
+        g_free(filename_prefix);
+        g_free(basename);
+        g_free(directory);
+#else
         // add GLOB.ext.xmp to the root of the basename
         g_strlcpy(pattern + ext_offset, glob_pattern, sizeof(pattern) - fn_len);
         g_strlcpy(pattern + ext_offset + gp_len, ext, sizeof(pattern) - ext_offset - gp_len);
@@ -1471,6 +1526,7 @@ GList *dt_image_find_duplicates(const char *filename)
             }
             globfree(&globbuf);
         }
+#endif
     }
     // we built the list in reverse order for speed, so un-reverse it
     return g_list_reverse(files);

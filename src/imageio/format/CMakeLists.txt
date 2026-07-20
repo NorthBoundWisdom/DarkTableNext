@@ -4,8 +4,13 @@ include_directories(SYSTEM "${PNG_PNG_INCLUDE_DIR}")
 
 include(manage-symbol-visibility)
 
-add_definitions(-include common/module_api.h)
-add_definitions(-include imageio/format/imageio_format_api.h)
+if(MSVC)
+  add_compile_options("/FI${CMAKE_SOURCE_DIR}/src/common/module_api.h"
+                      "/FI${CMAKE_SOURCE_DIR}/src/imageio/format/imageio_format_api.h")
+else()
+  add_definitions(-include common/module_api.h)
+  add_definitions(-include imageio/format/imageio_format_api.h)
+endif()
 
 set(MODULES copy jpeg png tiff)
 

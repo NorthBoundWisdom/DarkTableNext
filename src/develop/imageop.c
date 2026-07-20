@@ -221,8 +221,14 @@ void dt_iop_default_init(dt_iop_module_t *module)
         switch (i->header.type)
         {
         case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
+#if defined(DT_MSVC_NO_C99_COMPLEX)
+            *(dt_introspection_float_complex_value_t *)((uint8_t *)module->default_params
+                                                         + i->header.offset) =
+                i->FloatComplex.Default;
+#else
             *(float complex *)((uint8_t *)module->default_params + i->header.offset) =
                 i->FloatComplex.Default;
+#endif
             break;
         case DT_INTROSPECTION_TYPE_FLOAT:
             *(float *)((uint8_t *)module->default_params + i->header.offset) = i->Float.Default;
@@ -1799,10 +1805,20 @@ gboolean _iop_validate_params(dt_introspection_field_t *field, gpointer params,
                                  field->Char.Max, field->Char.Default);
         break;
     case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
+#if defined(DT_MSVC_NO_C99_COMPLEX)
+    {
+        const dt_introspection_float_complex_value_t *const value = p;
+        all_ok = value->real >= field->FloatComplex.Min.real
+                 && value->real <= field->FloatComplex.Max.real
+                 && value->imaginary >= field->FloatComplex.Min.imaginary
+                 && value->imaginary <= field->FloatComplex.Max.imaginary;
+    }
+#else
         all_ok = creal(*(float complex *)p) >= creal(field->FloatComplex.Min) &&
                  creal(*(float complex *)p) <= creal(field->FloatComplex.Max) &&
                  cimag(*(float complex *)p) >= cimag(field->FloatComplex.Min) &&
                  cimag(*(float complex *)p) <= cimag(field->FloatComplex.Max);
+#endif
         break;
     case DT_INTROSPECTION_TYPE_ENUM:
         all_ok = FALSE;

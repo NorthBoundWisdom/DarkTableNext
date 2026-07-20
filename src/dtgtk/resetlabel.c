@@ -49,12 +49,12 @@ GtkWidget *dtgtk_reset_label_new(const gchar *text, dt_iop_module_t *module, voi
     GtkDarktableResetLabel *label;
     label = g_object_new(dtgtk_reset_label_get_type(), NULL);
     label->module = module;
-    label->offset = param - (void *)module->params;
+    label->offset = (char *)param - (char *)module->params;
     label->size = param_size;
 
     if (label->offset < 0 || label->offset + label->size > module->params_size)
     {
-        label->offset = param - (void *)module->default_params;
+        label->offset = (char *)param - (char *)module->default_params;
         if (label->offset < 0 || label->offset + label->size > module->params_size)
             dt_print(DT_DEBUG_ALWAYS, "[dtgtk_reset_label_new] reference outside %s params",
                      module->so->op);

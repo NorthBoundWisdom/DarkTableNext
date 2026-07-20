@@ -554,7 +554,7 @@ static inline float CCT_reverse_lookup(const float x, const float y)
 
     static const float T_min = 1667.f;
     static const float T_max = 25000.f;
-    static const float T_range = T_max - T_min;
+    const float T_range = T_max - T_min;
     static const size_t LUT_samples = 1 << 16;
 
     struct pair min_radius = {FLT_MAX, 0.0f};

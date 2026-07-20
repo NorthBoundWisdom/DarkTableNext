@@ -27,6 +27,10 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 static inline int _nb_ctrl_point(void)
 {
     return 6;

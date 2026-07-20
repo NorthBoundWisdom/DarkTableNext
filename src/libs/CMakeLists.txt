@@ -2,8 +2,13 @@ include_directories("${DARKTABLE_BINDIR}/")
 
 include(manage-symbol-visibility)
 
-add_definitions(-include common/module_api.h)
-add_definitions(-include libs/lib_api.h)
+if(MSVC)
+  add_compile_options("/FI${CMAKE_SOURCE_DIR}/src/common/module_api.h"
+                      "/FI${CMAKE_SOURCE_DIR}/src/libs/lib_api.h")
+else()
+  add_definitions(-include common/module_api.h)
+  add_definitions(-include libs/lib_api.h)
+endif()
 
 # The modules
 set(MODULES import export copy_history styles tagging image select collect recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks duplicate ioporder)

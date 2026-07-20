@@ -37,7 +37,6 @@
 #include "gui/context_menu.h"
 #include "iop/iop_api.h"
 
-#include <regex.h>
 #include <assert.h>
 #include <gtk/gtk.h>
 #include <inttypes.h>

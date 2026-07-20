@@ -38,7 +38,7 @@
 #endif
 
 #ifdef _WIN32
-#include <exchndl.h>
+#include <windows.h>
 #endif //_WIN32
 
 #if defined(__linux__) && !defined(PR_SET_PTRACER)
@@ -137,48 +137,31 @@ static LONG WINAPI dt_toplevel_exception_handler(PEXCEPTION_POINTERS pExceptionI
 {
     gchar *name_used;
     int fout;
-    BOOL ok;
 
     // Find a filename for the backtrace file
     if ((fout = g_file_open_tmp("darktable_bt_XXXXXX.txt", &name_used, NULL)) == -1)
         fout = STDOUT_FILENO; // just print everything to stdout
 
     FILE *fd = fdopen(fout, "wb");
-    fprintf(fd, "this is %s reporting an exception:\n\n", darktable_package_string);
+    fprintf(fd, "this is %s reporting an unhandled exception.\n", darktable_package_string);
     fclose(fd);
 
     if (fout != STDOUT_FILENO)
         close(fout);
 
-    // Set up logfile name
-    ok = ExcHndlSetLogFileNameA(name_used);
-    if (!ok)
-    {
-        g_printerr("backtrace logfile cannot be set to %s\n", name_used);
-    }
-    else
-    {
-        gchar *exception_message =
-            g_strdup_printf("An unhandled exception occurred.\nBacktrace will be written to: %s "
-                            "after you click on the OK button.\nIf you report this issue, "
-                            "please share this backtrace with the developers.\n",
-                            name_used);
-        wchar_t *wexception_message = g_utf8_to_utf16(exception_message, -1, NULL, NULL, NULL);
+    gchar *exception_message =
+        g_strdup_printf("An unhandled exception occurred.\nDetails were written to: %s\n", name_used);
+    wchar_t *wexception_message = g_utf8_to_utf16(exception_message, -1, NULL, NULL, NULL);
+    if (wexception_message)
         MessageBoxW(0, wexception_message, L"Error!", MB_OK);
-        g_free(exception_message);
-        g_free(wexception_message);
-    }
+    g_free(exception_message);
+    g_free(wexception_message);
 
     g_free(name_used);
 
-    // finally call the original exception handler (which should be drmingw's exception handler)
-    return _dt_exceptionfilter_old_handler(pExceptionInfo);
-}
-
-void dt_set_unhandled_exception_handler_win()
-{
-    // Set up drming's exception handler
-    ExcHndlInit();
+    if (_dt_exceptionfilter_old_handler)
+        return _dt_exceptionfilter_old_handler(pExceptionInfo);
+    return EXCEPTION_CONTINUE_SEARCH;
 }
 #endif // defined(_WIN32)
 
@@ -232,7 +215,7 @@ void dt_set_signal_handlers()
     }
 #elif !defined(__APPLE__)
     /*
-  Set up exception handler for backtrace on Windows
+  Set up exception handler for an exception report on Windows
   Works when there is NO SIGSEGV handler installed
 
   SetUnhandledExceptionFilter handler must be saved on the first invocation as GraphicsMagick
@@ -240,11 +223,9 @@ void dt_set_signal_handlers()
   Eventually InitializeMagick() should be fixed upstream not to ignore existing exception handlers
   */
 
-    dt_set_unhandled_exception_handler_win();
     if (1 == _times_handlers_were_set)
     {
-        // Save UnhandledExceptionFilter handler which just has been set up
-        // This should be drmingw's exception handler
+        // Save the original unhandled exception filter before installing ours.
         _dt_exceptionfilter_old_handler =
             SetUnhandledExceptionFilter(dt_toplevel_exception_handler);
     }

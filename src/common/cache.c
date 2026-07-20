@@ -149,7 +149,7 @@ restart:
         cache->lru = g_list_concat(cache->lru, entry->link);
         dt_pthread_mutex_unlock(&cache->lock);
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(_WIN32)
         const pthread_t writer = dt_pthread_rwlock_get_writer(&entry->lock);
         if (mode == 'w')
         {

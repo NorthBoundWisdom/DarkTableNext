@@ -24,7 +24,6 @@
 #include "control/control.h"
 #include <glib.h>   // for GList, gpointer, g_list_prepend
 #include <stdlib.h> // for NULL, malloc, free
-#include <sys/time.h>
 
 const double MAX_TIME_PERIOD = 0.5; // in second
 

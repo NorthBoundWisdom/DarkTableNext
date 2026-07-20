@@ -514,7 +514,7 @@ static inline void dt_vector_log2(const dt_aligned_pixel_t x, dt_aligned_pixel_t
     {
         float f[4];
         uint32_t i[4];
-    } mant, vx = {.f = {x[0], x[1], x[2], x[3]}};
+    } mant = {{ 0.0f }}, vx = {{ x[0], x[1], x[2], x[3] }};
     dt_aligned_pixel_t exp;
     for_four_channels(c)
     {

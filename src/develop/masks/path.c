@@ -28,6 +28,10 @@
 #include "develop/openmp_maths.h"
 #include <assert.h>
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 static void _path_bounding_box_raw(const float *const points, const float *border,
                                    const int nb_corner, const int num_points, const int num_borders,
                                    float *x_min, float *x_max, float *y_min, float *y_max);

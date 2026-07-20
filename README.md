@@ -39,6 +39,9 @@ Windows bootstrap 使用 Visual Studio 的 x64 开发者环境和
 C:\OpenSource\vcpkg\vcpkg.exe install "libxml2[tools]:x64-windows" "libxslt[tools]:x64-windows" gtk3:x64-windows pthreads:x64-windows
 ```
 
+Microsoft C does not implement C99 complex arithmetic. The MSVC bootstrap therefore omits the
+optional Liquify IOP; choosing FDC for X-Trans input uses the existing Markesteijn fallback.
+
 外部源码不使用临时 CMake 下载或复制进仓库的 vendored 副本，而由 FreeCM 和
 `source_roots.lock.jsonc.in` 统一管理。
 

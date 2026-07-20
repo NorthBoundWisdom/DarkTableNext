@@ -207,8 +207,8 @@ static uint8_t *_make_thumb_jpeg(const uint8_t *src_jpeg, const int src_len, int
                        sh :
                        (sh * DNG_THUMB_MAX_DIM + long_edge / 2) / long_edge;
 
-    uint8_t *small = dt_alloc_align_uint8((size_t)4 * dw * dh);
-    if (!small)
+    uint8_t *thumbnail_pixels = dt_alloc_align_uint8((size_t)4 * dw * dh);
+    if (!thumbnail_pixels)
     {
         dt_free_align(rgbx);
         return NULL;
@@ -234,7 +234,7 @@ static uint8_t *_make_thumb_jpeg(const uint8_t *src_jpeg, const int src_len, int
                 }
             if (n == 0)
                 n = 1;
-            uint8_t *dst = small + 4 * ((size_t)y * dw + x);
+            uint8_t *dst = thumbnail_pixels + 4 * ((size_t)y * dw + x);
             dst[0] = (uint8_t)(r / n);
             dst[1] = (uint8_t)(g / n);
             dst[2] = (uint8_t)(b / n);
@@ -247,11 +247,12 @@ static uint8_t *_make_thumb_jpeg(const uint8_t *src_jpeg, const int src_len, int
     uint8_t *jpeg = g_try_malloc(max_out);
     if (!jpeg)
     {
-        dt_free_align(small);
+        dt_free_align(thumbnail_pixels);
         return NULL;
     }
-    const int written = dt_imageio_jpeg_compress(small, jpeg, dw, dh, DNG_THUMB_JPEG_QUALITY);
-    dt_free_align(small);
+    const int written =
+        dt_imageio_jpeg_compress(thumbnail_pixels, jpeg, dw, dh, DNG_THUMB_JPEG_QUALITY);
+    dt_free_align(thumbnail_pixels);
     if (written <= 0 || written > (int)max_out)
     {
         g_free(jpeg);

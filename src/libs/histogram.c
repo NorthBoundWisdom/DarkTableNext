@@ -770,12 +770,14 @@ void gui_init(dt_lib_module_t *self)
     // red/green/blue channel on/off
     for (int i = DT_SCOPES_RGB_RED; i < DT_SCOPES_RGB_N; i++)
     {
-        g_autofree char *name = g_strdup_printf("%s-channel-button", rgb_names[i]);
-        g_autofree char *tip = g_strdup_printf(_("toggle %s channel"), _(rgb_names[i]));
+        char *name = g_strdup_printf("%s-channel-button", rgb_names[i]);
+        char *tip = g_strdup_printf(_("toggle %s channel"), _(rgb_names[i]));
         GtkWidget *btn = dtgtk_togglebutton_new(dtgtk_cairo_paint_color, CPF_NONE, NULL);
         dt_gui_add_class(btn, "rgb_toggle");
         gtk_widget_set_name(btn, name);
         gtk_widget_set_tooltip_text(btn, tip);
+        g_free(name);
+        g_free(tip);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btn), s->channels[i]);
         dt_action_define(dark, N_("toggle colors"), rgb_names[i], btn, &dt_action_def_toggle);
         dt_gui_box_add(s->button_box_rgb, btn);

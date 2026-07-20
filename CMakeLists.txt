@@ -54,8 +54,13 @@ endif()
 
 if(MSVC)
   add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h" /EHsc /Zc:preprocessor
-                      "$<$<COMPILE_LANGUAGE:C>:/std:c11>")
+                      /utf-8
+                      "$<$<COMPILE_LANGUAGE:C>:/std:c11>"
+                      "$<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>")
   add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
+  if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    add_compile_definitions(DT_MSVC_NO_C99_COMPLEX)
+  endif()
 endif()
 
 include(DefineOptions.cmake)
@@ -310,6 +315,7 @@ add_subdirectory(data "${DARKTABLE_DATADIR}")
 # FreeCM owns the final macOS deployment step.  Prepare a clean staging prefix
 # through the normal install graph first, then hand its native application
 # bundle to the generic (non-Qt) macOS packager.
+if(APPLE)
 set(DARKTABLE_PACKAGE_ROOT "${CMAKE_BINARY_DIR}/package")
 set(DARKTABLE_PACKAGE_STAGE "${DARKTABLE_PACKAGE_ROOT}/stage")
 set(DARKTABLE_PACKAGE_DIST_DIR "${DARKTABLE_PACKAGE_ROOT}/dist")
@@ -369,6 +375,7 @@ configure_file(
     @ONLY)
 install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/macos_bundle_install.cmake"
         COMPONENT DTApplication)
+endif()
 
 # uninstall target
 configure_file(

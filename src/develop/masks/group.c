@@ -23,6 +23,10 @@
 #include "develop/imageop.h"
 #include "develop/masks.h"
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 static int _group_events_mouse_scrolled(dt_iop_module_t *module, const float pzx, const float pzy,
                                         const int up, const uint32_t state, dt_masks_form_t *form,
                                         const int unused1, dt_masks_form_gui_t *gui,

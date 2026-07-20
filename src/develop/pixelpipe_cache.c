@@ -40,11 +40,12 @@ gboolean dt_dev_pixelpipe_cache_init(dt_dev_pixelpipe_t *pipe, const int entries
     const size_t csize = sizeof(void *) + sizeof(size_t) + sizeof(dt_iop_buffer_dsc_t) +
                          2 * sizeof(int32_t) + sizeof(uint64_t);
     cache->data = (void **)calloc(entries, csize);
-    cache->size = (size_t *)((void *)cache->data + entries * sizeof(void *));
-    cache->dsc = (dt_iop_buffer_dsc_t *)((void *)cache->size + entries * sizeof(size_t));
-    cache->hash = (dt_hash_t *)((void *)cache->dsc + entries * sizeof(dt_iop_buffer_dsc_t));
-    cache->used = (int32_t *)((void *)cache->hash + entries * sizeof(dt_hash_t));
-    cache->ioporder = (int32_t *)((void *)cache->used + entries * sizeof(int32_t));
+    char *const cache_memory = (char *)cache->data;
+    cache->size = (size_t *)(cache_memory + entries * sizeof(void *));
+    cache->dsc = (dt_iop_buffer_dsc_t *)((char *)cache->size + entries * sizeof(size_t));
+    cache->hash = (dt_hash_t *)((char *)cache->dsc + entries * sizeof(dt_iop_buffer_dsc_t));
+    cache->used = (int32_t *)((char *)cache->hash + entries * sizeof(dt_hash_t));
+    cache->ioporder = (int32_t *)((char *)cache->used + entries * sizeof(int32_t));
 
     for (int k = 0; k < entries; k++)
     {

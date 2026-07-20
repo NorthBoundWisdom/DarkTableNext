@@ -86,22 +86,13 @@ using namespace std;
 // For these models we can't calculate the correct crop factor or, for some we could, but we
 // prefer to take it from here, rather than complicate the calculation code with exceptions
 static const struct dt_model_cropfactor dt_cropfactors[] = {
-    {.model =
-         "Canon EOS 5D Mark IV", // tags contain incorrect data, so formula gives us incorrect result
-     .cropfactor = 1.0f},
-    {.model =
-         "Canon EOS 6D Mark II", // tags contain incorrect data, so formula gives us incorrect result
-     .cropfactor = 1.0f},
-    {.model = "FinePix SL1000", // exiv2 doesn't yet read the tags we need to calculate correctly
-     .cropfactor = 5.6f},
-    {.model = "FinePix E550", // tags contain incorrect data, so formula gives us incorrect result
-     .cropfactor = 4.65f},
-    {.model = "XF10", // resolution was calculated relative to dimensions not typical of Fuji
-     .cropfactor = 1.5f},
-    {.model = "FinePix S1", // resolution was calculated relative to dimensions not typical of Fuji
-     .cropfactor = 5.6f},
-    {.model = "FinePix HS10 HS11", // calculation gives a slightly inaccurate result
-     .cropfactor = 5.64f},
+    {"Canon EOS 5D Mark IV", 1.0f}, // tags contain incorrect data, so formula gives us incorrect result
+    {"Canon EOS 6D Mark II", 1.0f}, // tags contain incorrect data, so formula gives us incorrect result
+    {"FinePix SL1000", 5.6f},       // exiv2 doesn't yet read the tags we need to calculate correctly
+    {"FinePix E550", 4.65f},        // tags contain incorrect data, so formula gives us incorrect result
+    {"XF10", 1.5f},                 // resolution was calculated relative to dimensions not typical of Fuji
+    {"FinePix S1", 5.6f},           // resolution was calculated relative to dimensions not typical of Fuji
+    {"FinePix HS10 HS11", 5.64f},   // calculation gives a slightly inaccurate result
 };
 
 // Persistent list of Exiv2 tags. Set up in dt_init().

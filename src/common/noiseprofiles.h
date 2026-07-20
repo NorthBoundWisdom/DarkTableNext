@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "common/darktable_api.h"
 #include "common/image.h"
 #include <glib.h>
 #include <json-glib/json-glib.h>
@@ -33,7 +34,7 @@ typedef struct dt_noiseprofile_t
     dt_aligned_pixel_t b; // gaussian part
 } dt_noiseprofile_t;
 
-extern const dt_noiseprofile_t dt_noiseprofile_generic;
+extern DT_CORE_API const dt_noiseprofile_t dt_noiseprofile_generic;
 
 /** read the noiseprofile file once on startup (kind of)*/
 JsonParser *dt_noiseprofile_init(const char *alternative);

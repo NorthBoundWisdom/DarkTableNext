@@ -40,9 +40,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#ifndef _WIN32
 #include <sys/file.h>
+#else
+#include <io.h>
+#include <windows.h>
+#endif
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define USE_NESTED_TRANSACTIONS
 #define MAX_NESTED_TRANSACTIONS 5
@@ -50,6 +56,45 @@
 static dt_atomic_int _trxid;
 static int _application_instance_lock_fd = -1;
 static gchar *_application_instance_lockfile = NULL;
+
+static int _application_instance_lock_acquire(const int fd)
+{
+#ifdef _WIN32
+    const intptr_t handle_value = _get_osfhandle(fd);
+    if (handle_value == -1)
+    {
+        errno = EBADF;
+        return -1;
+    }
+
+    OVERLAPPED overlapped = {0};
+    if (LockFileEx((HANDLE)handle_value, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY,
+                   0, MAXDWORD, MAXDWORD, &overlapped))
+        return 0;
+
+    const DWORD lock_error = GetLastError();
+    errno = (lock_error == ERROR_LOCK_VIOLATION || lock_error == ERROR_SHARING_VIOLATION) ?
+                EWOULDBLOCK :
+                EIO;
+    return -1;
+#else
+    return flock(fd, LOCK_EX | LOCK_NB);
+#endif
+}
+
+static void _application_instance_lock_release(const int fd)
+{
+#ifdef _WIN32
+    const intptr_t handle_value = _get_osfhandle(fd);
+    if (handle_value != -1)
+    {
+        OVERLAPPED overlapped = {0};
+        UnlockFileEx((HANDLE)handle_value, 0, MAXDWORD, MAXDWORD, &overlapped);
+    }
+#else
+    flock(fd, LOCK_UN);
+#endif
+}
 
 typedef struct dt_database_t
 {
@@ -937,7 +982,7 @@ static gboolean _lock_application_instance(dt_database_t *db)
         return FALSE;
     }
 
-    if (flock(fd, LOCK_EX | LOCK_NB) != 0)
+    if (_application_instance_lock_acquire(fd) != 0)
     {
         const int lock_errno = errno;
         if (lock_errno == EWOULDBLOCK || lock_errno == EAGAIN)
@@ -966,7 +1011,7 @@ static gboolean _lock_application_instance(dt_database_t *db)
     if (!wrote_pid)
     {
         const int write_errno = errno;
-        flock(fd, LOCK_UN);
+        _application_instance_lock_release(fd);
         close(fd);
         db->application_instance_lock_failed = TRUE;
         db->error_message = g_strdup_printf(_("cannot write application instance lock: %s"),
@@ -1129,7 +1174,7 @@ dt_database_t *dt_database_init(const char *alternative, const gboolean load_dat
 start:;
     /* lets construct the db filename  */
     gchar *dbname = NULL;
-    g_autofree gchar *dbfilename_library = NULL;
+    gchar *dbfilename_library = NULL;
     gchar datadir[PATH_MAX] = {0};
 
     dt_loc_get_user_config_dir(datadir, sizeof(datadir));
@@ -1156,7 +1201,7 @@ start:;
     }
 
     /* we also need a 2nd db with permanent data like presets, styles and tags */
-    g_autofree gchar *dbfilename_data = NULL;
+    gchar *dbfilename_data = NULL;
     if (load_data)
         dbfilename_data = g_build_filename(datadir, "data.db", NULL);
     else
@@ -1204,6 +1249,8 @@ start:;
         dt_print(DT_DEBUG_ALWAYS,
                  "[init] application instance lock is unavailable; aborting before database access");
         g_free(dbname);
+        g_free(dbfilename_data);
+        g_free(dbfilename_library);
         return db;
     }
 #endif
@@ -1236,6 +1283,8 @@ start:;
         dt_print(DT_DEBUG_ALWAYS,
                  "[init] database is locked, probably another process is already using it");
         g_free(dbname);
+        g_free(dbfilename_data);
+        g_free(dbfilename_library);
         return db;
     }
 
@@ -1256,6 +1305,8 @@ start:;
         g_free(db->lockfile_library);
         g_free(db->dbfilename_library);
         g_free(db);
+        g_free(dbfilename_data);
+        g_free(dbfilename_library);
         return NULL;
     }
 
@@ -1437,6 +1488,8 @@ start:;
             }
             g_free(data_snap);
             g_free(dbname);
+            g_free(dbfilename_data);
+            g_free(dbfilename_library);
             goto start;
         }
     }
@@ -1584,6 +1637,8 @@ start:;
         }
         g_free(data_snap);
         g_free(dbname);
+        g_free(dbfilename_data);
+        g_free(dbfilename_library);
         goto start;
     }
     else
@@ -1632,6 +1687,8 @@ start:;
     }
 error:
     g_free(dbname);
+    g_free(dbfilename_data);
+    g_free(dbfilename_library);
 
     return db;
 }
@@ -1707,7 +1764,7 @@ void dt_database_release_application_instance_lock()
 {
     if (_application_instance_lock_fd >= 0)
     {
-        flock(_application_instance_lock_fd, LOCK_UN);
+        _application_instance_lock_release(_application_instance_lock_fd);
         close(_application_instance_lock_fd);
         _application_instance_lock_fd = -1;
     }

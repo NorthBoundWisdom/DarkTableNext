@@ -41,6 +41,7 @@ typedef struct dt_iop_scalepixels_params_t
 
 typedef struct dt_iop_scalepixels_gui_data_t
 {
+    char unused;
 } dt_iop_scalepixels_gui_data_t;
 
 typedef struct dt_iop_scalepixels_data_t

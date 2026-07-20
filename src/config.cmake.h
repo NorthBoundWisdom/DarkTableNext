@@ -2,6 +2,7 @@
 #pragma once
 
 #include "build_runtime_config.h"
+#include "common/darktable_api.h"
 
 #include <stddef.h>
 
@@ -13,10 +14,17 @@
 #define PACKAGE_BUGREPORT PACKAGE_URL "/issues"
 #define PACKAGE_DOCS PACKAGE_URL
 
-// these will be defined in build/bin/version_gen.c
-extern const char darktable_package_version[];
-extern const char darktable_package_string[];
-extern const char darktable_last_commit_year[];
+// These are defined in build/bin/version_gen.c, which is compiled as C.
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+extern DT_CORE_API const char darktable_package_version[];
+extern DT_CORE_API const char darktable_package_string[];
+extern DT_CORE_API const char darktable_last_commit_year[];
+#ifdef __cplusplus
+}
+#endif
 
 static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUPPORTED_EXTENSIONS_STRING@", NULL};
 

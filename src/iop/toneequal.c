@@ -198,6 +198,7 @@ typedef struct dt_iop_toneequalizer_data_t
 typedef struct dt_iop_toneequalizer_global_data_t
 {
     // TODO: put OpenCL kernels here at some point
+    char unused;
 } dt_iop_toneequalizer_global_data_t;
 
 typedef struct dt_iop_toneequalizer_gui_data_t

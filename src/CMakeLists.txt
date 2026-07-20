@@ -166,8 +166,14 @@ FILE(GLOB SOURCE_FILES
 
 FILE(GLOB HEADER_FILES "*.h" "common/*.h" "${OPENCL_PATH}/CL/*.h" "control/*.h" "gui/*.h" "iop/*.h" "libs/*.h" "views/*.h")
 
-list(APPEND SOURCE_FILES "osx/osx.c" "common/pwstorage/backend_apple_keychain.c" "main.c")
-list(APPEND HEADER_FILES "osx/osx.h" "common/pwstorage/backend_apple_keychain.h")
+list(APPEND SOURCE_FILES "main.c")
+if(APPLE)
+  list(APPEND SOURCE_FILES "osx/osx.c" "common/pwstorage/backend_apple_keychain.c")
+  list(APPEND HEADER_FILES "osx/osx.h" "common/pwstorage/backend_apple_keychain.h")
+elseif(WIN32)
+  list(APPEND SOURCE_FILES "common/win_file_trash.c")
+  list(APPEND HEADER_FILES "common/win_file_trash.h")
+endif()
 
 set(SOURCES ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -182,7 +188,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-set(CMAKE_CXX_STANDARD 17)
+if(MSVC)
+  set(CMAKE_CXX_STANDARD 20)
+else()
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -199,6 +209,7 @@ list(APPEND LIBS "${CMAKE_THREAD_LIBS_INIT}")
 if(WIN32)
   find_package(PThreads4W CONFIG REQUIRED)
   list(APPEND LIBS PThreads4W::PThreads4W)
+  list(APPEND LIBS psapi)
 endif()
 
 # libm is part of libSystem on macOS. Other platforms may still require an
@@ -324,7 +335,9 @@ endif()
 #
 # Detect compile of optional pwstorage backends
 #
-add_definitions("-DHAVE_APPLE_KEYCHAIN")
+if(APPLE)
+  add_definitions("-DHAVE_APPLE_KEYCHAIN")
+endif()
 
 find_package(ICU REQUIRED COMPONENTS i18n data uc)
 add_definitions(-DSQLITE_CORE -DSQLITE_ENABLE_ICU)
@@ -501,10 +514,19 @@ add_dependencies(lib_darktable generate_styles_string)
 add_dependencies(lib_darktable generate_conf)
 add_dependencies(lib_darktable generate_version)
 add_dependencies(lib_darktable generate_preferences)
+target_compile_definitions(lib_darktable PRIVATE DT_LIB_DARKTABLE_BUILD)
 
 set_target_properties(lib_darktable PROPERTIES MACOSX_RPATH TRUE INSTALL_RPATH "${RPATH_ORIGIN}")
 set_target_properties(lib_darktable PROPERTIES OUTPUT_NAME darktable)
 set_target_properties(lib_darktable PROPERTIES LINKER_LANGUAGE C)
+if(MSVC)
+  # The executable is also named darktable. Keep the core DLL name stable while
+  # giving its import library a distinct name on Windows. Unix exports the core
+  # API by default; ask CMake to generate the equivalent MSVC export definition.
+  set_target_properties(lib_darktable PROPERTIES
+                        ARCHIVE_OUTPUT_NAME darktable_core
+                        WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
 
 #
 # Link external libs
@@ -522,9 +544,17 @@ unset(LIBS)
 unset(STATIC_LIBS)
 unset(LIB_DEPS)
 
-add_library(lib_darktable_imageio_rawspeed STATIC imageio/imageio_rawspeed.cc)
-target_link_libraries(lib_darktable_imageio_rawspeed PRIVATE rawspeed)
-target_link_libraries(lib_darktable PRIVATE lib_darktable_imageio_rawspeed)
+if(MSVC)
+  # CMake's automatic Windows export definition only scans objects owned by the
+  # DLL target, not objects pulled from a static archive. This wrapper is part
+  # of the module ABI, so compile it directly into the core DLL on MSVC.
+  target_sources(lib_darktable PRIVATE imageio/imageio_rawspeed.cc)
+  target_link_libraries(lib_darktable PRIVATE rawspeed)
+else()
+  add_library(lib_darktable_imageio_rawspeed STATIC imageio/imageio_rawspeed.cc)
+  target_link_libraries(lib_darktable_imageio_rawspeed PRIVATE rawspeed)
+  target_link_libraries(lib_darktable PRIVATE lib_darktable_imageio_rawspeed)
+endif()
 
 #
 # Install lib_darktable
@@ -551,56 +581,65 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif(BUILD_TESTING)
 
-#
 # build darktable executable
-#
-set(DARKTABLE_APP_BUNDLE_DIR "${DARKTABLE_BINDIR}/darktable.app")
-set(DARKTABLE_APP_RESOURCES_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Resources")
-set(DARKTABLE_APP_FRAMEWORKS_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Frameworks")
-set(DARKTABLE_LAUNCHER "${DARKTABLE_BINDIR}/darktable")
-set(DARKTABLE_APP_ICON_FILE "darktable.icns")
-set(DARKTABLE_APP_ICON_SOURCE "${CMAKE_SOURCE_DIR}/data/pixmaps/macos/${DARKTABLE_APP_ICON_FILE}")
-get_filename_component(DARKTABLE_APP_LIBRARY_ROOT "${DARKTABLE_LIBDIR}/.." ABSOLUTE)
-get_filename_component(DARKTABLE_APP_SHARE_ROOT "${DARKTABLE_DATADIR}/.." ABSOLUTE)
+if(APPLE)
+  set(DARKTABLE_APP_BUNDLE_DIR "${DARKTABLE_BINDIR}/darktable.app")
+  set(DARKTABLE_APP_RESOURCES_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Resources")
+  set(DARKTABLE_APP_FRAMEWORKS_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Frameworks")
+  set(DARKTABLE_LAUNCHER "${DARKTABLE_BINDIR}/darktable")
+  set(DARKTABLE_APP_ICON_FILE "darktable.icns")
+  set(DARKTABLE_APP_ICON_SOURCE "${CMAKE_SOURCE_DIR}/data/pixmaps/macos/${DARKTABLE_APP_ICON_FILE}")
+  get_filename_component(DARKTABLE_APP_LIBRARY_ROOT "${DARKTABLE_LIBDIR}/.." ABSOLUTE)
+  get_filename_component(DARKTABLE_APP_SHARE_ROOT "${DARKTABLE_DATADIR}/.." ABSOLUTE)
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-macos-Info.plist.in"
-               "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist" @ONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-launcher.in" "${DARKTABLE_LAUNCHER}" @ONLY)
-file(CHMOD "${DARKTABLE_LAUNCHER}"
-     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-macos-Info.plist.in"
+                  "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist" @ONLY)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-launcher.in" "${DARKTABLE_LAUNCHER}" @ONLY)
+  file(CHMOD "${DARKTABLE_LAUNCHER}"
+       PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-set_source_files_properties("${DARKTABLE_APP_ICON_SOURCE}" PROPERTIES
-                            MACOSX_PACKAGE_LOCATION "Resources")
-add_executable(darktable MACOSX_BUNDLE main.c "${DARKTABLE_APP_ICON_SOURCE}")
-set_target_properties(darktable PROPERTIES
-                      LINKER_LANGUAGE C
-                      MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist"
-                      MACOSX_BUNDLE_ICON_FILE "${DARKTABLE_APP_ICON_FILE}"
-                      RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_BINDIR}")
-set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Security -framework CoreFoundation")
+  set_source_files_properties("${DARKTABLE_APP_ICON_SOURCE}" PROPERTIES
+                              MACOSX_PACKAGE_LOCATION "Resources")
+  add_executable(darktable MACOSX_BUNDLE main.c "${DARKTABLE_APP_ICON_SOURCE}")
+  set_target_properties(darktable PROPERTIES
+                        LINKER_LANGUAGE C
+                        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist"
+                        MACOSX_BUNDLE_ICON_FILE "${DARKTABLE_APP_ICON_FILE}"
+                        RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_BINDIR}")
+  set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Security -framework CoreFoundation")
+else()
+  add_executable(darktable main.c)
+  set_target_properties(darktable PROPERTIES
+                        LINKER_LANGUAGE C
+                        RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_BINDIR}")
+endif()
 target_link_libraries(darktable lib_darktable)
-# The installed application loads its core library from the same bundle.  The
-# relative module rpaths keep their existing layout when lib/darktable is
-# copied below Contents/Resources by macos_bundle_install.cmake.in.
-set_target_properties(darktable PROPERTIES
-                      INSTALL_RPATH "${RPATH_ORIGIN}/../Resources/lib/darktable")
+if(APPLE)
+  # The installed application loads its core library from the same bundle.  The
+  # relative module rpaths keep their existing layout when lib/darktable is
+  # copied below Contents/Resources by macos_bundle_install.cmake.in.
+  set_target_properties(darktable PROPERTIES
+                        INSTALL_RPATH "${RPATH_ORIGIN}/../Resources/lib/darktable")
 
-add_custom_command(TARGET darktable POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/lib"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/share"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
-  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_LIBRARY_ROOT}"
-          "${DARKTABLE_APP_RESOURCES_DIR}/lib"
-  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_SHARE_ROOT}"
-          "${DARKTABLE_APP_RESOURCES_DIR}/share"
-  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_BINDIR}/libdarktable.dylib"
-          "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
-  COMMENT "Assembling macOS application bundle"
-)
+  add_custom_command(TARGET darktable POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/lib"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/share"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_LIBRARY_ROOT}"
+            "${DARKTABLE_APP_RESOURCES_DIR}/lib"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_SHARE_ROOT}"
+            "${DARKTABLE_APP_RESOURCES_DIR}/share"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_BINDIR}/libdarktable.dylib"
+            "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
+    COMMENT "Assembling macOS application bundle"
+  )
 
-install(TARGETS darktable BUNDLE DESTINATION . COMPONENT DTApplication)
+  install(TARGETS darktable BUNDLE DESTINATION . COMPONENT DTApplication)
+else()
+  install(TARGETS darktable RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
+endif()
 
 
 dt_resolve_freecm_source_root(LIBRAW_PATH LIBRAW_SOURCE_ROOT LIBRAW_SOURCE_ROOT LibRaw libraw/libraw_version.h)

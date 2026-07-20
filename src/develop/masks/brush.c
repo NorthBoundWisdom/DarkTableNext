@@ -27,6 +27,10 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 #define HARDNESS_MIN 0.0005f
 #define HARDNESS_MAX 1.0f
 

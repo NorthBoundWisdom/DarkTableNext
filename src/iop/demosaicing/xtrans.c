@@ -545,10 +545,20 @@ static void xtrans_markesteijn_interpolate(float *out, const float *const in, co
 #undef TS
 
 #define TS DT_FDC_TS
+#if defined(DT_MSVC_NO_C99_COMPLEX)
 static void xtrans_fdc_interpolate(float *out, const float *const in, const int width,
                                    const int height, const uint8_t (*const xtrans)[6],
-                                   const int iso)
+                                   const int iso, const uint32_t filters)
 {
+    (void)iso;
+    xtrans_markesteijn_interpolate(out, in, width, height, xtrans, 3, filters);
+}
+#else
+static void xtrans_fdc_interpolate(float *out, const float *const in, const int width,
+                                   const int height, const uint8_t (*const xtrans)[6],
+                                   const int iso, const uint32_t filters)
+{
+    (void)filters;
     static const short orth[12] = {1, 0, 0, 1, -1, 0, 0, -1, 1, 0, 0, 1},
                        patt[2][16] = {{0, 1, 0, -1, 2, 0, -1, 0, 1, 1, 1, -1, 0, 0, 0, 0},
                                       {0, 1, 0, -2, 1, 0, -2, 0, 1, 1, -2, -2, 1, -1, -1, 1}},
@@ -1707,6 +1717,7 @@ static void xtrans_fdc_interpolate(float *out, const float *const in, const int 
     }
     dt_free_align(all_buffers);
 }
+#endif
 
 #undef PIX_SWAP
 #undef PIX_SORT

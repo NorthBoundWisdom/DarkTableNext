@@ -44,7 +44,9 @@
 
 #include <ctype.h>
 #include <errno.h>
+#ifndef _WIN32
 #include <libgen.h>
+#endif
 #include <sys/stat.h>
 #include <zlib.h>
 
@@ -2490,7 +2492,15 @@ static gboolean _opencl_build_program(const int dev, const int prog, const char 
             {
                 char dup[PATH_MAX] = {0};
                 g_strlcpy(dup, binname, sizeof(dup));
+#if defined(_WIN32)
+                char *bname = strrchr(dup, '/');
+                char *backslash = strrchr(dup, '\\');
+                if (!bname || (backslash && backslash > bname))
+                    bname = backslash;
+                bname = bname ? bname + 1 : dup;
+#else
                 char *bname = basename(dup);
+#endif
 
                 // save opencl compiled binary as md5sum-named file
                 char filename[PATH_MAX] = {0};

@@ -52,7 +52,10 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <glob.h>
+#ifdef _WIN32
+#include <windows.h>
+#include "common/win_file_trash.h"
+#endif
 #include "osx/osx.h"
 
 // Control of the collection updates during an import.  Start with a
@@ -2745,10 +2748,28 @@ static int _control_import_image_copy(const char *filename, char **prev_filename
     else
     {
 #ifdef _WIN32
-        struct utimbuf times;
-        times.actime = statbuf.st_atime;
-        times.modtime = statbuf.st_mtime;
-        utime(output, &times); // set origin file timestamps
+        gunichar2 *wide_output = g_utf8_to_utf16(output, -1, NULL, NULL, NULL);
+        HANDLE output_handle = wide_output ?
+                                   CreateFileW((LPCWSTR)wide_output, FILE_WRITE_ATTRIBUTES,
+                                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                               NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL) :
+                                   INVALID_HANDLE_VALUE;
+        g_free(wide_output);
+        if (output_handle != INVALID_HANDLE_VALUE)
+        {
+            const uint64_t windows_epoch_offset = 11644473600ULL;
+            const uint64_t ticks_per_second = 10000000ULL;
+            ULARGE_INTEGER access_value;
+            ULARGE_INTEGER modified_value;
+            access_value.QuadPart =
+                ((uint64_t)statbuf.st_atime + windows_epoch_offset) * ticks_per_second;
+            modified_value.QuadPart =
+                ((uint64_t)statbuf.st_mtime + windows_epoch_offset) * ticks_per_second;
+            FILETIME access_time = {access_value.LowPart, access_value.HighPart};
+            FILETIME modified_time = {modified_value.LowPart, modified_value.HighPart};
+            SetFileTime(output_handle, NULL, &access_time, &modified_time);
+            CloseHandle(output_handle);
+        }
 #else
         struct timeval times[2];
         times[0].tv_sec = statbuf.st_atime;

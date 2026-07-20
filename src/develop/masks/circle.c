@@ -26,6 +26,10 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 #define MIN_CIRCLE_RADIUS 0.0005f
 #define MIN_CIRCLE_BORDER 0.0005f
 

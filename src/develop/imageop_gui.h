@@ -31,6 +31,15 @@ GtkWidget *dt_bauhaus_toggle_from_params(dt_iop_module_t *self, const char *para
 // package dt_iop_module_t pointer and section name to pass to a _from_params function
 // it will then create a widget action in a section, rather than top level in the module
 // optionally pass a box to add the widgets to
+#if defined(_MSC_VER) && defined(__cplusplus)
+#define DT_IOP_SECTION_FOR_PARAMS_DECL(self, section, ...)                                         \
+    {                                                                                               \
+        .actions = DT_ACTION_TYPE_IOP_SECTION, .get_f = self->get_f, .module = (GModule *)self,    \
+        .params = self->params, .default_params = self->default_params,                            \
+        .gui_data = self->gui_data, .data = (void *)section,                                       \
+        .widget = __VA_OPT__(TRUE ? GTK_WIDGET(__VA_ARGS__) :) self->widget                        \
+    }
+#else
 #define DT_IOP_SECTION_FOR_PARAMS_DECL(self, section, ...)                                         \
     (dt_iop_module_t)                                                                              \
     {                                                                                              \
@@ -39,6 +48,7 @@ GtkWidget *dt_bauhaus_toggle_from_params(dt_iop_module_t *self, const char *para
         .gui_data = self->gui_data, .data = (void *)section,                                       \
         .widget = __VA_OPT__(TRUE ? GTK_WIDGET(__VA_ARGS__) :) self->widget                        \
     }
+#endif
 #define DT_IOP_SECTION_FOR_PARAMS(...) &DT_IOP_SECTION_FOR_PARAMS_DECL(__VA_ARGS__)
 
 GtkWidget *dt_iop_togglebutton_new(dt_iop_module_t *self, const char *section, const gchar *label,

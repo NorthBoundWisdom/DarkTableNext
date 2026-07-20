@@ -1925,7 +1925,7 @@ int process_cl(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, cl_mem dev_
     dt_opencl_release_mem_object(mask); // mask is only used for highlights reconstruction.
     mask = NULL;
 
-    const dt_iop_filmic_rgb_spline_t spline = (dt_iop_filmic_rgb_spline_t)d->spline;
+    const dt_iop_filmic_rgb_spline_t spline = d->spline;
 
     const float white_display = powf(spline.y[4], d->output_power);
     const float black_display = powf(spline.y[0], d->output_power);

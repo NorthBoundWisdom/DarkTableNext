@@ -109,6 +109,10 @@
 // implemented by Michael F. Hutt.
 #include "ashift_nmsimplex.c"
 
+#ifdef _MSC_VER
+#undef near
+#endif
+
 DT_MODULE_INTROSPECTION(5, dt_iop_ashift_params_t)
 
 const char *name()

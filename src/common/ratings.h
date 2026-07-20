@@ -37,6 +37,6 @@ void dt_ratings_apply_on_image(const dt_imgid_t imgid, const int rating,
 /** apply rating to all images in the list */
 void dt_ratings_apply_on_list(const GList *list, const int rating, const gboolean undo_on);
 
-extern const struct dt_action_def_t dt_action_def_rating;
+extern DT_CORE_API const struct dt_action_def_t dt_action_def_rating;
 
 G_END_DECLS

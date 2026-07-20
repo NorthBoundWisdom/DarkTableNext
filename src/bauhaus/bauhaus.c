@@ -1163,14 +1163,14 @@ void dt_bauhaus_update_from_field(dt_iop_module_t *module, GtkWidget *widget, gp
 
         if (params)
         {
-            int offset = field - module->params;
+            int offset = (char *)field - (char *)module->params;
             if (offset >= 0 && offset < module->params_size)
-                field = params + offset;
+                field = (char *)params + offset;
             else
             {
-                offset = field - (gpointer)module->blend_params;
+                offset = (char *)field - (char *)module->blend_params;
                 if (offset >= 0 && offset < sizeof(dt_develop_blend_params_t) && blend_params)
-                    field = blend_params + offset;
+                    field = (char *)blend_params + offset;
             }
         }
 
@@ -1508,7 +1508,7 @@ void dt_bauhaus_combobox_add_full(GtkWidget *widget, const char *text,
         return;
     dt_bauhaus_combobox_data_t *d = &w->combobox;
     if (!data && d->entries->len > 0 && !_combobox_entry(d, 0)->data)
-        data = _combobox_entry(d, d->entries->len - 1)->data + 1;
+        data = (char *)_combobox_entry(d, d->entries->len - 1)->data + 1;
     dt_bauhaus_combobox_entry_t *entry =
         _new_combobox_entry(text, align, sensitive, data, free_func);
     if (entry)

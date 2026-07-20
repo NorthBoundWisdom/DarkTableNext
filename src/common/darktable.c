@@ -76,11 +76,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef _WIN32
 #include <sys/param.h>
 #include <sys/types.h>
+#endif
 #include <unistd.h>
 #include <locale.h>
 #include <limits.h>
+
+#ifdef _WIN32
+#include <psapi.h>
+#endif
 
 #include <exiv2/exv_conf.h> // for EXV_PACKAGE_VERSION
 #include <lensfun.h>        // for lensfun library version macros
@@ -100,7 +106,7 @@
 #endif
 
 
-darktable_t darktable;
+DT_CORE_API darktable_t darktable;
 
 static int usage(const char *argv0)
 {

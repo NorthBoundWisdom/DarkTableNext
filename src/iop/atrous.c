@@ -1539,7 +1539,7 @@ static float _action_process_equalizer(gpointer target, const dt_action_element_
                 break;
             }
 
-            dt_dev_add_history_item_target(darktable.develop, self, TRUE, target + ch1);
+            dt_dev_add_history_item_target(darktable.develop, self, TRUE, (const char *)target + ch1);
         }
         else // radius
         {

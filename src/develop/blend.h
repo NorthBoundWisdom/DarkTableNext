@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "common/darktable_api.h"
 #include "common/iop_profile.h"
 #include "common/opencl.h"
 #include "develop/pixelpipe.h"
@@ -263,13 +264,13 @@ typedef struct dt_iop_gui_blendif_filter_t
     GtkBox *box;
 } dt_iop_gui_blendif_filter_t;
 
-extern const dt_introspection_type_enum_tuple_t dt_develop_blend_colorspace_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_flag_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_mask_mode_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_combine_masks_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_feathering_guide_names[];
-extern const dt_introspection_type_enum_tuple_t dt_develop_invert_mask_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_blend_colorspace_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_blend_mode_flag_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_mask_mode_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_combine_masks_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_feathering_guide_names[];
+extern DT_CORE_API const dt_introspection_type_enum_tuple_t dt_develop_invert_mask_names[];
 
 #define DEVELOP_MASKS_NB_SHAPES 5
 

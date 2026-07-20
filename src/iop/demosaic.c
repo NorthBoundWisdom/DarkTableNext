@@ -714,7 +714,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *const piece, const v
             {
                 const int passes = method == DT_IOP_DEMOSAIC_MARKESTEIJN_3 ? 3 : 1;
                 if (method == DT_IOP_DEMOSAIC_FDC)
-                    xtrans_fdc_interpolate(t_out, t_in, width, t_rows, xtrans, exif_iso);
+                    xtrans_fdc_interpolate(t_out, t_in, width, t_rows, xtrans, exif_iso, filters);
                 else if (method == DT_IOP_DEMOSAIC_MARKESTEIJN ||
                          method == DT_IOP_DEMOSAIC_MARKESTEIJN_3)
                     xtrans_markesteijn_interpolate(t_out, t_in, width, t_rows, xtrans, passes,

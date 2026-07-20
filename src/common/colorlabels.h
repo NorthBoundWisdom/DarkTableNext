@@ -35,7 +35,7 @@ typedef enum dt_colorlables_enum
 } dt_colorlabels_enum;
 
 /** array with all names as strings, terminated by a NULL entry */
-extern const char *dt_colorlabels_name[];
+extern DT_CORE_API const char *dt_colorlabels_name[];
 
 /** get the assigned colorlabels of imgid*/
 int dt_colorlabels_get_labels(const dt_imgid_t imgid);
@@ -56,6 +56,6 @@ const char *dt_colorlabels_to_string(int label);
 /** check if an image has a color label */
 gboolean dt_colorlabels_check_label(const dt_imgid_t imgid, const int color);
 
-extern const struct dt_action_def_t dt_action_def_color_label;
+extern DT_CORE_API const struct dt_action_def_t dt_action_def_color_label;
 
 G_END_DECLS

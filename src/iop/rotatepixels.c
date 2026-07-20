@@ -31,6 +31,7 @@ DT_MODULE_INTROSPECTION(1, dt_iop_rotatepixels_params_t)
 
 typedef struct dt_iop_rotatepixels_gui_data_t
 {
+    char unused;
 } dt_iop_rotatepixels_gui_data_t;
 
 typedef struct dt_iop_rotatepixels_params_t

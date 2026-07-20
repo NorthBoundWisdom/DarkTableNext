@@ -32,7 +32,6 @@
 #include "libs/lib_api.h"
 
 #include <gdk/gdkkeysyms.h>
-#include <sys/param.h>
 #ifdef GDK_WINDOWING_QUARTZ
 #include "osx/osx.h"
 #endif

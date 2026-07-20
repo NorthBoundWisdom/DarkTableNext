@@ -46,8 +46,6 @@
 
 DT_MODULE(4)
 
-extern darktable_t darktable;
-
 // options for conflict handling
 typedef enum dt_disk_onconflict_actions_t
 {

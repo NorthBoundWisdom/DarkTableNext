@@ -87,13 +87,21 @@ typedef struct dt_introspection_type_double_t
   double                              Default;         // default value for this double field. taken from comments. defaults to 0.0
 } dt_introspection_type_double_t;
 
+#if defined(DT_MSVC_NO_C99_COMPLEX)
+typedef struct dt_introspection_float_complex_value_t
+{
+  float real;
+  float imaginary;
+} dt_introspection_float_complex_value_t;
+#endif
+
 typedef struct dt_introspection_type_float_complex_t
 {
   dt_introspection_type_header_t      header;
-#if defined(_MSC_VER)
-  float                               Min;
-  float                               Max;
-  float                               Default;
+#if defined(DT_MSVC_NO_C99_COMPLEX)
+  dt_introspection_float_complex_value_t Min;
+  dt_introspection_float_complex_value_t Max;
+  dt_introspection_float_complex_value_t Default;
 #else
   float _Complex                      Min;             // minimum allowed value for this float complex field. taken from comments. defaults to -G_MAXFLOAT + -G_MAXFLOAT * _Complex_I
   float _Complex                      Max;             // maximum allowed value for this float complex field. taken from comments. defaults to G_MAXFLOAT + G_MAXFLOAT * _Complex_I

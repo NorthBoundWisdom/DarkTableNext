@@ -521,13 +521,13 @@ static inline void _blur_mul(const float *const in, float *out, const float *ble
             if (blend[i] > 0.0f)
             {
                 const float *kern = kernels + CAPTURE_KERNEL_ALIGN * table[i];
-                const gboolean small = table[i] < idx_small;
-                const int bd = small ? 2 : 4;
+                const gboolean use_small = table[i] < idx_small;
+                const int bd = use_small ? 2 : 4;
                 float val = 0.0f;
                 if (col >= bd && row >= bd && col < w1 - bd && row < height - bd)
                 {
                     const float *d = in + i;
-                    if (small)
+                    if (use_small)
                     {
                         val = kern[5 + 2] * (d[-w2 - 1] + d[-w2 + 1] + d[-w1 - 2] + d[-w1 + 2] +
                                              d[w1 - 2] + d[w1 + 2] + d[w2 - 1] + d[w2 + 1]) +
@@ -600,13 +600,13 @@ static inline void _blur_div(const float *const in, float *out, const float *con
             if (blend[i] > 0.0f)
             {
                 const float *kern = kernels + CAPTURE_KERNEL_ALIGN * table[i];
-                const gboolean small = table[i] < idx_small;
-                const int bd = small ? 2 : 4;
+                const gboolean use_small = table[i] < idx_small;
+                const int bd = use_small ? 2 : 4;
                 float val = 0.0f;
                 if (col >= bd && row >= bd && col < w1 - bd && row < height - bd)
                 {
                     const float *d = in + i;
-                    if (small)
+                    if (use_small)
                     {
                         val = kern[5 + 2] * (d[-w2 - 1] + d[-w2 + 1] + d[-w1 - 2] + d[-w1 + 2] +
                                              d[w1 - 2] + d[w1 + 2] + d[w2 - 1] + d[w2 + 1]) +

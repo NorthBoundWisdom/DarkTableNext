@@ -101,6 +101,8 @@ void dt_pthread_setname(const char *name)
 #elif defined __APPLE__
     pthread_setname_np(name);
 #elif defined _WIN32
-    dtwin_set_thread_name((DWORD)-1, name);
+    // PThreads4W does not expose the native thread handle required by the
+    // Windows thread-description API. This is diagnostic metadata only.
+    (void)name;
 #endif
 }

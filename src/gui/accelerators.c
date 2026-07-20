@@ -342,6 +342,97 @@ const dt_action_def_t dt_action_def_value = {N_("value"), NULL, _action_elements
 
 const dt_action_def_t _action_def_dummy = {};
 
+#ifdef _WIN32
+static GHashTable *_msvc_resolved_action_definitions = NULL;
+
+static const gchar **_resolve_msvc_action_effects(const gchar **effects)
+{
+    switch((uintptr_t)effects)
+    {
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_VALUE:
+        return dt_action_effect_value;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_SELECTION:
+        return dt_action_effect_selection;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_TOGGLE:
+        return dt_action_effect_toggle;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_HOLD:
+        return dt_action_effect_hold;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_ACTIVATE:
+        return dt_action_effect_activate;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_PRESETS:
+        return dt_action_effect_presets;
+    case (uintptr_t)DT_ACTION_EFFECT_TAG_CYCLE:
+        return dt_action_effect_cycle;
+    default:
+        return effects;
+    }
+}
+
+static const dt_action_element_def_t *_resolve_msvc_action_elements(
+    const dt_action_element_def_t *elements)
+{
+    return (uintptr_t)elements == (uintptr_t)DT_ACTION_ELEMENTS_TAG_HOLD ?
+               dt_action_elements_hold :
+               elements;
+}
+
+static const dt_action_def_t *_resolve_msvc_action_definition(const dt_action_def_t *definition)
+{
+    switch((uintptr_t)definition)
+    {
+    case (uintptr_t)DT_ACTION_DEF_TAG_TOGGLE:
+        return &dt_action_def_toggle;
+    case (uintptr_t)DT_ACTION_DEF_TAG_BUTTON:
+        return &dt_action_def_button;
+    case (uintptr_t)DT_ACTION_DEF_TAG_ENTRY:
+        return &dt_action_def_entry;
+    case (uintptr_t)DT_ACTION_DEF_TAG_VALUE:
+        return &dt_action_def_value;
+    default:
+        break;
+    }
+
+    if(!definition)
+        return NULL;
+
+    const dt_action_element_def_t *elements = _resolve_msvc_action_elements(definition->elements);
+    gboolean needs_copy = elements != definition->elements;
+    int element_count = 0;
+    for(; elements && elements[element_count].effects; element_count++)
+        needs_copy |= _resolve_msvc_action_effects(elements[element_count].effects) !=
+                      elements[element_count].effects;
+
+    if(!needs_copy)
+        return definition;
+
+    if(!_msvc_resolved_action_definitions)
+        _msvc_resolved_action_definitions = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+
+    const dt_action_def_t *resolved = g_hash_table_lookup(_msvc_resolved_action_definitions, definition);
+    if(resolved)
+        return resolved;
+
+    dt_action_def_t *copy = g_malloc0(sizeof(*copy) +
+                                      (element_count + 1) * sizeof(dt_action_element_def_t));
+    dt_action_element_def_t *copy_elements = (dt_action_element_def_t *)(copy + 1);
+    const dt_action_def_t resolved_definition = {.name = definition->name,
+                                                  .process = definition->process,
+                                                  .elements = copy_elements,
+                                                  .fallbacks = definition->fallbacks,
+                                                  .no_widget = definition->no_widget};
+    memcpy(copy, &resolved_definition, sizeof(*copy));
+    for(int element = 0; element < element_count; element++)
+    {
+        copy_elements[element] = elements[element];
+        copy_elements[element].effects = _resolve_msvc_action_effects(elements[element].effects);
+    }
+    g_hash_table_insert(_msvc_resolved_action_definitions, (gpointer)definition, copy);
+    return copy;
+}
+#else
+#define _resolve_msvc_action_definition(definition) (definition)
+#endif
+
 static dt_action_t *_action_find(const gchar *action_name)
 {
     gchar **path = g_strsplit(action_name, "/", 0);
@@ -4996,6 +5087,8 @@ static gboolean _reset_element_on_leave(GtkWidget *widget, GdkEvent *event, gpoi
 dt_action_t *dt_action_define(dt_action_t *owner, const gchar *section, const gchar *label,
                               GtkWidget *widget, const dt_action_def_t *action_def)
 {
+    action_def = _resolve_msvc_action_definition(action_def);
+
     if (owner->type == DT_ACTION_TYPE_IOP_INSTANCE)
     {
         return dt_action_define_iop((dt_iop_module_t *)owner, section, label, widget, action_def);

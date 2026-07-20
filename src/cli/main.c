@@ -42,7 +42,6 @@
 #include "imageio/imageio_module.h"
 
 #include <inttypes.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 #include "osx/osx.h"
@@ -212,7 +211,9 @@ static gboolean _inputs_have_xmp_sidecar(const GList *inputs)
 
 int main(int argc, char *arg[])
 {
+#ifdef __APPLE__
     dt_osx_prepare_environment();
+#endif
 
     dt_loc_init(NULL, NULL, NULL, NULL, NULL);
 

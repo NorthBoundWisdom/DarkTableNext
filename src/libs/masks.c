@@ -1079,13 +1079,13 @@ static void _tree_selection_change(GtkTreeSelection *selection, dt_lib_masks_t *
     }
     g_list_free_full(items, (GDestroyNotify)gtk_tree_path_free);
 
-    dt_masks_form_t *grp2 = dt_masks_create(DT_MASKS_GROUP);
-    grp2->formid = NO_MASKID;
-    dt_masks_group_ungroup(grp2, grp);
+    dt_masks_form_t *new_group = dt_masks_create(DT_MASKS_GROUP);
+    new_group->formid = NO_MASKID;
+    dt_masks_group_ungroup(new_group, grp);
 
     // don't call dt_masks_change_form_gui because it triggers a selection change again
     dt_masks_clear_form_gui(darktable.develop);
-    darktable.develop->form_visible = grp2;
+    darktable.develop->form_visible = new_group;
 
     // update sticky accels window
     if (darktable.view_manager->accels_window.window &&
@@ -1161,10 +1161,10 @@ static gboolean _show_tree_context_menu(GtkWidget *treeview, dt_lib_module_t *se
                 dt_mask_id_t id = INVALID_MASKID;
                 _lib_masks_get_values(model, &iter, NULL, &grid, &id);
 
-                dt_masks_form_t *grp2 = dt_masks_get_from_id(darktable.develop, grid);
-                if (grp2 && (grp2->type & DT_MASKS_GROUP))
+                dt_masks_form_t *new_group = dt_masks_get_from_id(darktable.develop, grid);
+                if (new_group && (new_group->type & DT_MASKS_GROUP))
                 {
-                    for (const GList *pts = grp2->points; pts; pts = g_list_next(pts))
+                    for (const GList *pts = new_group->points; pts; pts = g_list_next(pts))
                     {
                         dt_masks_point_group_t *pt = pts->data;
                         if (pt->formid == id)

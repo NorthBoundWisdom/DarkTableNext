@@ -32,7 +32,6 @@
 #include "iop/iop_api.h"
 
 #include <gtk/gtk.h>
-#include <libgen.h>
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>

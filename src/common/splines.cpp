@@ -110,7 +110,7 @@ protected:
         {
             for (iter i{i_begin}; i != i_end; ++i)
             {
-                if (x_lim.min <= i->x and i->x <= x_lim.max)
+                if (x_lim.min <= i->x && i->x <= x_lim.max)
                     points.push_back({i->x, i->y, 0});
             }
         }
@@ -174,7 +174,7 @@ public:
             h = points[n1].x - points[n0].x;
         }
         T y;
-        if ((not periodic) and (x <= points.front().x or x >= points.back().x))
+        if (!periodic && (x <= points.front().x || x >= points.back().x))
         {
             // use linear extrapolation for off-grid points
             const base_point<T> &P{x <= points.front().x ? points.front() : points.back()};
@@ -621,7 +621,7 @@ class smooth_cubic_spline : public spline_base<T>
     static void LU_solve(const matrix &A, vector &b)
     {
         const size_type n{A.size()};
-        if (n < 1 or A.size() != b.size())
+        if (n < 1 || A.size() != b.size())
             return;
         if (A.isbanded())
         {
@@ -693,7 +693,7 @@ class smooth_cubic_spline : public spline_base<T>
             }
             // set up and solve the set of linear equations to determine the 2nd derivative of the
             // interpolating function at the knots
-            matrix A(N, not periodic);
+            matrix A(N, !periodic);
             std::vector<T> b(N);
             for (size_type i{1}; i < N - 1; ++i)
             {

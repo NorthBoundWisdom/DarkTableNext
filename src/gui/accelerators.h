@@ -18,8 +18,10 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <gtk/gtk.h>
 
+#include "common/darktable_api.h"
 #include "develop/imageop.h"
 #include "libs/lib.h"
 #include "views/view.h"
@@ -57,7 +59,8 @@ dt_action_t *dt_action_locate(dt_action_t *owner, gchar **path, gboolean create)
 
 static inline dt_action_t *dt_action_section(dt_action_t *owner, const gchar *section)
 {
-    return dt_action_locate(owner, (gchar **)(const gchar *[]){section, NULL}, TRUE);
+    gchar *path[] = { (gchar *)section, NULL };
+    return dt_action_locate(owner, path, TRUE);
 }
 static inline dt_view_t *dt_action_view(dt_action_t *action)
 {
@@ -127,13 +130,31 @@ typedef enum dt_shortcut_move_t
     DT_SHORTCUT_MOVE_PGUPDOWN,  // are ported to the action framework
 } dt_shortcut_move_t;
 
-extern const gchar *dt_action_effect_value[];
-extern const gchar *dt_action_effect_selection[];
-extern const gchar *dt_action_effect_toggle[];
-extern const gchar *dt_action_effect_hold[];
-extern const gchar *dt_action_effect_activate[];
-extern const gchar *dt_action_effect_presets[];
-extern const gchar *dt_action_effect_cycle[];
+#define DT_ACTION_EFFECT_TAG_VALUE ((const gchar **)(uintptr_t)0x101)
+#define DT_ACTION_EFFECT_TAG_SELECTION ((const gchar **)(uintptr_t)0x102)
+#define DT_ACTION_EFFECT_TAG_TOGGLE ((const gchar **)(uintptr_t)0x103)
+#define DT_ACTION_EFFECT_TAG_HOLD ((const gchar **)(uintptr_t)0x104)
+#define DT_ACTION_EFFECT_TAG_ACTIVATE ((const gchar **)(uintptr_t)0x105)
+#define DT_ACTION_EFFECT_TAG_PRESETS ((const gchar **)(uintptr_t)0x106)
+#define DT_ACTION_EFFECT_TAG_CYCLE ((const gchar **)(uintptr_t)0x107)
+
+#if defined(_WIN32) && !defined(DT_LIB_DARKTABLE_BUILD)
+#define dt_action_effect_value DT_ACTION_EFFECT_TAG_VALUE
+#define dt_action_effect_selection DT_ACTION_EFFECT_TAG_SELECTION
+#define dt_action_effect_toggle DT_ACTION_EFFECT_TAG_TOGGLE
+#define dt_action_effect_hold DT_ACTION_EFFECT_TAG_HOLD
+#define dt_action_effect_activate DT_ACTION_EFFECT_TAG_ACTIVATE
+#define dt_action_effect_presets DT_ACTION_EFFECT_TAG_PRESETS
+#define dt_action_effect_cycle DT_ACTION_EFFECT_TAG_CYCLE
+#else
+extern DT_CORE_API const gchar *dt_action_effect_value[];
+extern DT_CORE_API const gchar *dt_action_effect_selection[];
+extern DT_CORE_API const gchar *dt_action_effect_toggle[];
+extern DT_CORE_API const gchar *dt_action_effect_hold[];
+extern DT_CORE_API const gchar *dt_action_effect_activate[];
+extern DT_CORE_API const gchar *dt_action_effect_presets[];
+extern DT_CORE_API const gchar *dt_action_effect_cycle[];
+#endif
 
 typedef struct dt_action_element_def_t
 {
@@ -158,7 +179,13 @@ typedef struct dt_action_element_def_t
         }                                                                                          \
     }
 
-extern const dt_action_element_def_t dt_action_elements_hold[];
+#define DT_ACTION_ELEMENTS_TAG_HOLD ((const dt_action_element_def_t *)(uintptr_t)0x201)
+
+#if defined(_WIN32) && !defined(DT_LIB_DARKTABLE_BUILD)
+#define dt_action_elements_hold DT_ACTION_ELEMENTS_TAG_HOLD
+#else
+extern DT_CORE_API const dt_action_element_def_t dt_action_elements_hold[];
+#endif
 
 typedef struct dt_shortcut_fallback_t
 {
@@ -187,10 +214,22 @@ typedef struct dt_action_def_t
     const gboolean no_widget;
 } dt_action_def_t;
 
-extern const dt_action_def_t dt_action_def_toggle;
-extern const dt_action_def_t dt_action_def_button;
-extern const dt_action_def_t dt_action_def_entry;
-extern const dt_action_def_t dt_action_def_value;
+#define DT_ACTION_DEF_TAG_TOGGLE ((const dt_action_def_t *)(uintptr_t)0x301)
+#define DT_ACTION_DEF_TAG_BUTTON ((const dt_action_def_t *)(uintptr_t)0x302)
+#define DT_ACTION_DEF_TAG_ENTRY ((const dt_action_def_t *)(uintptr_t)0x303)
+#define DT_ACTION_DEF_TAG_VALUE ((const dt_action_def_t *)(uintptr_t)0x304)
+
+#if defined(_WIN32) && !defined(DT_LIB_DARKTABLE_BUILD)
+#define dt_action_def_toggle (*DT_ACTION_DEF_TAG_TOGGLE)
+#define dt_action_def_button (*DT_ACTION_DEF_TAG_BUTTON)
+#define dt_action_def_entry (*DT_ACTION_DEF_TAG_ENTRY)
+#define dt_action_def_value (*DT_ACTION_DEF_TAG_VALUE)
+#else
+extern DT_CORE_API const dt_action_def_t dt_action_def_toggle;
+extern DT_CORE_API const dt_action_def_t dt_action_def_button;
+extern DT_CORE_API const dt_action_def_t dt_action_def_entry;
+extern DT_CORE_API const dt_action_def_t dt_action_def_value;
+#endif
 
 /** Read-only availability and state information for an action invocation.
  *

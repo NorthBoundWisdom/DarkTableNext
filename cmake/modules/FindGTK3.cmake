@@ -31,8 +31,8 @@
 find_package(PkgConfig)
 pkg_check_modules(GTK3 gtk+-3.0)
 
-# Mac needs library names to include full path
-if(APPLE)
+# Apple and MSVC need pkg-config library names resolved to concrete paths.
+if(APPLE OR WIN32)
 	foreach(i ${GTK3_LIBRARIES})
 		find_library(_gtk3_LIBRARY NAMES ${i} HINTS ${GTK3_LIBRARY_DIRS})
 		LIST(APPEND GTK3_LIBRARY ${_gtk3_LIBRARY})
@@ -40,7 +40,7 @@ if(APPLE)
 	endforeach(i)
 	set(GTK3_LIBRARIES ${GTK3_LIBRARY})
 	unset(GTK3_LIBRARY CACHE)
-endif(APPLE)
+endif()
 
 set(VERSION_OK TRUE)
 if (GTK3_VERSION)

@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "common/darktable_api.h"
+
 // The build system sets this; keep the header usable in standalone tools too.
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 700 // for localtime_r and dprintf
@@ -446,7 +448,7 @@ typedef struct
     double user;
 } dt_times_t;
 
-extern darktable_t darktable;
+extern DT_CORE_API darktable_t darktable;
 
 int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load_data);
 
@@ -586,7 +588,7 @@ static inline void dt_unlock_image_pair(const dt_imgid_t imgid1, const dt_imgid_
     dt_pthread_mutex_unlock(&(darktable.db_image[imgid2 & (DT_IMAGE_DBLOCKS - 1)]));
 }
 
-extern GdkModifierType dt_modifier_shortcuts;
+extern DT_CORE_API GdkModifierType dt_modifier_shortcuts;
 
 // check whether the specified mask of modifier keys exactly matches,
 // among the set Shift+Control+(Alt/Meta).  ignores the state of any

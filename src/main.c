@@ -28,7 +28,9 @@
 
 int main(int argc, char *argv[])
 {
+#ifdef __APPLE__
     dt_osx_prepare_environment();
+#endif
 
     if (dt_init(argc, argv, TRUE, TRUE))
     {

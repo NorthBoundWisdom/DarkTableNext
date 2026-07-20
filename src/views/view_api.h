@@ -34,45 +34,46 @@ struct dt_view_t;
 
 #endif // FULL_API_H
 
-OPTIONAL(const char *, name, const struct dt_view_t *self); // get translatable name
-OPTIONAL(uint32_t, view, const struct dt_view_t *self);     // get the view type
-DEFAULT(uint32_t, flags, );                                 // get flags of the view
-OPTIONAL(void, init, struct dt_view_t *self);               // init *data
-OPTIONAL(void, gui_init,
+
+DT_MODULE_API_OPTIONAL(const char *, name, const struct dt_view_t *self); // get translatable name
+DT_MODULE_API_OPTIONAL(uint32_t, view, const struct dt_view_t *self);     // get the view type
+DT_MODULE_API_DEFAULT(uint32_t, flags, );                                 // get flags of the view
+DT_MODULE_API_OPTIONAL(void, init, struct dt_view_t *self);               // init *data
+DT_MODULE_API_OPTIONAL(void, gui_init,
          struct dt_view_t *self); // create gtk elements, called after libs are created
-OPTIONAL(void, cleanup, struct dt_view_t *self); // cleanup *data
-OPTIONAL(void, expose, struct dt_view_t *self, cairo_t *cr, int32_t width, int32_t height,
+DT_MODULE_API_OPTIONAL(void, cleanup, struct dt_view_t *self); // cleanup *data
+DT_MODULE_API_OPTIONAL(void, expose, struct dt_view_t *self, cairo_t *cr, int32_t width, int32_t height,
          int32_t pointerx,
          int32_t pointery);                            // expose the module (gtk callback)
-OPTIONAL(gboolean, try_enter, struct dt_view_t *self); // test if enter can succeed.
-OPTIONAL(
+DT_MODULE_API_OPTIONAL(gboolean, try_enter, struct dt_view_t *self); // test if enter can succeed.
+DT_MODULE_API_OPTIONAL(
     void, enter,
     struct dt_view_t *self); // mode entered, this module got focus. return non-null on failure.
-OPTIONAL(void, leave,
+DT_MODULE_API_OPTIONAL(void, leave,
          struct dt_view_t *self); // mode left (is called after the new try_enter has succeeded).
-OPTIONAL(void, reset, struct dt_view_t *self); // reset default appearance
+DT_MODULE_API_OPTIONAL(void, reset, struct dt_view_t *self); // reset default appearance
 
 // event callbacks:
-OPTIONAL(void, mouse_enter, struct dt_view_t *self);
-OPTIONAL(void, mouse_leave, struct dt_view_t *self);
-OPTIONAL(void, mouse_moved, struct dt_view_t *self, double x, double y, double pressure, int which);
+DT_MODULE_API_OPTIONAL(void, mouse_enter, struct dt_view_t *self);
+DT_MODULE_API_OPTIONAL(void, mouse_leave, struct dt_view_t *self);
+DT_MODULE_API_OPTIONAL(void, mouse_moved, struct dt_view_t *self, double x, double y, double pressure, int which);
 
-OPTIONAL(int, button_released, struct dt_view_t *self, double x, double y, int which,
+DT_MODULE_API_OPTIONAL(int, button_released, struct dt_view_t *self, double x, double y, int which,
          uint32_t state);
-OPTIONAL(int, button_pressed, struct dt_view_t *self, double x, double y, double pressure,
+DT_MODULE_API_OPTIONAL(int, button_pressed, struct dt_view_t *self, double x, double y, double pressure,
          int which, int type, uint32_t state);
-OPTIONAL(void, configure, struct dt_view_t *self, int width, int height);
-OPTIONAL(void, scrolled, struct dt_view_t *self, double x, double y, int up,
+DT_MODULE_API_OPTIONAL(void, configure, struct dt_view_t *self, int width, int height);
+DT_MODULE_API_OPTIONAL(void, scrolled, struct dt_view_t *self, double x, double y, int up,
          int state); // mouse scrolled in view
-OPTIONAL(void, scrollbar_changed, struct dt_view_t *self, double x,
+DT_MODULE_API_OPTIONAL(void, scrollbar_changed, struct dt_view_t *self, double x,
          double y); // scrollbars changed in view
-OPTIONAL(gboolean, gesture_pan, struct dt_view_t *self, double x, double y, double dx, double dy,
+DT_MODULE_API_OPTIONAL(gboolean, gesture_pan, struct dt_view_t *self, double x, double y, double dx, double dy,
          int state);
-OPTIONAL(gboolean, gesture_pinch, struct dt_view_t *self, double x, double y, double dx, double dy,
+DT_MODULE_API_OPTIONAL(gboolean, gesture_pinch, struct dt_view_t *self, double x, double y, double dx, double dy,
          int phase, double scale, int state); // x,y are root (screen-absolute) coords
 
 // list of mouse actions
-OPTIONAL(GSList *, mouse_actions, const struct dt_view_t *self);
+DT_MODULE_API_OPTIONAL(GSList *, mouse_actions, const struct dt_view_t *self);
 
 #ifdef FULL_API_H
 

@@ -816,15 +816,27 @@ static gchar *_lib_history_bauhaus_text(gpointer bhfield, const char *d, dt_iop_
     return NULL;
 }
 
+static gchar *_lib_history_bauhaus_or_default(gchar *bauhaus_text, gchar *default_text)
+{
+    if (bauhaus_text)
+    {
+        g_free(default_text);
+        return bauhaus_text;
+    }
+    return default_text;
+}
+
 static gchar *_lib_history_change_text(dt_introspection_field_t *field, const char *d,
                                        dt_iop_module_t *module, gpointer params, gpointer oldpar)
 {
-    void *p = (void *)params + field->header.offset;
-    void *o = (void *)oldpar + field->header.offset;
+    void *p = (char *)params + field->header.offset;
+    void *o = (char *)oldpar + field->header.offset;
 
-#define CHANGE_TEXT_BAUHAUS(format, fieldtype)                                                                               \
-    _lib_history_bauhaus_text((void *)module->params + field->header.offset, d, module, *(fieldtype *)o, *(fieldtype *)p) ?: \
-        CHG_STR(format, d, *(fieldtype *)o, *(fieldtype *)p)
+#define CHANGE_TEXT_BAUHAUS(format, fieldtype)                                                       \
+    _lib_history_bauhaus_or_default(                                                                \
+        _lib_history_bauhaus_text((char *)module->params + field->header.offset, d, module,       \
+                                  *(fieldtype *)o, *(fieldtype *)p),                               \
+        CHG_STR(format, d, *(fieldtype *)o, *(fieldtype *)p))
 
     switch (field->header.type)
     {
@@ -935,12 +947,22 @@ static gchar *_lib_history_change_text(dt_introspection_field_t *field, const ch
             return CHANGE_TEXT_BAUHAUS('%c', char);
         break;
     case DT_INTROSPECTION_TYPE_FLOATCOMPLEX:
+#if defined(DT_MSVC_NO_C99_COMPLEX)
+    {
+        const dt_introspection_float_complex_value_t *const old_value = o;
+        const dt_introspection_float_complex_value_t *const new_value = p;
+        if (old_value->real != new_value->real || old_value->imaginary != new_value->imaginary)
+            return CHG_STR(%.4f + %.4fi, d, old_value->real, old_value->imaginary, new_value->real,
+                           new_value->imaginary);
+    }
+#else
         if (*(float complex *)o != *(float complex *)p)
             // clang-format off
             return CHG_STR(%.4f + %.4fi, d,
                            creal(*(float complex *)o), cimag(*(float complex *)o),
                            creal(*(float complex *)p), cimag(*(float complex *)p));
         // clang-format on
+#endif
         break;
     case DT_INTROSPECTION_TYPE_ENUM:
         if (*(int *)o != *(int *)p)
@@ -1052,6 +1074,27 @@ static gboolean _changes_tooltip_callback(GtkWidget *widget, const gint x, const
                 CHG_STR(%d, label, old_blend->field, hitem->blend_params->field) :                \
                 CHG_STR(%s, label, Q_(old_str), Q_(new_str));                                     \
     }
+
+#ifdef _MSC_VER
+#undef add_blend_history_change
+#define add_blend_history_change(field, fmt, label)                                                \
+    do                                                                                             \
+    {                                                                                              \
+        if ((hitem->blend_params->field) != (old_blend->field))                                    \
+        {                                                                                          \
+            gchar *chg_fmt = g_strconcat("%s\t\t", fmt, "\t\u2192\t\t", fmt, NULL);          \
+            gchar *bauhaus_text =                                                                 \
+                _lib_history_bauhaus_text(&hitem->module->blend_params->field, label,            \
+                                          hitem->module, old_blend->field,                        \
+                                          hitem->blend_params->field);                             \
+            change_parts[num_parts++] =                                                           \
+                bauhaus_text ? bauhaus_text :                                                     \
+                               g_strdup_printf(chg_fmt, label, old_blend->field,                 \
+                                               hitem->blend_params->field);                         \
+            g_free(chg_fmt);                                                                       \
+        }                                                                                          \
+    } while (0)
+#endif
         // clang-format on
 
         add_blend_history_change_enum(blend_cst, _("colorspace"),

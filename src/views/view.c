@@ -50,6 +50,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 static void dt_view_manager_load_modules(dt_view_manager_t *vm);
 static int dt_view_load_module(void *v, const char *libname, const char *module_name);
@@ -1592,10 +1595,14 @@ void dt_view_audio_stop(dt_view_manager_t *vm)
     g_source_remove(vm->audio.audio_player_event_source);
     if (vm->audio.audio_player_id != -1)
     {
+#ifdef _WIN32
+        TerminateProcess((HANDLE)vm->audio.audio_player_pid, 1);
+#else
         if (getpgid(0) != getpgid(vm->audio.audio_player_pid))
             kill(-vm->audio.audio_player_pid, SIGKILL);
         else
             kill(vm->audio.audio_player_pid, SIGKILL);
+#endif
     }
     g_spawn_close_pid(vm->audio.audio_player_pid);
     vm->audio.audio_player_id = -1;

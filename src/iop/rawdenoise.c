@@ -84,6 +84,7 @@ typedef struct dt_iop_rawdenoise_data_t
 
 typedef struct dt_iop_rawdenoise_global_data_t
 {
+    char unused;
 } dt_iop_rawdenoise_global_data_t;
 
 const char *name()

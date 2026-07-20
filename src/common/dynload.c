@@ -19,7 +19,11 @@
 #ifdef HAVE_OPENCL
 
 #include <stdlib.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 #include "common/dynload.h"
 #include "common/darktable.h"
@@ -35,7 +39,11 @@ dt_gmodule_t *dt_gmodule_open(const char *library)
 {
     // logic here is simplified since it's used only specifically for OpenCL
     dt_gmodule_t *module = NULL;
+#ifdef _WIN32
+    void *gmodule = LoadLibraryA(library);
+#else
     void *gmodule = dlopen(library, RTLD_LAZY | RTLD_LOCAL);
+#endif
 
     if (gmodule != NULL)
     {
@@ -50,7 +58,11 @@ dt_gmodule_t *dt_gmodule_open(const char *library)
 /* get pointer to symbol */
 gboolean dt_gmodule_symbol(dt_gmodule_t *module, const char *name, void (**pointer)(void))
 {
+#ifdef _WIN32
+    *pointer = (void (*)(void))GetProcAddress((HMODULE)module->gmodule, name);
+#else
     *pointer = dlsym(module->gmodule, name);
+#endif
     const gboolean valid = *pointer != NULL;
     if (!valid)
         dt_print(DT_DEBUG_OPENCL, "[opencl init] missing symbol `%s` in library`", name);

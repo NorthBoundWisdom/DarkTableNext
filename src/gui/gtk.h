@@ -419,9 +419,9 @@ static inline GtkWidget *dt_ui_entry_new(gint width_chars)
     return entry;
 };
 
-extern const struct dt_action_def_t dt_action_def_tabs_all_rgb;
-extern const struct dt_action_def_t dt_action_def_tabs_rgb;
-extern const struct dt_action_def_t dt_action_def_tabs_none;
+extern DT_CORE_API const struct dt_action_def_t dt_action_def_tabs_all_rgb;
+extern DT_CORE_API const struct dt_action_def_t dt_action_def_tabs_rgb;
+extern DT_CORE_API const struct dt_action_def_t dt_action_def_tabs_none;
 
 GtkNotebook *dt_ui_notebook_new(struct dt_action_def_t *def);
 
@@ -629,7 +629,7 @@ void dt_gui_dialog_restore_size(GtkDialog *dialog, const char *conf);
 // returns the session type at runtime
 dt_gui_session_type_t dt_gui_get_session_type(void);
 
-#if !defined(__cplusplus)
+#if !defined(__cplusplus) && !defined(_MSC_VER)
 #undef G_CALLBACK
 static inline GCallback G_CALLBACK(void *f)
 {
@@ -655,6 +655,6 @@ static inline GCallback G_CALLBACK(void *f)
     "signal " signal " return type does not match specified handler " #c_handler); \
   g_signal_connect_data((instance), (signal), (GCallback)(c_handler), (user_data), NULL, (GConnectFlags) 0); } while(0)
 // clang-format on
-#endif // __cplusplus
+#endif // !__cplusplus && !_MSC_VER
 
 G_END_DECLS
