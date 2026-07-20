@@ -2201,6 +2201,31 @@ Details :
   background-color: @thumbnail_font_color;
 }
 
+/* Keep applied culling metadata readable in the filmstrip without exposing
+   every inactive control. The color-label widget is only visible when the
+   image has a label; stars and reject are restricted to their active state.
+   Hovering the thumbnail still reveals the complete editable overlay above. */
+#thumbtable-filmstrip.dt_overlays_hover #thumb-main:not(:hover) #thumb-star:active,
+#thumbtable-filmstrip.dt_overlays_hover_extended #thumb-main:not(:hover) #thumb-star:active
+{
+  color: @thumbnail_font_color;
+  background-color: @thumbnail_font_color;
+}
+
+#thumbtable-filmstrip.dt_overlays_hover #thumb-main:not(:hover) #thumb-reject:active,
+#thumbtable-filmstrip.dt_overlays_hover_extended #thumb-main:not(:hover) #thumb-reject:active
+{
+  color: red;
+  background-color: transparent;
+}
+
+#thumbtable-filmstrip.dt_overlays_hover #thumb-main:not(:hover) #thumb-colorlabels,
+#thumbtable-filmstrip.dt_overlays_hover_extended #thumb-main:not(:hover) #thumb-colorlabels
+{
+  color: @thumbnail_font_color;
+  background-color: transparent;
+}
+
 /* Set stars icon hover effect */
 .dt_overlays_hover #thumb-main:hover #thumb-star:hover,
 .dt_overlays_hover_extended #thumb-main:hover #thumb-star:hover,

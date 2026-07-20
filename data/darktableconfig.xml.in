@@ -2186,13 +2186,6 @@
     <longdescription/>
   </dtconfig>
   <dtconfig>
-    <name>lighttable/ui/preview/toolbar_bottom_visible</name>
-    <type>bool</type>
-    <default>false</default>
-    <shortdescription>show toolbar bottom panel in preview mode</shortdescription>
-    <longdescription/>
-  </dtconfig>
-  <dtconfig>
     <name>lighttable/ui/preview/toolbar_top_visible</name>
     <type>bool</type>
     <default>false</default>

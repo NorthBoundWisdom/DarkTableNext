@@ -36,6 +36,7 @@ option(DT_MODULE_RELINK_ON_CORE_CHANGE
        "Relink loadable modules whenever a linked shared library changes" OFF)
 
 function(dt_module_configure_link_dependencies target)
+  set_property(GLOBAL APPEND PROPERTY DT_LOADABLE_MODULE_TARGETS ${target})
   if(NOT DT_MODULE_RELINK_ON_CORE_CHANGE)
     set_property(TARGET ${target} PROPERTY LINK_DEPENDS_NO_SHARED TRUE)
   endif()
@@ -354,7 +355,7 @@ configure_file(
 add_custom_target(prepare-macos-package
     COMMAND "${CMAKE_COMMAND}" -E remove_directory "${DARKTABLE_PACKAGE_STAGE}"
     COMMAND "${CMAKE_COMMAND}" --install "${CMAKE_BINARY_DIR}" --prefix "${DARKTABLE_PACKAGE_STAGE}"
-    DEPENDS darktable
+    DEPENDS darktable-development-bundle
     COMMENT "Preparing the darktable macOS package staging bundle"
     VERBATIM
     USES_TERMINAL)

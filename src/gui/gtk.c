@@ -253,6 +253,12 @@ static gchar *_panels_get_panel_path(const dt_ui_panel_t panel, char *suffix)
 
 static gboolean _panel_is_visible(const dt_ui_panel_t panel)
 {
+    // The center-bottom toolbar owns the persistent Lighttable rating,
+    // color-label, layout and zoom controls. It is part of the workspace, not
+    // a collapsible panel, so legacy per-view visibility state must not hide it.
+    if (panel == DT_UI_PANEL_CENTER_BOTTOM)
+        return TRUE;
+
     gchar *key = _panels_get_view_path("panel_collaps_state");
     if (dt_conf_get_int(key))
     {
@@ -320,17 +326,10 @@ static void _panel_toggle(const dt_ui_border_t border, const dt_ui_t *ui)
     case DT_UI_BORDER_BOTTOM: // bottom border
     default:
     {
-        const gboolean show_cb = _panel_is_visible(DT_UI_PANEL_CENTER_BOTTOM);
         const gboolean show_b = _panel_is_visible(DT_UI_PANEL_BOTTOM);
-        // all visible => toolbar hidden => all hidden => toolbar visible => all visible
-        if (show_cb && show_b)
-            dt_ui_panel_show(ui, DT_UI_PANEL_CENTER_BOTTOM, FALSE, TRUE);
-        else if (!show_cb && show_b)
-            dt_ui_panel_show(ui, DT_UI_PANEL_BOTTOM, FALSE, TRUE);
-        else if (!show_cb && !show_b)
-            dt_ui_panel_show(ui, DT_UI_PANEL_CENTER_BOTTOM, TRUE, TRUE);
-        else
-            dt_ui_panel_show(ui, DT_UI_PANEL_BOTTOM, TRUE, TRUE);
+        // The footer toolbar is permanent. The bottom border only controls the
+        // filmstrip panel below it.
+        dt_ui_panel_show(ui, DT_UI_PANEL_BOTTOM, !show_b, TRUE);
     }
     break;
     }
@@ -372,11 +371,6 @@ static void _toggle_top_tool_accel_callback(dt_action_t *action)
     dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP,
                      !_panel_is_visible(DT_UI_PANEL_CENTER_TOP), TRUE);
 }
-static void _toggle_bottom_tool_accel_callback(dt_action_t *action)
-{
-    dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_CENTER_BOTTOM,
-                     !_panel_is_visible(DT_UI_PANEL_CENTER_BOTTOM), TRUE);
-}
 static void _toggle_top_all_accel_callback(dt_action_t *action)
 {
     const gboolean v =
@@ -384,14 +378,6 @@ static void _toggle_top_all_accel_callback(dt_action_t *action)
     dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_TOP, !v, TRUE);
     dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_CENTER_TOP, !v, TRUE);
 }
-static void _toggle_bottom_all_accel_callback(dt_action_t *action)
-{
-    const gboolean v =
-        (_panel_is_visible(DT_UI_PANEL_CENTER_BOTTOM) || _panel_is_visible(DT_UI_PANEL_BOTTOM));
-    dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_BOTTOM, !v, TRUE);
-    dt_ui_panel_show(darktable.gui->ui, DT_UI_PANEL_CENTER_BOTTOM, !v, TRUE);
-}
-
 static gboolean _borders_button_pressed(GtkWidget *w, GdkEventButton *event,
                                         const gpointer user_data)
 {
@@ -1556,9 +1542,7 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     dt_action_register(pnl, N_("filmstrip"), _toggle_filmstrip_accel_callback,
                        GDK_KEY_f, GDK_CONTROL_MASK);
     dt_action_register(pnl, N_("top toolbar"), _toggle_top_tool_accel_callback, 0, 0);
-    dt_action_register(pnl, N_("bottom toolbar"), _toggle_bottom_tool_accel_callback, 0, 0);
     dt_action_register(pnl, N_("all top"), _toggle_top_all_accel_callback, 0, 0);
-    dt_action_register(pnl, N_("all bottom"), _toggle_bottom_all_accel_callback, 0, 0);
 
     dt_action_register(&darktable.control->actions_global, N_("toggle tooltip visibility"),
                        _toggle_tooltip_visibility, GDK_KEY_T, GDK_SHIFT_MASK);
@@ -2217,12 +2201,14 @@ void dt_ui_panel_show(const dt_ui_t *ui, const dt_ui_panel_t p, const gboolean s
 {
     g_return_if_fail(GTK_IS_WIDGET(ui->panels[p]));
 
+    const gboolean effective_show = show || p == DT_UI_PANEL_CENTER_BOTTOM;
+
     // for left and right sides, panels are inside a gtkoverlay
     GtkWidget *over_panel = NULL;
     if (p == DT_UI_PANEL_LEFT || p == DT_UI_PANEL_RIGHT || p == DT_UI_PANEL_BOTTOM)
         over_panel = gtk_widget_get_parent(ui->panels[p]);
 
-    if (show)
+    if (effective_show)
     {
         gtk_widget_show(ui->panels[p]);
         if (over_panel)
@@ -2249,7 +2235,7 @@ void dt_ui_panel_show(const dt_ui_t *ui, const dt_ui_panel_t p, const gboolean s
     if (write)
     {
         gchar *key;
-        if (show)
+        if (effective_show)
         {
             // we reset the collaps_panel value if we show a panel
             key = _panels_get_view_path("panel_collaps_state");
@@ -2268,7 +2254,7 @@ void dt_ui_panel_show(const dt_ui_t *ui, const dt_ui_panel_t p, const gboolean s
             else
                 g_free(key);
             key = _panels_get_panel_path(p, "_visible");
-            dt_conf_set_bool(key, show);
+            dt_conf_set_bool(key, effective_show);
             g_free(key);
         }
         else
@@ -2294,7 +2280,7 @@ void dt_ui_panel_show(const dt_ui_t *ui, const dt_ui_panel_t p, const gboolean s
             else
             {
                 key = _panels_get_panel_path(p, "_visible");
-                dt_conf_set_bool(key, show);
+                dt_conf_set_bool(key, effective_show);
                 g_free(key);
             }
         }

@@ -107,12 +107,13 @@ cmake --build --preset win_msvc_debug
 
 应用会在启动时动态加载 IOP、Lighttable、view 与 imageio 模块。正常构建只会在模块自身源码或
 其公共 ABI 头变更时重链这些模块；核心库的实现性改动不会重写全部模块，从而保留 macOS 的文件
-页缓存并缩短编译后的首次启动。
+身份和缩短增量构建。
 
-对于确实被重写而失去文件页缓存的模块，启动过程会在数据库、collection 与 GTK 初始化期间用
-独立只读线程预热模块文件，并在首次动态加载前汇合；该线程不访问 GTK、数据库或模块全局状态。
-启动画面的模块进度更新按 50ms 节流并使用非阻塞 display flush，避免为每个模块执行一次 Quartz
-同步往返。这两项优化不改变模块 ABI、加载顺序或缓存失效规则。
+完整开发构建会把项目模块和 `libdarktable` 复制进生成的 `darktable.app`，从内到外进行 ad-hoc
+签名，并让稳定启动入口只加载 bundle 自己拥有的代码。这样可避免 macOS 对构建目录中每个新
+Mach-O 模块进行独立的首次运行验证；Homebrew 依赖仍保持外部引用，只有 `package-macos` 才收集
+完整第三方依赖闭包。`codesign --verify` 不是运行或构建步骤，正式 Developer ID 签名与公证仍只
+属于发布流程。启动画面仅显示粗粒度阶段，不再逐项刷新所有 processing/utility 模块名称。
 
 `DT_MODULE_VERSION` 是明确的模块 ABI 失效边界。凡是修改了 loadable module 可见的
 `lib_darktable` 函数、类型、结构布局或调用约定，必须在

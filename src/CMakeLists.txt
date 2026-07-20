@@ -636,6 +636,31 @@ if(APPLE)
     COMMENT "Assembling macOS application bundle"
   )
 
+  # Loading freshly linked Mach-O modules from outside the application bundle
+  # makes macOS assess every file independently on first use.  That turns a full
+  # rebuild into a long first launch even though later launches are fast.  The
+  # normal development build therefore gets the same code ownership shape as the
+  # packaged application: project modules and libdarktable are copied into the
+  # bundle and signed from the inside out.  Homebrew dependencies remain external
+  # for fast iteration and are collected only by package-macos.
+  get_property(DARKTABLE_LOADABLE_MODULE_TARGETS GLOBAL PROPERTY DT_LOADABLE_MODULE_TARGETS)
+  set(DARKTABLE_DEVELOPMENT_BUNDLE_STAMP
+      "${DARKTABLE_BINDIR}/.darktable-development-bundle.stamp")
+  configure_file(
+      "${CMAKE_SOURCE_DIR}/cmake/macos_development_bundle.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
+      @ONLY)
+  add_custom_command(
+    OUTPUT "${DARKTABLE_DEVELOPMENT_BUNDLE_STAMP}"
+    COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
+    DEPENDS darktable ${DARKTABLE_LOADABLE_MODULE_TARGETS}
+            "${CMAKE_SOURCE_DIR}/cmake/macos_development_bundle.cmake.in"
+            "${CMAKE_SOURCE_DIR}/packaging/macos/entitlements.plist"
+    COMMENT "Embedding and signing development application modules"
+    VERBATIM)
+  add_custom_target(darktable-development-bundle ALL
+                    DEPENDS "${DARKTABLE_DEVELOPMENT_BUNDLE_STAMP}")
+
   install(TARGETS darktable BUNDLE DESTINATION . COMPONENT DTApplication)
 else()
   install(TARGETS darktable RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)

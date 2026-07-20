@@ -962,119 +962,6 @@ static gboolean _event_scroll(GtkWidget *widget, GdkEvent *event, dt_thumbtable_
     return TRUE;
 }
 
-static void _line_to(cairo_t *cr, PangoRectangle ink, const float offx, const float offy,
-                     const double n, const double h, const double x, const double y)
-{
-    const double radius = DT_PIXEL_APPLY_DPI(3);
-    cairo_new_path(cr);
-    cairo_arc(cr, h, offy + (n + .5) * ink.height, radius, 0, 2 * M_PI);
-    cairo_rel_move_to(cr, -radius, 0);
-    cairo_line_to(cr, x, y);
-    cairo_arc(cr, x, y, radius, 0, 2 * M_PI);
-    cairo_stroke(cr);
-}
-
-static void _line_to_module(cairo_t *cr, const int32_t width, PangoRectangle ink, const float offx,
-                            const float offy, const double n, const double h, char *name)
-{
-    dt_lib_module_t *lib = dt_lib_get_module(name);
-
-    if (!lib || !lib->expander || !gtk_widget_get_mapped(lib->expander))
-        return;
-
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(lib->expander, &allocation);
-    gtk_widget_translate_coordinates(gtk_widget_get_parent(lib->expander),
-                                     dt_ui_center(darktable.gui->ui), allocation.x, allocation.y,
-                                     &allocation.x, &allocation.y);
-    _line_to(cr, ink, offx, offy, n, h, allocation.x > 0 ? width : 0,
-             allocation.y + allocation.height / 2);
-}
-
-// display help text in the center view if there's no image to show
-static void _lighttable_expose_empty(cairo_t *cr, const int32_t width, const int32_t height,
-                                     dt_thumbtable_t *lighttable)
-{
-    dt_gui_gtk_set_source_rgb(cr, DT_GUI_COLOR_LIGHTTABLE_BG);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
-
-    const float offy = height * 0.2f;
-    const float offx = width * 0.05f;
-    PangoLayout *layout = pango_cairo_create_layout(cr);
-    PangoFontDescription *desc =
-        pango_font_description_copy_static(darktable.bauhaus->pango_font_desc);
-    pango_font_description_set_absolute_size(desc, DT_PIXEL_APPLY_DPI(20.0f) * PANGO_SCALE);
-    pango_layout_set_font_description(layout, desc);
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
-    pango_layout_set_width(layout, PANGO_SCALE * (width - 2 * offx));
-    PangoTabArray *tabs =
-        pango_tab_array_new_with_positions(1, TRUE, PANGO_TAB_RIGHT, width - 2 * offx);
-    pango_layout_set_tabs(layout, tabs);
-    pango_tab_array_free(tabs);
-
-    const gboolean hover = (dt_act_on_get_algorithm() == DT_ACT_ON_HOVER);
-#define RGHT "\t   ",
-    gchar *here = _("here"),
-          *text = g_strjoin(
-              NULL, "<b>", _("there are no images in this collection"), "</b>",
-              !lighttable ? NULL : "\n", "<b>" RGHT _("need help?"), "</b>", "\n",
-              _("if you have not imported any images yet"),
-              RGHT _("click on <b>?</b> then an on-screen item to open manual page"), "\n",
-              _("you can do so in the import module"),
-              RGHT _("press and hold '<b>h</b>' to show all active keyboard shortcuts"),
-              "\n" RGHT _("to open the online manual click "), "<u>", here, "</u>", "\n",
-              _("try to relax the filter settings in the top panel"), "\n",
-              _("or add images in the collections module"), "<b>" RGHT _("personalize darktable"),
-              "</b>", "\n" RGHT _("click on the gear icon for global preferences"), "\n",
-              RGHT _("click on the keyboard icon to define shortcuts"), "\n", "<b>",
-              hover ? _("try the 'no-click' workflow") : "", "</b>",
-              RGHT _("set module-specific preferences through module's menu"), "\n",
-              hover ? _("hover over an image and use keyboard shortcuts") : "", "\n",
-              hover ? _("to apply ratings, colors, styles, etc.") : "",
-              RGHT _("make default raw development look more like your"), "\n",
-              _("hover over any button for its description and shortcuts"),
-              RGHT _("camera's JPEG by applying a camera-specific style"), NULL);
-
-    dt_gui_gtk_set_source_rgb(cr, DT_GUI_COLOR_LIGHTTABLE_FONT);
-    cairo_move_to(cr, offx, offy);
-    pango_layout_set_markup(layout, text, -1);
-    pango_cairo_show_layout(cr, layout);
-    g_free(text);
-
-    if (lighttable)
-    {
-        dt_gui_gtk_set_source_rgba(cr, DT_GUI_COLOR_LIGHTTABLE_FONT, 0.3f);
-        const float offx2 = offx - DT_PIXEL_APPLY_DPI(10);
-        PangoRectangle ink;
-        PangoLayoutLine *line = pango_layout_get_line_readonly(layout, 5);
-        pango_layout_line_get_pixel_extents(line, NULL, &ink);
-
-        const int button_width =
-            gtk_widget_get_allocated_width(darktable.gui->focus_peaking_button);
-
-        cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(3));
-        cairo_new_path(cr);
-        _line_to_module(cr, width, ink, offx, offy, 3, offx2, "import");
-        _line_to(cr, ink, offx, offy, 5, offx + ink.width + DT_PIXEL_APPLY_DPI(10), width * 0.45f,
-                 0);
-        _line_to_module(cr, width, ink, offx, offy, 6, offx2, "collect");
-        _line_to(cr, ink, offx, offy, 12.8, 4 * button_width, 4 * button_width, height);
-
-        _line_to(cr, ink, offx, offy, 1.3, width - offx2 - 0.7 * ink.width,
-                 width - 2.75 * button_width, 0);
-        _line_to(cr, ink, offx, offy, 8, width - offx2, width - button_width, 0);
-        _line_to_module(cr, width, ink, offx, offy, 11, width - offx2, "styles");
-
-        pango_layout_set_text(layout, here, -1);
-        pango_layout_get_pixel_extents(layout, NULL, &lighttable->manual_button);
-        lighttable->manual_button.x = width - offx;
-        lighttable->manual_button.y = offy + 5 * lighttable->manual_button.height;
-    }
-    pango_font_description_free(desc);
-    g_object_unref(layout);
-}
-
 static gboolean _event_draw(GtkWidget *widget, cairo_t *cr, dt_thumbtable_t *table)
 {
     if (!GTK_IS_CONTAINER(gtk_widget_get_parent(widget)))
@@ -1085,19 +972,10 @@ static gboolean _event_draw(GtkWidget *widget, cairo_t *cr, dt_thumbtable_t *tab
     gtk_render_background(context, cr, 0, 0, gtk_widget_get_allocated_width(widget),
                           gtk_widget_get_allocated_height(widget));
 
-    // but we don't really want to draw something, this is just to know
-    // when the widget is really ready
-    table->manual_button.width = -1;
     if (!darktable.collection || (dt_collection_get_count(darktable.collection) == 0))
-    {
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(table->widget, &allocation);
-        _lighttable_expose_empty(cr, allocation.width, allocation.height,
-                                 table->mode != DT_THUMBTABLE_MODE_FILMSTRIP ? table : NULL);
         return TRUE;
-    }
-    else
-        dt_thumbtable_full_redraw(table, FALSE);
+
+    dt_thumbtable_full_redraw(table, FALSE);
     return FALSE; // let's propagate this event
 }
 
@@ -1228,13 +1106,6 @@ static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
         if (table->mode == DT_THUMBTABLE_MODE_FILMSTRIP && cv == DT_VIEW_DARKROOM)
         {
             dt_selection_select(darktable.selection, darktable.develop->image_storage.id);
-        }
-
-        PangoRectangle *button = &table->manual_button;
-        if (event->x < button->x && event->x > button->x - button->width && event->y < button->y &&
-            event->y > button->y - button->height)
-        {
-            dt_gui_show_help(NULL);
         }
 
         return TRUE;
