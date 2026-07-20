@@ -24,12 +24,12 @@ set(MODULES ${MODULES} module_toolbox)
 set(MODULES ${MODULES} filmstrip)
 set(MODULES ${MODULES} hinter)
 set(MODULES ${MODULES} image_infos)
-set(MODULES ${MODULES} log_history)
 
 # Modules are discovered by scanning this directory at runtime. Remove the
-# old binary during configure so an incremental build cannot load the deleted
-# Lighttable timeline module.
+# old binaries during configure so an incremental build cannot load deleted
+# Lighttable modules.
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libtimeline${CMAKE_SHARED_MODULE_SUFFIX}")
+file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/liblog_history${CMAKE_SHARED_MODULE_SUFFIX}")
 
 # modules
 add_library(import MODULE "import.c")
@@ -68,7 +68,6 @@ add_library(module_toolbox MODULE "tools/module_toolbox.c")
 add_library(filmstrip MODULE "tools/filmstrip.c")
 add_library(hinter MODULE "tools/hinter.c")
 add_library(image_infos MODULE "tools/image_infos.c")
-add_library(log_history MODULE "tools/log_history.c")
 
 # Add libs references
 foreach(module ${MODULES})

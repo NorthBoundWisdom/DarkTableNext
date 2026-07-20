@@ -23,6 +23,7 @@
 #include "common/image.h"
 #include "common/gimp.h"
 #include "gui/guides.h"
+#include "gui/log_history.h"
 #include "gui/splash.h"
 #include "bauhaus/bauhaus.h"
 #include "develop/develop.h"
@@ -188,31 +189,36 @@ static void _toggle_tooltip_visibility(dt_action_t *action)
     dt_toast_log(tooltip_hidden ? _("tooltips off") : _("tooltips on"));
 }
 
-static inline void _update_focus_peaking_button()
+static void _toggle_focus_peaking(dt_action_t *action)
 {
-    // read focus peaking global state and update toggle button accordingly
-    const gboolean state = darktable.gui->show_focus_peaking;
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(darktable.gui->focus_peaking_button), state);
-}
-
-static void _focuspeaking_switch_button_callback(GtkWidget *button, gpointer user_data)
-{
-    // button method
-    const gboolean state_memory = darktable.gui->show_focus_peaking;
-    const gboolean state_new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
-
-    if (state_memory == state_new)
-        return; // nothing to change, bypass
-
-    darktable.gui->show_focus_peaking = state_new;
-
-    gtk_widget_queue_draw(button);
+    darktable.gui->show_focus_peaking = !darktable.gui->show_focus_peaking;
 
     // make sure the second window if active is updated
     dt_dev_reprocess_center(darktable.develop);
 
     // we inform that all thumbnails need to be redraw
     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_DEVELOP_MIPMAP_UPDATED, -1);
+
+    (void)action;
+}
+
+static void _focus_peaking_status(const dt_action_t *action, const int instance,
+                                  const int element, const int effect,
+                                  dt_action_status_t *status, gpointer user_data)
+{
+    status->checked = darktable.gui->show_focus_peaking;
+    status->value = status->checked;
+    (void)action;
+    (void)instance;
+    (void)element;
+    (void)effect;
+    (void)user_data;
+}
+
+static void _log_history_command(dt_action_t *action)
+{
+    dt_gui_log_history_show(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)));
+    (void)action;
 }
 
 static gchar *_panels_get_view_path(char *suffix)
@@ -1579,19 +1585,14 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     }
     g_list_free(input_devices);
 
-    // create focus-peaking button
-    darktable.gui->focus_peaking_button =
-        dtgtk_togglebutton_new(dtgtk_cairo_paint_focus_peaking, 0, NULL);
-    gtk_widget_set_tooltip_text(darktable.gui->focus_peaking_button,
-                                _("toggle focus-peaking mode"));
-    g_signal_connect(G_OBJECT(darktable.gui->focus_peaking_button), "clicked",
-                     G_CALLBACK(_focuspeaking_switch_button_callback), NULL);
-    _update_focus_peaking_button();
+    // Keep focus peaking as a global command without reserving footer space for it.
+    ac = dt_action_register(&darktable.control->actions_global, N_("toggle focus peaking"),
+                            _toggle_focus_peaking, GDK_KEY_f,
+                            GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    dt_action_set_status_callback(ac, _focus_peaking_status, NULL);
 
-    // toggle focus peaking everywhere
-    ac = dt_action_define(&darktable.control->actions_global, NULL, N_("toggle focus peaking"),
-                          darktable.gui->focus_peaking_button, &dt_action_def_toggle);
-    dt_shortcut_register(ac, 0, 0, GDK_KEY_f, GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    dt_action_register(&darktable.control->actions_global, N_("log history"),
+                       _log_history_command, 0, 0);
 
     return 0;
 }

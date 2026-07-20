@@ -23,6 +23,7 @@
 #include "common/selection.h"
 #include "control/conf.h"
 #include "control/control.h"
+#include "dtgtk/button.h"
 #include "dtgtk/thumbtable.h"
 #include "gui/accelerators.h"
 #include "gui/gtk.h"
@@ -33,9 +34,9 @@ DT_MODULE(1)
 
 typedef struct dt_lib_tool_lighttable_t
 {
-    GtkWidget *zoom;
     GtkWidget *layout_box;
-    GtkWidget *layout_filemanager;
+    GtkWidget *grid_smaller;
+    GtkWidget *grid_larger;
     GtkWidget *layout_culling_dynamic;
     GtkWidget *layout_culling_fix;
     GtkWidget *layout_culling_restricted;
@@ -53,10 +54,7 @@ static gint _lib_lighttable_get_zoom(dt_lib_module_t *self);
 /* get/set layout proxy function */
 static dt_lighttable_layout_t _lib_lighttable_get_layout(dt_lib_module_t *self);
 
-/* zoom slider change callback */
-static void _lib_lighttable_zoom_slider_changed(GtkWidget *widget, dt_lib_module_t *self);
-
-static void _set_zoom(dt_lib_module_t *self, int zoom);
+static void _set_zoom(dt_lib_module_t *self, int old_zoom, int new_zoom);
 
 const char *name(dt_lib_module_t *self)
 {
@@ -90,7 +88,7 @@ static void _lib_lighttable_update_btn(dt_lib_module_t *self)
     gboolean fullpreview = dt_view_lighttable_preview_state(darktable.view_manager);
 
     // which btn should be active ?
-    GtkWidget *active = d->layout_filemanager;
+    GtkWidget *active = NULL;
     if (fullpreview)
         active = d->layout_preview;
     else if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
@@ -101,8 +99,11 @@ static void _lib_lighttable_update_btn(dt_lib_module_t *self)
     for (GList *l = children; l; l = g_list_delete_link(l, l))
     {
         GtkWidget *w = l->data;
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (w == active));
-        gtk_widget_queue_draw(w); // force redraw even if state not changed
+        if (GTK_IS_TOGGLE_BUTTON(w))
+        {
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), (w == active));
+            gtk_widget_queue_draw(w); // force redraw even if state not changed
+        }
     }
 
     // and now we set the tooltips
@@ -124,9 +125,11 @@ static void _lib_lighttable_update_btn(dt_lib_module_t *self)
     else
         gtk_widget_set_tooltip_text(d->layout_culling_dynamic, _("click to exit culling layout."));
 
-    gtk_widget_set_sensitive(d->zoom,
-                             (d->layout != DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC && !fullpreview));
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(d->zoom), d->current_zoom);
+    const gboolean grid_controls_active =
+        d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER && !fullpreview;
+    gtk_widget_set_sensitive(d->grid_smaller,
+                             grid_controls_active && d->current_zoom < DT_LIGHTTABLE_MAX_ZOOM);
+    gtk_widget_set_sensitive(d->grid_larger, grid_controls_active && d->current_zoom > 1);
 
     // culling restricted button configuration
     if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING || fullpreview)
@@ -270,10 +273,18 @@ static gboolean _lib_lighttable_restricted_btn_release(GtkWidget *w, GdkEventBut
     return TRUE;
 }
 
-static void _lib_lighttable_key_accel_toggle_filemanager(dt_action_t *action)
+static void _lib_lighttable_grid_smaller_clicked(GtkWidget *widget, dt_lib_module_t *self)
 {
-    dt_lib_module_t *self = darktable.view_manager->proxy.lighttable.module;
-    _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_FILEMANAGER);
+    dt_lib_tool_lighttable_t *d = self->data;
+    _lib_lighttable_set_zoom(self, d->current_zoom + 1);
+    (void)widget;
+}
+
+static void _lib_lighttable_grid_larger_clicked(GtkWidget *widget, dt_lib_module_t *self)
+{
+    dt_lib_tool_lighttable_t *d = self->data;
+    _lib_lighttable_set_zoom(self, d->current_zoom - 1);
+    (void)widget;
 }
 
 static void _lib_lighttable_key_accel_toggle_culling_dynamic_mode(dt_action_t *action)
@@ -463,18 +474,25 @@ void gui_init(dt_lib_module_t *self)
     }
     else
         d->current_zoom = dt_conf_get_int("plugins/lighttable/images_in_row");
+    d->current_zoom = CLAMP(d->current_zoom, 1, DT_LIGHTTABLE_MAX_ZOOM);
 
     // create the layouts icon list
     dt_action_t *ltv = &darktable.view_manager->proxy.lighttable.view->actions;
     dt_action_t *ac = NULL;
 
-    d->layout_filemanager = dtgtk_togglebutton_new(dtgtk_cairo_paint_lt_mode_grid, 0, NULL);
-    ac = dt_action_define(ltv, NULL, N_("toggle filemanager layout"), d->layout_filemanager, NULL);
-    dt_action_register(ac, NULL, _lib_lighttable_key_accel_toggle_filemanager, 0, 0);
-    dt_gui_add_help_link(d->layout_filemanager, "layout_filemanager");
-    gtk_widget_set_tooltip_text(d->layout_filemanager, _("click to enter filemanager layout."));
-    g_signal_connect(G_OBJECT(d->layout_filemanager), "button-release-event",
-                     G_CALLBACK(_lib_lighttable_layout_btn_release), self);
+    d->grid_smaller = dtgtk_button_new(dtgtk_cairo_paint_lt_grid_smaller, 0, NULL);
+    ac = dt_action_define(ltv, NULL, N_("decrease grid size"), d->grid_smaller,
+                          &dt_action_def_button);
+    gtk_widget_set_tooltip_text(d->grid_smaller, _("decrease grid size"));
+    g_signal_connect(G_OBJECT(d->grid_smaller), "clicked",
+                     G_CALLBACK(_lib_lighttable_grid_smaller_clicked), self);
+
+    d->grid_larger = dtgtk_button_new(dtgtk_cairo_paint_lt_grid_larger, 0, NULL);
+    ac = dt_action_define(ltv, NULL, N_("increase grid size"), d->grid_larger,
+                          &dt_action_def_button);
+    gtk_widget_set_tooltip_text(d->grid_larger, _("increase grid size"));
+    g_signal_connect(G_OBJECT(d->grid_larger), "clicked",
+                     G_CALLBACK(_lib_lighttable_grid_larger_clicked), self);
 
     d->layout_culling_fix =
         dtgtk_togglebutton_new(dtgtk_cairo_paint_lt_mode_culling_fixed, 0, NULL);
@@ -509,17 +527,9 @@ void gui_init(dt_lib_module_t *self)
     g_signal_connect(G_OBJECT(d->layout_preview), "button-release-event",
                      G_CALLBACK(_lib_lighttable_layout_btn_release), self);
 
-    d->layout_box = dt_gui_hbox(d->layout_filemanager, d->layout_culling_fix,
+    d->layout_box = dt_gui_hbox(d->grid_smaller, d->grid_larger, d->layout_culling_fix,
                                 d->layout_culling_dynamic, d->layout_preview);
     gtk_widget_set_name(d->layout_box, "lighttable-layouts-box");
-
-    /* create horizontal zoom slider */
-    d->zoom = gtk_spin_button_new_with_range(1, DT_LIGHTTABLE_MAX_ZOOM, 1);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(d->zoom), d->current_zoom);
-    gtk_widget_set_margin_start(d->zoom, 24);
-    gtk_widget_set_tooltip_text(d->zoom,
-                                _("set the number of thumbnails per row in filemanager layout,\n"
-                                  "or the total number of thumbnails shown in culling layouts."));
 
     /* culling restricted icon */
     d->layout_culling_restricted = dtgtk_togglebutton_new(dtgtk_cairo_paint_lock, 0, NULL);
@@ -532,12 +542,9 @@ void gui_init(dt_lib_module_t *self)
     g_signal_connect(G_OBJECT(d->layout_culling_restricted), "button-release-event",
                      G_CALLBACK(_lib_lighttable_restricted_btn_release), self);
 
-    self->widget = dt_gui_hbox(d->layout_box, d->zoom, d->layout_culling_restricted);
+    self->widget = dt_gui_hbox(d->layout_box, d->layout_culling_restricted);
 
     _lib_lighttable_update_btn(self);
-
-    g_signal_connect(G_OBJECT(d->zoom), "value-changed",
-                     G_CALLBACK(_lib_lighttable_zoom_slider_changed), self);
 
     darktable.view_manager->proxy.lighttable.module = self;
     darktable.view_manager->proxy.lighttable.set_zoom = _lib_lighttable_set_zoom;
@@ -560,28 +567,19 @@ void gui_cleanup(dt_lib_module_t *self)
     self->data = NULL;
 }
 
-static void _set_zoom(dt_lib_module_t *self, int zoom)
+static void _set_zoom(dt_lib_module_t *self, const int old_zoom, const int new_zoom)
 {
     dt_lib_tool_lighttable_t *d = self->data;
     if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING)
     {
-        dt_conf_set_int("plugins/lighttable/culling_num_images", zoom);
+        dt_conf_set_int("plugins/lighttable/culling_num_images", new_zoom);
         dt_control_queue_redraw_center();
     }
     else if (d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
-        dt_conf_set_int("plugins/lighttable/images_in_row", zoom);
-        dt_thumbtable_zoom_changed(dt_ui_thumbtable(darktable.gui->ui), d->current_zoom, zoom);
+        dt_conf_set_int("plugins/lighttable/images_in_row", new_zoom);
+        dt_thumbtable_zoom_changed(dt_ui_thumbtable(darktable.gui->ui), old_zoom, new_zoom);
     }
-}
-
-static void _lib_lighttable_zoom_slider_changed(GtkWidget *widget, dt_lib_module_t *self)
-{
-    dt_lib_tool_lighttable_t *d = self->data;
-
-    const int i = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
-    _set_zoom(self, i);
-    d->current_zoom = i;
 }
 
 static dt_lighttable_layout_t _lib_lighttable_get_layout(dt_lib_module_t *self)
@@ -593,8 +591,14 @@ static dt_lighttable_layout_t _lib_lighttable_get_layout(dt_lib_module_t *self)
 static void _lib_lighttable_set_zoom(dt_lib_module_t *self, gint zoom)
 {
     dt_lib_tool_lighttable_t *d = self->data;
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(d->zoom), zoom);
+    zoom = CLAMP(zoom, 1, DT_LIGHTTABLE_MAX_ZOOM);
+    if (zoom == d->current_zoom)
+        return;
+
+    const int old_zoom = d->current_zoom;
     d->current_zoom = zoom;
+    _set_zoom(self, old_zoom, zoom);
+    _lib_lighttable_update_btn(self);
 }
 
 static gint _lib_lighttable_get_zoom(dt_lib_module_t *self)

@@ -18,13 +18,11 @@
 
 #include "common/extra_optimizations.h"
 
-#include "bauhaus/bauhaus.h"
 #include "common/collection.h"
 #include "common/colorlabels.h"
 #include "common/darktable.h"
 #include "common/debug.h"
 #include "common/file_location.h"
-#include "common/focus_peaking.h"
 #include "common/grouping.h"
 #include "common/history.h"
 #include "common/image_cache.h"
@@ -35,7 +33,6 @@
 #include "control/control.h"
 #include "control/jobs.h"
 #include "control/settings.h"
-#include "dtgtk/button.h"
 #include "dtgtk/culling.h"
 #include "dtgtk/thumbtable.h"
 #include "gui/accelerators.h"
@@ -52,7 +49,6 @@
 #include <errno.h>
 #include <gdk/gdkkeysyms.h>
 #include <math.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,8 +75,6 @@ typedef struct dt_library_t
     gboolean preview_state;   // are we in preview mode (always combined with another layout)
     gboolean already_started; // is it the first start of lighttable. Used by culling
     int thumbtable_offset;    // last thumbtable offset before entering culling
-
-    GtkWidget *profile_floating_window;
 } dt_library_t;
 
 const char *name(const dt_view_t *self)
@@ -1032,220 +1026,6 @@ GSList *mouse_actions(const dt_view_t *self)
     return lm;
 }
 
-static void _profile_display_intent_callback(GtkWidget *combo, gpointer user_data)
-{
-    const int pos = dt_bauhaus_combobox_get(combo);
-
-    dt_iop_color_intent_t new_intent = darktable.color_profiles->display_intent;
-
-    // we are not using the int value directly so it's robust against
-    // changes on lcms' side
-    switch (pos)
-    {
-    case 0:
-        new_intent = DT_INTENT_PERCEPTUAL;
-        break;
-    case 1:
-        new_intent = DT_INTENT_RELATIVE_COLORIMETRIC;
-        break;
-    case 2:
-        new_intent = DT_INTENT_SATURATION;
-        break;
-    case 3:
-        new_intent = DT_INTENT_ABSOLUTE_COLORIMETRIC;
-        break;
-    }
-
-    if (new_intent != darktable.color_profiles->display_intent)
-    {
-        darktable.color_profiles->display_intent = new_intent;
-        pthread_rwlock_rdlock(&darktable.color_profiles->xprofile_lock);
-        dt_colorspaces_update_display_transforms();
-        pthread_rwlock_unlock(&darktable.color_profiles->xprofile_lock);
-        dt_control_queue_redraw_center();
-    }
-}
-
-static void _profile_display2_intent_callback(GtkWidget *combo, gpointer user_data)
-{
-    const int pos = dt_bauhaus_combobox_get(combo);
-
-    dt_iop_color_intent_t new_intent = darktable.color_profiles->display2_intent;
-
-    // we are not using the int value directly so it's robust against
-    // changes on lcms' side
-    switch (pos)
-    {
-    case 0:
-        new_intent = DT_INTENT_PERCEPTUAL;
-        break;
-    case 1:
-        new_intent = DT_INTENT_RELATIVE_COLORIMETRIC;
-        break;
-    case 2:
-        new_intent = DT_INTENT_SATURATION;
-        break;
-    case 3:
-        new_intent = DT_INTENT_ABSOLUTE_COLORIMETRIC;
-        break;
-    }
-
-    if (new_intent != darktable.color_profiles->display2_intent)
-    {
-        darktable.color_profiles->display2_intent = new_intent;
-        pthread_rwlock_rdlock(&darktable.color_profiles->xprofile_lock);
-        dt_colorspaces_update_display2_transforms();
-        pthread_rwlock_unlock(&darktable.color_profiles->xprofile_lock);
-        dt_control_queue_redraw_center();
-    }
-}
-
-static void _profile_display_profile_callback(GtkWidget *combo, gpointer user_data)
-{
-    gboolean profile_changed = FALSE;
-    const int pos = dt_bauhaus_combobox_get(combo);
-
-    for (GList *profiles = darktable.color_profiles->profiles; profiles;
-         profiles = g_list_next(profiles))
-    {
-        dt_colorspaces_color_profile_t *pp = profiles->data;
-        if (pp->display_pos == pos)
-        {
-            if (darktable.color_profiles->display_type != pp->type ||
-                (darktable.color_profiles->display_type == DT_COLORSPACE_FILE &&
-                 strcmp(darktable.color_profiles->display_filename, pp->filename)))
-            {
-                darktable.color_profiles->display_type = pp->type;
-                g_strlcpy(darktable.color_profiles->display_filename, pp->filename,
-                          sizeof(darktable.color_profiles->display_filename));
-                profile_changed = TRUE;
-            }
-            goto end;
-        }
-    }
-
-    // profile not found, fall back to system display profile. shouldn't happen
-    dt_print(DT_DEBUG_ALWAYS,
-             "can't find display profile `%s', using system display profile instead",
-             dt_bauhaus_combobox_get_text(combo));
-    profile_changed = darktable.color_profiles->display_type != DT_COLORSPACE_DISPLAY;
-    darktable.color_profiles->display_type = DT_COLORSPACE_DISPLAY;
-    darktable.color_profiles->display_filename[0] = '\0';
-
-end:
-    if (profile_changed)
-    {
-        pthread_rwlock_rdlock(&darktable.color_profiles->xprofile_lock);
-        dt_colorspaces_update_display_transforms();
-        pthread_rwlock_unlock(&darktable.color_profiles->xprofile_lock);
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_CONTROL_PROFILE_USER_CHANGED,
-                                DT_COLORSPACES_PROFILE_TYPE_DISPLAY);
-        dt_control_queue_redraw_center();
-    }
-}
-
-static void _profile_display2_profile_callback(GtkWidget *combo, gpointer user_data)
-{
-    gboolean profile_changed = FALSE;
-    const int pos = dt_bauhaus_combobox_get(combo);
-
-    for (GList *profiles = darktable.color_profiles->profiles; profiles;
-         profiles = g_list_next(profiles))
-    {
-        dt_colorspaces_color_profile_t *pp = profiles->data;
-        if (pp->display2_pos == pos)
-        {
-            if (darktable.color_profiles->display2_type != pp->type ||
-                (darktable.color_profiles->display2_type == DT_COLORSPACE_FILE &&
-                 strcmp(darktable.color_profiles->display2_filename, pp->filename)))
-            {
-                darktable.color_profiles->display2_type = pp->type;
-                g_strlcpy(darktable.color_profiles->display2_filename, pp->filename,
-                          sizeof(darktable.color_profiles->display2_filename));
-                profile_changed = TRUE;
-            }
-            goto end;
-        }
-    }
-
-    // profile not found, fall back to system display2 profile. shouldn't happen
-    dt_print(DT_DEBUG_ALWAYS,
-             "can't find preview display profile `%s', using system display profile instead",
-             dt_bauhaus_combobox_get_text(combo));
-    profile_changed = darktable.color_profiles->display2_type != DT_COLORSPACE_DISPLAY2;
-    darktable.color_profiles->display2_type = DT_COLORSPACE_DISPLAY2;
-    darktable.color_profiles->display2_filename[0] = '\0';
-
-end:
-    if (profile_changed)
-    {
-        pthread_rwlock_rdlock(&darktable.color_profiles->xprofile_lock);
-        dt_colorspaces_update_display2_transforms();
-        pthread_rwlock_unlock(&darktable.color_profiles->xprofile_lock);
-        DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_CONTROL_PROFILE_USER_CHANGED,
-                                DT_COLORSPACES_PROFILE_TYPE_DISPLAY2);
-        dt_control_queue_redraw_center();
-    }
-}
-
-static void _profile_update_display_cmb(GtkWidget *cmb_display_profile)
-{
-    for (const GList *l = darktable.color_profiles->profiles; l; l = g_list_next(l))
-    {
-        dt_colorspaces_color_profile_t *prof = l->data;
-        if (prof->display_pos > -1)
-        {
-            if (prof->type == darktable.color_profiles->display_type &&
-                (prof->type != DT_COLORSPACE_FILE ||
-                 !strcmp(prof->filename, darktable.color_profiles->display_filename)))
-            {
-                if (dt_bauhaus_combobox_get(cmb_display_profile) != prof->display_pos)
-                {
-                    dt_bauhaus_combobox_set(cmb_display_profile, prof->display_pos);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static void _profile_update_display2_cmb(GtkWidget *cmb_display_profile)
-{
-    for (const GList *l = darktable.color_profiles->profiles; l; l = g_list_next(l))
-    {
-        dt_colorspaces_color_profile_t *prof = l->data;
-        if (prof->display2_pos > -1)
-        {
-            if (prof->type == darktable.color_profiles->display2_type &&
-                (prof->type != DT_COLORSPACE_FILE ||
-                 !strcmp(prof->filename, darktable.color_profiles->display2_filename)))
-            {
-                if (dt_bauhaus_combobox_get(cmb_display_profile) != prof->display2_pos)
-                {
-                    dt_bauhaus_combobox_set(cmb_display_profile, prof->display2_pos);
-                    break;
-                }
-            }
-        }
-    }
-}
-
-static void _profile_display_changed(gpointer instance, const uint8_t profile_type,
-                                     gpointer user_data)
-{
-    GtkWidget *cmb_display_profile = GTK_WIDGET(user_data);
-
-    _profile_update_display_cmb(cmb_display_profile);
-}
-
-static void _profile_display2_changed(gpointer instance, const uint8_t profile_type,
-                                      gpointer user_data)
-{
-    GtkWidget *cmb_display_profile = GTK_WIDGET(user_data);
-
-    _profile_update_display2_cmb(cmb_display_profile);
-}
-
 void gui_init(dt_view_t *self)
 {
     dt_library_t *lib = self->data;
@@ -1265,98 +1045,6 @@ void gui_init(dt_view_t *self)
                                 lib->culling->widget, 1);
     gtk_overlay_reorder_overlay(GTK_OVERLAY(dt_ui_center_base(darktable.gui->ui)),
                                 lib->preview->widget, 1);
-
-    /* add the global focus peaking button in toolbox */
-    dt_view_manager_module_toolbox_add(darktable.view_manager, darktable.gui->focus_peaking_button,
-                                       DT_VIEW_LIGHTTABLE | DT_VIEW_DARKROOM);
-
-    // create display profile button
-    GtkWidget *const profile_button = dtgtk_button_new(dtgtk_cairo_paint_display, 0, NULL);
-    gtk_widget_set_tooltip_text(profile_button, _("set display profile"));
-    dt_view_manager_module_toolbox_add(darktable.view_manager, profile_button, DT_VIEW_LIGHTTABLE);
-
-    // and the popup window
-    lib->profile_floating_window = gtk_popover_new(profile_button);
-
-    g_object_set(G_OBJECT(lib->profile_floating_window), "transitions-enabled", FALSE, NULL);
-    g_signal_connect_swapped(G_OBJECT(profile_button), "button-press-event",
-                             G_CALLBACK(gtk_widget_show_all), lib->profile_floating_window);
-
-    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-
-    gtk_container_add(GTK_CONTAINER(lib->profile_floating_window), vbox);
-
-    /** let's fill the encapsulating widgets */
-
-    static const gchar *intents_list[] = {N_("perceptual"), N_("relative colorimetric"),
-                                          NC_("rendering intent", "saturation"),
-                                          N_("absolute colorimetric"), NULL};
-
-    GtkWidget *display_intent =
-        dt_bauhaus_combobox_new_full(DT_ACTION(self), N_("profiles"), N_("intent"), "", 0,
-                                     _profile_display_intent_callback, NULL, intents_list);
-    GtkWidget *display2_intent =
-        dt_bauhaus_combobox_new_full(DT_ACTION(self), N_("profiles"), N_("preview intent"), "", 0,
-                                     _profile_display2_intent_callback, NULL, intents_list);
-
-    GtkWidget *display_profile = dt_bauhaus_combobox_new(NULL);
-    dt_bauhaus_widget_set_label(display_profile, NULL, N_("display profile"));
-
-    GtkWidget *display2_profile = dt_bauhaus_combobox_new(NULL);
-    dt_bauhaus_widget_set_label(display2_profile, NULL, N_("preview display profile"));
-
-    // pack entries
-    gtk_box_pack_start(GTK_BOX(vbox), display_profile, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), display_intent, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), gtk_separator_new(GTK_ORIENTATION_HORIZONTAL), TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), display2_profile, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), display2_intent, TRUE, TRUE, 0);
-
-    for (GList *profiles = darktable.color_profiles->profiles; profiles;
-         profiles = g_list_next(profiles))
-    {
-        dt_colorspaces_color_profile_t *prof = profiles->data;
-        if (prof->display_pos > -1)
-        {
-            dt_bauhaus_combobox_add(display_profile, prof->name);
-            if (prof->type == darktable.color_profiles->display_type &&
-                (prof->type != DT_COLORSPACE_FILE ||
-                 !strcmp(prof->filename, darktable.color_profiles->display_filename)))
-            {
-                dt_bauhaus_combobox_set(display_profile, prof->display_pos);
-            }
-        }
-        if (prof->display2_pos > -1)
-        {
-            dt_bauhaus_combobox_add(display2_profile, prof->name);
-            if (prof->type == darktable.color_profiles->display2_type &&
-                (prof->type != DT_COLORSPACE_FILE ||
-                 !strcmp(prof->filename, darktable.color_profiles->display2_filename)))
-            {
-                dt_bauhaus_combobox_set(display2_profile, prof->display2_pos);
-            }
-        }
-    }
-
-    char *tooltip = dt_ioppr_get_location_tooltip("out", _("display ICC profiles"));
-    gtk_widget_set_tooltip_markup(display_profile, tooltip);
-    g_free(tooltip);
-
-    tooltip = dt_ioppr_get_location_tooltip("out", _("preview display ICC profiles"));
-    gtk_widget_set_tooltip_markup(display2_profile, tooltip);
-    g_free(tooltip);
-
-    g_signal_connect(G_OBJECT(display_profile), "value-changed",
-                     G_CALLBACK(_profile_display_profile_callback), NULL);
-
-    g_signal_connect(G_OBJECT(display2_profile), "value-changed",
-                     G_CALLBACK(_profile_display2_profile_callback), NULL);
-
-    // update the gui when profiles change
-    DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_CONTROL_PROFILE_USER_CHANGED, _profile_display_changed,
-                              display_profile);
-    DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_CONTROL_PROFILE_USER_CHANGED, _profile_display2_changed,
-                              display2_profile);
 
     dt_action_t *sa = &self->actions, *ac = NULL;
 

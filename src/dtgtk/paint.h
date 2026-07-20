@@ -180,9 +180,6 @@ void dtgtk_cairo_paint_alignment(cairo_t *cr, gint x, gint y, gint w, gint h, gi
 /** paint a text label icon */
 void dtgtk_cairo_paint_text_label(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                   void *data);
-/** paint a message/chat bubble icon */
-void dtgtk_cairo_paint_messages(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
-                                void *data);
 /** paint a styles icon */
 void dtgtk_cairo_paint_styles(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
 /** paint the ? help label */
@@ -231,8 +228,6 @@ void dtgtk_cairo_paint_warning(cairo_t *cr, gint x, gint y, gint w, gint h, gint
 /** paint a soft proofing icon */
 void dtgtk_cairo_paint_softproof(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                  void *data);
-/** paint a display icon */
-void dtgtk_cairo_paint_display(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
 /** paint a display2 icon */
 void dtgtk_cairo_paint_display2(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                 void *data);
@@ -251,9 +246,6 @@ void dtgtk_cairo_paint_multiinstance(cairo_t *cr, gint x, gint y, gint w, gint h
                                      void *data);
 /** paint a simple grid icon */
 void dtgtk_cairo_paint_grid(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
-/** paint focus peaking icon */
-void dtgtk_cairo_paint_focus_peaking(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
-                                     void *data);
 /** paint camera icon */
 void dtgtk_cairo_paint_camera(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
 /** paint histogram scope icon */
@@ -424,9 +416,12 @@ void dtgtk_cairo_paint_wand(cairo_t *cr, gint x, gint y, gint w, gint h, gint fl
 
 // Lighttable modes
 
-/** Lighttable: Grid mode */
-void dtgtk_cairo_paint_lt_mode_grid(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
-                                    void *data);
+/** Lighttable: decrease grid size (4 columns by 3 rows) */
+void dtgtk_cairo_paint_lt_grid_smaller(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
+                                       void *data);
+/** Lighttable: increase grid size (3 columns by 2 rows) */
+void dtgtk_cairo_paint_lt_grid_larger(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
+                                      void *data);
 /** Lighttable: Culling fixed */
 void dtgtk_cairo_paint_lt_mode_culling_fixed(cairo_t *cr, gint x, gint y, gint w, gint h,
                                              gint flags, void *data);

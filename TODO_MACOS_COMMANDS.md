@@ -69,7 +69,8 @@ CPU/OpenCL 结果、数据库 schema 或文件格式。产品范围继续以
 ### 单一事实来源与命令资格
 
 - 新增 `src/gui/system_commands.[ch]`。它从 `dt_action` 树收集可稳定解析的
-  `DT_ACTION_TYPE_COMMAND`，并显式接入 Preferences、Shortcuts、focus peaking 与导入/导出入口。
+  `DT_ACTION_TYPE_COMMAND`，并显式接入 Preferences、Shortcuts、focus peaking、日志历史与
+  导入/导出入口。日志历史使用菜单命令打开按需创建的非模态窗口，不再占用工作区底栏。
 - 每个 `GSimpleAction` 的名称由完整 Action ID、element、effect、instance 的 SHA-256 派生；激活时
   重新按 ID 解析 Action，查询 `dt_action_get_status()` 后才调用一次 `dt_action_invoke()`。
   不保存 Widget、模块或 Action 裸指针。
@@ -80,7 +81,8 @@ CPU/OpenCL 结果、数据库 schema 或文件格式。产品范围继续以
 
 - 菜单按产品语义投影为 App、File、Edit、Image、Selection、View、Lighttable、Darkroom、Actions
   和 Help；不直接转储内部 Action 树。
-- `dt_action_get_status()` 映射到 `GAction` enabled 与 boolean state，并在视图、选择、活动图像、
+- `dt_action_get_status()` 映射到 `GAction` enabled 与 boolean state；focus peaking 即使不再拥有
+  底栏 toggle widget，仍由命令状态回调提供菜单勾选状态。投影在视图、选择、活动图像、
   历史和 style 变化时刷新。style 变化会重建可动态注册的命令，再安全同步菜单。
 - `accelerators.[ch]` 提供只读的可表示键盘 chord 查询与共享的
   `dt_shortcut_normalize_modifiers()`。macOS 以 `<Primary>` 导出 Command key equivalent；投影层和
@@ -122,9 +124,13 @@ CPU/OpenCL 结果、数据库 schema 或文件格式。产品范围继续以
   此前直接运行裸可执行文件时 bundle identifier 为 `NULL`，正是 KeyClu / Paletro 未响应的根因。
 - 菜单点击与 `⌘⇧F` 均能切换 focus peaking 的 AX 勾选；连续两次按键得到“未勾选 → 勾选 → 未勾选”，
   验证状态回写与单次执行路径。
+- 删除底栏 toggle widget 后再次验证：`View` 菜单仍包含 `toggle focus peaking`，其 AX 勾选可由
+  命令状态回调从未选切换为已选；`log history` 同处 `View` 菜单，并能打开独立非模态窗口。
 - `cmake --build --preset mac_clang_debug --target darktable` 和
   `cmake --build --preset mac_clang_release --target darktable` 均已通过；启用测试的 Debug preset 下
   `ctest --test-dir build/mac_clang_debug --output-on-failure -L unit` 为 3/3 通过。
+- 本轮底栏收缩额外完成 `mac_gcc_debug` 与 `mac_clang_release` 全量构建；GCC Debug 的 unit 标签
+  CTest 为 3/3 通过。
 
 调试构建直接打开 Preferences 时因本地构建树未安装 GSettings schema 而退出；这是已存在的运行时
 打包前置条件，不是菜单 Action 的 GLib/GTK 警告或应用逻辑崩溃。系统菜单和状态动作的独立验证

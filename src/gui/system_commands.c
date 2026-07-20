@@ -89,7 +89,8 @@ static dt_system_command_menu_t _menu_for_action(const gchar *action_id)
 
     if (_matches(action_id, "global/switch views") || _matches(action_id, "global/panels") ||
         !g_strcmp0(action_id, "global/fullscreen") ||
-        !g_strcmp0(action_id, "global/toggle focus peaking"))
+        !g_strcmp0(action_id, "global/toggle focus peaking") ||
+        !g_strcmp0(action_id, "global/log history"))
         return DT_SYSTEM_COMMAND_MENU_VIEW;
 
     if (_matches(action_id, "views/lighttable"))
@@ -123,10 +124,12 @@ static dt_system_command_menu_t _menu_for_action(const gchar *action_id)
     return DT_SYSTEM_COMMAND_MENU_ACTIONS;
 }
 
-static gboolean _is_stateful(const dt_action_t *action, const dt_action_element_t element)
+static gboolean _is_stateful(const dt_action_t *action, const gchar *action_id,
+                             const dt_action_element_t element)
 {
     const dt_action_element_def_t *elements = dt_action_get_elements(action);
-    return elements && element >= 0 && elements[element].effects == dt_action_effect_toggle;
+    return (elements && element >= 0 && elements[element].effects == dt_action_effect_toggle) ||
+           !g_strcmp0(action_id, "global/toggle focus peaking");
 }
 
 static gchar *_native_action_name(const gchar *action_id, const dt_action_element_t element,
@@ -210,7 +213,7 @@ static void _add_command(dt_action_t *action, const gboolean explicit)
     command->element = DT_ACTION_ELEMENT_DEFAULT;
     command->effect = DT_ACTION_EFFECT_DEFAULT_KEY;
     command->menu = _menu_for_action(command->action_id);
-    command->stateful = _is_stateful(action, command->element);
+    command->stateful = _is_stateful(action, command->action_id, command->element);
     command->native_name = _native_action_name(command->action_id, command->element,
                                                 command->effect, command->instance);
 

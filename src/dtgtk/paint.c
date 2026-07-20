@@ -1066,59 +1066,6 @@ void dtgtk_cairo_paint_grid(cairo_t *cr, const gint x, const gint y, const gint 
     FINISH
 }
 
-void dtgtk_cairo_paint_focus_peaking(cairo_t *cr, const gint x, const gint y, const gint w,
-                                     const gint h, gint flags, void *data)
-{
-    PREAMBLE(1.2, 1, 0, 0)
-
-    // stigmometer aka split focusing screen aka Dodin's prism
-    cairo_arc(cr, 0.5, 0.5, 0.2, 0, 2. * M_PI);
-    cairo_move_to(cr, 0.3, 0.5);
-    cairo_line_to(cr, 0.7, 0.5);
-    cairo_stroke(cr);
-
-    // corners
-    const double center = 0.5;
-    const double width = 1.;
-    const double height = width * 3. / 4.;
-    const double offset_h = height / 2.;
-    const double offset_w = width / 2.;
-
-    const double tick_length = 0.2;
-    const double radius = 0.1;
-
-    const double left = center - offset_w;
-    const double right = center + offset_w;
-    const double top = center - offset_h;
-    const double bottom = center + offset_h;
-
-    /// north west
-    cairo_move_to(cr, left, top + tick_length);
-    cairo_arc(cr, left + radius, top + radius, radius, M_PI, 1.5 * M_PI);
-    cairo_line_to(cr, left + tick_length, top);
-    cairo_stroke(cr);
-
-    // south west
-    cairo_move_to(cr, left + tick_length, bottom);
-    cairo_arc(cr, left + radius, bottom - radius, radius, M_PI_2, M_PI);
-    cairo_line_to(cr, left, bottom - tick_length);
-    cairo_stroke(cr);
-
-    // south east
-    cairo_move_to(cr, right, bottom - tick_length);
-    cairo_arc(cr, right - radius, bottom - radius, radius, 0.0, M_PI_2);
-    cairo_line_to(cr, right - tick_length, bottom);
-    cairo_stroke(cr);
-
-    // north east
-    cairo_move_to(cr, right - tick_length, top);
-    cairo_arc(cr, right - radius, top + radius, radius, -M_PI_2, 0.0);
-    cairo_line_to(cr, right, top + tick_length);
-    cairo_stroke(cr);
-
-    FINISH
-}
-
 void dtgtk_cairo_paint_camera(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
                               gint flags, void *data)
 {
@@ -2301,39 +2248,6 @@ void dtgtk_cairo_paint_text_label(cairo_t *cr, const gint x, const gint y, const
     FINISH
 }
 
-void dtgtk_cairo_paint_messages(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
-                                gint flags, void *data)
-{
-    PREAMBLE(1, 1, 0, 0)
-
-    // speech bubble outline
-    cairo_move_to(cr, 0.15, 0.1);
-    cairo_line_to(cr, 0.85, 0.1);
-    cairo_curve_to(cr, 0.92, 0.1, 0.95, 0.15, 0.95, 0.22);
-    cairo_line_to(cr, 0.95, 0.68);
-    cairo_curve_to(cr, 0.95, 0.75, 0.92, 0.8, 0.85, 0.8);
-    cairo_line_to(cr, 0.35, 0.8);
-    cairo_line_to(cr, 0.15, 1.0);
-    cairo_line_to(cr, 0.2, 0.8);
-    cairo_line_to(cr, 0.15, 0.8);
-    cairo_curve_to(cr, 0.08, 0.8, 0.05, 0.75, 0.05, 0.68);
-    cairo_line_to(cr, 0.05, 0.22);
-    cairo_curve_to(cr, 0.05, 0.15, 0.08, 0.1, 0.15, 0.1);
-    cairo_close_path(cr);
-    cairo_stroke(cr);
-
-    // text lines inside
-    cairo_move_to(cr, 0.2, 0.3);
-    cairo_line_to(cr, 0.8, 0.3);
-    cairo_move_to(cr, 0.2, 0.47);
-    cairo_line_to(cr, 0.65, 0.47);
-    cairo_move_to(cr, 0.2, 0.64);
-    cairo_line_to(cr, 0.7, 0.64);
-    cairo_stroke(cr);
-
-    FINISH
-}
-
 void dtgtk_cairo_paint_union(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
                              gint flags, void *data)
 {
@@ -2641,21 +2555,6 @@ void dtgtk_cairo_paint_softproof(cairo_t *cr, const gint x, const gint y, const 
 
     cairo_set_fill_rule(cr, CAIRO_FILL_RULE_EVEN_ODD);
     cairo_fill(cr);
-
-    FINISH
-}
-
-void dtgtk_cairo_paint_display(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
-                               gint flags, void *data)
-{
-    PREAMBLE(1, 1, 0, 0)
-
-    cairo_rectangle(cr, 0, 0, 1, 3. / 4.);
-    cairo_move_to(cr, 0.5, 3. / 4);
-    cairo_line_to(cr, 0.5, 1);
-    cairo_move_to(cr, 0.3, 1);
-    cairo_line_to(cr, 0.7, 1);
-    cairo_stroke(cr);
 
     FINISH
 }
@@ -3336,22 +3235,39 @@ void dtgtk_cairo_paint_wand(cairo_t *cr, const gint x, const gint y, const gint 
     FINISH
 }
 
-void dtgtk_cairo_paint_lt_mode_grid(cairo_t *cr, const gint x, const gint y, const gint w,
-                                    const gint h, gint flags, void *data)
+void dtgtk_cairo_paint_lt_grid_smaller(cairo_t *cr, const gint x, const gint y, const gint w,
+                                       const gint h, gint flags, void *data)
 {
     PREAMBLE(1.4, 1, 0, 0)
 
     cairo_rectangle(cr, 0.05, 0.2, 0.9, 0.6);
-    cairo_move_to(cr, 0.06, 0.5);
-    cairo_line_to(cr, 0.94, 0.5);
+    cairo_move_to(cr, 0.275, 0.21);
+    cairo_line_to(cr, 0.275, 0.79);
+    cairo_move_to(cr, 0.5, 0.21);
+    cairo_line_to(cr, 0.5, 0.79);
+    cairo_move_to(cr, 0.725, 0.21);
+    cairo_line_to(cr, 0.725, 0.79);
+    cairo_move_to(cr, 0.06, 0.4);
+    cairo_line_to(cr, 0.94, 0.4);
+    cairo_move_to(cr, 0.06, 0.6);
+    cairo_line_to(cr, 0.94, 0.6);
+    cairo_stroke(cr);
+
+    FINISH
+}
+
+void dtgtk_cairo_paint_lt_grid_larger(cairo_t *cr, const gint x, const gint y, const gint w,
+                                      const gint h, gint flags, void *data)
+{
+    PREAMBLE(1.4, 1, 0, 0)
+
+    cairo_rectangle(cr, 0.05, 0.2, 0.9, 0.6);
     cairo_move_to(cr, 0.35, 0.21);
     cairo_line_to(cr, 0.35, 0.79);
     cairo_move_to(cr, 0.65, 0.21);
     cairo_line_to(cr, 0.65, 0.79);
-    cairo_stroke(cr);
-
-    cairo_set_line_width(cr, 0.08);
-    cairo_rectangle(cr, 0.35, 0.5, 0.3, 0.3);
+    cairo_move_to(cr, 0.06, 0.5);
+    cairo_line_to(cr, 0.94, 0.5);
     cairo_stroke(cr);
 
     FINISH

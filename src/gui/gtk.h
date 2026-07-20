@@ -129,7 +129,6 @@ typedef struct dt_gui_gtk_t
     gboolean show_focus_peaking;
     gboolean touchpad_gestures_enabled;
     double overlay_red, overlay_blue, overlay_green, overlay_contrast;
-    GtkWidget *focus_peaking_button;
 
     double dpi, dpi_factor, ppd, ppd_thb;
     gboolean have_pen_pressure;
