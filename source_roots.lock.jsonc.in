@@ -4,6 +4,12 @@
   // submodules, vendored copies, or CMake-time downloads.
   "schemaVersion": 5,
   "projectVersion": "0.9.0",
+  "AppConfigs": {
+    // Keep the committed dependency baseline release-safe. Developers may set
+    // this to true in the ignored active lock to isolate runtime persistence
+    // for this checkout under darktable-dev/<checkout hash>.
+    "DevMode": false
+  },
   "cmakeEnvironment": {
     "PATH": "/opt/homebrew/opt/llvm/bin:$penv{PATH}"
   },

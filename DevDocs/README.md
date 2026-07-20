@@ -16,6 +16,7 @@ This guide maps the existing Image Operation (IOP) modules and darkroom implemen
 | **[Module_Groups.md](Module_Groups.md)** | Module grouping explanation and `default_group()` |
 | **[maths.md](maths.md)** | Core Math, transposed matrices, and color science helpers |
 | **[GPU_Baseline.md](GPU_Baseline.md)** | OpenCL → Metal Phase 0 workload, correctness, and performance gates |
+| **[Runtime_Persistence.md](Runtime_Persistence.md)** | DevMode checkout isolation and production instance-lock policy |
 
 ### GUI Development
 | File | Description |

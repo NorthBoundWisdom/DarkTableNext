@@ -44,6 +44,19 @@ python3 configs/source_root_workflow.py --update
 `--init` 会准备依赖 seed repository，是唯一允许联网的依赖工作流；`--update`
 根据活动锁离线物化源码根并重新生成 CMake 预设。
 
+### 运行时持久化模式
+
+`source_roots.lock.jsonc.in` 固定 `AppConfigs.DevMode: false`，因此 release 构建使用
+标准用户配置、缓存和数据库根，并在启动时使用一个由内核自动释放的应用实例锁；同一用户
+不能同时运行两个生产进程，即使它们指定了不同的 `--library` 或 `--configdir`。
+
+开发 checkout 可在被忽略的 `source_roots.lock.jsonc` 中设置
+`"AppConfigs": { "DevMode": true }`，然后重新执行 `--update` 和 CMake configure。开发
+构建会根据解析后的 checkout 路径生成稳定哈希，并将默认持久化根隔离在
+`darktable-dev/<checkout-hash>` 下；该根包含 `library.db`、`data.db`、配置和缓存，同时 D-Bus
+服务名也按 checkout 隔离。不同 checkout 可以并存；同一 checkout 仍由数据库锁保护。
+显式传入 `--configdir` 或 `--cachedir` 仍会覆盖该默认根，应只用于明确需要共享状态的场景。
+
 ### 配置、构建与运行
 
 ```sh

@@ -136,7 +136,7 @@ static int usage(const char *argv0)
          "--cachedir DIR\n"
          "    darktable keeps a cache of image thumbnails for fast image preview\n"
          "    and precompiled OpenCL binaries for fast startup. By default the\n"
-         "    cache is located in $HOME/.cache/darktable/. Multiple thumbnail\n"
+         "    cache is located in the build-selected darktable user cache root. Multiple thumbnail\n"
          "    caches may exist in parallel, one for each library file.\n"
          "\n"
          "--conf KEY=VALUE\n"
@@ -146,7 +146,7 @@ static int usage(const char *argv0)
          "\n"
          "--configdir DIR\n"
          "    Where darktable stores user-specific configuration.\n"
-         "    The default location is $HOME/.config/darktable/\n"
+         "    The default location is the build-selected darktable user configuration root.\n"
          "\n"
          "--datadir DIR\n"
          "    Define the directory where darktable finds its runtime data.\n"
@@ -157,7 +157,7 @@ static int usage(const char *argv0)
          "--library FILE\n"
          "    Specifies an alternate location for darktable's image information database,\n"
          "    which is stored in an SQLite file by default (library.db) in the directory\n"
-         "    specified by --configdir or $HOME/.config/darktable/. You can use this\n"
+         "    specified by --configdir or the build-selected user configuration root. You can use this\n"
          "    option for experimentation without affecting your original library.db.\n"
          "    If the specified database file doesn't exist, darktable will create it.\n"
          "\n"
@@ -1349,7 +1349,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
                     connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
                 // ... and send it to the running instance of darktable
                 image_loaded_elsewhere =
-                    g_dbus_connection_call_sync(connection, "org.darktable.service", "/darktable",
+                    g_dbus_connection_call_sync(connection, dt_dbus_service_name(), "/darktable",
                                                 "org.darktable.service.Remote", "Open",
                                                 g_variant_new("(s)", filename), NULL,
                                                 G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL) != NULL;
@@ -1864,6 +1864,7 @@ After dt_control_shutdown() has finished we are sure there are no background thr
     }
 
     dt_database_destroy(darktable.db);
+    dt_database_release_application_instance_lock();
 
     if (init_gui)
     {

@@ -36,6 +36,14 @@ static const gchar introspection_xml[] = "<node>"
                                          "  </interface>"
                                          "</node>";
 
+const gchar *dt_dbus_service_name()
+{
+#if DT_BUILD_DEVMODE
+    return "org.darktable.service.dev.checkout_" DT_BUILD_CHECKOUT_ID;
+#else
+    return "org.darktable.service";
+#endif
+}
 
 static void _handle_method_call(GDBusConnection *connection, const gchar *sender,
                                 const gchar *object_path, const gchar *interface_name,
@@ -135,8 +143,7 @@ struct dt_dbus_t *dt_dbus_init()
     if (dbus->introspection_data == NULL)
         return dbus;
 
-    dbus->owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                                    "org.darktable.service", // FIXME
+    dbus->owner_id = g_bus_own_name(G_BUS_TYPE_SESSION, dt_dbus_service_name(),
                                     G_BUS_NAME_OWNER_FLAGS_NONE, _on_bus_acquired,
                                     _on_name_acquired, _on_name_lost, dbus, NULL);
 

@@ -30,6 +30,8 @@ struct dt_database_t *dt_database_init(const char *alternative, const gboolean l
                                        const gboolean has_gui);
 /** closes down database and frees memory */
 void dt_database_destroy(const struct dt_database_t *);
+/** releases the process-wide production instance lock after final database shutdown */
+void dt_database_release_application_instance_lock();
 /** get handle */
 struct sqlite3 *dt_database_get(const struct dt_database_t *);
 /** Returns database path */

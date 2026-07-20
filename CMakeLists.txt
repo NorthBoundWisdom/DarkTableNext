@@ -121,6 +121,30 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
 #
 file(MAKE_DIRECTORY "${DARKTABLE_BINDIR}/") # the bin/ subdirectory won't exist yet
 
+# Runtime persistence behavior is deliberately a build input rather than an
+# application-version heuristic.  The ignored active source-roots lock may
+# enable per-checkout developer state; the committed template remains the
+# production-safe default.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(DT_BUILD_RUNTIME_CONFIG "${DARKTABLE_BINDIR}/build_runtime_config.h")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/configs/generate_build_runtime_config.py"
+    "${CMAKE_SOURCE_DIR}/configs/source_roots.py"
+    "${CMAKE_SOURCE_DIR}/source_roots.lock.jsonc.in"
+    "${CMAKE_SOURCE_DIR}/source_roots.lock.jsonc")
+execute_process(
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/configs/generate_build_runtime_config.py"
+            --repo-root "${CMAKE_SOURCE_DIR}" --output "${DT_BUILD_RUNTIME_CONFIG}"
+    RESULT_VARIABLE DT_RUNTIME_CONFIG_RESULT
+    OUTPUT_VARIABLE DT_RUNTIME_CONFIG_OUTPUT
+    ERROR_VARIABLE DT_RUNTIME_CONFIG_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(NOT DT_RUNTIME_CONFIG_RESULT EQUAL 0)
+  message(FATAL_ERROR
+      "Unable to generate the DarkTableNext runtime mode configuration:\n${DT_RUNTIME_CONFIG_ERROR}")
+endif()
+message(STATUS "${DT_RUNTIME_CONFIG_OUTPUT}")
+
 # Adds a custom command to generate the version source from PROJECT_VERSION.
 function(generate_version_gen_c)
   set(_VERSION "${ARGV0}")

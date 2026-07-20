@@ -40,6 +40,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -47,10 +48,14 @@
 #define MAX_NESTED_TRANSACTIONS 5
 /* transaction id */
 static dt_atomic_int _trxid;
+static int _application_instance_lock_fd = -1;
+static gchar *_application_instance_lockfile = NULL;
 
 typedef struct dt_database_t
 {
     gboolean lock_acquired;
+    gboolean application_instance_lock_failed;
+    gboolean application_instance_lock_contended;
 
     /* data database filename */
     gchar *dbfilename_data, *lockfile_data;
@@ -609,7 +614,38 @@ static void _sanitize_db(dt_database_t *db)
 
 void dt_database_show_error(const dt_database_t *db, const char *dblabel)
 {
-    if (!db->lock_acquired)
+    if (db->application_instance_lock_failed)
+    {
+        char *label_text = NULL;
+        if (db->application_instance_lock_contended)
+        {
+            char *owner_suffix = db->error_other_pid > 0
+                                     ? g_strdup_printf(_(" (current owner process ID %d)"),
+                                                       db->error_other_pid)
+                                     : g_strdup("");
+            label_text = g_markup_printf_escaped(
+                _("\n"
+                  "  Another darktable instance is already running.\n"
+                  "\n"
+                  "  DarkTableNext production builds allow one graphical instance per user.\n"
+                  "  Close the running instance before opening another one%s.\n"),
+                owner_suffix);
+            g_free(owner_suffix);
+        }
+        else
+        {
+            label_text = g_markup_printf_escaped(
+                _("\n"
+                  "  DarkTableNext could not acquire its application instance lock.\n"
+                  "\n"
+                  "  %s\n"),
+                db->error_message ? db->error_message : _("unknown lock error"));
+        }
+        dt_gui_show_standalone_yes_no_dialog(_("darktable is already running"), label_text,
+                                             _("_ok"), NULL);
+        g_free(label_text);
+    }
+    else if (!db->lock_acquired)
     {
         char lck_pathname[1024];
         snprintf(lck_pathname, sizeof(lck_pathname), "%s.lock", db->error_dbfilename);
@@ -859,6 +895,92 @@ static gboolean _lock_databases(dt_database_t *db)
     return TRUE;
 }
 
+#if !DT_BUILD_DEVMODE
+static void _read_application_instance_owner(dt_database_t *db, const int fd)
+{
+    char buf[64] = {0};
+    if (lseek(fd, 0, SEEK_SET) < 0)
+        return;
+
+    const int bytes_read = read(fd, buf, sizeof(buf) - 1);
+    if (bytes_read > 0)
+        db->error_other_pid = atoi(buf);
+}
+
+static gboolean _lock_application_instance(dt_database_t *db)
+{
+    if (_application_instance_lock_fd >= 0)
+        return TRUE;
+
+    gchar *lock_directory =
+        g_build_filename(g_get_user_config_dir(), "darktable", "Locks", NULL);
+    if (g_mkdir_with_parents(lock_directory, 0700) != 0)
+    {
+        db->application_instance_lock_failed = TRUE;
+        db->error_message =
+            g_strdup_printf(_("cannot create application instance lock directory: %s"),
+                            strerror(errno));
+        g_free(lock_directory);
+        return FALSE;
+    }
+
+    gchar *lockfile = g_build_filename(lock_directory, "application-instance.lock", NULL);
+    g_free(lock_directory);
+
+    const int fd = g_open(lockfile, O_CREAT | O_RDWR, 0600);
+    if (fd < 0)
+    {
+        db->application_instance_lock_failed = TRUE;
+        db->error_message = g_strdup_printf(_("cannot open application instance lock: %s"),
+                                             strerror(errno));
+        g_free(lockfile);
+        return FALSE;
+    }
+
+    if (flock(fd, LOCK_EX | LOCK_NB) != 0)
+    {
+        const int lock_errno = errno;
+        if (lock_errno == EWOULDBLOCK || lock_errno == EAGAIN)
+        {
+            _read_application_instance_owner(db, fd);
+            db->application_instance_lock_failed = TRUE;
+            db->application_instance_lock_contended = TRUE;
+        }
+        else
+        {
+            db->application_instance_lock_failed = TRUE;
+            db->error_message =
+                g_strdup_printf(_("cannot acquire application instance lock: %s"),
+                                strerror(lock_errno));
+        }
+        close(fd);
+        g_free(lockfile);
+        return FALSE;
+    }
+
+    gchar *pid = g_strdup_printf("%d\n", getpid());
+    const size_t pid_length = strlen(pid);
+    const gboolean wrote_pid = ftruncate(fd, 0) == 0 && lseek(fd, 0, SEEK_SET) >= 0 &&
+                                write(fd, pid, pid_length) == (ssize_t)pid_length;
+    g_free(pid);
+    if (!wrote_pid)
+    {
+        const int write_errno = errno;
+        flock(fd, LOCK_UN);
+        close(fd);
+        db->application_instance_lock_failed = TRUE;
+        db->error_message = g_strdup_printf(_("cannot write application instance lock: %s"),
+                                             strerror(write_errno));
+        g_free(lockfile);
+        return FALSE;
+    }
+
+    _application_instance_lock_fd = fd;
+    _application_instance_lockfile = lockfile;
+    return TRUE;
+}
+#endif
+
 static gboolean _upgrade_camera_table(const dt_database_t *db)
 {
     gboolean res = TRUE;
@@ -1075,6 +1197,16 @@ start:;
     db->dbfilename_library = g_strdup(dbfilename_library);
 
     dt_atomic_set_int(&_trxid, 0);
+
+#if !DT_BUILD_DEVMODE
+    if (!_lock_application_instance(db))
+    {
+        dt_print(DT_DEBUG_ALWAYS,
+                 "[init] application instance lock is unavailable; aborting before database access");
+        g_free(dbname);
+        return db;
+    }
+#endif
 
     /* make sure the folder exists. this might not be the case for new databases */
     /* also check if a database backup is needed */
@@ -1552,7 +1684,8 @@ void dt_upgrade_maker_model(const dt_database_t *db)
 
 void dt_database_destroy(const dt_database_t *db)
 {
-    sqlite3_close(db->handle);
+    if (db->handle)
+        sqlite3_close(db->handle);
     if (db->lockfile_data)
     {
         g_unlink(db->lockfile_data);
@@ -1568,6 +1701,17 @@ void dt_database_destroy(const dt_database_t *db)
     g_free((dt_database_t *)db);
 
     sqlite3_shutdown();
+}
+
+void dt_database_release_application_instance_lock()
+{
+    if (_application_instance_lock_fd >= 0)
+    {
+        flock(_application_instance_lock_fd, LOCK_UN);
+        close(_application_instance_lock_fd);
+        _application_instance_lock_fd = -1;
+    }
+    g_clear_pointer(&_application_instance_lockfile, g_free);
 }
 
 sqlite3 *dt_database_get(const dt_database_t *db)

@@ -24,6 +24,11 @@ from repomgrcpp.preset_templates import resolve_preset_models as resolve_freecm_
 
 def resolve_preset_models(*args: object, **kwargs: object):
     """Keep the generated macOS compiler presets tied to their toolchains."""
+    lock_data = args[1] if len(args) > 1 else kwargs.get("lock_data")
+    if lock_data is None:
+        raise ValueError("resolve_preset_models requires the dependency lock data")
+    dev_mode_from_lock_data(lock_data, path_label=REPO_ROOT / "source_roots.lock.jsonc")
+
     resolved = resolve_freecm_preset_models(*args, **kwargs)
     if resolved.os_group != "mac":
         return resolved

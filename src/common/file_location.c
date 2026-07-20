@@ -35,6 +35,15 @@
 #include "file_location.h"
 #include "whereami.h"
 
+static gchar *_default_user_directory(const gchar *base_directory)
+{
+#if DT_BUILD_DEVMODE
+    return g_build_filename(base_directory, "darktable-dev", DT_BUILD_CHECKOUT_ID, NULL);
+#else
+    return g_build_filename(base_directory, "darktable", NULL);
+#endif
+}
+
 uint8_t dt_loc_init(const char *datadir, const char *moduledir, const char *configdir,
                     const char *cachedir, const char *tmpdir)
 {
@@ -182,7 +191,7 @@ gchar *dt_loc_init_generic(const char *absolute_value, const char *application_d
 
 gboolean dt_loc_init_user_config_dir(const char *configdir)
 {
-    char *default_config_dir = g_build_filename(g_get_user_config_dir(), "darktable", NULL);
+    char *default_config_dir = _default_user_directory(g_get_user_config_dir());
     darktable.configdir = dt_loc_init_generic(configdir, NULL, default_config_dir);
     g_free(default_config_dir);
     return dt_check_opendir("darktable.configdir", darktable.configdir);
@@ -196,7 +205,7 @@ gboolean dt_loc_init_tmp_dir(const char *tmpdir)
 
 gboolean dt_loc_init_user_cache_dir(const char *cachedir)
 {
-    char *default_cache_dir = g_build_filename(g_get_user_cache_dir(), "darktable", NULL);
+    char *default_cache_dir = _default_user_directory(g_get_user_cache_dir());
     darktable.cachedir = dt_loc_init_generic(cachedir, NULL, default_cache_dir);
     g_free(default_cache_dir);
     return dt_check_opendir("darktable.cachedir", darktable.cachedir);

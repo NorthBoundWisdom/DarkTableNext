@@ -19,6 +19,36 @@ from freecm.dependency_roots import (  # noqa: E402
 )
 
 
+DEV_MODE_KEY = "DevMode"
+
+
+def dev_mode_from_lock_data(lock_data: object, *, path_label: object) -> bool:
+    """Return the checkout-local runtime persistence mode from AppConfigs.
+
+    Older ignored active locks predate AppConfigs.  They retain the safe
+    production default until a developer explicitly adds AppConfigs.DevMode.
+    """
+    if not isinstance(lock_data, dict):
+        raise ValueError(f"Invalid source-roots lock file (expected object): {path_label}")
+    if DEV_MODE_KEY in lock_data:
+        raise ValueError(
+            f"{DEV_MODE_KEY} must be stored in AppConfigs.{DEV_MODE_KEY} in {path_label}"
+        )
+
+    app_configs = lock_data.get("AppConfigs", {})
+    if app_configs is None:
+        app_configs = {}
+    if not isinstance(app_configs, dict):
+        raise ValueError(f"Invalid AppConfigs map in {path_label}")
+
+    value = app_configs.get(DEV_MODE_KEY, False)
+    if not isinstance(value, bool):
+        raise ValueError(
+            f"Invalid AppConfigs.{DEV_MODE_KEY} in {path_label}; expected boolean"
+        )
+    return value
+
+
 DEPENDENCY_ROOT_SPECS: tuple[DependencyRootSpec, ...] = (
     DependencyRootSpec(
         dependency_name="rawspeed",

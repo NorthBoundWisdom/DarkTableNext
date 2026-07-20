@@ -1,6 +1,8 @@
 // CMake uses config.cmake.h to generate config.h within the build folder.
 #pragma once
 
+#include "build_runtime_config.h"
+
 #include <stddef.h>
 
 // clang-format off

@@ -36,6 +36,9 @@ typedef struct dt_dbus_t
 /** allocates and initializes dbus */
 dt_dbus_t *dt_dbus_init();
 
+/** Returns the D-Bus service name for this runtime persistence scope. */
+const gchar *dt_dbus_service_name();
+
 /** closes down database and frees memory */
 void dt_dbus_destroy(const dt_dbus_t *);
 

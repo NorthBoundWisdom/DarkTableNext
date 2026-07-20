@@ -9,6 +9,8 @@
 
 #include "osx.h"
 
+#include "config.h"
+
 #include <gio/gio.h>
 #include <string.h>
 
@@ -98,7 +100,12 @@ static char *_dt_osx_create_gdk_pixbuf_loader_cache(const char *resources_dir,
     }
     g_free(template_path);
 
+#if DT_BUILD_DEVMODE
+    char *cache_dir =
+        g_build_filename(g_get_user_cache_dir(), "darktable-dev", DT_BUILD_CHECKOUT_ID, NULL);
+#else
     char *cache_dir = g_build_filename(g_get_user_cache_dir(), "darktable", NULL);
+#endif
     if (g_mkdir_with_parents(cache_dir, 0700) != 0)
     {
         g_free(cache_dir);
