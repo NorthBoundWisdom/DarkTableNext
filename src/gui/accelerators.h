@@ -45,6 +45,8 @@ void dt_shortcuts_select_view(dt_view_type_flags_t view);
 gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_data);
 gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
                                       GtkTooltip *tooltip, GtkWidget *vbox);
+/** Apply the current platform's shortcut modifier policy to an input event. */
+GdkModifierType dt_shortcut_normalize_modifiers(GdkModifierType modifiers);
 
 float dt_action_process(const gchar *action, int instance, const gchar *element,
                         const gchar *effect, float size);
@@ -223,6 +225,15 @@ gchar *dt_action_get_effect_label(const dt_action_t *action, dt_action_element_t
                                   dt_action_effect_t effect);
 gchar *dt_action_get_shortcut_label(const dt_action_t *action, int instance,
                                     dt_action_element_t element, dt_action_effect_t effect);
+
+/** Resolve a stable, escaped Action ID previously returned by dt_action_get_full_id(). */
+dt_action_t *dt_action_find_by_id(const gchar *action_id);
+
+/** Return the active-view shortcuts that GTK can represent as native accelerators.
+ * The result is a newly allocated, NULL-terminated list suitable for
+ * gtk_application_set_accels_for_action(); free it with g_strfreev(). */
+gchar **dt_action_get_gtk_accels(const dt_action_t *action, int instance,
+                                 dt_action_element_t element, dt_action_effect_t effect);
 
 /** Find the closest action assigned to widget or one of its ancestors.
  * `action_widget`, when non-NULL, receives the widget that owns the action. */

@@ -141,23 +141,14 @@ gchar *dt_loc_init_generic(const char *absolute_value, const char *application_d
             char *bundle_path = dt_osx_get_bundle_res_path();
             if (bundle_path)
             {
-                /// bundle detected ...
-
-                // on a mac inside the bundle the executables are in <bundleroot>/Contents/MacOS/
-                // all other directories are a subdirectory of <bundleroot>/Contents/Resources:
-                // <bundleroot>/Contents/Resources/etc
-                // <bundleroot>/Contents/Resources/lib
-                // <bundleroot>/Contents/Resources/share
-                // so the relative path from the binary directory to the other directories
-                // differs to the non-bundle version by
-                // ../etc -> ../Resources/etc,
-                // ../lib -> ../Resources/lib,
-                // ../share -> ../Resources/share,
-                // So we have to modify the relative default value
-
-                // +2: removes the two dots '..'
-                g_snprintf(complete_path, sizeof(complete_path), "%s/../Resources%s",
-                           application_directory, default_value + 2);
+                // Bundle resources replace the normal ../lib and ../share layout.  The bundle path
+                // is resolved from the actual executable, so this remains valid through the
+                // bin/darktable compatibility wrapper.
+                const char *resource_relative =
+                    g_str_has_prefix(default_value, "..") ? default_value + 2 : default_value;
+                g_snprintf(complete_path, sizeof(complete_path), "%s%s", bundle_path,
+                           resource_relative);
+                g_free(bundle_path);
             }
             else
             {

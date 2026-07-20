@@ -58,6 +58,7 @@
 #include "gui/accelerators.h"
 #include "gui/workspace.h"
 #include "gui/gtk.h"
+#include "gui/system_commands.h"
 #include "gui/guides.h"
 #include "gui/presets.h"
 #include "gui/styles.h"
@@ -1602,6 +1603,10 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         // Save the shortcuts including defaults
         dt_shortcuts_save(NULL, TRUE);
 
+        // The application Action tree and user shortcut set are now complete.  Register the
+        // GtkApplication projection before any interactive event can reach the main window.
+        dt_gui_system_commands_init(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)));
+
         // connect the shortcut dispatcher
         g_signal_connect(dt_ui_main_window(darktable.gui->ui), "event",
                          G_CALLBACK(dt_shortcut_dispatcher), NULL);
@@ -1786,6 +1791,7 @@ After dt_control_shutdown() has finished we are sure there are no background thr
 
     if (init_gui)
     {
+        dt_gui_system_commands_cleanup();
         dt_lib_cleanup(darktable.lib);
         free(darktable.lib);
         darktable.lib = NULL;

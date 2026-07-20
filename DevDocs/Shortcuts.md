@@ -56,3 +56,33 @@ If an existing module control lacks a shortcut:
 
 ## User Configuration
 Users can customize shortcuts in **Preferences > Shortcuts**. The system scans all registered actions and presents them in a hierarchical list.
+
+## macOS System Command Projection
+
+`src/gui/system_commands.c` is a projection of the existing Action system, not a second shortcut
+registry. Once the GUI Action tree and user shortcut configuration are ready, it registers a
+`GtkApplication`, exports a product-level `GMenuModel`, and exposes a selected subset of Actions as
+`GSimpleAction` entries. This lets macOS Accessibility clients discover the menu and its simple
+keyboard equivalents.
+
+The development command `build/<preset>/bin/darktable` launches the matching `darktable.app` bundle
+instead of a bare Mach-O executable. The bundle's `org.darktable.darktable` identity is required for
+per-application Accessibility clients such as Paletro and KeyClu to associate the active process with
+its exported menu; the wrapper preserves the documented command-line entry point.
+
+- `dt_action` and the configured `GSequence` remain the source of truth. A projected command keeps
+  only its stable Action ID plus element/effect/instance; it re-resolves the Action, queries
+  `dt_action_get_status()`, then invokes it through `dt_action_invoke()`.
+- Only a plain keyboard chord with one stable Action target is eligible. Mouse, scroll, hold,
+  multiple-click, move/device input, provider-only Actions, object hit tests, and ambiguous IOP
+  instances stay in the existing dispatcher or context-menu provider.
+- `dt_action_get_gtk_accels()` returns the active view's eligible chords and
+  `dt_shortcut_normalize_modifiers()` is the shared input policy. On macOS the projection uses
+  `<Primary>` so Command is exported as a native key equivalent while Quartz-specific marker bits do
+  not change dispatch matching.
+- The main-window dispatcher lets the focused editor consume input first, then routes a matching
+  projected chord to the same `GSimpleAction` activation path as a menu click. This prevents the
+  native representation and legacy dispatcher from executing an Action twice.
+- Loading or saving shortcuts schedules an accelerator refresh. Menu/action state refreshes on view,
+  selection, active-image, history, and style changes; all GTK/GAction updates run on the GTK main
+  thread.

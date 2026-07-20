@@ -10,6 +10,9 @@
 #include "osx.h"
 
 #include <gio/gio.h>
+#include <string.h>
+
+#include "whereami.h"
 
 float dt_osx_get_ppd()
 {
@@ -43,7 +46,34 @@ gboolean dt_osx_file_trash(const char *filename, GError **error)
 
 char *dt_osx_get_bundle_res_path()
 {
-    return NULL;
+    const int executable_length = wai_getExecutablePath(NULL, 0, NULL);
+    if (executable_length <= 0)
+        return NULL;
+
+    char *executable_path = g_malloc(executable_length + 1);
+    if (wai_getExecutablePath(executable_path, executable_length, NULL) != executable_length)
+    {
+        g_free(executable_path);
+        return NULL;
+    }
+    executable_path[executable_length] = '\0';
+
+    const char *const contents = strstr(executable_path, ".app/Contents/MacOS/");
+    if (!contents)
+    {
+        g_free(executable_path);
+        return NULL;
+    }
+
+    char *bundle_path = g_strndup(executable_path, contents - executable_path + 4);
+    char *result = g_build_filename(bundle_path, "Contents", "Resources", NULL);
+    g_free(bundle_path);
+    g_free(executable_path);
+
+    if (!g_file_test(result, G_FILE_TEST_IS_DIR))
+        g_clear_pointer(&result, g_free);
+
+    return result;
 }
 
 void dt_osx_prepare_environment()

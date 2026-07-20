@@ -52,6 +52,10 @@ cmake --build --preset mac_clang_debug
 ./build/mac_clang_debug/bin/darktable --version
 ```
 
+`bin/darktable` 是开发构建的稳定启动入口。它会启动同目录 `darktable.app` 内的可执行文件，
+因此直接从终端运行时也保有标准的 macOS bundle 身份、菜单栏和 Accessibility 命令发现；不要直接
+调用 `.darktable-runtime/darktable`。
+
 ### 开发构建的模块重链
 
 应用会在启动时动态加载 IOP、Lighttable、view 与 imageio 模块。正常构建只会在模块自身源码或
@@ -123,6 +127,7 @@ FreeCM 管理的 `build/dependency_*` 目录。
 
 - [核心收缩与重写计划](TODO_CORE_REDUCTION.md)
 - [动态上下文菜单计划与覆盖状态](TODO_CONTEXT_MENUS.md)
+- [macOS 系统命令与快捷键重构记录](TODO_MACOS_COMMANDS.md)
 - [开发者源码导读](DevDocs/README.md)
 - [GPU Phase 0 基线与准入规范](DevDocs/GPU_Baseline.md)
 - [0.9.0 发布说明](RELEASE_NOTES.md)

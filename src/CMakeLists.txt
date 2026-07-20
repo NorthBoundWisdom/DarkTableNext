@@ -133,6 +133,7 @@ FILE(GLOB SOURCE_FILES
   "gui/about.c"
   "gui/accelerators.c"
   "gui/context_menu.c"
+  "gui/system_commands.c"
   "gui/color_picker_proxy.c"
   "gui/workspace.c"
   "gui/gtk.c"
@@ -539,11 +540,45 @@ endif(BUILD_TESTING)
 #
 # build darktable executable
 #
+set(DARKTABLE_RUNTIME_STAGING_DIR "${DARKTABLE_BINDIR}/.darktable-runtime")
+set(DARKTABLE_APP_BUNDLE_DIR "${DARKTABLE_BINDIR}/darktable.app")
+set(DARKTABLE_APP_EXECUTABLE "${DARKTABLE_APP_BUNDLE_DIR}/Contents/MacOS/darktable")
+set(DARKTABLE_APP_RESOURCES_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Resources")
+set(DARKTABLE_APP_FRAMEWORKS_DIR "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Frameworks")
+set(DARKTABLE_LAUNCHER "${DARKTABLE_BINDIR}/darktable")
+get_filename_component(DARKTABLE_APP_LIBRARY_ROOT "${DARKTABLE_LIBDIR}/.." ABSOLUTE)
+get_filename_component(DARKTABLE_APP_SHARE_ROOT "${DARKTABLE_DATADIR}/.." ABSOLUTE)
+
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-macos-Info.plist.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/darktable-launcher.in" "${DARKTABLE_LAUNCHER}" @ONLY)
+file(CHMOD "${DARKTABLE_LAUNCHER}"
+     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 add_executable(darktable main.c)
 set_target_properties(darktable PROPERTIES LINKER_LANGUAGE C)
+set_target_properties(darktable PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_RUNTIME_STAGING_DIR}")
 set_target_properties(lib_darktable PROPERTIES LINK_FLAGS "-framework Security -framework CoreFoundation")
 target_link_libraries(darktable lib_darktable)
 set_target_properties(darktable PROPERTIES INSTALL_RPATH ${RPATH_ORIGIN}/${REL_BIN_TO_LIBDIR})
+
+add_custom_command(TARGET darktable POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_RESOURCES_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${DARKTABLE_APP_FRAMEWORKS_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:darktable>" "${DARKTABLE_APP_EXECUTABLE}"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/darktable-Info.plist"
+          "${DARKTABLE_APP_BUNDLE_DIR}/Contents/Info.plist"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/lib"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_RESOURCES_DIR}/share"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
+  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_LIBRARY_ROOT}"
+          "${DARKTABLE_APP_RESOURCES_DIR}/lib"
+  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_APP_SHARE_ROOT}"
+          "${DARKTABLE_APP_RESOURCES_DIR}/share"
+  COMMAND ${CMAKE_COMMAND} -E create_symlink "${DARKTABLE_BINDIR}/libdarktable.dylib"
+          "${DARKTABLE_APP_FRAMEWORKS_DIR}/libdarktable.dylib"
+  COMMENT "Assembling macOS application bundle"
+)
 
 install(TARGETS darktable DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT DTApplication)
 

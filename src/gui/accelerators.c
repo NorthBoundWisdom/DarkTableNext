@@ -18,6 +18,7 @@
 
 #include "gui/accelerators.h"
 #include "gui/context_menu.h"
+#include "gui/system_commands.h"
 #include "common/action.h"
 #include "common/darktable.h"
 #include "common/file_location.h"
@@ -28,6 +29,7 @@
 #include "bauhaus/bauhaus.h"
 
 #include <assert.h>
+#include <float.h>
 #include <gtk/gtk.h>
 #include <math.h>
 
@@ -359,6 +361,11 @@ static dt_action_t *_action_find(const gchar *action_name)
     g_strfreev(path);
 
     return action;
+}
+
+dt_action_t *dt_action_find_by_id(const gchar *action_id)
+{
+    return action_id ? _action_find(action_id) : NULL;
 }
 
 static const dt_action_def_t *_action_find_definition(dt_action_t *action)
@@ -928,6 +935,78 @@ gchar *dt_action_get_shortcut_label(const dt_action_t *action, const int instanc
     }
 
     return label;
+}
+
+static gboolean _shortcut_is_gtk_accelerator(const dt_shortcut_t *shortcut)
+{
+    return shortcut && shortcut->key_device == DT_SHORTCUT_DEVICE_KEYBOARD_MOUSE && shortcut->key &&
+           !shortcut->press && !shortcut->button && !shortcut->click && !shortcut->direction &&
+           !shortcut->move_device && !shortcut->move && fabsf(shortcut->speed - 1.0f) < FLT_EPSILON;
+}
+
+static gchar *_shortcut_gtk_accelerator_name(const dt_shortcut_t *shortcut)
+{
+    GdkModifierType modifiers = shortcut->mods;
+#ifdef __APPLE__
+    const GdkModifierType primary = gdk_keymap_get_modifier_mask(
+        gdk_keymap_get_for_display(gdk_display_get_default()),
+        GDK_MODIFIER_INTENT_PRIMARY_ACCELERATOR);
+    if (primary && (modifiers & primary))
+    {
+        gchar *without_primary = gtk_accelerator_name(shortcut->key, modifiers & ~primary);
+        gchar *accelerator = g_strconcat("<Primary>", without_primary, NULL);
+        g_free(without_primary);
+        return accelerator;
+    }
+#endif
+    return gtk_accelerator_name(shortcut->key, modifiers);
+}
+
+gchar **dt_action_get_gtk_accels(const dt_action_t *action, const int instance,
+                                 const dt_action_element_t element,
+                                 const dt_action_effect_t effect)
+{
+    GPtrArray *accelerators = g_ptr_array_new_with_free_func(g_free);
+    if (!action || !darktable.control || !darktable.control->shortcuts)
+    {
+        g_ptr_array_add(accelerators, NULL);
+        return (gchar **)g_ptr_array_free(accelerators, FALSE);
+    }
+
+    const dt_view_type_flags_t current_view = dt_view_get_current();
+    for (GSequenceIter *iter = g_sequence_get_begin_iter(darktable.control->shortcuts);
+         !g_sequence_iter_is_end(iter); iter = g_sequence_iter_next(iter))
+    {
+        const dt_shortcut_t *shortcut = g_sequence_get(iter);
+        if (shortcut->action != action || !(shortcut->views & current_view) ||
+            shortcut->instance != instance || shortcut->element != element ||
+            shortcut->effect != effect || !_shortcut_is_gtk_accelerator(shortcut))
+            continue;
+
+        gchar *accelerator = _shortcut_gtk_accelerator_name(shortcut);
+        if (!accelerator || !*accelerator)
+        {
+            g_free(accelerator);
+            continue;
+        }
+
+        gboolean duplicate = FALSE;
+        for (guint i = 0; i < accelerators->len; i++)
+        {
+            if (!g_strcmp0(accelerator, accelerators->pdata[i]))
+            {
+                duplicate = TRUE;
+                break;
+            }
+        }
+        if (duplicate)
+            g_free(accelerator);
+        else
+            g_ptr_array_add(accelerators, accelerator);
+    }
+
+    g_ptr_array_add(accelerators, NULL);
+    return (gchar **)g_ptr_array_free(accelerators, FALSE);
 }
 
 static gchar *_action_description(dt_shortcut_t *s, int components)
@@ -3140,6 +3219,7 @@ void dt_shortcuts_save(const gchar *ext, const gboolean backup)
     }
 
     _shortcuts_save(shortcuts_file, DT_ALL_DEVICES);
+    dt_gui_system_commands_shortcuts_changed();
 }
 
 static gboolean _find_combo_effect(const gchar **effects, const gchar *token, dt_action_t *ac,
@@ -3505,6 +3585,7 @@ void dt_shortcuts_load(const gchar *ext, const gboolean clear)
         return;
 
     _shortcuts_load(shortcuts_file, DT_ALL_DEVICES, DT_ALL_DEVICES, clear);
+    dt_gui_system_commands_shortcuts_changed();
 }
 
 void dt_shortcuts_reinitialise(dt_action_t *action)
@@ -4225,12 +4306,12 @@ static inline void _interrupt_delayed_release(gboolean trigger)
     }
 }
 
-static guint _key_modifiers_clean(guint mods)
+GdkModifierType dt_shortcut_normalize_modifiers(GdkModifierType modifiers)
 {
     GdkKeymap *keymap = gdk_keymap_get_for_display(gdk_display_get_default());
-    mods &= GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD5_MASK |
-            gdk_keymap_get_modifier_mask(keymap, GDK_MODIFIER_INTENT_PRIMARY_ACCELERATOR);
-    return mods | dt_modifier_shortcuts;
+    modifiers &= GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_MOD5_MASK |
+                 gdk_keymap_get_modifier_mask(keymap, GDK_MODIFIER_INTENT_PRIMARY_ACCELERATOR);
+    return modifiers | dt_modifier_shortcuts;
 }
 
 float dt_shortcut_move(dt_input_device_t id, guint time, guint move, float move_size)
@@ -4253,7 +4334,7 @@ float dt_shortcut_move(dt_input_device_t id, guint time, guint move, float move_
         _sc.effect = DT_ACTION_EFFECT_DEFAULT_KEY;
 
     if (id != DT_SHORTCUT_DEVICE_KEYBOARD_MOUSE)
-        _sc.mods = _key_modifiers_clean(dt_key_modifier_state());
+        _sc.mods = dt_shortcut_normalize_modifiers(dt_key_modifier_state());
 
     float return_value = 0;
     if (!DT_PERFORM_ACTION(move_size))
@@ -4378,7 +4459,7 @@ void dt_shortcut_key_press(const dt_input_device_t id, const guint time, const g
     else
     {
         if (id)
-            _sc.mods = _key_modifiers_clean(dt_key_modifier_state());
+            _sc.mods = dt_shortcut_normalize_modifiers(dt_key_modifier_state());
 
         dt_shortcut_t just_key = {
             .key_device = id, .key = key, .mods = _sc.mods, .views = dt_view_get_current()};
@@ -4658,6 +4739,10 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
                     return FALSE;
             }
         }
+
+        if (event->type == GDK_KEY_PRESS &&
+            dt_gui_system_commands_activate_key_event(&event->key))
+            return TRUE;
     }
 
     switch (event->type)
@@ -4681,7 +4766,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
                 return FALSE;
         }
 
-        _sc.mods = _key_modifiers_clean(event->key.state);
+        _sc.mods = dt_shortcut_normalize_modifiers(event->key.state);
 
         dt_shortcut_key_press(DT_SHORTCUT_DEVICE_KEYBOARD_MOUSE, event->key.time, ko.key + 1);
         break;
@@ -4691,7 +4776,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
             // are we defining shortcuts for fallbacks? just modifiers can be used.
             if (_sc.action && _sc.action->type == DT_ACTION_TYPE_FALLBACK)
             {
-                _sc.mods = _key_modifiers_clean(event->key.state);
+                _sc.mods = dt_shortcut_normalize_modifiers(event->key.state);
                 dt_shortcut_move(DT_SHORTCUT_DEVICE_KEYBOARD_MOUSE, 0, DT_SHORTCUT_MOVE_NONE, 1);
             }
             return FALSE;
@@ -4715,7 +4800,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
             _ungrab_at_focus_loss();
         return FALSE;
     case GDK_SCROLL:
-        _sc.mods = _key_modifiers_clean(event->scroll.state);
+        _sc.mods = dt_shortcut_normalize_modifiers(event->scroll.state);
 
         int delta_x, delta_y;
         if (dt_gui_get_scroll_unit_deltas(&event->scroll, &delta_x, &delta_y))
@@ -4750,7 +4835,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
         if (event->motion.time > _last_time && !dt_gui_long_click(event->motion.time, _last_time))
             break;
 
-        _sc.mods = _key_modifiers_clean(event->motion.state);
+        _sc.mods = dt_shortcut_normalize_modifiers(event->motion.state);
 
         const gdouble step_size = 10;
 
@@ -4789,7 +4874,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
         }
         break;
     case GDK_BUTTON_PRESS:
-        _sc.mods = _key_modifiers_clean(event->button.state);
+        _sc.mods = dt_shortcut_normalize_modifiers(event->button.state);
 
         _pressed_button |= 1 << (event->button.button - 1);
         _interrupt_delayed_release(_sc.button != _pressed_button);
@@ -5239,7 +5324,7 @@ float dt_accel_get_speed_multiplier(GtkWidget *widget, guint state)
     if (state != GDK_MODIFIER_MASK)
     {
         dt_shortcut_t s = {.action = &_value_action,
-                           .mods = _key_modifiers_clean(state),
+                           .mods = dt_shortcut_normalize_modifiers(state),
                            .views = DT_VIEW_FALLBACK};
 
         dt_action_t *wac = dt_action_widget(widget);

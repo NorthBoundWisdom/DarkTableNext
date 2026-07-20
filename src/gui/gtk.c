@@ -57,9 +57,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef MAC_INTEGRATION
-#include <gtkosxapplication.h>
-#endif
 #ifdef GDK_WINDOWING_QUARTZ
 #include "osx/osx.h"
 #endif
@@ -1091,29 +1088,26 @@ static void _gui_switch_view_key_accel_callback(dt_action_t *action)
     dt_ctl_switch_mode_to(action->id);
 }
 
-#ifdef MAC_INTEGRATION
-static gboolean _osx_quit_callback(GtkosxApplication *OSXapp, gpointer user_data)
+static void _about_command(dt_action_t *action)
 {
-    GList *windows, *window;
-    windows = gtk_window_list_toplevels();
-    for (window = windows; window != NULL; window = g_list_next(window))
-        if (gtk_window_get_modal(GTK_WINDOW(window->data)) &&
-            gtk_widget_get_visible(GTK_WIDGET(window->data)))
-            break;
-    if (window == NULL)
-        _quit_callback(NULL);
-    g_list_free(windows);
-    return TRUE;
+    darktable_show_about_dialog();
+    (void)action;
 }
 
-static gboolean _osx_openfile_callback(GtkosxApplication *OSXapp, gchar *path, gpointer user_data)
+static void _documentation_command(dt_action_t *action)
 {
-    // when multiple files are dropped on the app icon this callback
-    // gets called for each file individually so we don't request to
-    // open the darkroom here.
-    return dt_is_valid_imgid(dt_load_from_string(path, FALSE, NULL));
+    GtkWidget *anchor = gtk_button_new();
+    dt_gui_add_help_link(anchor, "document_root");
+    dt_gui_show_help(anchor);
+    gtk_widget_destroy(anchor);
+    (void)action;
 }
-#endif
+
+static void _homepage_command(dt_action_t *action)
+{
+    dt_open_url(PACKAGE_URL);
+    (void)action;
+}
 
 dt_gui_session_type_t dt_gui_get_session_type(void)
 {
@@ -1324,26 +1318,6 @@ void dt_open_url(const char *url)
     }
 }
 
-#ifdef MAC_INTEGRATION
-static void _osx_ctl_switch_mode_to(GtkWidget *mi, gpointer mode)
-{
-    dt_ctl_switch_mode_to((const char *)mode);
-}
-
-static void _osx_add_view_menu_item(GtkWidget *menu, const char *label, gpointer mode)
-{
-    GtkWidget *mi = gtk_menu_item_new_with_label(label);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), mi);
-    gtk_widget_show(mi);
-    g_signal_connect(G_OBJECT(mi), "activate", G_CALLBACK(_osx_ctl_switch_mode_to), mode);
-}
-
-static void _open_url(GtkWidget *widget, gpointer url)
-{
-    dt_open_url((const char *)url);
-}
-#endif
-
 // This is based on GIMP's implementation:
 // https://gitlab.gnome.org/GNOME/gimp/-/blob/master/app/widgets/gimpwidgets-utils.c#L2655
 // Set win32 title bar color based on theme (background color).
@@ -1487,85 +1461,6 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     // Initializing widgets
     _init_widgets(gui);
 
-#ifdef MAC_INTEGRATION
-    GtkosxApplication *OSXApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
-
-    // View menu
-    GtkWidget *view_root_menu = gtk_menu_item_new_with_label(C_("menu", "Views"));
-    gtk_widget_show(view_root_menu);
-
-    GtkWidget *view_menu = gtk_menu_new();
-    _osx_add_view_menu_item(view_menu, C_("menu", "Lighttable"), "lighttable");
-    _osx_add_view_menu_item(view_menu, C_("menu", "Darkroom"), "darkroom");
-
-    GtkWidget *sep = gtk_separator_menu_item_new();
-    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), sep);
-    gtk_widget_show(sep);
-
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(view_root_menu), view_menu);
-
-    // Window menu
-    GtkWidget *window_root_menu = gtk_menu_item_new_with_label(C_("menu", "Window"));
-    gtk_widget_show(window_root_menu);
-
-    GtkWidget *window_menu = gtk_menu_new();
-    gtk_widget_show(window_menu);
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(window_root_menu), window_menu);
-
-    // Help menu
-    GtkWidget *help_root_menu = gtk_menu_item_new_with_label(C_("menu", "Help"));
-    gtk_widget_show(help_root_menu);
-
-    GtkWidget *help_menu = gtk_menu_new();
-    GtkWidget *help_manual = gtk_menu_item_new_with_label(C_("menu", "darktable Manual"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), help_manual);
-    gtk_widget_show(help_manual);
-    dt_gui_add_help_link(help_manual, "document_root");
-    g_signal_connect(G_OBJECT(help_manual), "activate", G_CALLBACK(dt_gui_show_help), help_manual);
-
-    GtkWidget *help_home = gtk_menu_item_new_with_label(C_("menu", "darktable Homepage"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), help_home);
-    gtk_widget_show(help_home);
-    g_signal_connect(G_OBJECT(help_home), "activate", G_CALLBACK(_open_url), PACKAGE_URL);
-
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(help_root_menu), help_menu);
-
-    // build the menu bar
-    GtkWidget *menu_bar = gtk_menu_bar_new();
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), view_root_menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), window_root_menu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), help_root_menu);
-
-    // park the menubar inside the (already constructed) main window so
-    // gtk-mac-integration finds a real Quartz-backed GtkWindow as the
-    // toplevel. the GtkMenuBar widget itself stays hidden — the items
-    // are mirrored into the native macOS NSMenu by mac-integration
-    GtkWidget *main_vbox = gtk_bin_get_child(GTK_BIN(gui->ui->main_window));
-    gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
-    gtk_widget_set_no_show_all(menu_bar, TRUE);
-
-    gtkosx_application_set_menu_bar(OSXApp, GTK_MENU_SHELL(menu_bar));
-
-    // Now the application menu (first item)
-    // GTK automatically translates the item with index 0 so no need to localize.
-    // Furthermore, the application name (darktable) is automatically appended.
-    GtkWidget *mi_about = gtk_menu_item_new_with_label("About");
-    g_signal_connect(G_OBJECT(mi_about), "activate", G_CALLBACK(darktable_show_about_dialog), NULL);
-    gtkosx_application_insert_app_menu_item(OSXApp, mi_about, 0);
-
-    GtkWidget *mi_prefs = gtk_menu_item_new_with_label(C_("menu", "Preferences"));
-    g_signal_connect(G_OBJECT(mi_prefs), "activate", G_CALLBACK(dt_gui_preferences_show), NULL);
-    gtkosx_application_insert_app_menu_item(OSXApp, mi_prefs, 1);
-
-    gtkosx_application_set_window_menu(OSXApp, GTK_MENU_ITEM(window_root_menu));
-    gtkosx_application_set_help_menu(OSXApp, GTK_MENU_ITEM(help_root_menu));
-
-    g_signal_connect_data(G_OBJECT(OSXApp), "NSApplicationBlockTermination",
-                          G_CALLBACK(_osx_quit_callback), NULL, NULL, 0);
-    g_signal_connect_data(G_OBJECT(OSXApp), "NSApplicationOpenFile",
-                          G_CALLBACK(_osx_openfile_callback), NULL, NULL, 0);
-#endif
-
     widget = dt_ui_center(darktable.gui->ui);
     g_signal_connect(G_OBJECT(widget), "configure-event", G_CALLBACK(_configure), gui);
     for (int i = 2; i; i--, widget = dt_ui_snapshot(darktable.gui->ui))
@@ -1640,6 +1535,11 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     // register ctrl-q to quit:
     dt_action_register(&darktable.control->actions_global, N_("quit"), _quit_callback, GDK_KEY_q,
                        GDK_CONTROL_MASK);
+    dt_action_register(&darktable.control->actions_global, N_("about"), _about_command, 0, 0);
+    dt_action_register(&darktable.control->actions_global, N_("documentation"),
+                       _documentation_command, 0, 0);
+    dt_action_register(&darktable.control->actions_global, N_("homepage"), _homepage_command, 0,
+                       0);
 
     // Full-screen accelerator
     dt_action_register(&darktable.control->actions_global, N_("fullscreen"),
@@ -1723,9 +1623,6 @@ void dt_gui_gtk_run(dt_gui_gtk_t *gui)
     const int tb = darktable.control->tabborder;
     dt_view_manager_configure(darktable.view_manager, allocation.width - 2 * tb,
                               allocation.height - 2 * tb);
-#ifdef MAC_INTEGRATION
-    gtkosx_application_ready(g_object_new(GTKOSX_TYPE_APPLICATION, NULL));
-#endif
 #ifdef GDK_WINDOWING_QUARTZ
     dt_osx_focus_window();
 #endif
@@ -2138,15 +2035,6 @@ void dt_ui_notify_user()
     if (darktable.gui && !gtk_window_is_active(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui))))
     {
         gtk_window_set_urgency_hint(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)), TRUE);
-#ifdef MAC_INTEGRATION
-#ifdef GTK_TYPE_OSX_APPLICATION
-        gtk_osxapplication_attention_request(g_object_new(GTK_TYPE_OSX_APPLICATION, NULL),
-                                             INFO_REQUEST);
-#else
-        gtkosx_application_attention_request(g_object_new(GTKOSX_TYPE_APPLICATION, NULL),
-                                             INFO_REQUEST);
-#endif
-#endif
     }
 }
 
