@@ -34,6 +34,7 @@ def resolve_preset_models(*args: object, **kwargs: object):
         for preset in model["configurePresets"]:
             cache = preset["cacheVariables"]
             name = preset["name"]
+            environment = preset.setdefault("environment", {})
             if resolved.os_group == "mac":
                 if name.startswith("mac_clang_"):
                     cache["CMAKE_C_COMPILER"] = "clang"
@@ -41,9 +42,9 @@ def resolve_preset_models(*args: object, **kwargs: object):
                 elif name.startswith("mac_gcc_"):
                     cache["CMAKE_C_COMPILER"] = "gcc-16"
                     cache["CMAKE_CXX_COMPILER"] = "g++-16"
-                    preset["environment"] = {
-                        "PATH": "/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm/bin:$penv{PATH}"
-                    }
+                    environment["PATH"] = (
+                        "/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm/bin:$penv{PATH}"
+                    )
             elif resolved.os_group == "win":
                 path_prefix = (
                     "C:/Program Files/Git/usr/bin;"
@@ -52,9 +53,7 @@ def resolve_preset_models(*args: object, **kwargs: object):
                 )
                 if name.startswith("win_llvm_"):
                     path_prefix = "C:/Program Files/LLVM/bin;" + path_prefix
-                preset["environment"] = {
-                    "PATH": path_prefix + "$penv{PATH}"
-                }
+                environment["PATH"] = path_prefix + "$penv{PATH}"
     return resolved
 
 
