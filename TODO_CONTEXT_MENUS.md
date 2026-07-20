@@ -53,8 +53,6 @@ schema 或文件格式支持。产品范围继续以 [`TODO_CORE_REDUCTION.md`](
 - [x] Mask 管理器树保留它的层级菜单与复选状态，但每项都绑定到同一 Tree Action；菜单打开时
       冻结 `GtkTreeRowReference`，激活时先恢复并校验原选择，再复用既有 shape/group/history
       回调，避免操作漂移到菜单打开后的选择。
-- [x] Timeline 的辅助点击已由直接删除最后一条时间规则改为“移除时间筛选”Action 菜单；当末条
-      collection 规则不是时间规则时，菜单项保留但会给出禁用原因。
 - [x] modulegroups 的“active modules”辅助菜单已将“show all history modules”绑定为命令
       Action；它携带目标布尔值并继续使用原有 preset 保存与 IOP 可见性更新。
 - [x] modulegroups 的分组与 quick-access 辅助菜单已将添加/移除操作绑定为命令 Action；菜单
@@ -105,7 +103,6 @@ Action 树加入缩略图菜单。
 | Snapshot 条目 | `libs/snapshots.c` | 已覆盖 | 仅覆盖显示、恢复、重命名；画布分割线/旋转手势仍不拦截。 |
 | Metadata 文本行 | `libs/metadata.c` | 已覆盖 | 保留 GTK 原生编辑项；动态历史值经 provider Action 写回。 |
 | Mask 管理器树 | `libs/masks.c` | 已覆盖 | 保留形状、分组和布尔操作的专用层级菜单；所有菜单项经 RowReference-backed Tree Action 调用既有 history 路径。 |
-| Timeline | `libs/tools/timeline.c` | 已覆盖 | 辅助点击展示“移除时间筛选”Action；时间轴主键拖拽仍是原有选择手势。 |
 | Modulegroups 分组、active 与 quick-access tabs | `libs/modulegroups.c` | 已覆盖 | active 状态、分组模块和 quick-access widget 的添加/移除均经 Action；直接布局菜单保存可校验的领域快照，编辑预设对话框仍是其自身的显式编辑界面。 |
 | 左右侧栏的模块可见性管理 | `gui/gtk.c` | 保留 | 侧栏空白处仍打开完整的显示/隐藏与“恢复默认”管理菜单；它管理当前视图的面板布局，不命中单一领域对象，后续若注册为 Action 才并入通用投影。 |
 | RGB Curve、Tone Curve、Base Curve、Color Zones 节点 | `iop/{rgbcurve,tonecurve,basecurve,colorzones}.c` | 已覆盖 | 右键菜单提供节点删除/端点或节点重置和当前曲线复位；payload 为可校验的标量快照。 |

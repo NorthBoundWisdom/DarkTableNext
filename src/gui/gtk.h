@@ -80,10 +80,6 @@ typedef enum dt_gui_color_t
     DT_GUI_COLOR_THUMBNAIL_BORDER,
     DT_GUI_COLOR_THUMBNAIL_SELECTED_BORDER,
     DT_GUI_COLOR_FILMSTRIP_BG,
-    DT_GUI_COLOR_TIMELINE_BG,
-    DT_GUI_COLOR_TIMELINE_FG,
-    DT_GUI_COLOR_TIMELINE_TEXT_BG,
-    DT_GUI_COLOR_TIMELINE_TEXT_FG,
     DT_GUI_COLOR_CULLING_SELECTED_BORDER,
     DT_GUI_COLOR_CULLING_FILMSTRIP_SELECTED_BORDER,
     DT_GUI_COLOR_PREVIEW_HOVER_BORDER,
@@ -378,8 +374,10 @@ GtkWidget *dt_ui_center_base(const struct dt_ui_t *ui);
 GtkWidget *dt_ui_snapshot(const struct dt_ui_t *ui);
 /** \brief get the main window widget */
 GtkWidget *dt_ui_main_window(const struct dt_ui_t *ui);
-/** \brief get the thumb table */
+/** \brief get the main thumb table */
 struct dt_thumbtable_t *dt_ui_thumbtable(const struct dt_ui_t *ui);
+/** \brief get the Lighttable-only filmstrip thumb table */
+struct dt_thumbtable_t *dt_ui_lighttable_filmstrip(const struct dt_ui_t *ui);
 /** \brief get the log message widget */
 GtkWidget *dt_ui_log_msg(const struct dt_ui_t *ui);
 /** \brief get the toast message widget */

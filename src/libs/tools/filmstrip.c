@@ -66,18 +66,39 @@ int position(const dt_lib_module_t *self)
     return 1001;
 }
 
+static dt_thumbtable_t *_filmstrip_thumbtable(void)
+{
+    dt_thumbtable_t *table = dt_ui_thumbtable(darktable.gui->ui);
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE &&
+        dt_view_lighttable_get_layout(darktable.view_manager) == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
+        !dt_view_lighttable_preview_state(darktable.view_manager))
+    {
+        table = dt_ui_lighttable_filmstrip(darktable.gui->ui);
+    }
+    return table;
+}
+
 static gboolean _lib_filmstrip_draw_callback(GtkWidget *widget, cairo_t *wcr, gpointer user_data)
 {
-    // we only ensure that the thumbtable is inside our container
-    if (!gtk_bin_get_child(GTK_BIN(widget)))
+    dt_lib_module_t *self = user_data;
+    dt_thumbtable_t *table = _filmstrip_thumbtable();
+
+    GtkWidget *child = gtk_bin_get_child(GTK_BIN(widget));
+    if (child != table->widget)
     {
-        dt_thumbtable_t *tt = dt_ui_thumbtable(darktable.gui->ui);
-        dt_thumbtable_set_parent(tt, widget, DT_THUMBTABLE_MODE_FILMSTRIP);
-        gtk_widget_show(widget);
-        gtk_widget_show(tt->widget);
-        gtk_widget_queue_draw(tt->widget);
+        if (child)
+            gtk_container_remove(GTK_CONTAINER(widget), child);
+        dt_thumbtable_set_parent(table, self->widget, DT_THUMBTABLE_MODE_FILMSTRIP);
+        gtk_widget_show(table->widget);
+        gtk_widget_queue_draw(table->widget);
     }
+    gtk_widget_show(widget);
     return FALSE;
+}
+
+void view_enter(dt_lib_module_t *self, dt_view_t *old_view, dt_view_t *new_view)
+{
+    _lib_filmstrip_draw_callback(self->widget, NULL, self);
 }
 
 static void _filmstrip_center(dt_action_t *action)
@@ -85,7 +106,7 @@ static void _filmstrip_center(dt_action_t *action)
     if (!darktable.view_manager->active_images)
         return;
     const int imgid = GPOINTER_TO_INT(darktable.view_manager->active_images->data);
-    dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui), imgid, TRUE);
+    dt_thumbtable_set_offset_image(_filmstrip_thumbtable(), imgid, TRUE);
 }
 
 static void _filmstrip_toggle_auto_scroll(dt_action_t *action)

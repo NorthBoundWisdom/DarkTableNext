@@ -1311,13 +1311,6 @@
     <shortdescription>tooltips for full preview</shortdescription>
     <longdescription/>
   </dtconfig>
-  <dtconfig>
-    <name>plugins/lighttable/timeline/last_zoom</name>
-    <type>int</type>
-    <default>0</default>
-    <shortdescription>last timeline zoom.</shortdescription>
-    <longdescription/>
-  </dtconfig>
   <dtconfig prefs="lighttable" section="thumbs">
     <name>plugins/lighttable/thumbnail_raw_min_level</name>
     <type>

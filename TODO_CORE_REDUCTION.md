@@ -11,6 +11,7 @@
 - [x] 删除 Lighttable 顶部快捷筛选/排序栏及规则置顶状态；左侧筛选器是唯一的规则编辑入口。
 - [x] 删除全局顶部工具箱：分组、缩略图叠加层、上下文帮助、快捷键映射和全局偏好入口不再占用工作区。
 - [x] 删除 Lighttable 筛选规则与排序快照历史；它们与 Darkroom 编辑历史、XMP 和图像数据库历史无关。
+- [x] 删除 Lighttable 时间线；底部改为与中央 grid 共享 collection/selection 的横向照片浏览条。
 - [x] 使 XML 验证、ISOBMFF/CR3 检测、LibRaw 和 ICU 成为固定构建行为。
 - [x] 删除 AI/ONNX、神经修复、对象蒙版及其模型、文档、偏好项和测试。
 

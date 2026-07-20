@@ -103,8 +103,9 @@ typedef struct dt_ui_t
     /* main widget */
     GtkWidget *main_window;
 
-    /* thumb table */
+    /* thumbnail tables: the main grid and the Lighttable filmstrip */
     dt_thumbtable_t *thumbtable;
+    dt_thumbtable_t *lighttable_filmstrip;
 
     /* log msg and toast labels */
     GtkWidget *log_msg, *toast_msg;
@@ -1552,7 +1553,7 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     // specific top/bottom toggles
     dt_action_register(pnl, N_("header"), _toggle_header_accel_callback, GDK_KEY_h,
                        GDK_CONTROL_MASK);
-    dt_action_register(pnl, N_("filmstrip and timeline"), _toggle_filmstrip_accel_callback,
+    dt_action_register(pnl, N_("filmstrip"), _toggle_filmstrip_accel_callback,
                        GDK_KEY_f, GDK_CONTROL_MASK);
     dt_action_register(pnl, N_("top toolbar"), _toggle_top_tool_accel_callback, 0, 0);
     dt_action_register(pnl, N_("bottom toolbar"), _toggle_bottom_tool_accel_callback, 0, 0);
@@ -1855,8 +1856,9 @@ static void _init_main_table(GtkWidget *container)
     darktable.gui->ui->center = cda;
     darktable.gui->ui->center_base = ocda;
 
-    /* initialize the thumb panel */
+    /* initialize the main grid and the Lighttable filmstrip */
     darktable.gui->ui->thumbtable = dt_thumbtable_new();
+    darktable.gui->ui->lighttable_filmstrip = dt_thumbtable_new();
 
     /* the log message */
     GtkWidget *eb = gtk_event_box_new();
@@ -2366,6 +2368,10 @@ GtkWidget *dt_ui_snapshot(const dt_ui_t *ui)
 dt_thumbtable_t *dt_ui_thumbtable(const struct dt_ui_t *ui)
 {
     return ui->thumbtable;
+}
+dt_thumbtable_t *dt_ui_lighttable_filmstrip(const struct dt_ui_t *ui)
+{
+    return ui->lighttable_filmstrip;
 }
 GtkWidget *dt_ui_log_msg(const struct dt_ui_t *ui)
 {
@@ -3504,10 +3510,6 @@ void dt_gui_apply_theme()
         [DT_GUI_COLOR_THUMBNAIL_SELECTED_BORDER] = {"thumbnail_selected_border_color",
                                                     {0.9, 0.9, 0.9, 1.0}},
         [DT_GUI_COLOR_FILMSTRIP_BG] = {"filmstrip_bg_color", {0.2, 0.2, 0.2, 1.0}},
-        [DT_GUI_COLOR_TIMELINE_BG] = {"timeline_bg_color", {0.4, 0.4, 0.4, 1.0}},
-        [DT_GUI_COLOR_TIMELINE_FG] = {"timeline_fg_color", {0.8, 0.8, 0.8, 1.0}},
-        [DT_GUI_COLOR_TIMELINE_TEXT_BG] = {"timeline_text_bg_color", {0., 0., 0., 0.8}},
-        [DT_GUI_COLOR_TIMELINE_TEXT_FG] = {"timeline_text_fg_color", {1., 1., 1., 0.9}},
         [DT_GUI_COLOR_CULLING_SELECTED_BORDER] = {"culling_selected_border_color",
                                                   {0.1, 0.1, 0.1, 1.0}},
         [DT_GUI_COLOR_CULLING_FILMSTRIP_SELECTED_BORDER] =

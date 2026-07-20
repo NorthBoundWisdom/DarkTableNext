@@ -302,12 +302,6 @@ typedef struct dt_view_manager_t
                                   const dt_imgid_t imgid);
         } lighttable;
 
-        /* timeline module proxy */
-        struct
-        {
-            struct dt_lib_module_t *module;
-        } timeline;
-
     } proxy;
 
 } dt_view_manager_t;

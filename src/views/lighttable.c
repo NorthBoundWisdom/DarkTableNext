@@ -93,6 +93,16 @@ uint32_t view(const dt_view_t *self)
     return DT_VIEW_LIGHTTABLE;
 }
 
+static void _show_filmstrip(void)
+{
+    dt_lib_module_t *filmstrip = darktable.view_manager->proxy.filmstrip.module;
+    if (!filmstrip)
+        return;
+
+    dt_lib_set_visible(filmstrip, TRUE);
+    gtk_widget_queue_draw(filmstrip->widget);
+}
+
 // exit the full preview mode
 static void _preview_quit(dt_view_t *self)
 {
@@ -106,7 +116,7 @@ static void _preview_quit(dt_view_t *self)
     // restore panels
     dt_ui_restore_panels(darktable.gui->ui);
 
-    // show/hide filmstrip & timeline when entering the view
+    // The bottom photo browser remains available for every Lighttable layout.
     if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING ||
         lib->current_layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC)
     {
@@ -115,20 +125,14 @@ static void _preview_quit(dt_view_t *self)
         dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection =
             lib->culling->navigate_inside_selection;
 
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
 
         dt_culling_update_active_images_list(lib->culling);
     }
     else
     {
         dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection = FALSE;
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
 
         // set offset back
         dt_thumbtable_set_offset(dt_ui_thumbtable(darktable.gui->ui), lib->thumbtable_offset, TRUE);
@@ -230,10 +234,7 @@ static void _lighttable_check_layout(dt_view_t *self)
     {
         dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
                                  dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
         dt_ui_scrollbars_show(darktable.gui->ui, FALSE);
         dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui),
                                        lib->culling->offset_imgid, TRUE);
@@ -241,10 +242,7 @@ static void _lighttable_check_layout(dt_view_t *self)
     }
     else
     {
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
     }
 }
 
@@ -448,14 +446,11 @@ void enter(dt_view_t *self)
 
     dt_collection_hint_message(darktable.collection);
 
-    // show/hide filmstrip & timeline when entering the view
+    // The bottom photo browser remains available for every Lighttable layout.
     if (layout == DT_LIGHTTABLE_LAYOUT_CULLING || layout == DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC ||
         lib->preview_state)
     {
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
 
         if (lib->preview_state)
             dt_culling_update_active_images_list(lib->preview);
@@ -464,10 +459,7 @@ void enter(dt_view_t *self)
     }
     else
     {
-        dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                           FALSE); // not available in this layouts
-        dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                           TRUE); // always on, visibility is driven by panel state
+        _show_filmstrip();
     }
 
     // restore panels
@@ -495,13 +487,10 @@ static void _preview_enter(dt_view_t *self, const gboolean sticky, const gboolea
     dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection =
         lib->preview->navigate_inside_selection;
 
-    // show/hide filmstrip & timeline when entering the view
+    // Keep the bottom photo browser synchronized with the active culling image.
     dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
                              dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
-    dt_lib_set_visible(darktable.view_manager->proxy.timeline.module,
-                       FALSE); // not available in this layouts
-    dt_lib_set_visible(darktable.view_manager->proxy.filmstrip.module,
-                       TRUE); // always on, visibility is driven by panel state
+    _show_filmstrip();
     dt_thumbtable_set_offset_image(dt_ui_thumbtable(darktable.gui->ui), lib->preview->offset_imgid,
                                    TRUE);
 
@@ -544,6 +533,8 @@ void init(dt_view_t *self)
     darktable.view_manager->proxy.lighttable.get_culling_selection = _culling_get_selection;
     darktable.view_manager->proxy.lighttable.view = self;
     darktable.view_manager->proxy.lighttable.change_offset = _lighttable_change_offset;
+
+    dt_conf_remove_key("plugins/lighttable/timeline/last_zoom");
 
     // ensure the memory table is up to date
     dt_collection_memory_update();

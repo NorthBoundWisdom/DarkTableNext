@@ -34,6 +34,7 @@
 #include "gui/accelerators.h"
 #include "gui/context_menu.h"
 #include "gui/drag_and_drop.h"
+#include "gui/gtk.h"
 #include "views/view.h"
 #include "bauhaus/bauhaus.h"
 
@@ -1149,6 +1150,19 @@ static gboolean _do_select_single(gpointer user_data)
     return FALSE;
 }
 
+static void _sync_lighttable_grid_from_filmstrip(dt_thumbtable_t *table, const dt_imgid_t imgid)
+{
+    if (table != dt_ui_lighttable_filmstrip(darktable.gui->ui) ||
+        dt_view_get_current() != DT_VIEW_LIGHTTABLE ||
+        dt_view_lighttable_get_layout(darktable.view_manager) != DT_LIGHTTABLE_LAYOUT_FILEMANAGER ||
+        dt_view_lighttable_preview_state(darktable.view_manager))
+        return;
+
+    dt_thumbtable_t *grid = dt_ui_thumbtable(darktable.gui->ui);
+    if (!dt_thumbtable_ensure_imgid_visibility(grid, imgid))
+        dt_thumbtable_set_offset_image(grid, imgid, TRUE);
+}
+
 static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
                                     dt_thumbtable_t *table)
 {
@@ -1270,14 +1284,17 @@ static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event,
     if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY &&
         event->type == GDK_BUTTON_RELEASE)
     {
+        gboolean selection_changed = FALSE;
         if (dt_modifier_is(event->state, GDK_CONTROL_MASK) ||
             dt_modifier_is(event->state, GDK_MOD2_MASK)) // CMD key on macOS
         {
             dt_selection_toggle(darktable.selection, id);
+            selection_changed = TRUE;
         }
         else if (dt_modifier_is(event->state, GDK_SHIFT_MASK))
         {
             dt_selection_select_range(darktable.selection, id);
+            selection_changed = TRUE;
         }
         else
         {
@@ -1315,8 +1332,12 @@ static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event,
             {
                 dt_selection_select_single(darktable.selection, id);
                 DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_VIEWMANAGER_THUMBTABLE_ACTIVATE, id);
+                selection_changed = TRUE;
             }
         }
+
+        if (selection_changed)
+            _sync_lighttable_grid_from_filmstrip(table, id);
     }
 
     return TRUE;
@@ -1578,6 +1599,15 @@ static void _dt_mouse_over_image_callback(gpointer instance, dt_thumbtable_t *ta
         return;
 
     const dt_imgid_t imgid = dt_control_get_mouse_over_id();
+
+    // Lighttable owns two independent thumbnail tables. The global hover id is
+    // still needed by actions and menus, but its visual state belongs only to
+    // the table currently under the pointer.
+    if (dt_view_get_current() == DT_VIEW_LIGHTTABLE &&
+        dt_view_lighttable_get_layout(darktable.view_manager) == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
+        !dt_view_lighttable_preview_state(darktable.view_manager) && !table->mouse_inside &&
+        dt_is_valid_imgid(imgid))
+        return;
 
     dt_imgid_t groupid = NO_IMGID;
     // we crawl over all images to find the right one
@@ -2241,7 +2271,6 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table, const gboolean force)
         int posx = 0;
         int posy = 0;
         int offset = table->offset;
-        int empty_start = 0;
 
         if (table->mode == DT_THUMBTABLE_MODE_FILEMANAGER)
         {
@@ -2269,12 +2298,9 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table, const gboolean force)
         }
         else if (table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
         {
-            // in filmstrip, the offset is the centered image, so we need to
-            // find the first image to load
+            // The active image stays near the middle of the visible range, but
+            // the strip itself starts at the leading edge of its container.
             offset = MAX(1, table->offset - table->rows / 2);
-            empty_start = -MIN(0, table->offset - table->rows / 2 - 1);
-            posx = (table->view_width - table->rows * table->thumb_size) / 2;
-            posx += empty_start * table->thumb_size;
         }
 
         // we store image margin from first thumb to apply to new ones and
@@ -2314,7 +2340,7 @@ void dt_thumbtable_full_redraw(dt_thumbtable_t *table, const gboolean force)
                                        " LEFT JOIN main.selected_images AS si"
                                        "   ON mi.imgid = si.imgid"
                                        " WHERE mi.rowid>=%d LIMIT %d",
-                                       offset, table->rows * table->thumbs_per_row - empty_start);
+                                       offset, table->rows * table->thumbs_per_row);
 
         DT_DEBUG_SQLITE3_PREPARE_V2(dt_database_get(darktable.db), query, -1, &stmt, NULL);
         while (sqlite3_step(stmt) == SQLITE_ROW)
@@ -2847,6 +2873,11 @@ static dt_action_t *_register_thumb_image_action(dt_action_t *owner, const gchar
 // init all accels
 static void _thumbtable_init_accels()
 {
+    static gboolean initialized = FALSE;
+    if (initialized)
+        return;
+    initialized = TRUE;
+
     dt_action_t *thumb_actions = &darktable.control->actions_thumb;
 
     /* setup history key accelerators */

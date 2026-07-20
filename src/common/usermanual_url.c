@@ -41,7 +41,6 @@ dt_help_url urls_db[] = {
     {"image", "module-reference/utility-modules/lighttable/selected-image/"},
     {"copy_history", "module-reference/utility-modules/lighttable/history-stack/"},
     {"styles", "module-reference/utility-modules/lighttable/styles/#module-controls"},
-    {"timeline", "module-reference/utility-modules/lighttable/timeline/"},
     {"metadata", "module-reference/utility-modules/shared/metadata-editor/"},
     {"metadata_preferences",
      "module-reference/utility-modules/shared/metadata-editor/#preferences"},
