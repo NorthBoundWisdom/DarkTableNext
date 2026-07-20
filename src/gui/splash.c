@@ -34,6 +34,30 @@
 
 #define ICON_SIZE 150
 
+// Module discovery can report more than one hundred progress messages in well
+// under a second.  Processing the complete GTK queue and synchronously waiting
+// for Quartz after every label change makes startup latency proportional to the
+// number of modules.  Keep the splash responsive without putting a display
+// server round trip in the module-loading hot path.
+#define PROGRESS_UPDATE_INTERVAL_US (50 * G_TIME_SPAN_MILLISECOND)
+
+static gint64 _last_progress_update = 0;
+
+static void _dispatch_progress_update(const gboolean force)
+{
+    const gint64 now = g_get_monotonic_time();
+    if (!force && _last_progress_update &&
+        now - _last_progress_update < PROGRESS_UPDATE_INTERVAL_US)
+        return;
+
+    _last_progress_update = now;
+    dt_gui_process_events();
+
+    GdkDisplay *display = gdk_display_get_default();
+    if (display)
+        gdk_display_flush(display);
+}
+
 #ifdef USE_FEATURED_IMAGE
 #define PROGNAME_SIZE 300
 #else
@@ -195,7 +219,7 @@ void dt_splash_screen_create(const gboolean force)
     gtk_window_set_default_size(GTK_WINDOW(darktable.splash.start_screen), 700, -1);
     gtk_widget_show_all(darktable.splash.start_screen);
     gtk_widget_hide(darktable.splash.remaining_box);
-    dt_gui_process_events();
+    _dispatch_progress_update(TRUE);
 }
 
 void dt_splash_screen_set_progress(const char *msg)
@@ -208,8 +232,7 @@ void dt_splash_screen_set_progress(const char *msg)
         gtk_label_set_text(GTK_LABEL(darktable.splash.progress_text), msg);
         gtk_widget_show(darktable.splash.progress_text);
         gtk_widget_hide(darktable.splash.remaining_box);
-        dt_gui_process_events();
-        gdk_display_sync(gdk_display_get_default());
+        _dispatch_progress_update(FALSE);
     }
 }
 
@@ -243,7 +266,7 @@ void dt_splash_screen_set_progress_percent(const char *msg, const double fractio
             gtk_label_set_text(GTK_LABEL(darktable.splash.remaining_text), "   --:--");
         }
         gtk_widget_show_all(darktable.splash.start_screen);
-        dt_gui_process_events();
+        _dispatch_progress_update(FALSE);
     }
 }
 
@@ -255,5 +278,6 @@ void dt_splash_screen_destroy()
         darktable.splash.progress_text = NULL;
         gtk_widget_destroy(darktable.splash.start_screen);
         darktable.splash.start_screen = NULL;
+        _last_progress_update = 0;
     }
 }

@@ -90,6 +90,11 @@ DMG。默认是 ad-hoc 签名，适合本机验收；正式对外发布时，在
 其公共 ABI 头变更时重链这些模块；核心库的实现性改动不会重写全部模块，从而保留 macOS 的文件
 页缓存并缩短编译后的首次启动。
 
+对于确实被重写而失去文件页缓存的模块，启动过程会在数据库、collection 与 GTK 初始化期间用
+独立只读线程预热模块文件，并在首次动态加载前汇合；该线程不访问 GTK、数据库或模块全局状态。
+启动画面的模块进度更新按 50ms 节流并使用非阻塞 display flush，避免为每个模块执行一次 Quartz
+同步往返。这两项优化不改变模块 ABI、加载顺序或缓存失效规则。
+
 `DT_MODULE_VERSION` 是明确的模块 ABI 失效边界。凡是修改了 loadable module 可见的
 `lib_darktable` 函数、类型、结构布局或调用约定，必须在
 [`src/common/darktable.h`](src/common/darktable.h) 提升该值，再完整构建模块。运行时加载器会拒绝

@@ -69,6 +69,11 @@ cmake --preset mac_clang_debug
 cmake --build --preset mac_clang_debug
 ```
 
+在 macOS 上，同一项变更需要同时验证 Debug 与 Release 时，必须交叉覆盖两套编译器：默认使用
+`mac_gcc_debug` 与 `mac_clang_release`；也可根据任务使用 `mac_clang_debug` 与
+`mac_gcc_release`。不要用同一编译器同时完成 Debug、Release 两项验证；单元测试运行在
+所选的 Debug preset 上。此配对规则仅适用于 `mac_*` preset，不外推为其他平台的验证要求。
+
 测试默认关闭。涉及可测试 C/C++ 行为时：
 
 ```sh

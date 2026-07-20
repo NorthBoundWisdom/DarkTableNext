@@ -1,5 +1,12 @@
 add_subdirectory(external)
 
+# The managed Imath subproject sets CMAKE_DEBUG_POSTFIX to "_d" in the cache.
+# Keep that suffix on the dependency targets already created above, but do not
+# let it change DarkTableNext's runtime module names: module discovery derives
+# operation names directly from filenames and requires them to be build-type
+# independent.
+set(CMAKE_DEBUG_POSTFIX "")
+
 include(CheckCSourceCompiles)
 include(CheckCXXSymbolExists)
 
@@ -145,7 +152,6 @@ FILE(GLOB SOURCE_FILES
   "gui/preferences.c"
   "gui/presets.c"
   "gui/splash.c"
-  "gui/welcome.c"
   "gui/styles_dialog.c"
   "imageio/imageio.c"
   "imageio/imageio_dng.c"

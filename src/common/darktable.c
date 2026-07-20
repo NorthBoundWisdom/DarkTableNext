@@ -40,6 +40,7 @@
 #include "common/image_cache.h"
 #include "common/iop_order.h"
 #include "common/mipmap_cache.h"
+#include "common/module.h"
 #include "common/noiseprofiles.h"
 #include "common/opencl.h"
 #include "common/points.h"
@@ -63,7 +64,6 @@
 #include "gui/presets.h"
 #include "gui/styles.h"
 #include "gui/splash.h"
-#include "gui/welcome.h"
 #include "imageio/imageio_module.h"
 #include "libs/lib.h"
 #include "views/view.h"
@@ -1366,6 +1366,13 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         return 1;
     }
 
+    // A source rebuild replaces one or more Mach-O files and makes their next
+    // dynamic load a cold filesystem pass.  Read the small module set on a
+    // dedicated worker while database, collection and GUI setup continue; the
+    // thread touches no GTK, module, or database state and is joined before the
+    // first g_module_open().
+    GThread *module_prefetch = dt_module_prefetch_modules();
+
     dt_splash_screen_set_progress(_("preparing database"));
     dt_upgrade_maker_model(darktable.db);
 
@@ -1545,6 +1552,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         if (dt_gui_gtk_init(darktable.gui))
         {
             dt_print(DT_DEBUG_ALWAYS, "[dt_init] ERROR: can't init gui, aborting.");
+            g_thread_join(module_prefetch);
             dt_splash_screen_destroy();
             return 1;
         }
@@ -1557,6 +1565,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
     }
 
     dt_splash_screen_set_progress(_("loading image formats"));
+    g_thread_join(module_prefetch);
 
     darktable.imageio = (dt_imageio_t *)calloc(1, sizeof(dt_imageio_t));
     dt_imageio_init(darktable.imageio);
@@ -1589,10 +1598,13 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
 
     if (init_gui)
     {
+        dt_splash_screen_set_progress(_("preparing lighttable"));
         dt_ctl_switch_mode_to("lighttable");
 
         // all the default shortcuts have been registered
         darktable.control->accel_initialised = TRUE;
+
+        dt_splash_screen_set_progress(_("loading shortcuts"));
 
         // Save the default shortcuts
         dt_shortcuts_save(".defaults", FALSE);
@@ -1605,6 +1617,7 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
 
         // The application Action tree and user shortcut set are now complete.  Register the
         // GtkApplication projection before any interactive event can reach the main window.
+        dt_splash_screen_set_progress(_("registering system commands"));
         dt_gui_system_commands_init(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)));
 
         // connect the shortcut dispatcher
@@ -1655,11 +1668,11 @@ int dt_init(int argc, char *argv[], const gboolean init_gui, const gboolean load
         // Restore the final geometry before mapping the Quartz window. Showing
         // the default-sized window first causes a visibly mis-scaled frame and
         // can leave GTK with an incorrect control scale after maximizing.
+        dt_splash_screen_set_progress(_("opening lighttable"));
         dt_gui_gtk_load_config();
         gtk_widget_show_all(dt_ui_main_window(darktable.gui->ui));
         dt_gui_process_events();
         dt_splash_screen_destroy();
-        dt_welcome_screen_run_if_needed();
 
         // finally set the cursor to be the default.
         // for some reason this is needed on some systems to pick up the correctly themed cursor

@@ -20,6 +20,12 @@
 
 #include <glib.h>
 
+/**
+ * Warm the filesystem pages for the loadable module set on a worker thread.
+ * The returned thread must be joined before calling dt_module_load_modules().
+ */
+GThread *dt_module_prefetch_modules(void);
+
 GList *dt_module_load_modules(const char *subdir, const size_t module_size,
                               int (*load_module_so)(void *module, const char *libname,
                                                     const char *plugin_name),
