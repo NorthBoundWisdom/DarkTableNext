@@ -23,10 +23,6 @@
 #include "develop/imageop.h"
 #include "develop/masks.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 static int _group_events_mouse_scrolled(dt_iop_module_t *module, const float pzx, const float pzy,
                                         const int up, const uint32_t state, dt_masks_form_t *form,
                                         const int unused1, dt_masks_form_gui_t *gui,
@@ -184,19 +180,19 @@ static int _group_events_mouse_moved(dt_iop_module_t *module, const float pzx, c
     {
         dt_masks_point_group_t *fpt = fpts->data;
         dt_masks_form_t *frm = dt_masks_get_from_id(darktable.develop, fpt->formid);
-        int inside, inside_border, near, inside_source;
+        int inside, inside_border, near_index, inside_source;
         float dist = FLT_MAX;
         inside = inside_border = inside_source = 0;
-        near = -1;
+        near_index = -1;
 
         float wd, ht;
         dt_masks_get_image_size(&wd, &ht, NULL, NULL);
         const float xx = pzx * wd, yy = pzy * ht;
         if (frm && frm->functions && frm->functions->get_distance)
             frm->functions->get_distance(xx, yy, as, gui, pos, g_list_length(frm->points), &inside,
-                                         &inside_border, &near, &inside_source, &dist);
+                                         &inside_border, &near_index, &inside_source, &dist);
 
-        if (inside || inside_border || near >= 0 || inside_source)
+        if (inside || inside_border || near_index >= 0 || inside_source)
         {
             if (sel_dist > dist)
             {

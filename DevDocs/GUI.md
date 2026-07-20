@@ -56,9 +56,6 @@ nearest `dt_action_t`, derives the IOP instance when needed, queries its current
   append dynamic values as Action items. A provider returning `FALSE` falls back to the standard
   Action projection.
 
-The complete coverage plan and remaining provider work are tracked in
-[TODO_CONTEXT_MENUS.md](../TODO_CONTEXT_MENUS.md).
-
 For a runtime Action audit, run the existing **reinitialise input devices** Action. It writes
 `all_actions` in the user configuration directory. Each Action line includes its complete ID, type,
 view mask and target presence; its following invocation lines record element/effect, current enabled

@@ -23,6 +23,16 @@ else()
   project(darktable VERSION 0.9.0 LANGUAGES CXX C)
 endif()
 
+# All first-party C targets, including those created before src/, use the
+# same portable language baseline.  Compiler-specific capabilities remain
+# separately detected where C11 has no equivalent.
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Tests are opt-in: application presets must not pull test-only dependencies
 # or assets into a normal configure/build.
 option(BUILD_TESTING "Build DarkTableNext tests" OFF)
@@ -42,10 +52,6 @@ function(dt_module_configure_link_dependencies target)
   endif()
 endfunction()
 
-if(NOT APPLE AND NOT WIN32)
-  message(FATAL_ERROR "DarkTableNext supports macOS and Windows only.")
-endif()
-
 if(NOT CMAKE_C_COMPILER_ID MATCHES "^(AppleClang|Clang|GNU|MSVC)$")
   message(FATAL_ERROR "Unsupported C compiler: ${CMAKE_C_COMPILER_ID}. Use Clang, GCC, or MSVC.")
 endif()
@@ -56,7 +62,6 @@ endif()
 if(MSVC)
   add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h" /EHsc /Zc:preprocessor
                       /utf-8
-                      "$<$<COMPILE_LANGUAGE:C>:/std:c11>"
                       "$<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>")
   add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
   if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
@@ -142,6 +147,8 @@ if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_DARWIN_C_SOURCE")
 elseif(WIN32)
   message("-- Windows build")
+else()
+  message("-- ${CMAKE_SYSTEM_NAME} build")
 endif()
 
 #

@@ -2,9 +2,9 @@
 
 ## 项目定位
 
-DarkTableNext 0.9 是 macOS-only、GPLv3 的照片工作流与 RAW 编辑维护基线。保留验证过的
-图像处理核心和现有 GTK 前端，主动删除已确认不属于产品范围的历史兼容、插件和外围
-工作流。
+DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与 RAW 编辑维护
+基线。保留验证过的图像处理核心和现有 GTK 前端，主动删除已确认不属于产品范围的历史
+兼容、插件和外围工作流。
 
 仓库根目录下的约定适用于整个仓库。`FreeCM/` 是独立子模块并由它自己的 `AGENTS.md`
 管理；所有 `build/dependency_*` 内容都是父仓库工作流生成的外部源码，不得把它们当作
@@ -73,6 +73,10 @@ cmake --build --preset mac_clang_debug
 `mac_gcc_debug` 与 `mac_clang_release`；也可根据任务使用 `mac_clang_debug` 与
 `mac_gcc_release`。不要用同一编译器同时完成 Debug、Release 两项验证；单元测试运行在
 所选的 Debug preset 上。此配对规则仅适用于 `mac_*` preset，不外推为其他平台的验证要求。
+
+涉及跨平台构建、公共头或平台分支的改动，除本机验证外，应在可用的 Windows 和 Linux
+工具链上分别完成 configure/build；当前环境缺少相应工具链时，执行可行的静态检查并明确
+报告未验证的平台，不能将 macOS 结果表述为全平台通过。
 
 测试默认关闭。涉及可测试 C/C++ 行为时：
 

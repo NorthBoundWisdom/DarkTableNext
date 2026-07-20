@@ -5,10 +5,14 @@
 #ifndef THREAD_SAFETY_ANALYSIS_MUTEX_H
 #define THREAD_SAFETY_ANALYSIS_MUTEX_H
 
-// Enable thread safety attributes only with clang.
-// The attributes can be safely erased when compiling with other compilers.
-#if defined(__clang__) && (!defined(SWIG))
+// Enable thread-safety annotations only when the compiler supports the
+// capability attribute. Other compilers can safely erase the annotations.
+#if !defined(SWIG) && defined(__has_attribute)
+#if __has_attribute(capability)
 #define THREAD_ANNOTATION_ATTRIBUTE__(x) __attribute__((x))
+#else
+#define THREAD_ANNOTATION_ATTRIBUTE__(x) // no-op
+#endif
 #else
 #define THREAD_ANNOTATION_ATTRIBUTE__(x) // no-op
 #endif

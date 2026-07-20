@@ -28,10 +28,6 @@
 #include "develop/openmp_maths.h"
 #include <assert.h>
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 static void _path_bounding_box_raw(const float *const points, const float *border,
                                    const int nb_corner, const int num_points, const int num_borders,
                                    float *x_min, float *x_max, float *y_min, float *y_max);
@@ -1479,14 +1475,14 @@ fail:
 /** get the distance between point (x,y) and the path */
 static void _path_get_distance(const float x, const float y, const float as,
                                dt_masks_form_gui_t *gui, const int index, const int corner_count,
-                               gboolean *inside, gboolean *inside_border, int *near,
+                               gboolean *inside, gboolean *inside_border, int *near_index,
                                gboolean *inside_source, float *dist)
 {
     // initialise returned values
     *inside_source = FALSE;
     *inside = FALSE;
     *inside_border = FALSE;
-    *near = -1;
+    *near_index = -1;
     *dist = FLT_MAX;
 
     if (!gui)
@@ -1529,9 +1525,9 @@ static void _path_get_distance(const float x, const float y, const float as,
 
     // we check if it's inside borders
     if (!dt_masks_point_in_form_near(x, y, gpt->border, _nb_wctrl_points(corner_count),
-                                     gpt->border_count, as, near))
+                                     gpt->border_count, as, near_index))
     {
-        if (*near != -1)
+        if (*near_index != -1)
         {
             *inside_border = TRUE;
         }
@@ -1584,9 +1580,9 @@ static void _path_get_distance(const float x, const float y, const float as,
             if (dd < as2)
             {
                 if (current_seg == 0)
-                    *near = corner_count - 1;
+                    *near_index = corner_count - 1;
                 else
-                    *near = current_seg - 1;
+                    *near_index = current_seg - 1;
             }
         }
 
@@ -2585,13 +2581,13 @@ static int _path_events_mouse_moved(dt_iop_module_t *module, float pzx, float pz
 
     // are we inside the form or the borders or near a segment ???
     gboolean in = FALSE, inb = FALSE, ins = FALSE;
-    int near = 0;
+    int near_index = 0;
     float dist = 0;
-    _path_get_distance(pzx, pzy, as, gui, index, nb, &in, &inb, &near, &ins, &dist);
-    gui->seg_selected = !gui->select_only_border && dist < sqf(as) ? near : -1;
+    _path_get_distance(pzx, pzy, as, gui, index, nb, &in, &inb, &near_index, &ins, &dist);
+    gui->seg_selected = !gui->select_only_border && dist < sqf(as) ? near_index : -1;
 
     // no segment selected, set form or source selection
-    if (near < 0)
+    if (near_index < 0)
     {
         if (ins)
         {

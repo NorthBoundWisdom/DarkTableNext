@@ -754,7 +754,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
                           float bstemp[2];
                           for (int dir = 0; dir < 2; dir++)
                           {
-                              const float p[9] __attribute__((aligned(16))) = {
+                              _Alignas(16) const float p[9] = {
                                   blockshifts[(vblock - 1) * horiz_tiles + hblock - 1][c][dir],
                                   blockshifts[(vblock - 1) * horiz_tiles + hblock][c][dir],
                                   blockshifts[(vblock - 1) * horiz_tiles + hblock + 1][c][dir],

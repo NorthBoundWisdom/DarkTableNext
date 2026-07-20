@@ -27,10 +27,6 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 #define HARDNESS_MIN 0.0005f
 #define HARDNESS_MAX 1.0f
 
@@ -1031,14 +1027,14 @@ fail:
 /** get the distance between point (x,y) and the brush */
 static void _brush_get_distance(const float x, const float y, const float as,
                                 dt_masks_form_gui_t *gui, const int index, const int corner_count,
-                                gboolean *inside, gboolean *inside_border, int *near,
+                                gboolean *inside, gboolean *inside_border, int *near_index,
                                 gboolean *inside_source, float *dist)
 {
     // initialise returned values
     *inside_source = FALSE;
     *inside = FALSE;
     *inside_border = FALSE;
-    *near = -1;
+    *near_index = -1;
     *dist = FLT_MAX;
 
     if (!gui)
@@ -1098,7 +1094,7 @@ static void _brush_get_distance(const float x, const float y, const float as,
     // we check if it's inside borders
     if (gpt->border_count > 2 + _nb_ctrl_point(corner_count))
     {
-        *near = -1;
+        *near_index = -1;
 
         float last = gpt->border[gpt->border_count * 2 - 1];
         int nb = 0;
@@ -1109,7 +1105,7 @@ static void _brush_get_distance(const float x, const float y, const float as,
             const float dd = sqf(x1 - x) + sqf(y1 - y);
 
             if (dd < as2)
-                *near = i * 2;
+                *near_index = i * 2;
 
             if (((y <= y1 && y > last) || (y >= y1 && y < last)) && (x1 > x))
                 nb++;
@@ -1117,11 +1113,11 @@ static void _brush_get_distance(const float x, const float y, const float as,
         }
 
         // near or inside the border
-        if (*near != -1 || (nb & 1))
+        if (*near_index != -1 || (nb & 1))
             *inside = *inside_border = TRUE;
     }
 
-    *near = -1;
+    *near_index = -1;
 
     // and we check if we are near a segment
     if (gpt->points_count > 2 + _nb_ctrl_point(corner_count))
@@ -1145,14 +1141,14 @@ static void _brush_get_distance(const float x, const float y, const float as,
             *dist = fminf(*dist, dd);
             if (*dist == dd && current_seg > 0 && dd < as2)
             {
-                *near = current_seg - 1;
+                *near_index = current_seg - 1;
             }
         }
     }
 
     // if inside border detected and not in a segment, then we are in range to allow
     // moving the whole brush.
-    if (*inside && *inside_border && *near == -1)
+    if (*inside && *inside_border && *near_index == -1)
         *dist = 0.0f;
 }
 
@@ -2229,12 +2225,12 @@ static int _brush_events_mouse_moved(struct dt_iop_module_t *module, float pzx, 
     // are we inside the form or the borders or near a segment ???
     gboolean in, inb, ins;
     float dist;
-    int near;
-    _brush_get_distance(pzx, pzy, as, gui, index, nb, &in, &inb, &near, &ins, &dist);
-    gui->seg_selected = near;
+    int near_index;
+    _brush_get_distance(pzx, pzy, as, gui, index, nb, &in, &inb, &near_index, &ins, &dist);
+    gui->seg_selected = near_index;
 
     // no segment selected, set form or source selection
-    if (near < 0)
+    if (near_index < 0)
     {
         if (ins)
         {

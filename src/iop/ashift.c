@@ -109,10 +109,6 @@
 // implemented by Michael F. Hutt.
 #include "ashift_nmsimplex.c"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 DT_MODULE_INTROSPECTION(5, dt_iop_ashift_params_t)
 
 const char *name()
@@ -316,7 +312,7 @@ typedef struct dt_iop_ashift_points_idx_t
 {
     size_t offset;
     int length;
-    int near;
+    int is_near;
     int bounded;
     dt_iop_ashift_linetype_t type;
     dt_iop_ashift_linecolor_t color;
@@ -3427,7 +3423,7 @@ static void _get_near(const float *points, dt_iop_ashift_points_idx_t *points_id
         return;
 
     for (int n = 0; n < lines_count; n++)
-        points_idx[n].near = 0;
+        points_idx[n].is_near = 0;
     for (int n = 0; n < lines_count; n++)
     {
         // skip irrelevant lines
@@ -3456,12 +3452,12 @@ static void _get_near(const float *points, dt_iop_ashift_points_idx_t *points_id
 
             if (dx * dx + dy * dy < delta2)
             {
-                points_idx[n].near = 1;
+                points_idx[n].is_near = 1;
                 break;
             }
         }
         // if we don't want multiple selection, stop here
-        if (!multiple && points_idx[n].near)
+        if (!multiple && points_idx[n].is_near)
             break;
     }
 }
@@ -3496,7 +3492,7 @@ static void _get_bounded_inside(const float *points, dt_iop_ashift_points_idx_t 
     for (int n = 0; n < points_lines_count; n++)
     {
         // mark line as "not near" and "not bounded"
-        points_idx[n].near = 0;
+        points_idx[n].is_near = 0;
         points_idx[n].bounded = 0;
 
         // skip irrelevant lines
@@ -3510,7 +3506,7 @@ static void _get_bounded_inside(const float *points, dt_iop_ashift_points_idx_t 
         {
             points_idx[n].bounded = 1;
             // only mark "near"-ness of those lines we are interested in
-            points_idx[n].near = ((points_idx[n].type & mask) != state) ? 0 : 1;
+            points_idx[n].is_near = ((points_idx[n].type & mask) != state) ? 0 : 1;
         }
     }
 }
@@ -3596,7 +3592,7 @@ static gboolean _get_points(const dt_iop_module_t *self, const dt_iop_ashift_lin
         total_points += length;
 
         my_points_idx[n].length = length;
-        my_points_idx[n].near = 0;
+        my_points_idx[n].is_near = 0;
         my_points_idx[n].bounded = 0;
 
         const dt_iop_ashift_linetype_t type = lines[n].type;
@@ -4063,7 +4059,7 @@ void gui_post_expose(dt_iop_module_t *self, cairo_t *cr, const float wd, const f
             g->points_idx[n].type != ASHIFT_LINE_VERTICAL_SELECTED)
             continue;
         // is the near flag set? -> draw line a bit thicker
-        if (g->points_idx[n].near)
+        if (g->points_idx[n].is_near)
             cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(3.0) * lwidth);
         else
             cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(1.5) * lwidth);
@@ -4411,7 +4407,7 @@ int mouse_moved(dt_iop_module_t *self, const float pzx, const float pzy, const d
         for (int n = 0; g->selecting_lines_version == g->lines_version && n < g->points_lines_count;
              n++)
         {
-            if (g->points_idx[n].near == 0)
+            if (g->points_idx[n].is_near == 0)
                 continue;
 
             if (g->isdeselecting)
@@ -4536,7 +4532,7 @@ int button_pressed(dt_iop_module_t *self, const float pzx, const float pzy, cons
         // we search the selected line and mark it as the moved line
         for (int n = 0; n < g->points_lines_count; n++)
         {
-            if (g->points_idx[n].near)
+            if (g->points_idx[n].is_near)
             {
                 float pts[2] = {pzx * wd, pzy * ht};
                 dt_dev_distort_backtransform_plus(self->dev, self->dev->preview_pipe,
@@ -4559,7 +4555,7 @@ int button_pressed(dt_iop_module_t *self, const float pzx, const float pzy, cons
         for (int n = 0; g->selecting_lines_version == g->lines_version && n < g->points_lines_count;
              n++)
         {
-            if (g->points_idx[n].near == 0)
+            if (g->points_idx[n].is_near == 0)
                 continue;
 
             if (which == GDK_BUTTON_SECONDARY)
@@ -4860,7 +4856,7 @@ int scrolled(dt_iop_module_t *self, const float pzx, const float pzy, const int 
         for (int n = 0; g->selecting_lines_version == g->lines_version && n < g->points_lines_count;
              n++)
         {
-            if (g->points_idx[n].near == 0)
+            if (g->points_idx[n].is_near == 0)
                 continue;
 
             if (g->isdeselecting)

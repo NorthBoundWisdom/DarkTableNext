@@ -390,16 +390,15 @@ static void lmmse_demosaic(float *const restrict out, const float *const restric
                             float *colc = qix[c] + rr * DT_LMMSE_TILESIZE + cc;
                             float *col1 = qix[1] + rr * DT_LMMSE_TILESIZE + cc;
                             // Assign 3x3 differential color values
-                            const float p[9]
-                                __attribute__((aligned(16))) = {colc[-w1 - 1] - col1[-w1 - 1],
-                                                                colc[-w1] - col1[-w1],
-                                                                colc[-w1 + 1] - col1[-w1 + 1],
-                                                                colc[-1] - col1[-1],
-                                                                colc[0] - col1[0],
-                                                                colc[1] - col1[1],
-                                                                colc[w1 - 1] - col1[w1 - 1],
-                                                                colc[w1] - col1[w1],
-                                                                colc[w1 + 1] - col1[w1 + 1]};
+                            _Alignas(16) const float p[9] = {colc[-w1 - 1] - col1[-w1 - 1],
+                                                             colc[-w1] - col1[-w1],
+                                                             colc[-w1 + 1] - col1[-w1 + 1],
+                                                             colc[-1] - col1[-1],
+                                                             colc[0] - col1[0],
+                                                             colc[1] - col1[1],
+                                                             colc[w1 - 1] - col1[w1 - 1],
+                                                             colc[w1] - col1[w1],
+                                                             colc[w1 + 1] - col1[w1 + 1]};
                             corr[0] = median9f(p);
                         }
                     }

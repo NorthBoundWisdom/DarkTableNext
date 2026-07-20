@@ -312,6 +312,11 @@ static lfLensType _lenstype_to_lensfun_lenstype(const int lt)
     }
 }
 
+static inline int _modflag_bits(const dt_iop_lens_modflag_t flags)
+{
+    return (int)flags;
+}
+
 static int _modflags_to_lensfun_mods(int modify_flags)
 {
     int mods = LF_MODIFY_GEOMETRY | LF_MODIFY_SCALE;
@@ -1346,7 +1351,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
         {
             knots_dist[i] = knots_vig[i] = (float)(i + 0.5) / (nc - 1);
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
             {
                 cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] =
                     (p->cor_dist_ft * cd->sony.distortion[i] * powf(2, -14) + 1);
@@ -1356,13 +1361,13 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
                 cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = 1;
             }
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_TCA)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_TCA)
             {
                 cor_rgb[0][i] *= p->cor_ca_r_ft * cd->sony.ca_r[i] * powf(2, -21) + 1;
                 cor_rgb[2][i] *= p->cor_ca_b_ft * cd->sony.ca_b[i] * powf(2, -21) + 1;
             }
 
-            if (vig && (p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING))
+            if (vig && (_modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING))
                 vig[i] = powf(
                     2, 0.5f - powf(2, p->cor_vig_ft * cd->sony.vignetting[i] * powf(2, -13) - 1));
             else if (vig)
@@ -1407,7 +1412,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             // vignetting correction is applied before distortion correction. So the
             // spline is related to the source image before distortion.
             knots_vig[j] = cd->fuji.cropf * cd->fuji.knots[i];
-            if (vig && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING)
+            if (vig && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING)
             {
                 vig[j] = 1 - p->cor_vig_ft * (1 - cd->fuji.vignetting[i] / 100);
             }
@@ -1430,7 +1435,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             const float r = rin / m;
             knots_dist[i] = r;
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
             {
                 for (int c = 0; c < 3; c++)
                 {
@@ -1442,7 +1447,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
                 cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = 1;
             }
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_TCA)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_TCA)
             {
                 const float mcar = _interpolate_linear_spline(knots_in, cor_ca_r_in, ncin, rin);
                 const float mcab = _interpolate_linear_spline(knots_in, cor_ca_b_in, ncin, rin);
@@ -1468,7 +1473,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             const float pw4 = powf(r, 4.0f);
             const float pw6 = powf(r, 6.0f);
             if (cor_rgb && cd->dng.has_warp &&
-                p->modify_flags &
+                _modflag_bits(p->modify_flags) &
                     (DT_IOP_LENS_MODIFY_FLAG_DISTORTION | DT_IOP_LENS_MODIFY_FLAG_TCA))
             {
                 // Convert the polynomial to a spline by evaluating it at each knot
@@ -1484,7 +1489,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             }
 
             if (vig && cd->dng.has_vignette &&
-                (p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING))
+                (_modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_VIGNETTING))
             {
                 const float dvig = cd->dng.cvig[0] * pw2 + cd->dng.cvig[1] * pw4 +
                                    cd->dng.cvig[2] * pw6 + cd->dng.cvig[3] * powf(r, 8.0f) +
@@ -1526,7 +1531,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             const float r = (float)i / (float)(nc - 1);
             knots_dist[i] = knots_vig[i] = r;
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_DISTORTION)
             {
                 // Convert the polynomial to a spline by evaluating it at each knot
                 //
@@ -1545,7 +1550,7 @@ static int _init_coeffs_md(const dt_image_t *img, const dt_iop_lens_params_t *p,
             else if (cor_rgb)
                 cor_rgb[0][i] = cor_rgb[1][i] = cor_rgb[2][i] = 1.0f;
 
-            if (cor_rgb && p->modify_flags & DT_IOP_LENS_MODIFY_FLAG_TCA)
+            if (cor_rgb && _modflag_bits(p->modify_flags) & DT_IOP_LENS_MODIFY_FLAG_TCA)
             {
                 // Radius in the input (distorted) image of the current knot
                 const float rd = cor_rgb[1][i] * r;

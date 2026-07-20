@@ -41,7 +41,7 @@ typedef struct dt_iop_rawoverexposed_t
     int dummy;
 } dt_iop_rawoverexposed_t;
 
-static const float dt_iop_rawoverexposed_colors[4][4] __attribute__((aligned(64))) = {
+static _Alignas(64) const float dt_iop_rawoverexposed_colors[4][4] = {
     {1.0f, 0.0f, 0.0f, 1.0f}, // red
     {0.0f, 1.0f, 0.0f, 1.0f}, // green
     {0.0f, 0.0f, 1.0f, 1.0f}, // blue

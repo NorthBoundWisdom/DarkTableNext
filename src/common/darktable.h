@@ -116,7 +116,13 @@ G_BEGIN_DECLS
 /* Create cloned functions for various CPU SSE generations */
 /* See for instructions https://hannes.hauswedell.net/post/2017/12/09/fmv/ */
 /* TL;DR : use only on SIMD functions containing low-level paralellized/vectorized loops */
-#if __has_attribute(target_clones) && !defined(NATIVE_ARCH) && defined(__GLIBC__)
+#if defined(__has_attribute)
+#define DT_HAS_ATTRIBUTE(attribute) __has_attribute(attribute)
+#else
+#define DT_HAS_ATTRIBUTE(attribute) 0
+#endif
+
+#if DT_HAS_ATTRIBUTE(target_clones) && !defined(NATIVE_ARCH) && defined(__GLIBC__)
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64)
 #define __DT_CLONE_TARGETS__                                                                       \
     __attribute__((target_clones("default", "sse2", "sse3", "sse4.1", "sse4.2", "popcnt", "avx",   \
@@ -129,6 +135,7 @@ G_BEGIN_DECLS
 #else
 #define __DT_CLONE_TARGETS__
 #endif
+#undef DT_HAS_ATTRIBUTE
 
 #define STR_YESNO(b) ((b) ? "YES" : "NO")
 #define STR_TRUEFALSE(b) ((b) ? "TRUE" : "FALSE")

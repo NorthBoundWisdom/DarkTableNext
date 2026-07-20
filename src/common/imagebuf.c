@@ -150,8 +150,8 @@ void dt_iop_image_copy(float *const __restrict__ out, const float *const __restr
 #ifdef _OPENMP
     if (nfloats > parallel_imgop_minimum) // is the copy big enough to outweigh threading overhead?
     {
-        float *const outv __attribute__((aligned(16))) = out;
-        const float *const inv __attribute__((aligned(16))) = in;
+        _Alignas(16) float *const outv = out;
+        _Alignas(16) const float *const inv = in;
         // we can gain a little by using a small number of threads in
         // parallel, but not much since the memory bus quickly saturates
         // (basically, each core can saturate a memory channel, so a

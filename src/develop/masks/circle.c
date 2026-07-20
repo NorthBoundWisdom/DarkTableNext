@@ -26,10 +26,6 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 #define MIN_CIRCLE_RADIUS 0.0005f
 #define MIN_CIRCLE_BORDER 0.0005f
 
@@ -40,7 +36,7 @@ static inline int _nb_ctrl_point(void)
 
 static void _circle_get_distance(const float x, const float y, const float as,
                                  dt_masks_form_gui_t *gui, const int index, const int num_points,
-                                 gboolean *inside, gboolean *inside_border, int *near,
+                                 gboolean *inside, gboolean *inside_border, int *near_index,
                                  gboolean *inside_source, float *dist)
 {
     (void)num_points; // unused arg, keep compiler from complaining
@@ -48,7 +44,7 @@ static void _circle_get_distance(const float x, const float y, const float as,
     *inside_source = FALSE;
     *inside = FALSE;
     *inside_border = FALSE;
-    *near = -1;
+    *near_index = -1;
     *dist = FLT_MAX;
 
     if (!gui)
@@ -93,9 +89,9 @@ static void _circle_get_distance(const float x, const float y, const float as,
     *dist = fminf(*dist, bd);
 
     // we check if it's inside borders
-    if (!dt_masks_point_in_form_near(x, y, gpt->border, 1, gpt->border_count, as, near))
+    if (!dt_masks_point_in_form_near(x, y, gpt->border, 1, gpt->border_count, as, near_index))
     {
-        if (*near != -1)
+        if (*near_index != -1)
             *inside_border = TRUE;
         else
             return;
@@ -549,9 +545,9 @@ static int _circle_events_mouse_moved(dt_iop_module_t *module, const float pzx, 
         const float x = pzx * wd;
         const float y = pzy * ht;
         gboolean in, inb, ins;
-        int near;
+        int near_index;
         float dist;
-        _circle_get_distance(x, y, as, gui, index, 0, &in, &inb, &near, &ins, &dist);
+        _circle_get_distance(x, y, as, gui, index, 0, &in, &inb, &near_index, &ins, &dist);
         if (ins)
         {
             gui->form_selected = TRUE;

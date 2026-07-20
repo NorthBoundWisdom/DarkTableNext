@@ -25,10 +25,6 @@
 #include "develop/imageop.h"
 #include "develop/imageop_gui.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 #pragma GCC diagnostic ignored "-Wshadow"
 
 dt_masks_form_t *dt_masks_dup_masks_form(const dt_masks_form_t *form)
@@ -1855,14 +1851,14 @@ gboolean dt_masks_point_in_form_exact(const float x, const float y, const float 
 
 gboolean dt_masks_point_in_form_near(const float x, const float y, const float *points,
                                      const int points_start, const int points_count,
-                                     const float distance, int *near)
+                                     const float distance, int *near_index)
 {
     // we use ray casting algorithm to avoid most problems with
     // horizontal segments.
 
     const float distance2 = sqf(distance);
 
-    *near = -1;
+    *near_index = -1;
 
     if (points_count > 2 + points_start)
     {
@@ -1880,7 +1876,7 @@ gboolean dt_masks_point_in_form_near(const float x, const float y, const float *
             const float dd = sqf(x1 - x) + sqf(y1 - y);
 
             if (dd < distance2)
-                *near = i * 2;
+                *near_index = i * 2;
 
             //if we need to jump to skip points (in case of deleted point,
             //because of self-intersection)

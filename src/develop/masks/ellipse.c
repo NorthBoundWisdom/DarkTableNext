@@ -27,10 +27,6 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 static inline int _nb_ctrl_point(void)
 {
     return 6;
@@ -106,7 +102,7 @@ static int _ellipse_point_in_polygon(const float x, const float y, const float *
 
 static void _ellipse_get_distance(const float x, const float y, const float as,
                                   dt_masks_form_gui_t *gui, const int index, const int num_points,
-                                  gboolean *inside, gboolean *inside_border, int *near,
+                                  gboolean *inside, gboolean *inside_border, int *near_index,
                                   gboolean *inside_source, float *dist)
 {
     (void)num_points; // unused arg, keep compiler from complaining
@@ -115,7 +111,7 @@ static void _ellipse_get_distance(const float x, const float y, const float as,
     *inside = FALSE;
     *inside_border = FALSE;
     *inside_source = FALSE;
-    *near = -1;
+    *near_index = -1;
 
     if (!gui)
         return;
@@ -132,7 +128,7 @@ static void _ellipse_get_distance(const float x, const float y, const float as,
             *inside_source = TRUE;
             *inside = TRUE;
             *inside_border = FALSE;
-            *near = -1;
+            *near_index = -1;
 
             // get the minial dist for center & control points
             for (int k = 0; k < _nb_ctrl_point() - 1; k++)
@@ -158,13 +154,13 @@ static void _ellipse_get_distance(const float x, const float y, const float as,
         *dist = fminf(*dist, bd);
     }
 
-    *near = -1;
+    *near_index = -1;
 
     // we check if it's inside borders
     if (!dt_masks_point_in_form_near(x, y, gpt->border, _nb_ctrl_point(), gpt->border_count, as,
-                                     near))
+                                     near_index))
     {
-        if (*near != -1)
+        if (*near_index != -1)
             *inside_border = TRUE;
         else
             return;
@@ -1068,10 +1064,10 @@ static int _ellipse_events_mouse_moved(dt_iop_module_t *module, const float pzx,
         const float y = pzy * ht;
 
         gboolean in = FALSE, inb = FALSE, ins = FALSE;
-        int near = 0;
+        int near_index = 0;
 
         float dist = 0.0f;
-        _ellipse_get_distance(x, y, as, gui, index, 0, &in, &inb, &near, &ins, &dist);
+        _ellipse_get_distance(x, y, as, gui, index, 0, &in, &inb, &near_index, &ins, &dist);
         if (ins)
         {
             gui->form_selected = TRUE;

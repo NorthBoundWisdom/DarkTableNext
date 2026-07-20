@@ -27,10 +27,6 @@
 #include "develop/masks.h"
 #include "develop/openmp_maths.h"
 
-#ifdef _MSC_VER
-#undef near
-#endif
-
 static inline int _nb_ctrl_point(void)
 {
     return 3;
@@ -38,7 +34,7 @@ static inline int _nb_ctrl_point(void)
 
 static void _gradient_get_distance(const float x, const float y, const float as,
                                    dt_masks_form_gui_t *gui, const int index, const int num_points,
-                                   gboolean *inside, gboolean *inside_border, int *near,
+                                   gboolean *inside, gboolean *inside_border, int *near_index,
                                    gboolean *inside_source, float *dist)
 {
     (void)num_points; // unused arg, keep compiler from complaining
@@ -46,7 +42,7 @@ static void _gradient_get_distance(const float x, const float y, const float as,
         return;
 
     *inside = *inside_border = *inside_source = FALSE;
-    *near = -1;
+    *near_index = -1;
     *dist = FLT_MAX;
 
     const dt_masks_form_gui_points_t *gpt = g_list_nth_data(gui->points, index);
@@ -573,9 +569,9 @@ static int _gradient_events_mouse_moved(dt_iop_module_t *module, const float pzx
         const float x = pzx * wd;
         const float y = pzy * ht;
         gboolean in, inb, ins;
-        int near;
+        int near_index;
         float dist;
-        _gradient_get_distance(x, y, as, gui, index, 0, &in, &inb, &near, &ins, &dist);
+        _gradient_get_distance(x, y, as, gui, index, 0, &in, &inb, &near_index, &ins, &dist);
 
         const dt_masks_form_gui_points_t *gpt = g_list_nth_data(gui->points, index);
 
