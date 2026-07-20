@@ -94,6 +94,8 @@ typedef enum
     DT_IMAGE_MONOCHROME_BAYER = 1 << 19,
     // image has a flag set to use the monochrome workflow in the modules supporting it
     DT_IMAGE_MONOCHROME_WORKFLOW = 1 << 20,
+    // image has been picked in the Lighttable workflow
+    DT_IMAGE_PICKED = 1 << 21,
 } dt_image_flags_t;
 
 typedef enum dt_image_colorspace_t

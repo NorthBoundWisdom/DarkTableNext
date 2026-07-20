@@ -19,6 +19,7 @@
 #include "common/ratings.h"
 #include "common/collection.h"
 #include "common/debug.h"
+#include "common/selection.h"
 #include "control/control.h"
 #include "dtgtk/button.h"
 #include "gui/draw.h"
@@ -32,8 +33,10 @@ DT_MODULE(1)
 typedef struct dt_lib_ratings_t
 {
     gint current;
+    gint rating;
     gint pointerx;
     gint pointery;
+    GtkWidget *drawing;
 } dt_lib_ratings_t;
 
 /* redraw the ratings */
@@ -51,6 +54,35 @@ static gboolean _lib_ratings_button_press_callback(GtkWidget *widget, GdkEventBu
 static gboolean _lib_ratings_button_release_callback(GtkWidget *widget, GdkEventButton *event,
                                                      dt_lib_module_t *self);
 
+static int _selected_rating(void)
+{
+    GList *imgs = dt_selection_get_list(darktable.selection, FALSE, FALSE);
+    int rating = -1;
+    for (GList *image = imgs; image; image = g_list_next(image))
+    {
+        const int image_rating = dt_ratings_get(GPOINTER_TO_INT(image->data));
+        if (rating < 0)
+            rating = image_rating;
+        else if (rating != image_rating)
+        {
+            rating = -1;
+            break;
+        }
+    }
+    g_list_free(imgs);
+    return rating;
+}
+
+static void _ratings_selection_changed(gpointer instance, dt_lib_module_t *self)
+{
+    dt_lib_gui_queue_update(self);
+}
+
+static void _ratings_metadata_changed(gpointer instance, const int type, dt_lib_module_t *self)
+{
+    dt_lib_gui_queue_update(self);
+}
+
 const char *name(dt_lib_module_t *self)
 {
     return _("ratings");
@@ -63,7 +95,7 @@ dt_view_type_flags_t views(dt_lib_module_t *self)
 
 uint32_t container(dt_lib_module_t *self)
 {
-    return DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_LEFT;
+    return DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_RIGHT;
 }
 
 gboolean expandable(dt_lib_module_t *self)
@@ -87,6 +119,7 @@ void gui_init(dt_lib_module_t *self)
     gtk_widget_set_valign(self->widget, GTK_ALIGN_CENTER);
 
     GtkWidget *drawing = gtk_drawing_area_new();
+    d->drawing = drawing;
 
     gtk_widget_set_events(drawing, GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
                                        GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
@@ -119,6 +152,9 @@ void gui_init(dt_lib_module_t *self)
     dt_shortcut_register(ac, 4, 0, GDK_KEY_4, 0);
     dt_shortcut_register(ac, 5, 0, GDK_KEY_5, 0);
     dt_shortcut_register(ac, 6, 0, GDK_KEY_r, 0);
+
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_SELECTION_CHANGED, _ratings_selection_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_METADATA_CHANGED, _ratings_metadata_changed);
 }
 
 void gui_cleanup(dt_lib_module_t *self)
@@ -156,20 +192,22 @@ static gboolean _lib_ratings_draw_callback(GtkWidget *widget, cairo_t *crf, dt_l
     int x = 0;
     cairo_set_line_width(cr, DT_PIXEL_APPLY_DPI(1));
     gdk_cairo_set_source_rgba(cr, &fg_color);
+    const gboolean hovering = d->pointerx > 0;
     d->current = 0;
     for (int k = 0; k < 5; k++)
     {
         /* outline star */
         dt_draw_star(cr, star_size / 2.0 + x, star_size / 2.0, star_size / 2.0,
                      star_size / (2.0 * 2.5));
-        if (x < d->pointerx)
+        const gboolean active = hovering ? x < d->pointerx : k < d->rating;
+        if (active)
         {
             cairo_fill_preserve(cr);
             cairo_set_source_rgba(cr, fg_color.red, fg_color.green, fg_color.blue,
-                                  fg_color.alpha * 0.5);
+                                  fg_color.alpha * (hovering ? 0.5 : 1.0));
             cairo_stroke(cr);
             gdk_cairo_set_source_rgba(cr, &fg_color);
-            if ((k + 1) > d->current)
+            if (hovering && (k + 1) > d->current)
                 d->current = darktable.control->element = (k + 1);
         }
         else
@@ -184,6 +222,13 @@ static gboolean _lib_ratings_draw_callback(GtkWidget *widget, cairo_t *crf, dt_l
     cairo_surface_destroy(cst);
 
     return TRUE;
+}
+
+void gui_update(dt_lib_module_t *self)
+{
+    dt_lib_ratings_t *d = self->data;
+    d->rating = _selected_rating();
+    gtk_widget_queue_draw(d->drawing);
 }
 
 static gboolean _lib_ratings_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,

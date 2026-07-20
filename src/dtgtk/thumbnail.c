@@ -895,8 +895,8 @@ static gboolean _event_image_draw(GtkWidget *widget, cairo_t *cr, gpointer user_
 
 static void _thumb_update_icons(dt_thumbnail_t *thumb)
 {
-    // Preview omits reject, rating, and zoom controls from its compact information panel.
-    // Those controls remain available in the filmstrip, grid, and multi-image Culling.
+    // Preview omits rating and zoom controls from its compact information panel.
+    // Reject is deliberately toolbar-only: the footer exposes the full flag set.
     const gboolean show_preview_controls = thumb->container != DT_THUMBNAIL_CONTAINER_PREVIEW;
 
     gtk_widget_set_visible(thumb->w_local_copy, thumb->has_localcopy);
@@ -907,7 +907,7 @@ static void _thumb_update_icons(dt_thumbnail_t *thumb)
     gtk_widget_set_visible(thumb->w_zoom_eb, (show_preview_controls && thumb->zoomable &&
                                               thumb->over == DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK));
     gtk_widget_show(thumb->w_bottom_eb);
-    gtk_widget_set_visible(thumb->w_reject, show_preview_controls);
+    gtk_widget_hide(thumb->w_reject);
     gtk_widget_show(thumb->w_ext);
 
     // show cursor (filmstrip current-image arrow) only for the active image
@@ -1809,6 +1809,8 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
     if (thumb->over != DT_THUMBNAIL_OVERLAYS_HOVER_BLOCK)
     {
         gtk_widget_get_size_request(thumb->w_main, &width, &height);
+        const gboolean compact_grid = thumb->container == DT_THUMBNAIL_CONTAINER_LIGHTTABLE &&
+                                      thumb->over == DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED;
         // we need to squeeze reject + space + stars + space + colorlabels
         // icons on a thumbnail width that means a width of 4 + MAX_STARS
         // icons size all icons and spaces having a width of 2.5 * r1
@@ -1833,57 +1835,60 @@ static void _thumb_resize_overlays(dt_thumbnail_t *thumb)
             thumb->over == DT_THUMBNAIL_OVERLAYS_MIXED)
         {
             attrlist = pango_attr_list_new();
-            attr = pango_attr_size_new_absolute(1.5 * r1 * PANGO_SCALE);
+            attr = pango_attr_size_new_absolute((compact_grid ? 1.15f : 1.5f) * r1 * PANGO_SCALE);
             pango_attr_list_insert(attrlist, attr);
             gtk_label_set_attributes(GTK_LABEL(thumb->w_bottom), attrlist);
             pango_attr_list_unref(attrlist);
             int w = 0;
             int h = 0;
             pango_layout_get_pixel_size(gtk_label_get_layout(GTK_LABEL(thumb->w_bottom)), &w, &h);
-            gtk_widget_set_size_request(thumb->w_bottom_eb, width,
-                                        icon_size * 0.75 + h + 3 * thumb->img_margin->bottom);
+            const int rating_icon_size = compact_grid ? roundf(icon_size * 0.72f) : icon_size;
+            const int bottom_height = compact_grid ?
+                                        h + rating_icon_size + 2 * thumb->img_margin->bottom :
+                                        icon_size * 0.75 + h + 3 * thumb->img_margin->bottom;
+            gtk_widget_set_size_request(thumb->w_bottom_eb, width, bottom_height);
         }
         else
             gtk_widget_set_size_request(thumb->w_bottom_eb, width,
                                         icon_size * 0.75 + 2 * thumb->img_margin->bottom);
 
-        gtk_label_set_xalign(GTK_LABEL(thumb->w_bottom), 0.5);
+        gtk_label_set_xalign(GTK_LABEL(thumb->w_bottom), compact_grid ? 0.0 : 0.5);
         gtk_label_set_yalign(GTK_LABEL(thumb->w_bottom), 0);
         gtk_widget_set_margin_top(thumb->w_bottom, thumb->img_margin->bottom);
         gtk_widget_set_valign(thumb->w_bottom_eb, GTK_ALIGN_END);
         gtk_widget_set_halign(thumb->w_bottom_eb, GTK_ALIGN_CENTER);
         gtk_widget_set_margin_start(thumb->w_bottom_eb, 0);
 
-        // reject icon
-        const int margin_b_icons = MAX(0, thumb->img_margin->bottom - icon_size * 0.125 - 1);
-        gtk_widget_set_size_request(thumb->w_reject, icon_size, icon_size);
+        const int rating_icon_size = compact_grid ? roundf(icon_size * 0.72f) : icon_size;
+        const int margin_b_icons =
+            MAX(0, thumb->img_margin->bottom - rating_icon_size * 0.125 - 1);
+        gtk_widget_set_size_request(thumb->w_reject, rating_icon_size, rating_icon_size);
         gtk_widget_set_valign(thumb->w_reject, GTK_ALIGN_END);
-        int pos = MAX(0, thumb->img_margin->left - icon_size * 0.125);
-        // align on the left of the thumb
+        int pos = MAX(0, thumb->img_margin->left - rating_icon_size * 0.125);
         gtk_widget_set_margin_start(thumb->w_reject, pos);
         gtk_widget_set_margin_bottom(thumb->w_reject, margin_b_icons);
 
-        // stars
+        // Keep Grid metadata and ratings on one shared left edge.
         for (int i = 0; i < MAX_STARS; i++)
         {
-            gtk_widget_set_size_request(thumb->w_stars[i], icon_size, icon_size);
+            gtk_widget_set_size_request(thumb->w_stars[i], rating_icon_size, rating_icon_size);
             gtk_widget_set_valign(thumb->w_stars[i], GTK_ALIGN_END);
             gtk_widget_set_margin_bottom(thumb->w_stars[i], margin_b_icons);
-            gtk_widget_set_margin_start(thumb->w_stars[i],
-                                        thumb->img_margin->left +
-                                            (width - thumb->img_margin->left -
-                                             thumb->img_margin->right - MAX_STARS * icon_size) *
-                                                0.5 +
-                                            i * icon_size);
+            const int rating_start = compact_grid ? thumb->img_margin->left :
+                thumb->img_margin->left +
+                    (width - thumb->img_margin->left - thumb->img_margin->right -
+                     MAX_STARS * rating_icon_size) * 0.5;
+            gtk_widget_set_margin_start(thumb->w_stars[i], rating_start + i * rating_icon_size);
         }
 
         // the color labels
-        gtk_widget_set_size_request(thumb->w_color, icon_size, icon_size);
+        gtk_widget_set_size_request(thumb->w_color, rating_icon_size, rating_icon_size);
         gtk_widget_set_valign(thumb->w_color, GTK_ALIGN_END);
         gtk_widget_set_halign(thumb->w_color, GTK_ALIGN_START);
         gtk_widget_set_margin_bottom(thumb->w_color, margin_b_icons);
-        pos = width - thumb->img_margin->right - icon_size + icon_size * 0.125;
-        // align on the right
+        pos = compact_grid ? thumb->img_margin->left + (MAX_STARS + 0.35f) * rating_icon_size :
+                             width - thumb->img_margin->right - rating_icon_size +
+                                 rating_icon_size * 0.125;
         gtk_widget_set_margin_start(thumb->w_color, pos);
 
         // the local copy indicator

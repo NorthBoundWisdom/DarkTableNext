@@ -1,22 +1,7 @@
 #!/bin/sh
 
 launcher_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-app_path="$launcher_dir/darktable.app"
 
-# Keep non-GUI inspection commands usable in a terminal. Launch Services would
-# otherwise detach their output along with the application process.
-for argument in "$@"
-do
-  case "$argument" in
-    --help|-h|--version|-v)
-      exec "$app_path/Contents/MacOS/darktable" "$@"
-      ;;
-  esac
-done
-
-# Starting the bundle through Launch Services lets macOS associate this process
-# with its Info.plist and darktable.icns instead of showing the generic GTK
-# application icon in the Dock. -W preserves the normal foreground terminal
-# behavior, while -n keeps explicit command-line launches independent.
-# Console-only --help and --version stay on the direct branch above.
-exec /usr/bin/open -W -n "$app_path" --args "$@"
+# Keep the app as the launcher's process. Development Run actions can then
+# terminate the previous instance before starting a replacement.
+exec "$launcher_dir/darktable.app/Contents/MacOS/darktable" "$@"

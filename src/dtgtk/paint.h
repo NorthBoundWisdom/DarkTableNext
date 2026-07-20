@@ -141,6 +141,8 @@ void dtgtk_cairo_paint_aspectflip(cairo_t *cr, gint x, gint y, gint w, gint h, g
                                   void *data);
 /** Paint a color label icon */
 void dtgtk_cairo_paint_label(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
+/** Paint a Lighttable workflow flag. CPF_ACTIVE fills it and CPF_SPECIAL_FLAG dashes its outline. */
+void dtgtk_cairo_paint_flag(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags, void *data);
 /** Paint a color label icon for selection */
 void dtgtk_cairo_paint_label_sel(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                  void *data);

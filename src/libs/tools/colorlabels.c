@@ -19,6 +19,7 @@
 #include "bauhaus/bauhaus.h"
 #include "common/colorlabels.h"
 #include "common/collection.h"
+#include "common/selection.h"
 #include "control/control.h"
 #include "dtgtk/button.h"
 #include "gui/accelerators.h"
@@ -47,6 +48,32 @@ typedef struct dt_lib_colorlabels_t
 static gboolean _lib_colorlabels_button_clicked_callback(GtkWidget *w, GdkEventButton *event,
                                                          dt_lib_module_t *self);
 
+static int _selected_common_colorlabels(void)
+{
+    GList *imgs = dt_selection_get_list(darktable.selection, FALSE, FALSE);
+    int labels = 0;
+    gboolean have_image = FALSE;
+    for (GList *image = imgs; image; image = g_list_next(image))
+    {
+        const int image_labels = dt_colorlabels_get_labels(GPOINTER_TO_INT(image->data));
+        labels = have_image ? labels & image_labels : image_labels;
+        have_image = TRUE;
+    }
+    g_list_free(imgs);
+    return have_image ? labels : 0;
+}
+
+static void _colorlabels_selection_changed(gpointer instance, dt_lib_module_t *self)
+{
+    dt_lib_gui_queue_update(self);
+}
+
+static void _colorlabels_metadata_changed(gpointer instance, const int type,
+                                          dt_lib_module_t *self)
+{
+    dt_lib_gui_queue_update(self);
+}
+
 gint _get_colorlabel(dt_lib_module_t *self, GtkWidget *w)
 {
     dt_lib_colorlabels_t *d = self->data;
@@ -70,7 +97,7 @@ dt_view_type_flags_t views(dt_lib_module_t *self)
 
 uint32_t container(dt_lib_module_t *self)
 {
-    return DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_LEFT;
+    return DT_UI_CONTAINER_PANEL_CENTER_BOTTOM_RIGHT;
 }
 
 gboolean expandable(dt_lib_module_t *self)
@@ -120,8 +147,8 @@ void gui_init(dt_lib_module_t *self)
 
     for (int k = 0; k < 6; k++)
     {
-        GtkWidget *button =
-            dtgtk_button_new(dtgtk_cairo_paint_label, (k | 8 | CPF_LABEL_PURPLE), NULL);
+        GtkWidget *button = dtgtk_button_new(k < 5 ? dtgtk_cairo_paint_label : dtgtk_cairo_paint_reset,
+                                             (k | 8 | CPF_LABEL_PURPLE), NULL);
         d->buttons[k] = button;
         dt_gui_add_class(d->buttons[k], "dt_no_hover");
         dt_gui_add_class(d->buttons[k], "dt_dimmed");
@@ -146,12 +173,32 @@ void gui_init(dt_lib_module_t *self)
     dt_shortcut_register(ac, 5, 0, GDK_KEY_F5, 0);
 
     gtk_widget_set_name(self->widget, "lib-label-colors");
+
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_SELECTION_CHANGED, _colorlabels_selection_changed);
+    DT_CONTROL_SIGNAL_HANDLE(DT_SIGNAL_METADATA_CHANGED, _colorlabels_metadata_changed);
 }
 
 void gui_cleanup(dt_lib_module_t *self)
 {
     g_free(self->data);
     self->data = NULL;
+}
+
+void gui_update(dt_lib_module_t *self)
+{
+    dt_lib_colorlabels_t *d = self->data;
+    const int labels = _selected_common_colorlabels();
+    for (int k = 0; k < 5; k++)
+    {
+        GtkWidget *button = d->buttons[k];
+        if (labels & (1 << k))
+            gtk_widget_set_state_flags(button, GTK_STATE_FLAG_CHECKED, FALSE);
+        else
+            gtk_widget_unset_state_flags(button, GTK_STATE_FLAG_CHECKED);
+        gtk_widget_queue_draw(button);
+    }
+    gtk_widget_unset_state_flags(d->buttons[5], GTK_STATE_FLAG_CHECKED);
+    gtk_widget_queue_draw(d->buttons[5]);
 }
 
 #define FLOATING_ENTRY_WIDTH DT_PIXEL_APPLY_DPI(150)

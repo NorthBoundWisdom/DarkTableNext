@@ -314,6 +314,34 @@ static gboolean _panel_is_visible(const dt_ui_panel_t panel)
     return ret;
 }
 
+static gboolean _panels_controls_visible(void)
+{
+    gchar *key = _panels_get_view_path("panels_collapse_controls");
+    const gboolean visible = !key || !dt_conf_key_exists(key) || dt_conf_get_bool(key);
+    g_free(key);
+    return visible;
+}
+
+static void _update_side_border_widgets(const dt_ui_panel_t panel)
+{
+    if (panel != DT_UI_PANEL_LEFT && panel != DT_UI_PANEL_RIGHT)
+        return;
+
+    GtkWidget *collapsed = panel == DT_UI_PANEL_LEFT ? darktable.gui->widgets.left_border :
+                                                       darktable.gui->widgets.right_border;
+    GtkWidget *expanded = panel == DT_UI_PANEL_LEFT ? darktable.gui->widgets.left_border_overlay :
+                                                      darktable.gui->widgets.right_border_overlay;
+    if (!GTK_IS_WIDGET(collapsed) || !GTK_IS_WIDGET(expanded))
+        return;
+
+    const gboolean controls_visible = _panels_controls_visible();
+    const gboolean panel_visible = gtk_widget_get_visible(darktable.gui->ui->panels[panel]);
+    gtk_widget_set_visible(collapsed, controls_visible && !panel_visible);
+    gtk_widget_set_visible(expanded, controls_visible && panel_visible);
+    gtk_widget_queue_draw(collapsed);
+    gtk_widget_queue_draw(expanded);
+}
+
 static void _panels_controls_accel_callback(dt_action_t *action)
 {
     gchar *key = _panels_get_view_path("panels_collapse_controls");
@@ -326,9 +354,10 @@ static void _panels_controls_accel_callback(dt_action_t *action)
     dt_conf_set_bool(key, visible);
     g_free(key);
 
-    // Show/hide the collapsing controls in the borders
-    gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.right_border), visible);
-    gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.left_border), visible);
+    // The side controls use a full-height border while collapsed and a compact
+    // overlay button while expanded.
+    _update_side_border_widgets(DT_UI_PANEL_LEFT);
+    _update_side_border_widgets(DT_UI_PANEL_RIGHT);
     gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.top_border), visible);
     gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.bottom_border), visible);
 }
@@ -429,29 +458,12 @@ static gboolean _borders_button_pressed(GtkWidget *w, GdkEventButton *event,
     return TRUE;
 }
 
-// FIXME: if this is only called from scroll handlers, move this logic to scroll proxy
-// FIXME: just call with GdkModifierType as state
 gboolean dt_gui_ignore_scroll(GdkEventScroll *event)
 {
-    const gboolean ignore_without_mods = dt_conf_get_bool("darkroom/ui/sidebar_scroll_default");
-    const GdkModifierType mods_pressed = (event->state & gtk_accelerator_get_default_mod_mask());
-
-    if (mods_pressed == 0)
-    {
-        return ignore_without_mods;
-    }
-    else
-    {
-        if (mods_pressed == darktable.gui->sidebar_scroll_mask)
-        {
-            if (!ignore_without_mods)
-                return TRUE;
-
-            event->state &= ~darktable.gui->sidebar_scroll_mask;
-        }
-
-        return FALSE;
-    }
+    // Side panels reserve the wheel for scrolling. This fallback is also used
+    // by custom controls that receive a propagated scroll event.
+    (void)event;
+    return TRUE;
 }
 
 gboolean dt_gui_get_scroll_deltas(const GdkEventScroll *event, gdouble *delta_x, gdouble *delta_y)
@@ -1063,7 +1075,11 @@ void dt_gui_gtk_quit()
     const dt_gui_widgets_t *widgets = &darktable.gui->widgets;
     g_signal_handlers_block_by_func(widgets->left_border, _draw_borders,
                                     GINT_TO_POINTER(DT_UI_BORDER_LEFT));
+    g_signal_handlers_block_by_func(widgets->left_border_overlay, _draw_borders,
+                                    GINT_TO_POINTER(DT_UI_BORDER_LEFT));
     g_signal_handlers_block_by_func(widgets->right_border, _draw_borders,
+                                    GINT_TO_POINTER(DT_UI_BORDER_RIGHT));
+    g_signal_handlers_block_by_func(widgets->right_border_overlay, _draw_borders,
                                     GINT_TO_POINTER(DT_UI_BORDER_RIGHT));
     g_signal_handlers_block_by_func(widgets->top_border, _draw_borders,
                                     GINT_TO_POINTER(DT_UI_BORDER_TOP));
@@ -1514,9 +1530,6 @@ int dt_gui_gtk_init(dt_gui_gtk_t *gui)
     // smooth scrolling must be enabled to handle trackpad/touch events
     gui->scroll_mask = GDK_SCROLL_MASK | GDK_SMOOTH_SCROLL_MASK;
 
-    // key accelerator that enables scrolling of side panels
-    gui->sidebar_scroll_mask = GDK_MOD1_MASK | GDK_CONTROL_MASK;
-
     // Init focus peaking
     gui->show_focus_peaking = dt_conf_get_bool("ui/show_focus_peaking");
 
@@ -1804,7 +1817,8 @@ static GtkWidget *_init_outer_border(const gint width, const gint height, const 
     g_signal_connect(widget, "draw", G_CALLBACK(_draw_borders), GINT_TO_POINTER(which));
     g_signal_connect(widget, "button-press-event", G_CALLBACK(_borders_button_pressed),
                      GINT_TO_POINTER(which));
-    gtk_widget_set_name(GTK_WIDGET(widget), "outer-border");
+    gtk_widget_set_name(GTK_WIDGET(widget), width > 0 && height > 0 ? "outer-border-button" :
+                                                                       "outer-border");
     gtk_widget_show(widget);
 
     return widget;
@@ -1880,22 +1894,34 @@ static void _init_main_table(GtkWidget *container)
 {
     GtkWidget *widget;
 
-    // Creating the table
+    // The grid owns the collapsed side-panel controls. When a side panel is
+    // open its control moves to a compact overlay button instead.
+    GtkWidget *main_overlay = gtk_overlay_new();
     widget = gtk_grid_new();
-    gtk_box_pack_start(GTK_BOX(container), widget, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(main_overlay), widget);
+    gtk_box_pack_start(GTK_BOX(container), main_overlay, TRUE, TRUE, 0);
 
     container = widget;
 
-    // Adding the left border
     darktable.gui->widgets.left_border =
         _init_outer_border(DT_PIXEL_APPLY_DPI(10), -1, DT_UI_BORDER_LEFT);
     gtk_grid_attach(GTK_GRID(container), darktable.gui->widgets.left_border, 0, 0, 1, 2);
 
-    // Adding the right border
     darktable.gui->widgets.right_border =
         _init_outer_border(DT_PIXEL_APPLY_DPI(10), -1, DT_UI_BORDER_RIGHT);
-    ;
     gtk_grid_attach(GTK_GRID(container), darktable.gui->widgets.right_border, 4, 0, 1, 2);
+
+    darktable.gui->widgets.left_border_overlay =
+        _init_outer_border(DT_PIXEL_APPLY_DPI(18), DT_PIXEL_APPLY_DPI(48), DT_UI_BORDER_LEFT);
+    gtk_widget_set_halign(darktable.gui->widgets.left_border_overlay, GTK_ALIGN_START);
+    gtk_widget_set_valign(darktable.gui->widgets.left_border_overlay, GTK_ALIGN_CENTER);
+    gtk_overlay_add_overlay(GTK_OVERLAY(main_overlay), darktable.gui->widgets.left_border_overlay);
+
+    darktable.gui->widgets.right_border_overlay =
+        _init_outer_border(DT_PIXEL_APPLY_DPI(18), DT_PIXEL_APPLY_DPI(48), DT_UI_BORDER_RIGHT);
+    gtk_widget_set_halign(darktable.gui->widgets.right_border_overlay, GTK_ALIGN_END);
+    gtk_widget_set_valign(darktable.gui->widgets.right_border_overlay, GTK_ALIGN_CENTER);
+    gtk_overlay_add_overlay(GTK_OVERLAY(main_overlay), darktable.gui->widgets.right_border_overlay);
 
     /* initialize the top container */
     _ui_init_panel_top(darktable.gui->ui, container);
@@ -2170,8 +2196,8 @@ void dt_ui_restore_panels(const dt_ui_t *ui)
     dt_conf_set_bool(key, visible);
     g_free(key);
 
-    gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.right_border), visible);
-    gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.left_border), visible);
+    _update_side_border_widgets(DT_UI_PANEL_LEFT);
+    _update_side_border_widgets(DT_UI_PANEL_RIGHT);
     gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.top_border), visible);
     gtk_widget_set_visible(GTK_WIDGET(darktable.gui->widgets.bottom_border), visible);
 }
@@ -2247,10 +2273,6 @@ static void _handle_panel_widths(const dt_ui_panel_t p)
     int used_w = 0;
     used_w += gtk_widget_get_allocated_width(darktable.gui->ui->panels[other_panel]);
 
-    // width of left and right border
-    used_w += gtk_widget_get_allocated_width(darktable.gui->widgets.left_border);
-    used_w += gtk_widget_get_allocated_width(darktable.gui->widgets.right_border);
-
     // calculate width of center column
     const int center_col_w = app_window_width - used_w;
 
@@ -2316,15 +2338,26 @@ void dt_ui_panel_show(const dt_ui_t *ui, const dt_ui_panel_t p, const gboolean s
             gtk_widget_hide(over_panel);
     }
 
+    // Keep the side-panel control in its state-specific placement and refresh
+    // both arrows after the panel visibility changed.
+    if (p == DT_UI_PANEL_LEFT || p == DT_UI_PANEL_RIGHT)
+        _update_side_border_widgets(p);
+
     // force redraw of the border (to be sure the arrow in the right direction)
     if (p == DT_UI_PANEL_TOP || p == DT_UI_PANEL_CENTER_TOP)
         gtk_widget_queue_draw(darktable.gui->widgets.top_border);
     else if (p == DT_UI_PANEL_BOTTOM || p == DT_UI_PANEL_CENTER_BOTTOM)
         gtk_widget_queue_draw(darktable.gui->widgets.bottom_border);
     else if (p == DT_UI_PANEL_LEFT)
+    {
         gtk_widget_queue_draw(darktable.gui->widgets.left_border);
+        gtk_widget_queue_draw(darktable.gui->widgets.left_border_overlay);
+    }
     else if (p == DT_UI_PANEL_RIGHT)
+    {
         gtk_widget_queue_draw(darktable.gui->widgets.right_border);
+        gtk_widget_queue_draw(darktable.gui->widgets.right_border_overlay);
+    }
 
     if (write)
     {
@@ -2474,14 +2507,26 @@ static GtkWidget *_ui_init_panel_container_top(GtkWidget *container)
     return w;
 }
 
-static gboolean _ui_init_panel_container_center_scroll_event(GtkWidget *widget,
-                                                             const GdkEventScroll *event)
+static void _side_panel_scroll_capture(GtkEventControllerScroll *controller, const gdouble dx,
+                                       const gdouble dy, gpointer user_data)
 {
-    // just make sure nothing happens unless ctrl-alt are pressed:
-    return (((event->state & gtk_accelerator_get_default_mod_mask()) !=
-             darktable.gui->sidebar_scroll_mask) !=
-            dt_conf_get_bool("darkroom/ui/sidebar_scroll_default"));
-    // GTK4: return GDK_EVENT_PROPAGATE/GDK_EVENT_STOP
+    GtkWidget *sw = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
+    GtkAdjustment *adjustment =
+        gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(sw));
+    const gdouble lower = gtk_adjustment_get_lower(adjustment);
+    const gdouble upper = gtk_adjustment_get_upper(adjustment) -
+                          gtk_adjustment_get_page_size(adjustment);
+    const gdouble step = gtk_adjustment_get_step_increment(adjustment);
+    const gdouble delta = dy;
+
+    if (delta != 0.0)
+    {
+        const gdouble value = gtk_adjustment_get_value(adjustment) + delta * step;
+        gtk_adjustment_set_value(adjustment, CLAMP(value, lower, MAX(lower, upper)));
+    }
+
+    (void)dx;
+    (void)user_data;
 }
 
 static gboolean _on_drag_motion_drop(GtkWidget *empty, GdkDragContext *dc, const gint x,
@@ -2604,22 +2649,26 @@ static GtkWidget *_ui_init_panel_container_center(GtkWidget *container, const gb
                                       left ? GTK_CORNER_TOP_LEFT : GTK_CORNER_TOP_RIGHT);
     gtk_box_pack_start(GTK_BOX(container), sw, TRUE, TRUE, 0);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sw), GTK_POLICY_NEVER,
-                                   dt_conf_get_bool("panel_scrollbars_always_visible") ?
-                                       GTK_POLICY_ALWAYS :
-                                       GTK_POLICY_AUTOMATIC);
+                                   GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(sw), TRUE);
 
-    g_signal_connect(
-        G_OBJECT(left ? darktable.gui->widgets.right_border : darktable.gui->widgets.left_border),
-        "scroll-event", G_CALLBACK(_borders_scrolled), sw);
+    GtkWidget *collapsed_border =
+        left ? darktable.gui->widgets.right_border : darktable.gui->widgets.left_border;
+    GtkWidget *overlay_border = left ? darktable.gui->widgets.right_border_overlay :
+                                      darktable.gui->widgets.left_border_overlay;
+    g_signal_connect(G_OBJECT(collapsed_border), "scroll-event", G_CALLBACK(_borders_scrolled),
+                     sw);
+    g_signal_connect(G_OBJECT(overlay_border), "scroll-event", G_CALLBACK(_borders_scrolled),
+                     sw);
 
-    /* avoid scrolling with wheel, it's distracting (you'll end up over
-   * a control, and scroll it's value), only scroll on modifier */
-    // GTK4: this is absolutely not GTK4 compatible, but there is no way
-    // in GTK3 to have child widgets have their own scroll behavior and
-    // have a GtkEventControllerScroll on the parent GtkScrolledWindow.
-    g_signal_connect(G_OBJECT(sw), "scroll-event",
-                     G_CALLBACK(_ui_init_panel_container_center_scroll_event), NULL);
+    // Capture scrolls before child controls receive them. The wheel always
+    // scrolls the side panel, even over sliders, comboboxes, and modules that
+    // implement custom scroll handling.
+    GtkEventController *scroll = gtk_event_controller_scroll_new(
+        sw, GTK_EVENT_CONTROLLER_SCROLL_VERTICAL);
+    gtk_event_controller_set_propagation_phase(scroll, GTK_PHASE_CAPTURE);
+    g_object_weak_ref(G_OBJECT(sw), (GWeakNotify)g_object_unref, scroll);
+    g_signal_connect(scroll, "scroll", G_CALLBACK(_side_panel_scroll_capture), NULL);
 
     /* create the container */
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -2717,13 +2766,10 @@ static void _panel_set_side_panel_width(GtkWidget *widget, const dt_ui_panel_t p
     int max_w = darktable.gui->dpi_factor * dt_conf_get_int("max_panel_width");
     int used_w = min_center_w;
 
-    // Constraint: window width - center min - other side panel (if visible) - borders
+    // Constraint: window width - center min - other side panel. The side
+    // toggles are overlay controls and do not consume layout width.
     const dt_ui_panel_t other_panel =
         panel == DT_UI_PANEL_LEFT ? DT_UI_PANEL_RIGHT : DT_UI_PANEL_LEFT;
-    if (gtk_widget_get_visible(darktable.gui->widgets.left_border))
-        used_w += gtk_widget_get_allocated_width(darktable.gui->widgets.left_border);
-    if (gtk_widget_get_visible(darktable.gui->widgets.right_border))
-        used_w += gtk_widget_get_allocated_width(darktable.gui->widgets.right_border);
     if (gtk_widget_get_visible(darktable.gui->ui->panels[other_panel]))
         used_w += gtk_widget_get_allocated_width(darktable.gui->ui->panels[other_panel]);
 

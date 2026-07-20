@@ -334,6 +334,12 @@ undershoot,
   min-width: 1.4em;
 }
 
+/* Compact side-panel toggle shown while that panel is open. */
+#outer-border-button
+{
+  background-color: @border_color;
+}
+
 /* Allow to resize all windows */
 decoration
 {

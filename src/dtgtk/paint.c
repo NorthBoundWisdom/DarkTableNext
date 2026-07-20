@@ -1683,6 +1683,35 @@ void dtgtk_cairo_paint_label(cairo_t *cr, const gint x, const gint y, const gint
     FINISH
 }
 
+void dtgtk_cairo_paint_flag(cairo_t *cr, const gint x, const gint y, const gint w, const gint h,
+                            const gint flags, void *data)
+{
+    PREAMBLE(0.9, 1, 0, 0)
+
+    cairo_move_to(cr, 0.25, 0.85);
+    cairo_line_to(cr, 0.25, 0.15);
+    cairo_line_to(cr, 0.75, 0.28);
+    cairo_line_to(cr, 0.75, 0.60);
+    cairo_line_to(cr, 0.25, 0.48);
+    cairo_close_path(cr);
+
+    if (flags & CPF_ACTIVE)
+        cairo_fill_preserve(cr);
+    if (flags & CPF_SPECIAL_FLAG)
+    {
+        const double dashes[] = {0.08, 0.06};
+        cairo_set_dash(cr, dashes, G_N_ELEMENTS(dashes), 0.0);
+    }
+    cairo_stroke(cr);
+    cairo_set_dash(cr, NULL, 0, 0.0);
+
+    cairo_move_to(cr, 0.25, 0.15);
+    cairo_line_to(cr, 0.25, 0.90);
+    cairo_stroke(cr);
+
+    FINISH
+}
+
 void dtgtk_cairo_paint_label_sel(cairo_t *cr, const gint x, const gint y, const gint w,
                                  const gint h, const gint flags, void *data)
 {

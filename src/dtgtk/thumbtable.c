@@ -124,6 +124,13 @@ void dt_thumbtable_set_overlays_mode(dt_thumbtable_t *table, const dt_thumbnail_
 {
     if (!table)
         return;
+
+    // The Grid is the primary browsing surface. Keep its file format, metadata,
+    // and rating controls visible so scanning images does not depend on hover.
+    const dt_thumbnail_overlay_t effective_over =
+        table->mode == DT_THUMBTABLE_MODE_FILEMANAGER ? DT_THUMBNAIL_OVERLAYS_ALWAYS_EXTENDED
+                                                      : over;
+
     // we ensure the tooltips change in any cases
     gchar *txt =
         g_strdup_printf("plugins/lighttable/tooltips/%d/%d", table->mode, table->prefs_size);
@@ -131,14 +138,14 @@ void dt_thumbtable_set_overlays_mode(dt_thumbtable_t *table, const dt_thumbnail_
     g_free(txt);
 
     int timeout = 2;
-    if (over != table->overlays)
+    if (effective_over != table->overlays)
     {
         // if the overlay change
         txt = g_strdup_printf("plugins/lighttable/overlays/%d/%d", table->mode, table->prefs_size);
-        dt_conf_set_int(txt, over);
+        dt_conf_set_int(txt, effective_over);
         g_free(txt);
         gchar *cl0 = _thumbs_get_overlays_class(table->overlays);
-        gchar *cl1 = _thumbs_get_overlays_class(over);
+        gchar *cl1 = _thumbs_get_overlays_class(effective_over);
 
         dt_gui_remove_class(table->widget, cl0);
         dt_gui_add_class(table->widget, cl1);
@@ -160,12 +167,12 @@ void dt_thumbtable_set_overlays_mode(dt_thumbtable_t *table, const dt_thumbnail_
         // in any cases, we update the tooltip
         th->tooltip = table->show_tooltips;
 
-        if (over != table->overlays)
+        if (effective_over != table->overlays)
         {
             // we need to change the overlay content if we pass from normal to
             // extended overlays this is not done on the fly with css to avoid
             // computing extended msg for nothing and to reserve space if needed
-            dt_thumbnail_set_overlay(th, over, timeout);
+            dt_thumbnail_set_overlay(th, effective_over, timeout);
             // and we resize the bottom area
             dt_thumbnail_resize(th, th->width, th->height, TRUE, IMG_TO_FIT);
         }
@@ -175,7 +182,7 @@ void dt_thumbtable_set_overlays_mode(dt_thumbtable_t *table, const dt_thumbnail_
         }
     }
 
-    table->overlays = over;
+    table->overlays = effective_over;
     table->overlays_block_timeout = timeout;
 }
 

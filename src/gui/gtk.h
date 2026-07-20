@@ -40,6 +40,8 @@ typedef struct dt_gui_widgets_t
     // Borders
     GtkWidget *left_border;
     GtkWidget *right_border;
+    GtkWidget *left_border_overlay;
+    GtkWidget *right_border_overlay;
     GtkWidget *bottom_border;
     GtkWidget *top_border;
 
@@ -139,7 +141,6 @@ typedef struct dt_gui_gtk_t
     char gtkrc[PATH_MAX];
 
     gint scroll_mask;
-    guint sidebar_scroll_mask;
 
     cairo_filter_t filter_image; // filtering used to scale images to screen
 } dt_gui_gtk_t;
@@ -224,10 +225,7 @@ void dt_gui_gtk_set_source_rgba(cairo_t *cr, dt_gui_color_t color, const float o
 double dt_get_system_gui_ppd(GtkWidget *widget);
 double dt_get_screen_resolution(GtkWidget *widget);
 
-/* Check sidebar_scroll_default and modifier keys to determine if scroll event
- * should be processed by control or by panel. If default is panel scroll but
- * modifiers are pressed to indicate the control should be scrolled, then remove
- * the modifiers from the event before returning false */
+/* Side-panel controls must ignore scroll events so the panel can scroll. */
 gboolean dt_gui_ignore_scroll(GdkEventScroll *event);
 /* Return requested scroll delta(s) from event. If delta_x or delta_y
  * is NULL, do not return that delta. Return TRUE if requested deltas
