@@ -162,6 +162,7 @@ behaviour.
 - [Release notes](RELEASE_NOTES.md)
 - [Core reduction plan](TODO_CORE_REDUCTION.md)
 - [C11 consolidation plan](TODO_C11_CONSOLIDATION.md)
+- [GTK 4 migration plan](TODO_GTK4_MIGRATION.md)
 - [Developer documentation index](DevDocs/README.md)
 - [GPU baseline](DevDocs/GPU_Baseline.md)
 
