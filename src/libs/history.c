@@ -1046,17 +1046,22 @@ static gboolean _changes_tooltip_callback(GtkWidget *widget, const gint x, const
     {
         // clang-format off
 #define add_blend_history_change(field, fmt, label)                                                \
-    if ((hitem->blend_params->field) != (old_blend->field))                                        \
+    do                                                                                             \
     {                                                                                              \
-        gchar *chg_fmt = g_strconcat("%s\t\t", fmt, "\t\u2192\t\t", fmt, NULL);                    \
-        change_parts[num_parts++] =                                             \
-          _lib_history_bauhaus_text(&hitem->module->blend_params->field,        \
-                                    label, hitem->module, old_blend->field,     \
-                                    hitem->blend_params->field)                 \
-          ?: g_strdup_printf(chg_fmt, label,                                    \
-                             old_blend->field, hitem->blend_params->field);                  \
-        g_free(chg_fmt);                                                                           \
-    }
+        if ((hitem->blend_params->field) != (old_blend->field))                                    \
+        {                                                                                          \
+            gchar *chg_fmt = g_strconcat("%s\t\t", fmt, "\t\u2192\t\t", fmt, NULL);                \
+            gchar *bauhaus_text =                                                                 \
+                _lib_history_bauhaus_text(&hitem->module->blend_params->field, label,              \
+                                          hitem->module, old_blend->field,                         \
+                                          hitem->blend_params->field);                             \
+            change_parts[num_parts++] =                                                           \
+                bauhaus_text ? bauhaus_text :                                                     \
+                               g_strdup_printf(chg_fmt, label, old_blend->field,                   \
+                                               hitem->blend_params->field);                         \
+            g_free(chg_fmt);                                                                       \
+        }                                                                                          \
+    } while (0)
 #define add_blend_history_change_enum(field, label, list)                                          \
     if ((hitem->blend_params->field) != (old_blend->field))                                        \
     {                                                                                              \
@@ -1075,26 +1080,6 @@ static gboolean _changes_tooltip_callback(GtkWidget *widget, const gint x, const
                 CHG_STR(%s, label, Q_(old_str), Q_(new_str));                                     \
     }
 
-#ifdef _MSC_VER
-#undef add_blend_history_change
-#define add_blend_history_change(field, fmt, label)                                                \
-    do                                                                                             \
-    {                                                                                              \
-        if ((hitem->blend_params->field) != (old_blend->field))                                    \
-        {                                                                                          \
-            gchar *chg_fmt = g_strconcat("%s\t\t", fmt, "\t\u2192\t\t", fmt, NULL);          \
-            gchar *bauhaus_text =                                                                 \
-                _lib_history_bauhaus_text(&hitem->module->blend_params->field, label,            \
-                                          hitem->module, old_blend->field,                        \
-                                          hitem->blend_params->field);                             \
-            change_parts[num_parts++] =                                                           \
-                bauhaus_text ? bauhaus_text :                                                     \
-                               g_strdup_printf(chg_fmt, label, old_blend->field,                 \
-                                               hitem->blend_params->field);                         \
-            g_free(chg_fmt);                                                                       \
-        }                                                                                          \
-    } while (0)
-#endif
         // clang-format on
 
         add_blend_history_change_enum(blend_cst, _("colorspace"),

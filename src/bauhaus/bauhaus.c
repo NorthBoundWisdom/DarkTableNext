@@ -675,8 +675,9 @@ static void _window_show(GtkWidget *w, gpointer user_data)
     gtk_grab_add(GTK_WIDGET(user_data));
 }
 
-static void _widget_leave(GtkEventControllerMotion *controller, GtkWidget *widget)
+static void _widget_leave(GtkEventControllerMotion *controller, gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     // gtk_widget_set_state_flags triggers resize&draw avalanche
     // instead add GTK_STATE_FLAG_PRELIGHT in _widget_draw
     darktable.bauhaus->hovered = !controller ? widget : NULL;
@@ -685,8 +686,9 @@ static void _widget_leave(GtkEventControllerMotion *controller, GtkWidget *widge
 }
 
 static void _widget_enter(GtkEventControllerMotion *controller, double x, double y,
-                          GtkWidget *widget)
+                          gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     _widget_leave(NULL, widget);
 }
 
@@ -2896,8 +2898,9 @@ static void _slider_add_step(GtkWidget *widget, float delta, const guint state,
 }
 
 static void _widget_scroll(GtkEventControllerScroll *controller, double dx, double dy,
-                           GtkWidget *widget)
+                           gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     GdkEvent *event = gtk_get_current_event();
     if (!event || gdk_event_get_event_type(event) != GDK_SCROLL)
         dt_print(DT_DEBUG_ALWAYS, "[_widget_scroll] called on non-scroll event");
@@ -3376,8 +3379,9 @@ static gboolean _popup_key_press(GtkWidget *widget, GdkEventKey *event, gpointer
 }
 
 static void _widget_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                 const double y, GtkWidget *widget)
+                                 const double y, gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     dt_bauhaus_widget_t *w = DT_BAUHAUS_WIDGET(widget);
     dt_bauhaus_t *bh = darktable.bauhaus;
     gboolean passthrough_from_histogram =
@@ -3439,8 +3443,9 @@ static void _widget_button_press(GtkGestureSingle *gesture, const int n_press, c
 }
 
 static void _widget_button_release(GtkGestureSingle *gesture, const int n_press, const double x,
-                                   const double y, GtkWidget *widget)
+                                   const double y, gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     dt_bauhaus_widget_t *w = DT_BAUHAUS_WIDGET(widget);
     dt_bauhaus_widget_release_quad(widget);
 
@@ -3460,8 +3465,9 @@ static void _widget_button_stopped(GtkGestureSingle *gesture, dt_bauhaus_widget_
 }
 
 static void _widget_motion(GtkEventControllerMotion *controller, const double x, const double y,
-                           GtkWidget *widget)
+                           gpointer user_data)
 {
+    GtkWidget *const widget = user_data;
     dt_bauhaus_widget_t *w = DT_BAUHAUS_WIDGET(widget);
     dt_bauhaus_slider_data_t *d = &w->slider;
     dt_bauhaus_t *bh = darktable.bauhaus;

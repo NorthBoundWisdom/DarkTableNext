@@ -509,45 +509,35 @@ void dt_gui_hide_collapsible_section(const dt_gui_collapsible_section_t *cs);
 // is delay between first and second click/press longer than double-click time?
 gboolean dt_gui_long_click(const guint second, const guint first);
 
-#define ASSERT_FUNC_TYPE(func, expected_type) (void)(1 ? (func) : (expected_type)0)
+typedef void (*dt_gui_click_callback_t)(GtkGestureSingle *, int, double, double, gpointer);
+typedef void (*dt_gui_drag_callback_t)(GtkGestureDrag *, double, double, gpointer);
+typedef void (*dt_gui_motion_callback_t)(GtkEventControllerMotion *, double, double, gpointer);
+typedef void (*dt_gui_motion_leave_callback_t)(GtkEventControllerMotion *, gpointer);
+typedef void (*dt_gui_scroll_callback_t)(GtkEventControllerScroll *, double, double, gpointer);
 
-GtkGestureSingle *(dt_gui_connect_click)(GtkWidget * widget, GCallback pressed, GCallback released,
-                                         gpointer data);
+GtkGestureSingle *(dt_gui_connect_click)(GtkWidget *widget, dt_gui_click_callback_t pressed,
+                                         dt_gui_click_callback_t released, gpointer data);
 #define dt_gui_connect_click(widget, pressed, released, data)                                      \
-    (ASSERT_FUNC_TYPE(pressed,                                                                     \
-                      void (*)(GtkGestureSingle *, int, double, double, __typeof__(data))),        \
-     ASSERT_FUNC_TYPE(released,                                                                    \
-                      void (*)(GtkGestureSingle *, int, double, double, __typeof__(data))),        \
-     dt_gui_connect_click(GTK_WIDGET(widget), G_CALLBACK(pressed), G_CALLBACK(released), (data)))
+    (dt_gui_connect_click)(GTK_WIDGET(widget), (pressed), (released), (data))
 #define dt_gui_connect_click_all(widget, pressed, released, data)                                  \
     gtk_gesture_single_set_button(dt_gui_connect_click(widget, pressed, released, data), 0)
 
-GtkGesture *(dt_gui_connect_drag)(GtkWidget * widget, GCallback drag_begin, GCallback drag_end,
-                                  GCallback drag_update, gpointer data);
+GtkGesture *(dt_gui_connect_drag)(GtkWidget *widget, dt_gui_drag_callback_t drag_begin,
+                                  dt_gui_drag_callback_t drag_end,
+                                  dt_gui_drag_callback_t drag_update, gpointer data);
 #define dt_gui_connect_drag(widget, drag_begin, drag_end, drag_update, data)                       \
-    (ASSERT_FUNC_TYPE(drag_begin, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),   \
-     ASSERT_FUNC_TYPE(drag_end, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),     \
-     ASSERT_FUNC_TYPE(drag_update, void (*)(GtkGestureDrag *, double, double, __typeof__(data))),  \
-     dt_gui_connect_drag(GTK_WIDGET(widget), G_CALLBACK(drag_begin), G_CALLBACK(drag_end),         \
-                         G_CALLBACK(drag_update), (data)))
+    (dt_gui_connect_drag)(GTK_WIDGET(widget), (drag_begin), (drag_end), (drag_update), (data))
 
-GtkEventController *(dt_gui_connect_motion)(GtkWidget * widget, GCallback motion, GCallback enter,
-                                            GCallback leave, gpointer data);
+GtkEventController *(dt_gui_connect_motion)(GtkWidget *widget, dt_gui_motion_callback_t motion,
+                                            dt_gui_motion_callback_t enter,
+                                            dt_gui_motion_leave_callback_t leave, gpointer data);
 #define dt_gui_connect_motion(widget, motion, enter, leave, data)                                  \
-    (ASSERT_FUNC_TYPE(motion,                                                                      \
-                      void (*)(GtkEventControllerMotion *, double, double, __typeof__(data))),     \
-     ASSERT_FUNC_TYPE(enter,                                                                       \
-                      void (*)(GtkEventControllerMotion *, double, double, __typeof__(data))),     \
-     ASSERT_FUNC_TYPE(leave, void (*)(GtkEventControllerMotion *, __typeof__(data))),              \
-     dt_gui_connect_motion(GTK_WIDGET(widget), G_CALLBACK(motion), G_CALLBACK(enter),              \
-                           G_CALLBACK(leave), (data)))
+    (dt_gui_connect_motion)(GTK_WIDGET(widget), (motion), (enter), (leave), (data))
 
-GtkEventController *(dt_gui_connect_scroll)(GtkWidget * widget, GtkEventControllerScrollFlags flags,
-                                            GCallback scroll, gpointer data);
+GtkEventController *(dt_gui_connect_scroll)(GtkWidget *widget, GtkEventControllerScrollFlags flags,
+                                            dt_gui_scroll_callback_t scroll, gpointer data);
 #define dt_gui_connect_scroll(widget, flags, scroll, data)                                         \
-    (ASSERT_FUNC_TYPE(scroll,                                                                      \
-                      void (*)(GtkEventControllerScroll *, double, double, __typeof__(data))),     \
-     dt_gui_connect_scroll(GTK_WIDGET(widget), (flags), G_CALLBACK(scroll), (data)))
+    (dt_gui_connect_scroll)(GTK_WIDGET(widget), (flags), (scroll), (data))
 
 #define dt_gui_claim(gesture)                                                                      \
     gtk_gesture_set_state(GTK_GESTURE(gesture), GTK_EVENT_SEQUENCE_CLAIMED)

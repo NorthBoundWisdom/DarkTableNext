@@ -4531,8 +4531,8 @@ static void _gesture_cancel(GtkGestureSingle *gesture, GdkEventSequence *sequenc
     g_signal_emit_by_name(gesture, "released", 1, .0, .0);
 }
 
-GtkGestureSingle *(dt_gui_connect_click)(GtkWidget * widget, GCallback pressed, GCallback released,
-                                         gpointer data)
+GtkGestureSingle *(dt_gui_connect_click)(GtkWidget *widget, dt_gui_click_callback_t pressed,
+                                         dt_gui_click_callback_t released, gpointer data)
 {
     GtkGesture *gesture = gtk_gesture_multi_press_new(widget);
     g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_object_unref, gesture);
@@ -4550,8 +4550,9 @@ GtkGestureSingle *(dt_gui_connect_click)(GtkWidget * widget, GCallback pressed, 
     return (GtkGestureSingle *)gesture;
 }
 
-GtkGesture *(dt_gui_connect_drag)(GtkWidget * widget, GCallback drag_begin, GCallback drag_end,
-                                  GCallback drag_update, gpointer data)
+GtkGesture *(dt_gui_connect_drag)(GtkWidget *widget, dt_gui_drag_callback_t drag_begin,
+                                  dt_gui_drag_callback_t drag_end,
+                                  dt_gui_drag_callback_t drag_update, gpointer data)
 {
     GtkGesture *gesture = gtk_gesture_drag_new(widget);
     g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_object_unref, gesture);
@@ -4568,8 +4569,9 @@ GtkGesture *(dt_gui_connect_drag)(GtkWidget * widget, GCallback drag_begin, GCal
     return gesture;
 }
 
-GtkEventController *(dt_gui_connect_motion)(GtkWidget * widget, GCallback motion, GCallback enter,
-                                            GCallback leave, gpointer data)
+GtkEventController *(dt_gui_connect_motion)(GtkWidget *widget, dt_gui_motion_callback_t motion,
+                                            dt_gui_motion_callback_t enter,
+                                            dt_gui_motion_leave_callback_t leave, gpointer data)
 {
     GtkEventController *controller = gtk_event_controller_motion_new(widget);
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_TARGET);
@@ -4591,9 +4593,15 @@ GtkEventController *(dt_gui_connect_motion)(GtkWidget * widget, GCallback motion
 }
 
 typedef void (*scroll_handler_t)(GtkEventControllerScroll *, gdouble, gdouble, gpointer);
+typedef struct dt_gui_scroll_context_t
+{
+    dt_gui_scroll_callback_t handler;
+    gpointer user_data;
+} dt_gui_scroll_context_t;
+
 static gdouble _scroll_discrete_dx = 0.0;
 static gdouble _scroll_discrete_dy = 0.0;
-static const char *_scroll_real_handler_key = "real-scroll-handler";
+static const char *_scroll_context_key = "scroll-context";
 
 static gboolean _scroll_sidebar(GtkEventControllerScroll *controller, gdouble dy, GdkEvent *event)
 {
@@ -4640,6 +4648,7 @@ static float _scroll_attenuate(gdouble delta)
 static void _scroll_proxy_real(GtkEventControllerScroll *controller, gdouble dx, gdouble dy,
                                gpointer user_data, gboolean discrete)
 {
+    dt_gui_scroll_context_t *const context = user_data;
     GdkEvent *const event = gtk_get_current_event();
     if (!event)
         return;
@@ -4678,9 +4687,7 @@ static void _scroll_proxy_real(GtkEventControllerScroll *controller, gdouble dx,
         }
         if (dx != 0.0 || dy != 0.0)
         {
-            const scroll_handler_t real_handler =
-                g_object_get_data(G_OBJECT(controller), _scroll_real_handler_key);
-            real_handler(controller, dx, dy, user_data);
+            context->handler(controller, dx, dy, context->user_data);
         }
     }
     gdk_event_free(event);
@@ -4698,8 +4705,8 @@ static void _scroll_discrete_proxy(GtkEventControllerScroll *controller, gdouble
     _scroll_proxy_real(controller, dx, dy, data, TRUE);
 }
 
-GtkEventController *(dt_gui_connect_scroll)(GtkWidget * widget, GtkEventControllerScrollFlags flags,
-                                            GCallback scroll, gpointer data)
+GtkEventController *(dt_gui_connect_scroll)(GtkWidget *widget, GtkEventControllerScrollFlags flags,
+                                            dt_gui_scroll_callback_t scroll, gpointer data)
 {
     // FIXME: instead of using two proxy functions, set controller property if discrete
     const scroll_handler_t proxy =
@@ -4708,11 +4715,14 @@ GtkEventController *(dt_gui_connect_scroll)(GtkWidget * widget, GtkEventControll
     flags &= ~GTK_EVENT_CONTROLLER_SCROLL_DISCRETE;
 
     GtkEventController *const controller = gtk_event_controller_scroll_new(widget, flags);
+    dt_gui_scroll_context_t *const context = g_new(dt_gui_scroll_context_t, 1);
+    context->handler = scroll;
+    context->user_data = data;
     gtk_event_controller_set_propagation_phase(controller, GTK_PHASE_TARGET);
     g_object_weak_ref(G_OBJECT(widget), (GWeakNotify)g_object_unref, controller);
     // GTK4 gtk_widget_add_controller(widget, GTK_EVENT_CONTROLLER(controller));
-    g_signal_connect(controller, "scroll", G_CALLBACK(proxy), data);
-    g_object_set_data(G_OBJECT(controller), _scroll_real_handler_key, scroll);
+    g_object_set_data_full(G_OBJECT(controller), _scroll_context_key, context, g_free);
+    g_signal_connect(controller, "scroll", G_CALLBACK(proxy), context);
     return controller;
 }
 

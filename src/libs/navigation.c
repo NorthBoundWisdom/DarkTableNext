@@ -54,7 +54,7 @@ static gboolean _lib_navigation_motion_notify_callback(GtkWidget *widget, GdkEve
                                                        dt_lib_module_t *self);
 /* scroll callback */
 static void _lib_navigation_scroll_callback(GtkEventControllerScroll *controller, double dx,
-                                            double dy, dt_lib_module_t *self);
+                                            double dy, gpointer user_data);
 /* zoom begin callback */
 static void _lib_navigation_pinch_begin_callback(GtkGesture *gesture, GdkEventSequence *sequence,
                                                  dt_lib_module_t *self);
@@ -592,7 +592,7 @@ static gboolean _lib_navigation_widget_to_center(GtkEventController *controller,
 static void _lib_navigation_scroll_callback(GtkEventControllerScroll *controller, const double dx,
                                             const double dy,
                                             // FIXME: if unused don't pass
-                                            dt_lib_module_t *self)
+                                            gpointer user_data)
 {
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
         return;

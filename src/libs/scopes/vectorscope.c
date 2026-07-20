@@ -1041,8 +1041,9 @@ static void _harmony_adjust_page(GtkWidget *widget, GtkAllocation *alloc, dt_sco
 }
 
 static void _harmony_motion(GtkEventControllerMotion *controller, double x, double y,
-                            dt_scopes_mode_t *const self)
+                            gpointer user_data)
 {
+    dt_scopes_mode_t *const self = user_data;
     // harmony type buttons scroll as mouse ranges from below the top
     // buttons to the scope bottom less resize handle
     dt_scopes_vec_t *const d = self->data;
@@ -1054,8 +1055,9 @@ static void _harmony_motion(GtkEventControllerMotion *controller, double x, doub
     gtk_adjustment_set_value(vadj, val);
 }
 
-static void _harmony_leave(GtkEventControllerMotion *controller, dt_scopes_mode_t *const self)
+static void _harmony_leave(GtkEventControllerMotion *controller, gpointer user_data)
 {
+    dt_scopes_mode_t *const self = user_data;
     dt_scopes_vec_t *const d = self->data;
     d->ignore_prelight = DT_COLOR_HARMONY_NONE;
     if (d->harmony_prelight != DT_COLOR_HARMONY_NONE)

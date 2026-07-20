@@ -47,7 +47,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#ifndef _MSC_VER
+#ifndef _WIN32
 #include <glob.h>
 #endif
 #include <glib/gstdio.h>
@@ -1402,6 +1402,7 @@ gboolean dt_image_basic(const dt_imgid_t imgid)
     return status & DT_HISTORY_HASH_BASIC;
 }
 
+#ifndef _WIN32
 static gboolean _valid_glob_match(const char *const name, size_t offset)
 {
     // verify that the name matched by glob() is a valid sidecar name by
@@ -1417,6 +1418,7 @@ static gboolean _valid_glob_match(const char *const name, size_t offset)
     }
     return name[i] == '.';
 }
+#endif
 
 GList *dt_image_find_duplicates(const char *filename)
 {
@@ -1451,8 +1453,8 @@ GList *dt_image_find_duplicates(const char *filename)
     const size_t gp_len = strlen(glob_pattern);
     if (fn_len + gp_len + xmp_len < sizeof(pattern)) // enough space to build pattern?
     {
-#ifdef _MSC_VER
-        // MSVC has no POSIX glob(). Restrict the directory scan to the same
+#ifdef _WIN32
+        // Windows has no POSIX glob(). Restrict the directory scan to the same
         // pattern as the Unix path: the original basename, an underscore,
         // at least two ASCII digits, then the original extension and .xmp.
         gchar *directory = g_path_get_dirname(filename);
@@ -1667,7 +1669,7 @@ static dt_imgid_t _image_import_internal(const dt_filmid_t film_id, const char *
         return NO_IMGID;
     }
     int supported = 0;
-    for (const char **i = dt_supported_extensions; *i != NULL; i++)
+    for (const char *const *i = dt_supported_extensions; *i != NULL; i++)
         if (!strcmp(ext, *i))
         {
             supported = 1;

@@ -527,6 +527,12 @@ static inline void dt_cairo_perceptual_gradient(cairo_pattern_t *grad, const dou
     cairo_pattern_add_color_stop_rgba(grad, 1.0, 1.0, 1.0, 1.0, alpha);
 }
 
+static inline void dt_draw_pixbuf_free(guchar *pixels, gpointer user_data)
+{
+    (void)user_data;
+    free(pixels);
+}
+
 static inline GdkPixbuf *dt_draw_paint_to_pixbuf(
     GtkWidget *widget, const guint pixbuf_size, const int flags,
     void (*dtgtk_cairo_paint_fct)(cairo_t *cr, const gint x, const gint y, const gint w,
@@ -550,7 +556,7 @@ static inline GdkPixbuf *dt_draw_paint_to_pixbuf(
     uint8_t *buf = (uint8_t *)malloc(size);
     memcpy(buf, data, size);
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data(buf, GDK_COLORSPACE_RGB, TRUE, 8, dim, dim,
-                                                 dim * 4, (GdkPixbufDestroyNotify)free, NULL);
+                                                 dim * 4, dt_draw_pixbuf_free, NULL);
     cairo_surface_destroy(cst);
     return pixbuf;
 }

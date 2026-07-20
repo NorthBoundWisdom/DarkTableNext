@@ -355,8 +355,9 @@ void lib_histogram_update_tooltip(const dt_scopes_t *const scopes)
 }
 
 static void _drawable_drag_begin(GtkGestureDrag *gesture, const gdouble start_x,
-                                 const gdouble start_y, dt_scopes_t *s)
+                                 const gdouble start_y, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
     {
         dt_gui_deny(gesture);
@@ -375,15 +376,17 @@ static void _drawable_drag_begin(GtkGestureDrag *gesture, const gdouble start_x,
 }
 
 static void _drawable_drag_end(GtkGestureDrag *g, const gdouble ox, const gdouble oy,
-                               dt_scopes_t *s)
+                               gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     s->dragging = FALSE;
     dt_control_change_cursor(s->highlight == DT_SCOPES_HIGHLIGHT_NONE ? "default" : "grab");
 }
 
 static void _drawable_drag_update(GtkGestureDrag *gesture, const gdouble offset_x,
-                                  const gdouble offset_y, dt_scopes_t *s)
+                                  const gdouble offset_y, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     dt_scopes_mode_t *const cur_mode = s->cur_mode;
     // GTK4: use gtk_event_controller_get_current_event_state()
     GdkEvent *event = gtk_get_current_event();
@@ -406,8 +409,9 @@ static void _drawable_drag_update(GtkGestureDrag *gesture, const gdouble offset_
 }
 
 static void _drawable_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                   const double y, dt_scopes_t *s)
+                                   const double y, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
         return;
 
@@ -416,8 +420,9 @@ static void _drawable_button_press(GtkGestureSingle *gesture, const int n_press,
 }
 
 static void _drawable_motion(GtkEventControllerMotion *controller, const double x, const double y,
-                             dt_scopes_t *s)
+                             gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
     {
         s->highlight = DT_SCOPES_HIGHLIGHT_NONE;
@@ -446,8 +451,9 @@ static void _drawable_motion(GtkEventControllerMotion *controller, const double 
     }
 }
 
-static void _drawable_leave(GtkEventControllerMotion *controller, dt_scopes_t *s)
+static void _drawable_leave(GtkEventControllerMotion *controller, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     // if dragging, gtk keeps up motion notifications until mouse button
     // is released, at which point we'll get another leave event for
     // drawable if pointer is still outside of the widget
@@ -522,8 +528,9 @@ static void _channel_toggle(GtkWidget *button, dt_scopes_t *s)
 }
 
 static void _eventbox_scroll_callback(GtkEventControllerScroll *self, const gdouble dx,
-                                      const gdouble dy, dt_scopes_t *s)
+                                      const gdouble dy, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
         return;
 
@@ -577,8 +584,9 @@ static gboolean _pointer_over_widget(GtkWidget *from, GtkWidget *w, const double
 }
 
 static void _eventbox_motion_notify_callback(GtkEventControllerMotion *controller, const double x,
-                                             const double y, dt_scopes_t *s)
+                                             const double y, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
         return;
 
@@ -603,8 +611,9 @@ static void _eventbox_motion_notify_callback(GtkEventControllerMotion *controlle
 }
 
 static void _eventbox_enter_notify_callback(GtkEventControllerMotion *controller, const double x,
-                                            const double y, dt_scopes_t *s)
+                                            const double y, gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
     {
         gtk_widget_hide(s->button_box_left);
@@ -628,8 +637,10 @@ static void _eventbox_enter_notify_callback(GtkEventControllerMotion *controller
     gtk_widget_show(s->button_box_right);
 }
 
-static void _eventbox_leave_notify_callback(GtkEventControllerMotion *controller, dt_scopes_t *s)
+static void _eventbox_leave_notify_callback(GtkEventControllerMotion *controller,
+                                            gpointer user_data)
 {
+    dt_scopes_t *const s = user_data;
     // when click between buttons on the buttonbox a leave event is
     // generated -- ignore it (for GTK 4, replace this with the simpler
     // gtk_event_controller_get_current_event())

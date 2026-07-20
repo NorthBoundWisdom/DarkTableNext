@@ -20,6 +20,11 @@
   This file contains the necessary routines to implement a filter for the filtering module
 */
 
+static const char *const _month_short_names[] = {
+    N_("Jan"), N_("Feb"), N_("Mar"), N_("Apr"), NC_("short_month_name", "May"), N_("Jun"),
+    N_("Jul"), N_("Aug"), N_("Sep"), N_("Oct"), N_("Nov"), N_("Dec"),
+};
+
 static gchar *_date_get_db_colname(dt_lib_filtering_rule_t *rule)
 {
     switch (rule->prop)
@@ -155,7 +160,7 @@ static void _month_widget_init(dt_lib_filtering_rule_t *rule, const dt_collectio
 
     for (int i = 0; i < 12; i++)
     {
-        month->toggles[i] = gtk_toggle_button_new_with_label(Q_(dt_month_short_names[i]));
+        month->toggles[i] = gtk_toggle_button_new_with_label(Q_(_month_short_names[i]));
         gtk_widget_set_tooltip_text(month->toggles[i], _("filter by capture month\n"
                                                          "click to toggle month selection"));
         g_signal_connect(G_OBJECT(month->toggles[i]), "toggled", G_CALLBACK(_month_widget_changed),

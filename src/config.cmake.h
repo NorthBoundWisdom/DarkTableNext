@@ -22,11 +22,12 @@ extern "C"
 extern DT_CORE_API const char darktable_package_version[];
 extern DT_CORE_API const char darktable_package_string[];
 extern DT_CORE_API const char darktable_last_commit_year[];
+extern DT_CORE_API const char *const dt_supported_extensions[];
 #ifdef __cplusplus
 }
 #endif
 
-static const char *dt_supported_extensions[] __attribute__((unused)) = {"@DT_SUPPORTED_EXTENSIONS_STRING@", NULL};
+#define DT_SUPPORTED_EXTENSIONS_INITIALIZER {"@DT_SUPPORTED_EXTENSIONS_STRING@", NULL}
 
 #cmakedefine DARKTABLE_LIBDIR    "@REL_BIN_TO_LIBDIR@"
 #cmakedefine DARKTABLE_DATADIR   "@REL_BIN_TO_DATADIR@"

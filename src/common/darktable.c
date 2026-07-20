@@ -107,6 +107,7 @@
 
 
 DT_CORE_API darktable_t darktable;
+DT_CORE_API const char *const dt_supported_extensions[] = DT_SUPPORTED_EXTENSIONS_INITIALIZER;
 
 static int usage(const char *argv0)
 {
@@ -333,7 +334,7 @@ gboolean dt_supported_image(const gchar *filename)
     if (!ext)
         return FALSE;
     ext++;
-    for (const char **i = dt_supported_extensions; *i != NULL; i++)
+    for (const char *const *i = dt_supported_extensions; *i != NULL; i++)
         if (!g_ascii_strncasecmp(ext, *i, strlen(*i)))
         {
             supported = TRUE;
