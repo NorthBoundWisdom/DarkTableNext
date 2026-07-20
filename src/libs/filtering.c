@@ -537,12 +537,7 @@ static void _event_rule_changed(GtkWidget *entry, dt_lib_filtering_rule_t *rule)
     // update the config files
     _conf_update_rule(rule);
 
-    // update the query without throwing signal everywhere
-    dt_control_signal_block_by_func(darktable.signals, G_CALLBACK(_dt_collection_updated),
-                                    darktable.view_manager->proxy.module_collect.module);
     dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD, rule->prop, NULL);
-    dt_control_signal_unblock_by_func(darktable.signals, G_CALLBACK(_dt_collection_updated),
-                                      darktable.view_manager->proxy.module_collect.module);
 }
 
 static void _rule_set_raw_text(dt_lib_filtering_rule_t *rule, const gchar *text,
@@ -638,12 +633,7 @@ static void _event_rule_change_type(GtkWidget *widget, dt_lib_module_t *self)
     // update the config files
     _conf_update_rule(rule);
 
-    // update the query without throwing signal everywhere
-    dt_control_signal_block_by_func(darktable.signals, G_CALLBACK(_dt_collection_updated),
-                                    darktable.view_manager->proxy.module_collect.module);
     dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD, old, NULL);
-    dt_control_signal_unblock_by_func(darktable.signals, G_CALLBACK(_dt_collection_updated),
-                                      darktable.view_manager->proxy.module_collect.module);
 }
 
 static void _event_append_rule(GtkWidget *widget, dt_lib_module_t *self)

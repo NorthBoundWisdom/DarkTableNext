@@ -45,7 +45,6 @@ dt_help_url urls_db[] = {
     {"metadata_preferences",
      "module-reference/utility-modules/shared/metadata-editor/#preferences"},
     {"tagging", "module-reference/utility-modules/shared/tagging/"},
-    {"collect", "module-reference/utility-modules/shared/collections/"},
     {"recentcollect", "module-reference/utility-modules/shared/recent-collections/"},
     {"metadata_view", "module-reference/utility-modules/shared/image-information/"},
     {"export", "module-reference/utility-modules/shared/export/"},

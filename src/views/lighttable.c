@@ -62,7 +62,6 @@ DT_MODULE(1)
 typedef enum dt_lighttable_loupe_source_t
 {
     DT_LIGHTTABLE_LOUPE_NONE = 0,
-    DT_LIGHTTABLE_LOUPE_AUTO,
     DT_LIGHTTABLE_LOUPE_PREVIEW
 } dt_lighttable_loupe_source_t;
 
@@ -79,7 +78,7 @@ typedef struct dt_library_t
     dt_lighttable_layout_t current_layout;
 
     int preview_sticky;                        // are we in sticky preview mode
-    dt_lighttable_loupe_source_t loupe_source; // automatic density-1 or explicit preview
+    dt_lighttable_loupe_source_t loupe_source; // explicit single-image preview state
     gboolean already_started; // is it the first start of lighttable. Used by culling
     int thumbtable_offset;    // last thumbtable offset before entering culling
 } dt_library_t;
@@ -114,18 +113,17 @@ static void _show_filmstrip(void)
     gtk_widget_queue_draw(filmstrip->widget);
 }
 
-// Exit either automatic Loupe or explicit Preview and restore the underlying layout.
+// Exit Loupe and restore the underlying layout.
 static void _loupe_quit(dt_view_t *self)
 {
     dt_library_t *lib = self->data;
-    const gboolean automatic = lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO;
     const dt_imgid_t current_imgid = lib->preview->offset_imgid;
 
     dt_culling_set_hand_tool(lib->preview, FALSE);
     dt_culling_zoom_end(lib->preview);
     dt_culling_zoom_fit(lib->preview);
     gtk_widget_hide(lib->preview->widget);
-    if ((automatic || lib->preview->selection_sync) && dt_is_valid_imgid(current_imgid))
+    if (lib->preview->selection_sync && dt_is_valid_imgid(current_imgid))
     {
         dt_selection_select_single(darktable.selection, current_imgid);
     }
@@ -180,7 +178,7 @@ static void _lighttable_check_layout(dt_view_t *self)
     if (lib->current_layout == layout)
         return;
 
-    // A layout change always ends either kind of single-image Loupe.
+    // A layout change always ends single-image Loupe.
     if (_loupe_active(lib))
         _loupe_quit(self);
 
@@ -324,23 +322,6 @@ static void _loupe_enter(dt_view_t *self, const dt_lighttable_loupe_source_t sou
     dt_ui_scrollbars_show(darktable.gui->ui, FALSE);
 }
 
-static void _lighttable_sync_auto_loupe(dt_view_t *self)
-{
-    dt_library_t *lib = self->data;
-    const gboolean requested = lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
-                               dt_view_lighttable_get_zoom(darktable.view_manager) == 1;
-
-    if (requested && lib->loupe_source == DT_LIGHTTABLE_LOUPE_NONE)
-    {
-        _loupe_enter(self, DT_LIGHTTABLE_LOUPE_AUTO, FALSE, FALSE,
-                     DT_LIGHTTABLE_CULLING_RESTRICTION_COLLECTION);
-    }
-    else if (!requested && lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO)
-    {
-        _loupe_quit(self);
-    }
-}
-
 static void _lighttable_change_offset(dt_view_t *self, const gboolean reset, const dt_imgid_t imgid)
 {
     dt_library_t *lib = self->data;
@@ -476,10 +457,8 @@ void expose(dt_view_t *self, cairo_t *cr, const int32_t width, const int32_t hei
     const double start = dt_get_debug_wtime();
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    // Apply layout changes first, then derive automatic Loupe solely from the
-    // filemanager density setting.
+    // Apply layout changes before exposing the active Grid, Loupe, or Culling widget.
     _lighttable_check_layout(self);
-    _lighttable_sync_auto_loupe(self);
 
     if (!darktable.collection || dt_collection_get_count_no_group(darktable.collection) <= 0)
     {
@@ -577,24 +556,7 @@ static void _preview_set_state(dt_view_t *self, const gboolean state, const gboo
     dt_library_t *lib = self->data;
     if (state)
         _loupe_enter(self, DT_LIGHTTABLE_LOUPE_PREVIEW, sticky, focus, restriction);
-    else if (_explicit_preview(lib) && lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER &&
-             dt_view_lighttable_get_zoom(darktable.view_manager) == 1)
-    {
-        // Explicit Preview closes back into the density-owned Loupe without
-        // flashing or rebuilding the square grid underneath it.
-        dt_culling_set_hand_tool(lib->preview, FALSE);
-        dt_culling_zoom_end(lib->preview);
-        dt_culling_zoom_fit(lib->preview);
-        lib->preview_sticky = FALSE;
-        lib->preview->focus = FALSE;
-        lib->loupe_source = DT_LIGHTTABLE_LOUPE_AUTO;
-        dt_view_lighttable_update_layout_buttons(darktable.view_manager);
-        dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                 dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_NONE);
-        _show_filmstrip();
-        dt_ui_restore_panels(darktable.gui->ui);
-    }
-    else
+    else if (_loupe_active(lib))
         _loupe_quit(self);
 }
 
@@ -651,11 +613,6 @@ void leave(dt_view_t *self)
     {
         _loupe_quit(self);
     }
-    else if (lib->loupe_source == DT_LIGHTTABLE_LOUPE_AUTO)
-    {
-        // Automatic Loupe is derived again on the next Lighttable expose.
-        lib->loupe_source = DT_LIGHTTABLE_LOUPE_NONE;
-    }
 
     // we remove the thumbtable from main view
     dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui), NULL, DT_THUMBTABLE_MODE_NONE);
@@ -671,7 +628,7 @@ void reset(dt_view_t *self)
 }
 
 // Return the active dt_culling_t for gesture dispatch: the single-image widget
-// for automatic Loupe or Preview, the culling widget for a culling layout.
+// for Loupe, or the culling widget for a culling layout.
 static dt_culling_t *_active_culling(const dt_library_t *lib)
 {
     if (_loupe_active(lib))
@@ -958,9 +915,10 @@ static void zoom_in_callback(dt_action_t *action)
 {
     int zoom = dt_view_lighttable_get_zoom(darktable.view_manager);
 
-    zoom--;
-    if (zoom < 1)
-        zoom = 1;
+    if (dt_view_lighttable_get_layout(darktable.view_manager) == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
+        zoom += DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP;
+    else
+        zoom--;
 
     dt_view_lighttable_set_zoom(darktable.view_manager, zoom);
 }
@@ -969,21 +927,30 @@ static void zoom_out_callback(dt_action_t *action)
 {
     int zoom = dt_view_lighttable_get_zoom(darktable.view_manager);
 
-    zoom++;
-    if (zoom > 2 * DT_LIGHTTABLE_MAX_ZOOM)
-        zoom = 2 * DT_LIGHTTABLE_MAX_ZOOM;
+    if (dt_view_lighttable_get_layout(darktable.view_manager) == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
+        zoom -= DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP;
+    else
+        zoom++;
 
     dt_view_lighttable_set_zoom(darktable.view_manager, zoom);
 }
 
 static void zoom_max_callback(dt_action_t *action)
 {
-    dt_view_lighttable_set_zoom(darktable.view_manager, 1);
+    const int zoom = dt_view_lighttable_get_layout(darktable.view_manager) ==
+                             DT_LIGHTTABLE_LAYOUT_FILEMANAGER
+                         ? DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE
+                         : 1;
+    dt_view_lighttable_set_zoom(darktable.view_manager, zoom);
 }
 
 static void zoom_min_callback(dt_action_t *action)
 {
-    dt_view_lighttable_set_zoom(darktable.view_manager, DT_LIGHTTABLE_MAX_ZOOM);
+    const int zoom = dt_view_lighttable_get_layout(darktable.view_manager) ==
+                             DT_LIGHTTABLE_LAYOUT_FILEMANAGER
+                         ? DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE
+                         : DT_LIGHTTABLE_MAX_ZOOM;
+    dt_view_lighttable_set_zoom(darktable.view_manager, zoom);
 }
 
 static void _lighttable_undo_callback(dt_action_t *action)
@@ -1036,7 +1003,6 @@ static void _accel_culling_zoom_toggle(dt_action_t *action)
     dt_library_t *lib = self->data;
 
     _lighttable_check_layout(self);
-    _lighttable_sync_auto_loupe(self);
 
     dt_culling_t *table = _active_culling(lib);
     if (!table && lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
@@ -1125,7 +1091,7 @@ GSList *mouse_actions(const dt_view_t *self)
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0,
                                            _("scroll the collection"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, GDK_CONTROL_MASK,
-                                           _("change number of images per row"));
+                                           _("change grid thumbnail size"));
 
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT, 0, _("select an image"));
         lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT, GDK_SHIFT_MASK,

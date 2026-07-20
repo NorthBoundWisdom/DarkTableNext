@@ -446,7 +446,7 @@ static void _init_treeview(dt_lib_module_t *self, const int which)
         // Destroy the filter before clearing the underlying store: the
         // bulk row-deleted emissions corrupt the filter's internal
         // GSequence cache and crash in node_get_pos (same defensive
-        // pattern as libs/collect.c). The filter is recreated once the
+        // defensive pattern used for filtered tree models. The filter is recreated once the
         // store has been repopulated.
         model = NULL;
         g_object_ref(store);

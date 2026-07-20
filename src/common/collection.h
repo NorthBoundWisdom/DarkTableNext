@@ -270,5 +270,5 @@ void dt_collection_move_before(const dt_imgid_t image_id, GList *selected_images
 /* initialize memory table */
 void dt_collection_memory_update();
 
-/** save the current collection for recentcollect module and collect history */
+/** save the current collection for the recent-collections history */
 void dt_collection_history_save();

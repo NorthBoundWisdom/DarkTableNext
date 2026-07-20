@@ -72,6 +72,9 @@
  */
 
 #define DT_UI_PANEL_MODULE_SPACING 0
+#define DT_UI_SIDE_PANEL_OPEN_TOGGLE_WIDTH 9
+#define DT_UI_SIDE_PANEL_OPEN_TOGGLE_HEIGHT 48
+#define DT_UI_SIDE_PANEL_SCROLL_STEP 32
 #define DT_UI_PANEL_BOTTOM_DEFAULT_SIZE 120
 #define DT_UI_SCROLL_SMOOTH_DELTA_SCALE 50.0
 #define DT_UI_DEFAULT_WINDOW_WIDTH 900
@@ -1875,7 +1878,6 @@ static void _init_widgets(dt_gui_gtk_t *gui)
 
     // Initializing the top border
     gui->widgets.top_border = _init_outer_border(-1, DT_PIXEL_APPLY_DPI(10), DT_UI_BORDER_TOP);
-    gtk_box_pack_start(GTK_BOX(container), gui->widgets.top_border, FALSE, TRUE, 0);
 
     // Initializing the main table
     _init_main_table(container);
@@ -1909,6 +1911,12 @@ static void _init_main_table(GtkWidget *container)
     gtk_container_add(GTK_CONTAINER(main_overlay), widget);
     gtk_box_pack_start(GTK_BOX(container), main_overlay, TRUE, TRUE, 0);
 
+    // Keep the top-panel toggle over the workspace so it does not consume a
+    // dedicated row above the main grid.
+    gtk_widget_set_halign(darktable.gui->widgets.top_border, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(darktable.gui->widgets.top_border, GTK_ALIGN_START);
+    gtk_overlay_add_overlay(GTK_OVERLAY(main_overlay), darktable.gui->widgets.top_border);
+
     container = widget;
 
     darktable.gui->widgets.left_border =
@@ -1920,13 +1928,17 @@ static void _init_main_table(GtkWidget *container)
     gtk_grid_attach(GTK_GRID(container), darktable.gui->widgets.right_border, 4, 0, 1, 2);
 
     darktable.gui->widgets.left_border_overlay =
-        _init_outer_border(DT_PIXEL_APPLY_DPI(18), DT_PIXEL_APPLY_DPI(48), DT_UI_BORDER_LEFT);
+        _init_outer_border(DT_PIXEL_APPLY_DPI(DT_UI_SIDE_PANEL_OPEN_TOGGLE_WIDTH),
+                           DT_PIXEL_APPLY_DPI(DT_UI_SIDE_PANEL_OPEN_TOGGLE_HEIGHT),
+                           DT_UI_BORDER_LEFT);
     gtk_widget_set_halign(darktable.gui->widgets.left_border_overlay, GTK_ALIGN_START);
     gtk_widget_set_valign(darktable.gui->widgets.left_border_overlay, GTK_ALIGN_CENTER);
     gtk_overlay_add_overlay(GTK_OVERLAY(main_overlay), darktable.gui->widgets.left_border_overlay);
 
     darktable.gui->widgets.right_border_overlay =
-        _init_outer_border(DT_PIXEL_APPLY_DPI(18), DT_PIXEL_APPLY_DPI(48), DT_UI_BORDER_RIGHT);
+        _init_outer_border(DT_PIXEL_APPLY_DPI(DT_UI_SIDE_PANEL_OPEN_TOGGLE_WIDTH),
+                           DT_PIXEL_APPLY_DPI(DT_UI_SIDE_PANEL_OPEN_TOGGLE_HEIGHT),
+                           DT_UI_BORDER_RIGHT);
     gtk_widget_set_halign(darktable.gui->widgets.right_border_overlay, GTK_ALIGN_END);
     gtk_widget_set_valign(darktable.gui->widgets.right_border_overlay, GTK_ALIGN_CENTER);
     gtk_overlay_add_overlay(GTK_OVERLAY(main_overlay), darktable.gui->widgets.right_border_overlay);
@@ -2524,12 +2536,30 @@ static void _side_panel_scroll_capture(GtkEventControllerScroll *controller, con
     const gdouble lower = gtk_adjustment_get_lower(adjustment);
     const gdouble upper = gtk_adjustment_get_upper(adjustment) -
                           gtk_adjustment_get_page_size(adjustment);
-    const gdouble step = gtk_adjustment_get_step_increment(adjustment);
-    const gdouble delta = dy;
+    gdouble delta = dy;
+    gboolean smooth = FALSE;
+
+    // GtkScrolledWindow derives step_increment from its viewport. Multiplying
+    // wheel deltas by that value makes tall panels jump in a handful of large
+    // page-relative steps. Use the original event so discrete wheels advance
+    // by a fixed pixel distance while smooth trackpads retain fractional motion.
+    GdkEvent *event = gtk_get_current_event();
+    if (event)
+    {
+        if (gdk_event_get_event_type(event) == GDK_SCROLL)
+        {
+            smooth = event->scroll.direction == GDK_SCROLL_SMOOTH;
+            delta = 0.0;
+            dt_gui_get_scroll_deltas(&event->scroll, NULL, &delta);
+        }
+        gdk_event_free(event);
+    }
 
     if (delta != 0.0)
     {
-        const gdouble value = gtk_adjustment_get_value(adjustment) + delta * step;
+        const gdouble distance = smooth ? DT_UI_SCROLL_SMOOTH_DELTA_SCALE :
+                                          DT_PIXEL_APPLY_DPI(DT_UI_SIDE_PANEL_SCROLL_STEP);
+        const gdouble value = gtk_adjustment_get_value(adjustment) + delta * distance;
         gtk_adjustment_set_value(adjustment, CLAMP(value, lower, MAX(lower, upper)));
     }
 

@@ -424,6 +424,9 @@ void dtgtk_cairo_paint_lt_grid_smaller(cairo_t *cr, gint x, gint y, gint w, gint
 /** Lighttable: increase grid size (3 columns by 2 rows) */
 void dtgtk_cairo_paint_lt_grid_larger(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                       void *data);
+/** Lighttable: Loupe */
+void dtgtk_cairo_paint_lt_mode_loupe(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
+                                     void *data);
 /** Lighttable: Culling fixed */
 void dtgtk_cairo_paint_lt_mode_culling_fixed(cairo_t *cr, gint x, gint y, gint w, gint h,
                                              gint flags, void *data);

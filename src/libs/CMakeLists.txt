@@ -11,7 +11,7 @@ else()
 endif()
 
 # The modules
-set(MODULES import export copy_history styles tagging image select collect recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks duplicate ioporder)
+set(MODULES import export copy_history styles tagging image select recentcollect filtering metadata metadata_view navigation histogram history snapshots modulegroups backgroundjobs colorpicker masks duplicate ioporder)
 
 # The tools
 set(MODULES ${MODULES} viewswitcher)
@@ -31,6 +31,10 @@ set(MODULES ${MODULES} image_infos)
 # Lighttable modules.
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libtimeline${CMAKE_SHARED_MODULE_SUFFIX}")
 file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/liblog_history${CMAKE_SHARED_MODULE_SUFFIX}")
+file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/libcollect${CMAKE_SHARED_MODULE_SUFFIX}")
+if(APPLE)
+  file(REMOVE "${DARKTABLE_BINDIR}/darktable.app/Contents/Resources/lib/darktable/plugins/lighttable/libcollect${CMAKE_SHARED_MODULE_SUFFIX}")
+endif()
 
 # modules
 add_library(import MODULE "import.c")
@@ -40,7 +44,6 @@ add_library(styles MODULE "styles.c")
 add_library(image MODULE "image.c")
 add_library(tagging MODULE "tagging.c")
 add_library(select MODULE "select.c")
-add_library(collect MODULE "collect.c")
 add_library(recentcollect MODULE "recentcollect.c")
 add_library(filtering MODULE "filtering.c")
 add_library(metadata MODULE "metadata.c")

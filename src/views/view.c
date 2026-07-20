@@ -1274,14 +1274,6 @@ void dt_view_lighttable_change_offset(dt_view_manager_t *vm, const gboolean rese
         vm->proxy.lighttable.change_offset(vm->proxy.lighttable.view, reset, imgid);
 }
 
-void dt_view_collection_update(const dt_view_manager_t *vm)
-{
-    if (vm->proxy.module_filtering.module)
-        vm->proxy.module_filtering.update(vm->proxy.module_filtering.module);
-    if (vm->proxy.module_collect.module)
-        vm->proxy.module_collect.update(vm->proxy.module_collect.module);
-}
-
 void dt_view_filtering_set_sort(const dt_view_manager_t *vm, const int sort, const gboolean asc)
 {
     if (vm->proxy.module_filtering.module)

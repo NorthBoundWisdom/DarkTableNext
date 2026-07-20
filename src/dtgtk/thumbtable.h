@@ -112,7 +112,7 @@ gboolean dt_thumbtable_set_offset(dt_thumbtable_t *table, const int offset, cons
 gboolean dt_thumbtable_set_offset_image(dt_thumbtable_t *table, const dt_imgid_t imgid,
                                         const gboolean redraw);
 
-// fired when the zoom level change
+// fired when the layout-specific zoom value changes
 void dt_thumbtable_zoom_changed(dt_thumbtable_t *table, const int oldzoom, const int newzoom);
 
 // ensure that the mentioned image is visible by moving the view if needed

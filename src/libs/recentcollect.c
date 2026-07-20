@@ -71,7 +71,7 @@ const char *name(dt_lib_module_t *self)
 const char *description(dt_lib_module_t *self)
 {
     return _("select among the most recent search\n"
-             "criteria set in the collections module");
+             "criteria set by the collection query");
 }
 
 dt_view_type_flags_t views(dt_lib_module_t *self)

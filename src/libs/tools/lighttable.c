@@ -41,12 +41,6 @@ typedef enum dt_lighttable_direct_mode_t
     DT_LIGHTTABLE_DIRECT_MODE_SURVEY
 } dt_lighttable_direct_mode_t;
 
-enum
-{
-    DT_LIGHTTABLE_GRID_MIN_COLUMNS = 2,
-    DT_LIGHTTABLE_GRID_MAX_COLUMNS = 10,
-};
-
 typedef struct dt_lib_tool_lighttable_t
 {
     GtkWidget *layout_box;
@@ -134,9 +128,11 @@ static void _lib_lighttable_update_btn(dt_lib_module_t *self)
     const gboolean grid_controls_active =
         d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER && !fullpreview;
     gtk_widget_set_sensitive(d->grid_smaller,
-                             grid_controls_active && d->current_zoom < DT_LIGHTTABLE_GRID_MAX_COLUMNS);
+                             grid_controls_active &&
+                                 d->current_zoom > DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE);
     gtk_widget_set_sensitive(d->grid_larger,
-                             grid_controls_active && d->current_zoom > DT_LIGHTTABLE_GRID_MIN_COLUMNS);
+                             grid_controls_active &&
+                                 d->current_zoom < DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
 
     // culling restricted button configuration
     if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING || fullpreview)
@@ -202,10 +198,10 @@ static void _lib_lighttable_set_layout(dt_lib_module_t *self, const dt_lighttabl
         }
         else
         {
-            d->current_zoom = dt_conf_get_int("plugins/lighttable/images_in_row");
-            d->current_zoom = CLAMP(d->current_zoom, DT_LIGHTTABLE_GRID_MIN_COLUMNS,
-                                    DT_LIGHTTABLE_GRID_MAX_COLUMNS);
-            dt_conf_set_int("plugins/lighttable/images_in_row", d->current_zoom);
+            d->current_zoom = dt_conf_get_int("plugins/lighttable/grid_thumbnail_size");
+            d->current_zoom = CLAMP(d->current_zoom, DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE,
+                                    DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
+            dt_conf_set_int("plugins/lighttable/grid_thumbnail_size", d->current_zoom);
         }
 
         dt_conf_set_int("plugins/lighttable/layout", layout);
@@ -234,8 +230,6 @@ static void _lib_lighttable_apply_direct_mode(dt_lib_module_t *self,
     {
     case DT_LIGHTTABLE_DIRECT_MODE_GRID:
         _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_FILEMANAGER);
-        if (_lib_lighttable_get_zoom(self) < DT_LIGHTTABLE_GRID_MIN_COLUMNS)
-            _lib_lighttable_set_zoom(self, DT_LIGHTTABLE_GRID_MIN_COLUMNS);
         break;
     case DT_LIGHTTABLE_DIRECT_MODE_LOUPE:
         _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_PREVIEW);
@@ -372,14 +366,14 @@ static gboolean _lib_lighttable_restricted_btn_release(GtkWidget *w, GdkEventBut
 static void _lib_lighttable_grid_smaller_clicked(GtkWidget *widget, dt_lib_module_t *self)
 {
     dt_lib_tool_lighttable_t *d = self->data;
-    _lib_lighttable_set_zoom(self, d->current_zoom + 1);
+    _lib_lighttable_set_zoom(self, d->current_zoom - DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP);
     (void)widget;
 }
 
 static void _lib_lighttable_grid_larger_clicked(GtkWidget *widget, dt_lib_module_t *self)
 {
     dt_lib_tool_lighttable_t *d = self->data;
-    _lib_lighttable_set_zoom(self, d->current_zoom - 1);
+    _lib_lighttable_set_zoom(self, d->current_zoom + DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP);
     (void)widget;
 }
 
@@ -515,6 +509,7 @@ void gui_init(dt_lib_module_t *self)
     dt_conf_remove_key("lighttable/zoomable/last_offset");
     dt_conf_remove_key("lighttable/zoomable/last_pos_x");
     dt_conf_remove_key("lighttable/zoomable/last_pos_y");
+    dt_conf_remove_key("plugins/lighttable/images_in_row");
     d->layout = _lib_lighttable_get_configured_layout("plugins/lighttable/layout");
     d->base_layout = _lib_lighttable_get_configured_layout("plugins/lighttable/base_layout");
 
@@ -528,10 +523,10 @@ void gui_init(dt_lib_module_t *self)
     }
     else
     {
-        d->current_zoom = dt_conf_get_int("plugins/lighttable/images_in_row");
-        d->current_zoom = CLAMP(d->current_zoom, DT_LIGHTTABLE_GRID_MIN_COLUMNS,
-                                DT_LIGHTTABLE_GRID_MAX_COLUMNS);
-        dt_conf_set_int("plugins/lighttable/images_in_row", d->current_zoom);
+        d->current_zoom = dt_conf_get_int("plugins/lighttable/grid_thumbnail_size");
+        d->current_zoom = CLAMP(d->current_zoom, DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE,
+                                DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
+        dt_conf_set_int("plugins/lighttable/grid_thumbnail_size", d->current_zoom);
     }
     if (d->layout != DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
         d->current_zoom = CLAMP(d->current_zoom, 1, DT_LIGHTTABLE_MAX_ZOOM);
@@ -541,20 +536,20 @@ void gui_init(dt_lib_module_t *self)
     dt_action_t *ac = NULL;
 
     d->grid_smaller = dtgtk_button_new(dtgtk_cairo_paint_lt_grid_smaller, 0, NULL);
-    ac = dt_action_define(ltv, NULL, N_("decrease grid size"), d->grid_smaller,
+    ac = dt_action_define(ltv, NULL, N_("decrease grid thumbnail size"), d->grid_smaller,
                           &dt_action_def_button);
-    gtk_widget_set_tooltip_text(d->grid_smaller, _("decrease grid size"));
+    gtk_widget_set_tooltip_text(d->grid_smaller, _("decrease grid thumbnail size"));
     g_signal_connect(G_OBJECT(d->grid_smaller), "clicked",
                      G_CALLBACK(_lib_lighttable_grid_smaller_clicked), self);
 
     d->grid_larger = dtgtk_button_new(dtgtk_cairo_paint_lt_grid_larger, 0, NULL);
-    ac = dt_action_define(ltv, NULL, N_("increase grid size"), d->grid_larger,
+    ac = dt_action_define(ltv, NULL, N_("increase grid thumbnail size"), d->grid_larger,
                           &dt_action_def_button);
-    gtk_widget_set_tooltip_text(d->grid_larger, _("increase grid size"));
+    gtk_widget_set_tooltip_text(d->grid_larger, _("increase grid thumbnail size"));
     g_signal_connect(G_OBJECT(d->grid_larger), "clicked",
                      G_CALLBACK(_lib_lighttable_grid_larger_clicked), self);
 
-    d->loupe = dtgtk_button_new(dtgtk_cairo_paint_zoom, 0, NULL);
+    d->loupe = dtgtk_button_new(dtgtk_cairo_paint_lt_mode_loupe, 0, NULL);
     ac = dt_action_define(ltv, NULL, N_("loupe"), d->loupe, &dt_action_def_button);
     gtk_widget_set_tooltip_text(d->loupe, _("enter Lightroom-style loupe"));
     g_signal_connect(G_OBJECT(d->loupe), "clicked", G_CALLBACK(_lib_lighttable_loupe_clicked),
@@ -645,10 +640,8 @@ static void _set_zoom(dt_lib_module_t *self, const int old_zoom, const int new_z
     }
     else if (d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
-        dt_conf_set_int("plugins/lighttable/images_in_row", new_zoom);
+        dt_conf_set_int("plugins/lighttable/grid_thumbnail_size", new_zoom);
         dt_thumbtable_zoom_changed(dt_ui_thumbtable(darktable.gui->ui), old_zoom, new_zoom);
-        // At density 1 the grid is detached behind automatic Loupe, so the
-        // thumbtable itself cannot schedule the expose that restores density 2.
         dt_control_queue_redraw_center();
     }
 }
@@ -663,7 +656,8 @@ static void _lib_lighttable_set_zoom(dt_lib_module_t *self, gint zoom)
 {
     dt_lib_tool_lighttable_t *d = self->data;
     if (d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
-        zoom = CLAMP(zoom, DT_LIGHTTABLE_GRID_MIN_COLUMNS, DT_LIGHTTABLE_GRID_MAX_COLUMNS);
+        zoom = CLAMP(zoom, DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE,
+                     DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
     else
         zoom = CLAMP(zoom, 1, DT_LIGHTTABLE_MAX_ZOOM);
     if (zoom == d->current_zoom)

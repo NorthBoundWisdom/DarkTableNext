@@ -109,6 +109,14 @@ typedef struct dt_mouse_action_t
 /* maximum zoom factor for the lighttable */
 #define DT_LIGHTTABLE_MAX_ZOOM 25
 
+/* Responsive Grid keeps a target thumbnail size and derives the number of
+ * columns from the available canvas width. */
+#define DT_LIGHTTABLE_GRID_MIN_COLUMNS 2
+#define DT_LIGHTTABLE_GRID_MAX_COLUMNS 10
+#define DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE 128
+#define DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE 512
+#define DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP 32
+
 /**
  * main dt view module (as lighttable or darkroom)
  */
@@ -240,13 +248,6 @@ typedef struct dt_view_manager_t
    */
     struct
     {
-        /* module collection proxy object */
-        struct
-        {
-            struct dt_lib_module_t *module;
-            void (*update)(struct dt_lib_module_t *);
-        } module_collect;
-
         /* module recent collection proxy object */
         struct
         {
@@ -362,8 +363,6 @@ GSList *dt_mouse_action_create_format(GSList *actions, const dt_mouse_action_typ
                                       const GdkModifierType accel, const char *const format_string,
                                       const char *const replacement);
 
-/** update the collection module */
-void dt_view_collection_update(const dt_view_manager_t *vm);
 void dt_view_filtering_set_sort(const dt_view_manager_t *vm, const int sort, const gboolean asc);
 
 void dt_view_filtering_reset(const dt_view_manager_t *vm, const gboolean smart_filter);
@@ -396,9 +395,9 @@ dt_imgid_t dt_view_lighttable_get_culling_selection(dt_view_manager_t *vm);
 void dt_view_lighttable_set_preview_state(dt_view_manager_t *vm, const gboolean state,
                                           const gboolean sticky, const gboolean focus,
                                           const dt_lighttable_culling_restriction_t restriction);
-/** sets the lighttable image in row zoom */
+/** sets the layout-specific lighttable zoom value (Grid thumbnail size or Culling image count) */
 void dt_view_lighttable_set_zoom(dt_view_manager_t *vm, const gint zoom);
-/** gets the lighttable image in row zoom */
+/** gets the layout-specific lighttable zoom value (Grid thumbnail size or Culling image count) */
 gint dt_view_lighttable_get_zoom(const dt_view_manager_t *vm);
 /** force refresh of culling and/or preview */
 void dt_view_lighttable_culling_preview_refresh(dt_view_manager_t *vm);

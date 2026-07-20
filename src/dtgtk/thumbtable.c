@@ -334,6 +334,14 @@ static void _pos_get_previous(dt_thumbtable_t *table, int *x, int *y)
     }
 }
 
+static int _grid_columns_for_width(const int width, const int target_size)
+{
+    const int size = CLAMP(target_size, DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE,
+                           DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
+    return CLAMP((width + size / 2) / size, DT_LIGHTTABLE_GRID_MIN_COLUMNS,
+                 DT_LIGHTTABLE_GRID_MAX_COLUMNS);
+}
+
 // compute thumb_size, thumbs_per_row and rows for the current widget size
 // return TRUE if something as changed (or forced) FALSE otherwise
 static gboolean _compute_sizes(dt_thumbtable_t *table, const gboolean force)
@@ -352,7 +360,8 @@ static gboolean _compute_sizes(dt_thumbtable_t *table, const gboolean force)
     const int old_size = table->thumb_size;
     if (table->mode == DT_THUMBTABLE_MODE_FILEMANAGER)
     {
-        const int npr = dt_view_lighttable_get_zoom(darktable.view_manager);
+        const int target_size = dt_view_lighttable_get_zoom(darktable.view_manager);
+        const int npr = _grid_columns_for_width(allocation.width, target_size);
 
         if (force || allocation.width != table->view_width ||
             allocation.height != table->view_height || npr != table->thumbs_per_row)
@@ -762,8 +771,8 @@ static dt_thumbnail_t *_thumbtable_get_thumb(dt_thumbtable_t *table, const dt_im
     return NULL;
 }
 
-// change zoom value for the classic thumbtable
-static void _filemanager_zoom(dt_thumbtable_t *table, const int oldzoom, const int newzoom)
+// Change the target thumbnail size while keeping the image under the pointer in place.
+static void _filemanager_zoom(dt_thumbtable_t *table, const int old_size, const int new_size)
 {
     // nothing to do if thumbtable is empty
     if (!table->list)
@@ -811,13 +820,15 @@ static void _filemanager_zoom(dt_thumbtable_t *table, const int oldzoom, const i
     }
 
     // how many images will be displayed before the current position ?
-    const int new_size = table->view_width / newzoom;
-    const int new_pos = y / new_size * newzoom + x / new_size;
+    const int new_columns = _grid_columns_for_width(table->view_width, new_size);
+    const int new_cell_size = MAX(1, table->view_width / new_columns);
+    const int new_pos = y / new_cell_size * new_columns + x / new_cell_size;
 
     dt_thumbtable_set_offset(table, thumb->rowid - new_pos, FALSE);
 
-    dt_view_lighttable_set_zoom(darktable.view_manager, newzoom);
+    dt_view_lighttable_set_zoom(darktable.view_manager, new_size);
     gtk_widget_queue_draw(table->widget);
+    (void)old_size;
 }
 
 void dt_thumbtable_zoom_changed(dt_thumbtable_t *table, const int oldzoom, const int newzoom)
@@ -947,7 +958,9 @@ static gboolean _event_scroll(GtkWidget *widget, GdkEvent *event, dt_thumbtable_
             else
             {
                 const int old = dt_view_lighttable_get_zoom(darktable.view_manager);
-                const int new = CLAMP(old + delta_y, 1, DT_LIGHTTABLE_MAX_ZOOM);
+                const int new = CLAMP(old - delta_y * DT_LIGHTTABLE_GRID_THUMBNAIL_SIZE_STEP,
+                                      DT_LIGHTTABLE_GRID_MIN_THUMBNAIL_SIZE,
+                                      DT_LIGHTTABLE_GRID_MAX_THUMBNAIL_SIZE);
                 dt_thumbtable_zoom_changed(table, old, new);
             }
         }

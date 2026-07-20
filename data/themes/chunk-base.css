@@ -109,7 +109,7 @@ Why that? Just because it's a developer choice and most classes use underscore i
   - dt_bauhaus_popup:
       - used for all bauhaus popup
   - dt_spacing_sw:
-      - use it if spacing needed around some treeview (actually used in collections and tagging modules to have spacing on top and bottom margin regarding buttons/entries around
+      - use it if spacing needed around some treeview (used by tagging to have spacing on top and bottom margin regarding buttons/entries around
 
   * the list above is not exhausting. Those are main ones set actually and should be completed if needed. You could see other classes on this file
 ***/
@@ -1857,7 +1857,7 @@ treeview#delete-dialog:selected
 }
 
 /* Bauhaus states */
-.dt_bauhaus_popup:disabled /* set categories titles in bauhaus combobox popup ; for example in collections module */
+.dt_bauhaus_popup:disabled /* set category titles in Bauhaus combobox popups */
 {
   color: white;
 }

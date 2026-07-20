@@ -3302,6 +3302,17 @@ void dtgtk_cairo_paint_lt_grid_larger(cairo_t *cr, const gint x, const gint y, c
     FINISH
 }
 
+void dtgtk_cairo_paint_lt_mode_loupe(cairo_t *cr, const gint x, const gint y, const gint w,
+                                     const gint h, gint flags, void *data)
+{
+    PREAMBLE(1.4, 1, 0, 0)
+
+    cairo_rectangle(cr, 0.2, 0.2, 0.6, 0.6);
+    cairo_stroke(cr);
+
+    FINISH
+}
+
 void dtgtk_cairo_paint_lt_mode_culling_fixed(cairo_t *cr, const gint x, const gint y, const gint w,
                                              const gint h, gint flags, void *data)
 {

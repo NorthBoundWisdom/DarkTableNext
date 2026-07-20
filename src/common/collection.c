@@ -2058,7 +2058,7 @@ static gchar *get_query_string(const dt_collection_properties_t property, const 
         }
         else
         {
-            // plain text format from the collections panel (e.g. "12" or "3")
+            // plain text format used by collection rules (e.g. "12" or "3")
             // parse as a comma-separated list of month numbers or a single month
             GString *months = g_string_new(NULL);
             gchar **parts = g_strsplit(escaped_text, ",", -1);
