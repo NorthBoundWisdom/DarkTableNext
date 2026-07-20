@@ -661,6 +661,9 @@ if(APPLE)
                ${DARKTABLE_LOADABLE_MODULE_FILES}
                "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"
                "${DARKTABLE_DATADIR}/icons/hicolor/index.theme"
+               "${CMAKE_SOURCE_DIR}/data/pixmaps/scalable/actions/edit-clear-symbolic.svg"
+               "${CMAKE_SOURCE_DIR}/data/pixmaps/scalable/actions/edit-find-symbolic.svg"
+               "${CMAKE_SOURCE_DIR}/data/pixmaps/scalable/status/image-missing.svg"
                "${CMAKE_SOURCE_DIR}/packaging/macos/entitlements.plist")
   add_custom_command(TARGET darktable POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/macos_development_bundle.cmake"

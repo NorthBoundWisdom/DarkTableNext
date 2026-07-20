@@ -21,6 +21,23 @@ foreach(pixmap_size ${FIXED_SIZES})
 	FILE(COPY ${PIXMAP_FILES} DESTINATION ${DARKTABLE_DATADIR}/icons/${THEME}/${pixmap_size}/apps)
 endforeach(pixmap_size)
 
+# GtkSearchEntry relies on these standard icon names.  macOS and Windows
+# bundles cannot assume that an external desktop icon theme is installed, and
+# GTK aborts if even its final image-missing fallback is unavailable.
+set(GTK_FALLBACK_ICONS
+	"scalable/actions/edit-clear-symbolic.svg"
+	"scalable/actions/edit-find-symbolic.svg"
+	"scalable/status/image-missing.svg")
+foreach(icon_file ${GTK_FALLBACK_ICONS})
+	get_filename_component(icon_dir ${icon_file} DIRECTORY)
+	file(MAKE_DIRECTORY ${DARKTABLE_DATADIR}/icons/${THEME}/${icon_dir})
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${icon_file}
+	               ${DARKTABLE_DATADIR}/icons/${THEME}/${icon_file} COPYONLY)
+	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${icon_file}
+	        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/${THEME}/${icon_dir}
+	        COMPONENT DTApplication)
+endforeach()
+
 #
 # Install plugin pixmaps
 #

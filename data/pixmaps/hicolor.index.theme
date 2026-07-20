@@ -2,7 +2,7 @@
 Name=Hicolor
 Comment=Fallback icon theme for DarkTableNext application icons
 Hidden=true
-Directories=16x16/apps,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,256x256/apps,scalable/apps
+Directories=16x16/apps,22x22/apps,24x24/apps,32x32/apps,48x48/apps,64x64/apps,256x256/apps,scalable/apps,scalable/actions,scalable/status
 
 [16x16/apps]
 Size=16
@@ -44,4 +44,18 @@ Size=128
 MinSize=1
 MaxSize=512
 Context=Applications
+Type=Scalable
+
+[scalable/actions]
+Size=16
+MinSize=8
+MaxSize=512
+Context=Actions
+Type=Scalable
+
+[scalable/status]
+Size=16
+MinSize=8
+MaxSize=512
+Context=Status
 Type=Scalable
