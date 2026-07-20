@@ -1290,7 +1290,7 @@ guint dt_gui_translated_key_state(const GdkEventKey *event)
     {
         //not an alphabetic character
         //find any modifiers consumed to produce keyval
-        guint consumed;
+        GdkModifierType consumed;
         gdk_keymap_translate_keyboard_state(gdk_keymap_get_for_display(gdk_display_get_default()),
                                             event->hardware_keycode, event->state, event->group,
                                             NULL, NULL, NULL, &consumed);
@@ -1888,7 +1888,15 @@ static void _init_widgets(dt_gui_gtk_t *gui)
     dt_gui_apply_theme();
 }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
+#pragma warning(disable : 4132)
+#endif
 static const dt_action_def_t _action_def_focus_tabs;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 static void _init_main_table(GtkWidget *container)
 {
@@ -3665,7 +3673,7 @@ void dt_gui_apply_theme()
 
 GdkModifierType dt_key_modifier_state()
 {
-    guint state = 0;
+    GdkModifierType state = 0;
     GdkWindow *window = gtk_widget_get_window(dt_ui_main_window(darktable.gui->ui));
     gdk_device_get_state(
         gdk_seat_get_pointer(gdk_display_get_default_seat(gdk_window_get_display(window))), window,

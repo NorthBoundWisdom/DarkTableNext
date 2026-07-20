@@ -65,11 +65,19 @@ typedef struct dt_imageio_jpeg_gui_data_t
 } dt_imageio_jpeg_gui_data_t;
 
 // error functions
+#ifdef _MSC_VER
+#pragma warning(push)
+// jmp_buf requires stricter alignment than jpeg_error_mgr, so tail padding is intentional.
+#pragma warning(disable : 4324)
+#endif
 struct dt_imageio_jpeg_error_mgr
 {
     struct jpeg_error_mgr pub;
     jmp_buf setjmp_buffer;
 } dt_imageio_jpeg_error_mgr;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 typedef struct dt_imageio_jpeg_error_mgr *dt_imageio_jpeg_error_ptr;
 

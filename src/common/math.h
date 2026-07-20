@@ -175,7 +175,7 @@ static inline float fastlog2(const float x)
         float f;
     } mx = {(vx.i & 0x007FFFFF) | 0x3f000000};
 
-    float y = vx.i;
+    float y = (float)vx.i;
 
     y *= 1.1920928955078125e-7f;
 
@@ -410,7 +410,7 @@ static inline float dt_fast_expf(const float x)
     const int i2 = 0x402DF854u; // 0x40000000u;
     // const int k = CLAMPS(i1 + x * (i2 - i1), 0x0u, 0x7fffffffu);
     // without max clamping (doesn't work for large x, but is faster):
-    const int k0 = i1 + x * (i2 - i1);
+    const int k0 = (int)(i1 + x * (i2 - i1));
     union float_int u;
     u.k = k0 > 0 ? k0 : 0;
     return u.f;
@@ -446,7 +446,7 @@ static inline float fast_mexp2f(const float x)
         float f;
         int i;
     } k;
-    k.i = k0 >= (float)0x800000u ? k0 : 0;
+    k.i = k0 >= (float)0x800000u ? (int)k0 : 0;
     return k.f;
 }
 

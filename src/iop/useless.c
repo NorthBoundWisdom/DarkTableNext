@@ -30,9 +30,11 @@
 // need to have temporary unfinished code that will hurt the
 // compiler.
 // THIS MUST be REMOVED before submitting a PR.
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 // This is an example implementation of an image operation module that
 // does nothing useful.  It demonstrates how the different functions

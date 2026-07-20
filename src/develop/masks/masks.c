@@ -25,7 +25,9 @@
 #include "develop/imageop.h"
 #include "develop/imageop_gui.h"
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wshadow"
+#endif
 
 dt_masks_form_t *dt_masks_dup_masks_form(const dt_masks_form_t *form)
 {
@@ -76,25 +78,28 @@ GList *dt_masks_dup_forms_deep(GList *forms, dt_masks_form_t *form)
 
 static int _get_opacity(const dt_masks_form_gui_t *gui, const dt_masks_form_t *form)
 {
-    const dt_masks_point_group_t *fpt = g_list_nth_data(form->points, gui->group_edited);
-    const dt_masks_form_t *sel = dt_masks_get_from_id(darktable.develop, fpt->formid);
+    const dt_masks_point_group_t *selected_point =
+        g_list_nth_data(form->points, gui->group_edited);
+    const dt_masks_form_t *sel =
+        dt_masks_get_from_id(darktable.develop, selected_point->formid);
     if (!sel)
         return 0;
 
     const dt_mask_id_t formid = sel->formid;
 
     // look for apacity
-    const dt_masks_form_t *grp = dt_masks_get_from_id(darktable.develop, fpt->parentid);
+    const dt_masks_form_t *grp =
+        dt_masks_get_from_id(darktable.develop, selected_point->parentid);
     if (!grp || !(grp->type & DT_MASKS_GROUP))
         return 0;
 
     int opacity = 0;
     for (GList *fpts = grp->points; fpts; fpts = g_list_next(fpts))
     {
-        const dt_masks_point_group_t *fpt = fpts->data;
-        if (fpt->formid == formid)
+        const dt_masks_point_group_t *group_point = fpts->data;
+        if (group_point->formid == formid)
         {
-            opacity = fpt->opacity * 100;
+            opacity = group_point->opacity * 100;
             break;
         }
     }

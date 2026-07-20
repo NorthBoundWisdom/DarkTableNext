@@ -153,19 +153,19 @@ static inline void transpose_3x3_to_3xSSE(const float input[9], dt_colormatrix_t
 // convert a 3x3 matrix into the padded format optimized for vectorization
 static inline void repack_double3x3_to_3xSSE(const double input[9], dt_colormatrix_t output)
 {
-    output[0][0] = input[0];
-    output[0][1] = input[1];
-    output[0][2] = input[2];
+    output[0][0] = (float)input[0];
+    output[0][1] = (float)input[1];
+    output[0][2] = (float)input[2];
     output[0][3] = 0.0f;
 
-    output[1][0] = input[3];
-    output[1][1] = input[4];
-    output[1][2] = input[5];
+    output[1][0] = (float)input[3];
+    output[1][1] = (float)input[4];
+    output[1][2] = (float)input[5];
     output[1][3] = 0.0f;
 
-    output[2][0] = input[6];
-    output[2][1] = input[7];
-    output[2][2] = input[8];
+    output[2][0] = (float)input[6];
+    output[2][1] = (float)input[7];
+    output[2][2] = (float)input[8];
     output[2][3] = 0.0f;
 
     for (size_t c = 0; c < 4; c++)

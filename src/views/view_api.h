@@ -30,7 +30,9 @@ struct dt_view_t;
 
 /* early definition of modules to do type checking */
 
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 
 #endif // FULL_API_H
 
@@ -77,7 +79,9 @@ DT_MODULE_API_OPTIONAL(GSList *, mouse_actions, const struct dt_view_t *self);
 
 #ifdef FULL_API_H
 
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 
 G_END_DECLS
 

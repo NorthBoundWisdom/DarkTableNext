@@ -19,7 +19,7 @@
 #include "common/atomic.h"
 
 extern inline void dt_atomic_set_int(dt_atomic_int *var, int value);
-extern inline int dt_atomic_get_int(dt_atomic_int *var);
+extern inline int dt_atomic_get_int(const dt_atomic_int *var);
 extern inline int dt_atomic_add_int(dt_atomic_int *var, int incr);
 extern inline int dt_atomic_sub_int(dt_atomic_int *var, int decr);
 extern inline int dt_atomic_exch_int(dt_atomic_int *var, int value);

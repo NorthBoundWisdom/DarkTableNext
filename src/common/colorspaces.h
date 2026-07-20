@@ -288,24 +288,24 @@ static inline void rgb2hsl(const dt_aligned_pixel_t rgb, float *h, float *s, flo
     const float pmin = min3f(rgb);
     const float delta = (pmax - pmin);
 
-    float hv = 0, sv = 0, lv = (pmin + pmax) / 2.0;
+    float hv = 0.0f, sv = 0.0f, lv = (pmin + pmax) / 2.0f;
 
     if (delta != 0.0f)
     {
-        sv = lv < 0.5 ? delta / fmaxf(pmax + pmin, 1.52587890625e-05f) :
-                        delta / fmaxf(2.0 - pmax - pmin, 1.52587890625e-05f);
+        sv = lv < 0.5f ? delta / fmaxf(pmax + pmin, 1.52587890625e-05f) :
+                         delta / fmaxf(2.0f - pmax - pmin, 1.52587890625e-05f);
 
         if (pmax == r)
             hv = (g - b) / delta;
         else if (pmax == g)
-            hv = 2.0 + (b - r) / delta;
+            hv = 2.0f + (b - r) / delta;
         else if (pmax == b)
-            hv = 4.0 + (r - g) / delta;
-        hv /= 6.0;
-        if (hv < 0.0)
-            hv += 1.0;
-        else if (hv > 1.0)
-            hv -= 1.0;
+            hv = 4.0f + (r - g) / delta;
+        hv /= 6.0f;
+        if (hv < 0.0f)
+            hv += 1.0f;
+        else if (hv > 1.0f)
+            hv -= 1.0f;
     }
     *h = hv;
     *s = sv;
@@ -328,14 +328,14 @@ static inline float hue2rgb(float m1, float m2, float hue)
 
 static inline void hsl2rgb(dt_aligned_pixel_t rgb, float h, const float s, const float l)
 {
-    if (s == 0)
+    if (s == 0.0f)
     {
         rgb[0] = rgb[1] = rgb[2] = l;
         rgb[3] = 0.0f;
         return;
     }
-    const float m2 = l < 0.5 ? l * (1.0 + s) : l + s - l * s;
-    const float m1 = (2.0 * l - m2);
+    const float m2 = l < 0.5f ? l * (1.0f + s) : l + s - l * s;
+    const float m1 = (2.0f * l - m2);
     h *= 6.0f; // pre-scale hue angle
     rgb[0] = hue2rgb(m1, m2, h < 4.0f ? h + 2.0f : h - 4.0f);
     rgb[1] = hue2rgb(m1, m2, h);

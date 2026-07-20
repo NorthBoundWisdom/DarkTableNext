@@ -1,6 +1,13 @@
 set(DARKTABLE_SOURCE_ROOTS_DIR "${CMAKE_SOURCE_DIR}/build/dependency_source_roots" CACHE PATH
     "FreeCM materialized dependency source roots")
 
+if(MSVC)
+  # Dependency sources are managed by FreeCM and are not part of the
+  # DarkTableNext warning baseline. Their public headers are still consumed as
+  # external includes by first-party targets.
+  add_compile_options(/w)
+endif()
+
 function(dt_resolve_freecm_source_root output_variable cache_variable environment_variable repository_name required_path)
   set(_source_root "")
 
@@ -151,6 +158,15 @@ set(CMAKE_INSTALL_DATAROOTDIR_SAVE "${CMAKE_INSTALL_DATAROOTDIR}")
 set(CMAKE_INSTALL_DATAROOTDIR "${CMAKE_INSTALL_DATAROOTDIR}/darktable")
 
 add_subdirectory("${RAWSPEED_PATH}" ${DARKTABLE_LIBDIR}/rawspeed)
+
+# RawSpeed's public headers are dependency code as well. Mark the include paths
+# as system paths when they propagate into DarkTableNext targets so the project
+# warning baseline remains scoped to first-party sources.
+get_target_property(_rawspeed_interface_includes rawspeed INTERFACE_INCLUDE_DIRECTORIES)
+if(_rawspeed_interface_includes)
+  set_property(TARGET rawspeed APPEND PROPERTY
+               INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_rawspeed_interface_includes}")
+endif()
 
 # Copying rawspeed resources to where dt expects them
 add_custom_target("deploy" ALL)

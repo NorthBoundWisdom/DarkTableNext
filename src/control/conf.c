@@ -715,13 +715,10 @@ int dt_confgen_get_int(const char *name, const dt_confgen_value_kind_t kind)
         {
         case DT_MIN:
             return INT_MIN;
-            break;
         case DT_MAX:
             return INT_MAX;
-            break;
         default:
             return 0;
-            break;
         }
     }
     const char *str = dt_confgen_get(name, kind);
@@ -733,15 +730,11 @@ int dt_confgen_get_int(const char *name, const dt_confgen_value_kind_t kind)
     {
     case DT_MIN:
         return _conf_isnan(value) ? INT_MIN : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     case DT_MAX:
         return _conf_isnan(value) ? INT_MAX : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     default:
         return _conf_isnan(value) ? 0.0f : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     }
-    return (int)value;
 }
 
 int64_t dt_confgen_get_int64(const char *name, const dt_confgen_value_kind_t kind)
@@ -753,13 +746,10 @@ int64_t dt_confgen_get_int64(const char *name, const dt_confgen_value_kind_t kin
         {
         case DT_MIN:
             return INT64_MIN;
-            break;
         case DT_MAX:
             return INT64_MAX;
-            break;
         default:
             return 0;
-            break;
         }
     }
     const char *str = dt_confgen_get(name, kind);
@@ -771,15 +761,11 @@ int64_t dt_confgen_get_int64(const char *name, const dt_confgen_value_kind_t kin
     {
     case DT_MIN:
         return _conf_isnan(value) ? INT64_MIN : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     case DT_MAX:
         return _conf_isnan(value) ? INT64_MAX : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     default:
         return _conf_isnan(value) ? 0.0f : (value > 0 ? value + 0.5f : value - 0.5f);
-        break;
     }
-    return (int64_t)value;
 }
 
 gboolean dt_confgen_get_bool(const char *name, const dt_confgen_value_kind_t kind)

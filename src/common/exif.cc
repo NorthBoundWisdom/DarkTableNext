@@ -37,10 +37,14 @@
 #include <string>
 
 // Exiv2 headers trigger a shadow warning under the project's strict warning policy.
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#endif
 #include <exiv2/exiv2.hpp>
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 
 #include "control/control.h"
 
@@ -554,7 +558,7 @@ static void _deleteXmpTag(Exiv2::XmpData &xmp, const char *tag)
             pos = xmp.erase(pos);
         }
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
         // The only exception we may get is "invalid" tag, which is not
         // important enough to either stop the function, or even display
@@ -594,7 +598,7 @@ static void _remove_exif_keys(Exiv2::ExifData &exif, const char *keys[], const u
             while ((pos = exif.findKey(Exiv2::ExifKey(keys[i]))) != exif.end())
                 exif.erase(pos);
         }
-        catch (const Exiv2::AnyError &e)
+        catch (const Exiv2::AnyError &)
         {
             // The only exception we may get is "invalid" tag, which is not
             // important enough to either stop the function, or even display
@@ -614,7 +618,7 @@ static void _remove_xmp_keys(Exiv2::XmpData &xmp, const char *keys[], const unsi
             while ((pos = xmp.findKey(Exiv2::XmpKey(keys[i]))) != xmp.end())
                 xmp.erase(pos);
         }
-        catch (const Exiv2::AnyError &e)
+        catch (const Exiv2::AnyError &)
         {
             // The only exception we may get is "invalid" tag, which is not
             // important enough to either stop the function, or even display
@@ -3158,7 +3162,7 @@ unsigned char *dt_exif_xmp_decode(const char *input, const int len, int *output_
         // Do the actual uncompress step
         int result = Z_BUF_ERROR;
         uLongf bufLen = factor * compressed_size;
-        uLongf destLen;
+        uLongf destLen = 0;
 
         // We know the actual compression factor but if that fails we retry with
         // increasing buffer sizes, eg. we don't know (unlikely) factors > 99.
@@ -4176,7 +4180,7 @@ static void _set_xmp_dt_metadata(Exiv2::XmpData &xmpData, const dt_imgid_t imgid
                 else
                     xmpData[metadata->tagname] = sqlite3_column_text(stmt, 1);
             }
-            catch (const Exiv2::AnyError &e)
+            catch (const Exiv2::AnyError &)
             {
                 // ignore invalid tags
             }
@@ -4555,7 +4559,7 @@ static void _remove_xmp_key(Exiv2::XmpData &xmp, const char *key)
         if (pos != xmp.end())
             xmp.erase(pos);
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
     }
 }
@@ -4573,7 +4577,7 @@ static void _remove_xmp_keys(Exiv2::XmpData &xmpData, const char *key)
                 ++i;
         }
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
     }
 }
@@ -4586,7 +4590,7 @@ static void _remove_exif_key(Exiv2::ExifData &exif, const char *key)
         if (pos != exif.end())
             exif.erase(pos);
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
     }
 }
@@ -4599,7 +4603,7 @@ static void _remove_iptc_key(Exiv2::IptcData &iptc, const char *key)
         while ((pos = iptc.findKey(Exiv2::IptcKey(key))) != iptc.end())
             iptc.erase(pos);
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
     }
 }
@@ -4926,7 +4930,7 @@ gboolean dt_exif_xmp_attach_export(const dt_imgid_t imgid, const char *filename,
                         else if (g_str_has_prefix(md->tagname, "Exif."))
                             exifData[md->tagname] = value;
                     }
-                    catch (const Exiv2::AnyError &e)
+                    catch (const Exiv2::AnyError &)
                     {
                         // ignore invalid tags
                     }
@@ -5313,7 +5317,7 @@ void dt_exif_init()
     {
         Exiv2::XmpProperties::propertyList("lr");
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
         // If Lightroom is not known register it.
         Exiv2::XmpProperties::registerNs("http://ns.adobe.com/lightroom/1.0/", "lr");
@@ -5322,7 +5326,7 @@ void dt_exif_init()
     {
         Exiv2::XmpProperties::propertyList("exifEX");
     }
-    catch (const Exiv2::AnyError &e)
+    catch (const Exiv2::AnyError &)
     {
         // If exifEX is not known register it.
         Exiv2::XmpProperties::registerNs("http://cipa.jp/exif/1.0/", "exifEX");

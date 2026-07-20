@@ -144,7 +144,10 @@ void dt_iop_clip_and_zoom(float *out, const float *const in, const dt_iop_roi_t 
     const dt_interpolation_t *itor = dt_interpolation_new(DT_INTERPOLATION_USERPREF);
     float *linear = gamma ? dt_alloc_align_float((size_t)roi_in->width * roi_in->height * 4) : NULL;
     if (!linear)
-        return dt_interpolation_resample(itor, out, roi_out, in, roi_in);
+    {
+        dt_interpolation_resample(itor, out, roi_out, in, roi_in);
+        return;
+    }
 
     static const dt_aligned_pixel_t two_point_four = {2.4f, 2.4f, 2.4f, 2.4f};
     static const dt_aligned_pixel_t rev_two_point_four = {1.0f / 2.4f, 1.0f / 2.4f, 1.0f / 2.4f,

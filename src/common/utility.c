@@ -852,9 +852,9 @@ gchar *dt_util_normalize_path(const gchar *_input)
         g_free(filename);
         return NULL;
     }
-#endif
-
+#else
     return filename;
+#endif
 }
 
 #ifdef WIN32

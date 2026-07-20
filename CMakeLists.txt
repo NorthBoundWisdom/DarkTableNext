@@ -36,6 +36,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Tests are opt-in: application presets must not pull test-only dependencies
 # or assets into a normal configure/build.
 option(BUILD_TESTING "Build DarkTableNext tests" OFF)
+option(DT_MSVC_STRICT_CONVERSIONS
+       "Enable broad MSVC implicit numeric conversion diagnostics" OFF)
 
 # Loadable modules validate their own DT_MODULE_VERSION at runtime. Re-linking every
 # module for a private lib_darktable implementation change only rewrites the module
@@ -47,6 +49,7 @@ option(DT_MODULE_RELINK_ON_CORE_CHANGE
 
 function(dt_module_configure_link_dependencies target)
   set_property(GLOBAL APPEND PROPERTY DT_LOADABLE_MODULE_TARGETS ${target})
+  dt_target_enable_warnings(${target})
   if(NOT DT_MODULE_RELINK_ON_CORE_CHANGE)
     set_property(TARGET ${target} PROPERTY LINK_DEPENDS_NO_SHARED TRUE)
   endif()
@@ -63,7 +66,8 @@ if(MSVC)
   add_compile_options("/FI${CMAKE_CURRENT_SOURCE_DIR}/src/win_msvc_compat.h" /EHsc /Zc:preprocessor
                       /utf-8
                       "$<$<COMPILE_LANGUAGE:C>:/experimental:c11atomics>")
-  add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0)
+  add_compile_definitions(_CRT_NONSTDC_NO_DEPRECATE _CRT_SECURE_NO_WARNINGS
+                          _ITERATOR_DEBUG_LEVEL=0)
   if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_definitions(DT_MSVC_NO_C99_COMPLEX)
   endif()

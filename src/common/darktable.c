@@ -364,7 +364,6 @@ static void _switch_to_new_filmroll(const gchar *input)
             dirname = g_strdup(filename);
         else
             dirname = g_path_get_dirname((const gchar *)filename);
-        dt_filmid_t filmid = NO_FILMID;
         /* initialize a film object*/
         dt_film_t *film = malloc(sizeof(dt_film_t));
         dt_film_init(film);

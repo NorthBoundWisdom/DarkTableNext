@@ -23,6 +23,11 @@
 
 G_BEGIN_DECLS
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// Flexible array members are C99; MSVC supports them as a documented extension.
+#pragma warning(disable : 4200)
+#endif
 typedef struct dt_dng_gain_map_t
 {
     uint32_t top;
@@ -42,6 +47,9 @@ typedef struct dt_dng_gain_map_t
     uint32_t map_planes;
     float map_gain[];
 } dt_dng_gain_map_t;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 void dt_dng_opcode_process_opcode_list_2(uint8_t *buf, uint32_t size, dt_image_t *img);
 void dt_dng_opcode_process_opcode_list_3(uint8_t *buf, uint32_t size, dt_image_t *img);

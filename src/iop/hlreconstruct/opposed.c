@@ -66,15 +66,18 @@ static inline char _mask_dilated(const char *in, const size_t w1)
     if (in[0])
         return 1;
 
-    if (in[-w1 - 1] | in[-w1] | in[-w1 + 1] | in[-1] | in[1] | in[w1 - 1] | in[w1] | in[w1 + 1])
+    const ptrdiff_t stride = (ptrdiff_t)w1;
+    if (in[-stride - 1] | in[-stride] | in[-stride + 1] | in[-1] | in[1] | in[stride - 1] |
+        in[stride] | in[stride + 1])
         return 1;
 
-    const size_t w2 = 2 * w1;
-    const size_t w3 = 3 * w1;
+    const ptrdiff_t w2 = 2 * stride;
+    const ptrdiff_t w3 = 3 * stride;
     return (in[-w3 - 2] | in[-w3 - 1] | in[-w3] | in[-w3 + 1] | in[-w3 + 2] | in[-w2 - 3] |
             in[-w2 - 2] | in[-w2 - 1] | in[-w2] | in[-w2 + 1] | in[-w2 + 2] | in[-w2 + 3] |
-            in[-w1 - 3] | in[-w1 - 2] | in[-w1 + 2] | in[-w1 + 3] | in[-3] | in[-2] | in[2] |
-            in[3] | in[w1 - 3] | in[w1 - 2] | in[w1 + 2] | in[w1 + 3] | in[w2 - 3] | in[w2 - 2] |
+            in[-stride - 3] | in[-stride - 2] | in[-stride + 2] | in[-stride + 3] | in[-3] |
+            in[-2] | in[2] | in[3] | in[stride - 3] | in[stride - 2] | in[stride + 2] |
+            in[stride + 3] | in[w2 - 3] | in[w2 - 2] |
             in[w2 - 1] | in[w2] | in[w2 + 1] | in[w2 + 2] | in[w2 + 3] | in[w3 - 2] | in[w3 - 1] |
             in[w3] | in[w3 + 1] | in[w3 + 2]) ?
                1 :

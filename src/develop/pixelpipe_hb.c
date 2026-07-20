@@ -378,7 +378,10 @@ static void get_output_format(dt_iop_module_t *module, dt_dev_pixelpipe_t *pipe,
                               dt_iop_buffer_dsc_t *dsc)
 {
     if (module)
-        return module->output_format(module, pipe, piece, dsc);
+    {
+        module->output_format(module, pipe, piece, dsc);
+        return;
+    }
 
     // first input.
     *dsc = pipe->image.buf_dsc;

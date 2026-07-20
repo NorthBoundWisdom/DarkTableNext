@@ -275,7 +275,7 @@ static float _calcRadiusMono(const float *in, const int width, const int height)
 static float _calcRadiusXtrans(const float *in, const int width, const int height,
                                const uint8_t (*const xtrans)[6])
 {
-    int startx, starty;
+    int startx = 6, starty = 6;
     gboolean found = FALSE;
     for (starty = 6; starty < 12 && !found; starty++)
     {

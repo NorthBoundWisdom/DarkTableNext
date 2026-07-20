@@ -33,7 +33,9 @@ G_BEGIN_DECLS
 
 /* early definition of modules to do type checking */
 
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 
 #endif // FULL_API_H
 
@@ -87,7 +89,9 @@ DT_MODULE_API_OPTIONAL(int, read_image, struct dt_imageio_module_data_t *data, u
 
 #ifdef FULL_API_H
 
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 
 G_END_DECLS
 

@@ -222,7 +222,7 @@ static inline float extrapolate_lut(const float *const lut, const float v, const
 {
     // TODO: check if optimization is worthwhile!
     const float ft = CLAMPS(v * (lutsize - 1), 0, lutsize - 1);
-    const int t = (ft < lutsize - 2) ? ft : lutsize - 2;
+    const int t = (ft < lutsize - 2) ? (int)ft : lutsize - 2;
     const float f = ft - t;
     const float l1 = lut[t];
     const float l2 = lut[t + 1];

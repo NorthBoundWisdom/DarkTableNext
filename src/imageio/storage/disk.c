@@ -223,6 +223,11 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata,
     // we're potentially called in parallel. have sequence number synchronized:
     dt_pthread_mutex_lock(&darktable.plugin_threadsafe);
     {
+        char *output_dir = NULL;
+        const char *ext = NULL;
+        char *c = NULL;
+        size_t filename_free_space = 0;
+
     try_again:
         // avoid braindead export which is bound to overwrite at random:
         if (variable_expand && total > 1 && !g_strrstr(pattern, "$"))
@@ -268,7 +273,7 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata,
         }
 
         // get the directory path of the output file
-        char *output_dir = g_path_get_dirname(filename);
+        output_dir = g_path_get_dirname(filename);
 
         // try to create the output directory (including parent
         // directories, if necessary)
@@ -292,9 +297,9 @@ int store(dt_imageio_module_storage_t *self, dt_imageio_module_data_t *sdata,
             goto failed;
         }
 
-        const char *ext = format->extension(fdata);
-        char *c = filename + strlen(filename);
-        size_t filename_free_space = sizeof(filename) - (c - filename);
+        ext = format->extension(fdata);
+        c = filename + strlen(filename);
+        filename_free_space = sizeof(filename) - (c - filename);
         snprintf(c, filename_free_space, ".%s", ext);
 
     /* prevent overwrite of files */

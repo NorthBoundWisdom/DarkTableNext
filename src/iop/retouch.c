@@ -3088,7 +3088,7 @@ static void _retouch_blur(dt_iop_module_t *self, float *const in, dt_iop_roi_t *
             dt_bilateral_init(roi_mask_scaled->width, roi_mask_scaled->height, sigma_s, sigma_r);
         if (b)
         {
-            int converted_cst;
+            dt_iop_colorspace_type_t converted_cst;
             const dt_iop_order_iccprofile_info_t *const work_profile =
                 dt_ioppr_get_pipe_work_profile_info(piece->pipe);
 

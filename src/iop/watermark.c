@@ -436,7 +436,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     cairo_surface_t *surface_two = NULL;
 
     /* get the dimension of svg or png */
-    RsvgDimensionData dimension;
+    RsvgDimensionData dimension = {0};
     switch (type)
     {
     case DT_WTM_SVG:

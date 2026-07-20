@@ -14,7 +14,9 @@
 #ifndef DT_CONFGEN_H
 #define DT_CONFGEN_H
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
 
 #include "control/conf.h"
 

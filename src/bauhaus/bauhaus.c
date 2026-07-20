@@ -149,8 +149,16 @@ enum
     //DT_ACTION_ELEMENT_BUTTON = 1,
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
+#pragma warning(disable : 4132)
+#endif
 static const dt_action_def_t _action_def_slider, _action_def_combo, _action_def_focus_slider,
     _action_def_focus_combo, _action_def_focus_button;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 // INNER_PADDING is the horizontal space between slider and quad
 // and vertical space between labels and slider baseline

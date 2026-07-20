@@ -576,7 +576,7 @@ static void _draw_color_picker(dt_iop_module_t *self, cairo_t *cr, dt_iop_colorz
             const dt_iop_order_iccprofile_info_t *const work_profile =
                 dt_ioppr_get_iop_work_profile_info(self, self->dev->iop);
             dt_aligned_pixel_t pick_mean, pick_min, pick_max;
-            int converted_cst;
+            dt_iop_colorspace_type_t converted_cst;
 
             if (work_profile && histogram_profile)
             {

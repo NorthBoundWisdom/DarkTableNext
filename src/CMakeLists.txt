@@ -231,8 +231,8 @@ endif()
 # Find all other required libraries for building
 #
 # GTK3 does pull glib, but this allows us to check for the version
-find_package(Glib 2.56 REQUIRED)
-add_definitions("-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_56")
+find_package(Glib 2.58 REQUIRED)
+add_definitions("-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_58")
 add_definitions("-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_MIN_REQUIRED")
 include_directories(SYSTEM ${Glib_INCLUDE_DIRS})
 list(APPEND LIBS ${Glib_LIBRARIES})
@@ -368,27 +368,33 @@ endif()
 
 include(march-mtune)
 
-# -g is kept in every build so crash reports retain useful symbols.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+if(MSVC)
+  # Keep compiler debug information in every configuration for useful crash
+  # reports. CMake's configuration defaults already select the matching MSVC
+  # optimization level, so do not append ignored GNU optimization flags.
+  add_compile_options(/Zi)
+else()
+  # -g is kept in every build so crash reports retain useful symbols.
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MARCH} -g")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MARCH} -g")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -ftree-vectorize")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
-# These are compilation semantics, not linker options. Keeping them out of
-# CMAKE_<LANG>_FLAGS_RELEASE prevents Clang from warning about
-# -fno-finite-math-only on every macOS link command.
-add_compile_options(
-  "$<$<CONFIG:Release>:-ffast-math>"
-  "$<$<CONFIG:Release>:-fno-finite-math-only>"
-)
+  # These are compilation semantics, not linker options. Keeping them out of
+  # CMAKE_<LANG>_FLAGS_RELEASE prevents Clang from warning about
+  # -fno-finite-math-only on every macOS link command.
+  add_compile_options(
+    "$<$<CONFIG:Release>:-ffast-math>"
+    "$<$<CONFIG:Release>:-fno-finite-math-only>"
+  )
+endif()
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+add_compile_definitions("$<$<CONFIG:Debug>:_DEBUG>")
 
 #
 # Generate config.h
@@ -605,6 +611,13 @@ else()
                         RUNTIME_OUTPUT_DIRECTORY "${DARKTABLE_BINDIR}")
 endif()
 target_link_libraries(darktable lib_darktable)
+
+foreach(_darktable_target lib_darktable darktable darktable-cli darktable-test-variables)
+  if(TARGET ${_darktable_target})
+    dt_target_enable_warnings(${_darktable_target})
+  endif()
+endforeach()
+
 if(APPLE)
   # The installed application loads its core library from the same bundle.  The
   # relative module rpaths keep their existing layout when lib/darktable is

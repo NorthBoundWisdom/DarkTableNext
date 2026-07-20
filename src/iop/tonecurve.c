@@ -57,7 +57,15 @@ static gboolean dt_iop_tonecurve_leave_notify(GtkWidget *widget, GdkEventCrossin
                                               dt_iop_module_t *self);
 static gboolean dt_iop_tonecurve_key_press(GtkWidget *widget, GdkEventKey *event,
                                            dt_iop_module_t *self);
+#ifdef _MSC_VER
+#pragma warning(push)
+// MSVC diagnoses file-scope const tentative definitions used as forward declarations.
+#pragma warning(disable : 4132)
+#endif
 static const dt_action_def_t _action_def_tonecurve;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 static gboolean _tonecurve_context_menu_provider(GtkWidget *widget, const GdkEventButton *event,
                                                   gpointer user_data);
 

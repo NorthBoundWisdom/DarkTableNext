@@ -1429,10 +1429,6 @@ GList *dt_image_find_duplicates(const char *filename)
     //   digit) and filter out the false positives afterward
     // start by locating the extension, which we'll be referencing multiple times
     const size_t fn_len = strlen(filename);
-    const char *ext = strrchr(filename, '.'); // find last dot
-    if (!ext)
-        ext = filename;
-    const size_t ext_offset = ext - filename;
 
     gchar pattern[PATH_MAX] = {0};
     GList *files = NULL;
@@ -1508,6 +1504,11 @@ GList *dt_image_find_duplicates(const char *filename)
         g_free(basename);
         g_free(directory);
 #else
+        const char *ext = strrchr(filename, '.'); // find last dot
+        if (!ext)
+            ext = filename;
+        const size_t ext_offset = ext - filename;
+
         // add GLOB.ext.xmp to the root of the basename
         g_strlcpy(pattern + ext_offset, glob_pattern, sizeof(pattern) - fn_len);
         g_strlcpy(pattern + ext_offset + gp_len, ext, sizeof(pattern) - ext_offset - gp_len);

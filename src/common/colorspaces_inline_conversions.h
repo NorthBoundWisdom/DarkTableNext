@@ -254,8 +254,8 @@ static inline void dt_D50_XYZ_to_xyY(const dt_aligned_pixel_t sXYZ, dt_aligned_p
     dt_vector_max(XYZ, sXYZ, zero);
 
     const float sum = XYZ[0] + XYZ[1] + XYZ[2];
-    xyY[0] = (sum > 0.0f) ? XYZ[0] / sum : D50xyY.x;
-    xyY[1] = (sum > 0.0f) ? XYZ[1] / sum : D50xyY.y;
+    xyY[0] = (sum > 0.0f) ? XYZ[0] / sum : (float)D50xyY.x;
+    xyY[1] = (sum > 0.0f) ? XYZ[1] / sum : (float)D50xyY.y;
     xyY[2] = XYZ[1];
 }
 

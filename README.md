@@ -65,8 +65,14 @@ Useful macOS presets are `mac_clang_debug`, `mac_clang_release`,
 `mac_gcc_debug`, and `mac_gcc_release`; Windows provides matching
 `win_msvc_debug` and `win_msvc_release` presets. Linux may be configured with
 the generated host preset or a normal out-of-tree CMake build after the pinned
-dependencies have been materialised. Configure the macOS release preset and
-build the packaging target to produce a local DMG:
+dependencies have been materialised.
+
+MSVC first-party targets use an actionable `/W4` baseline. The normal build
+matches the GCC/Clang policy by leaving broad numeric conversion diagnostics to
+a dedicated audit; enable them with `-DDT_MSVC_STRICT_CONVERSIONS=ON`.
+
+Configure the macOS release preset and build the packaging target to produce a
+local DMG:
 
 ```sh
 cmake --preset mac_clang_release

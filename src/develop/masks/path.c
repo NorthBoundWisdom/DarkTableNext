@@ -1052,10 +1052,10 @@ static int _path_find_self_intersection(dt_masks_dynbuf_t *inter,
 
                     // We want to check, if the new self-intersection partially
                     // or fully overlaps with any previous one.
-                    int prev_start;
-                    int prev_end;
-                    int prev_start_ord;
-                    int prev_end_ord;
+                    int prev_start = 0;
+                    int prev_end = 0;
+                    int prev_start_ord = 0;
+                    int prev_end_ord = 0;
 
                     // Loop over all previously found self-intersections
                     int n;
@@ -1284,7 +1284,7 @@ static int _path_get_pts_border(dt_develop_t *dev, dt_masks_form_t *form, const 
 
         dt_masks_dynbuf_add_2(dpoints, rc[0], rc[1]);
 
-        border_init[k * 6 + 4] = dborder ? -dt_masks_dynbuf_position(dborder) : 0;
+        border_init[k * 6 + 4] = dborder ? -(float)dt_masks_dynbuf_position(dborder) : 0;
 
         if (dborder)
         {

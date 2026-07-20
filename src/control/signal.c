@@ -85,6 +85,7 @@ static void _presets_changed_destroy_callback(gpointer instance, gpointer module
     g_free(module);
 }
 
+#undef G_CALLBACK
 #define G_CALLBACK(f) ((GCallback)(f))
 static dt_signal_description _signal_description[DT_SIGNAL_COUNT] = {
     /* Global signals */

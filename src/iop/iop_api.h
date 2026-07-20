@@ -53,7 +53,9 @@ extern "C"
 
     /* early definition of modules to do type checking */
 
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 
 #endif // FULL_API_H
 
@@ -253,7 +255,9 @@ extern "C"
 
 #ifdef FULL_API_H
 
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 
 #if defined(__cplusplus) && !defined(INCLUDE_API_FROM_MODULE_H)
 } // extern "C"

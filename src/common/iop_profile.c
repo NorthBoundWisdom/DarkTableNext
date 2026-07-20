@@ -265,7 +265,9 @@ static void _transform_rgb_to_rgb_lcms2(const float *const image_in, float *cons
 
 static void _transform_lcms2(struct dt_iop_module_t *self, const float *const image_in,
                              float *const image_out, const int width, const int height,
-                             const int cst_from, const int cst_to, int *converted_cst,
+                             const dt_iop_colorspace_type_t cst_from,
+                             const dt_iop_colorspace_type_t cst_to,
+                             dt_iop_colorspace_type_t *converted_cst,
                              const dt_iop_order_iccprofile_info_t *const profile_info)
 {
     *converted_cst = cst_to;

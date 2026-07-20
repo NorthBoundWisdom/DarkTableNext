@@ -83,11 +83,15 @@ int (*version)();
 #define DT_MODULE_API_DEFAULT(return_type, function_name, ...) return_type function_name(__VA_ARGS__)
 G_BEGIN_DECLS
 // these 2 functions are defined by DT_MODULE() macro.
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 // returns the version of dt's module interface at the time this module was build
-int dt_module_dt_version();
+int dt_module_dt_version(void);
 // returns the version of this module
-int dt_module_mod_version();
+int dt_module_mod_version(void);
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 G_END_DECLS
 #endif

@@ -577,7 +577,6 @@ static void _collection_update_aspect_ratio(const dt_collection_t *collection)
 
 const char *dt_collection_name_untranslated(const dt_collection_properties_t prop)
 {
-    char *col_name = NULL;
     switch (prop)
     {
     case DT_COLLECTION_PROP_FILMROLL:
@@ -651,7 +650,6 @@ const char *dt_collection_name_untranslated(const dt_collection_properties_t pro
     default:
         return NULL;
     }
-    return col_name;
 }
 
 const char *dt_collection_name(const dt_collection_properties_t prop)

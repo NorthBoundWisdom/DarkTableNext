@@ -333,7 +333,7 @@ static cmsCIEXYZ _temperature_tint_to_XYZ(double TempK, double tint)
 static void _XYZ_to_temperature(cmsCIEXYZ XYZ, float *TempK, float *tint)
 {
     double maxtemp = DT_IOP_HIGHEST_TEMPERATURE, mintemp = DT_IOP_LOWEST_TEMPERATURE;
-    cmsCIEXYZ _xyz;
+    cmsCIEXYZ _xyz = _temperature_to_XYZ((maxtemp + mintemp) / 2.0);
 
     for (*TempK = (maxtemp + mintemp) / 2.0; (maxtemp - mintemp) > 1.0;
          *TempK = (maxtemp + mintemp) / 2.0)

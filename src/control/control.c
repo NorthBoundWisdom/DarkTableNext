@@ -896,7 +896,7 @@ void dt_control_hinter_message(const char *message)
         return;
     dt_control_t *s = darktable.control;
     if (s && s->proxy.hinter.module)
-        return s->proxy.hinter.set_message(s->proxy.hinter.module, message);
+        s->proxy.hinter.set_message(s->proxy.hinter.module, message);
 }
 
 dt_imgid_t dt_control_get_mouse_over_id()

@@ -616,12 +616,12 @@ static void _vec_process(dt_scopes_mode_t *const self, const float *const input,
     for (size_t out_y = 0; out_y < diam_px; out_y++)
         for (size_t out_x = 0; out_x < diam_px; out_x++)
         {
-            const int count = binned[out_y * diam_px + out_x];
+            const int count = dt_atomic_get_int(&binned[out_y * diam_px + out_x]);
             const float intensity = lut[(int)(MIN(1.f, scale * count) * lutmax)];
             graph[out_y * out_stride + out_x] = intensity * 255.0f;
         }
 
-    dt_free_align(binned);
+    dt_free_align((void *)binned);
     self->update_counter = self->scopes->update_counter;
 }
 

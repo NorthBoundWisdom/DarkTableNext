@@ -35,7 +35,9 @@ enum dt_iop_color_intent_t;
 
 /* early definition of modules to do type checking */
 
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 
 #endif // FULL_API_H
 
@@ -98,7 +100,9 @@ DT_MODULE_API_OPTIONAL(gboolean, storage_login, struct dt_imageio_module_storage
 
 #ifdef FULL_API_H
 
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 
 G_END_DECLS
 

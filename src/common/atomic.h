@@ -28,7 +28,7 @@ inline void dt_atomic_set_int(dt_atomic_int *var, int value)
 {
     std::atomic_store(var, value);
 }
-inline int dt_atomic_get_int(dt_atomic_int *var)
+inline int dt_atomic_get_int(const dt_atomic_int *var)
 {
     return std::atomic_load(var);
 }
@@ -66,7 +66,7 @@ inline void dt_atomic_set_int(dt_atomic_int *var, int value)
 {
     atomic_store(var, value);
 }
-inline int dt_atomic_get_int(dt_atomic_int *var)
+inline int dt_atomic_get_int(const dt_atomic_int *var)
 {
     return atomic_load(var);
 }

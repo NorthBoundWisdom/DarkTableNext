@@ -35,8 +35,14 @@
 #ifndef DT_PREFERENCES_H
 #define DT_PREFERENCES_H
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4101 4189)
+#endif
 
 #include <gtk/gtk.h>
 #include "control/conf.h"
@@ -391,7 +397,12 @@ static void init_tab_generated(GtkWidget *dialog, GtkWidget *stack)
   <xsl:value-of select="$dialog_end" />
 
   <!-- closing credits -->
-  <xsl:text>&#xA;#endif&#xA;</xsl:text>
+  <xsl:text><![CDATA[
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+#endif
+]]></xsl:text>
 
 </xsl:template>
 

@@ -924,7 +924,7 @@ static char *_variable_get_value(dt_variables_params_t *params, char **variable)
             if (start && **variable == ':')
             {
                 (*variable)++;
-                const size_t start_utf8_length = g_utf8_strlen(start, -1);
+                const glong start_utf8_length = g_utf8_strlen(start, -1);
                 const int length = strtol(*variable, variable, 10);
                 if (length >= 0)
                     end = g_utf8_offset_to_pointer(start, MIN(length, start_utf8_length));

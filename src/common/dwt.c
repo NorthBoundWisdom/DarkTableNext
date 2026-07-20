@@ -117,7 +117,7 @@ static void dwt_get_image_layer(float *const layer, dwt_params_t *const p)
 static void dwt_decompose_vert(float *const restrict out, const float *const restrict in,
                                const size_t height, const size_t width, const size_t lev)
 {
-    const size_t vscale = MIN(1 << lev, height - 1);
+    const size_t vscale = MIN((size_t)1 << lev, height - 1);
     DT_OMP_FOR()
     for (int rowid = 0; rowid < height; rowid++)
     {
@@ -151,7 +151,8 @@ static void dwt_decompose_horiz(float *const restrict out, float *const restrict
                                 float *const temp, size_t padded_size, const size_t height,
                                 const size_t width, const size_t lev)
 {
-    const int hscale = MIN(1 << lev, width); //(int because we need a signed difference below)
+    const int hscale = (int)MIN((size_t)1 << lev,
+                                width); //(int because we need a signed difference below)
     DT_OMP_FOR()
     for (int row = 0; row < height; row++)
     {
@@ -381,7 +382,7 @@ void dwt_decompose(dwt_params_t *p, _dwt_layer_func layer_func)
 static void dwt_denoise_vert_1ch(float *const restrict out, const float *const restrict in,
                                  const size_t height, const size_t width, const size_t lev)
 {
-    const int vscale = MIN(1 << lev, height);
+    const int vscale = (int)MIN((size_t)1 << lev, height);
     DT_OMP_FOR()
     for (int rowid = 0; rowid < height; rowid++)
     {
@@ -413,7 +414,7 @@ static void dwt_denoise_horiz_1ch(float *const restrict out, float *const restri
                                   const size_t width, const size_t lev, const float thold,
                                   const int last)
 {
-    const int hscale = MIN(1 << lev, width);
+    const int hscale = (int)MIN((size_t)1 << lev, width);
     DT_OMP_FOR()
     for (int row = 0; row < height; row++)
     {

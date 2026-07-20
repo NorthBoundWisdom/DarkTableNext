@@ -3654,7 +3654,7 @@ static cl_event *_opencl_events_get_slot(const int devid, const char *tag)
     if (!cl->dev[devid].use_events)
         return NULL;
 
-    static const cl_event zeroevent[1]; // implicitly initialized to zero
+    static const cl_event zeroevent[1] = {0};
     cl_event **eventlist = &(cl->dev[devid].eventlist);
     dt_opencl_eventtag_t **eventtags = &(cl->dev[devid].eventtags);
     int *numevents = &(cl->dev[devid].numevents);
@@ -3791,7 +3791,7 @@ static void _opencl_events_wait_for(const int devid)
     if (!cl->dev[devid].use_events)
         return;
 
-    static const cl_event zeroevent[1]; // implicitly initialized to zero
+    static const cl_event zeroevent[1] = {0};
     cl_event **eventlist = &(cl->dev[devid].eventlist);
     int *numevents = &(cl->dev[devid].numevents);
     int *lostevents = &(cl->dev[devid].lostevents);

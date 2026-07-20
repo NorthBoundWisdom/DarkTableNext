@@ -40,7 +40,7 @@ typedef struct dt_shortcut_t
 
     dt_input_device_t key_device;
     guint key;
-    guint mods;
+    GdkModifierType mods;
     guint press : 3;
     guint button : 3;
     guint click : 3;
@@ -902,7 +902,7 @@ static gchar *_shortcut_key_move_name(dt_input_device_t id, guint key_or_move, g
                 post_name = without_device;
             else
             {
-                char id_str[2] = "\0\0";
+                char id_str[2] = {0};
                 if (id)
                     id_str[0] = '0' + id;
 
@@ -3560,10 +3560,13 @@ static void _shortcuts_load(const gchar *shortcuts_file, dt_input_device_t file_
                             const dt_input_driver_definition_t *callbacks = driver->data;
                             if (!g_ascii_strcasecmp(token, callbacks->name))
                             {
-                                if (!callbacks->string_to_move(move_start, &s.move))
+                                guint move = 0;
+                                if (!callbacks->string_to_move(move_start, &move))
                                     dt_print(DT_DEBUG_ALWAYS,
                                              "[dt_shortcuts_load] move not recognised in %s",
                                              move_start);
+                                else
+                                    s.move = (dt_shortcut_move_t)move;
 
                                 s.move_device = id;
                                 break;
@@ -3883,9 +3886,11 @@ static gboolean _shortcut_match(dt_shortcut_t *f, gchar **fb_log)
         {
             dt_input_driver_definition_t *callbacks = driver->data;
 
+            guint move = f->move;
             if (callbacks->key_to_move &&
-                callbacks->key_to_move(callbacks->module, f->key_device, f->key, &f->move))
+                callbacks->key_to_move(callbacks->module, f->key_device, f->key, &move))
             {
+                f->move = (dt_shortcut_move_t)move;
                 f->move_device = f->key_device;
                 f->key_device = 0;
                 f->key = 0;
@@ -4791,7 +4796,7 @@ gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_dat
         if ((middle_click || event->type == GDK_SCROLL) &&
             (s.action || (s.action = dt_action_widget(darktable.control->mapping_widget))))
         {
-            int delta;
+            int delta = 0;
             if (middle_click || dt_gui_get_scroll_unit_delta(&event->scroll, &delta))
             {
                 s.speed = middle_click ? -1 : powf(10.0f, delta);
@@ -5284,7 +5289,7 @@ void dt_action_define_preset(dt_action_t *action, const gchar *name)
     if (p)
     {
         p->type = DT_ACTION_TYPE_PRESET;
-        p->target = (gpointer)TRUE;
+        p->target = GINT_TO_POINTER(TRUE);
     }
 }
 

@@ -723,7 +723,7 @@ void gui_init(dt_lib_module_t *self)
 
     // must match order of dt_scopes_mode_type_t
     // FIXME: should these be defined in each scope mode, or in a register function call?
-    const void *dt_lib_histogram_scope_type_icons[DT_SCOPES_MODE_N] = {
+    const DTGTKCairoPaintIconFunc dt_lib_histogram_scope_type_icons[DT_SCOPES_MODE_N] = {
         dtgtk_cairo_paint_vectorscope, dtgtk_cairo_paint_waveform_scope,
         dtgtk_cairo_paint_split_waveform_vectorscope, dtgtk_cairo_paint_rgb_parade,
         dtgtk_cairo_paint_histogram_scope};

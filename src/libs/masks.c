@@ -33,7 +33,9 @@
 
 DT_MODULE(1)
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wshadow"
+#endif
 
 static void _lib_masks_recreate_list(dt_lib_module_t *self);
 static void _lib_masks_update_list(dt_lib_module_t *self);
@@ -1140,22 +1142,22 @@ static gboolean _show_tree_context_menu(GtkWidget *treeview, dt_lib_module_t *se
             // feature only meaningful for rows with prev/next.
 
             GtkTreeIter it;
-            GtkTreePath *item = gtk_tree_path_copy(it0);
-            gtk_tree_model_get_iter(model, &it, item);
+            GtkTreePath *selected_path = gtk_tree_path_copy(it0);
+            gtk_tree_model_get_iter(model, &it, selected_path);
             is_last_row = !gtk_tree_model_iter_next(model, &it);
 
-            if (!is_last_row && !gtk_tree_path_prev(item))
+            if (!is_last_row && !gtk_tree_path_prev(selected_path))
             {
                 is_first_row = TRUE;
             }
-            gtk_tree_path_free(item);
+            gtk_tree_path_free(selected_path);
         }
 
         for (const GList *items_iter = selected; items_iter; items_iter = g_list_next(items_iter))
         {
-            GtkTreePath *item = (GtkTreePath *)items_iter->data;
+            GtkTreePath *selected_path = (GtkTreePath *)items_iter->data;
 
-            if (gtk_tree_model_get_iter(model, &iter, item))
+            if (gtk_tree_model_get_iter(model, &iter, selected_path))
             {
                 dt_mask_id_t grid = INVALID_MASKID;
                 dt_mask_id_t id = INVALID_MASKID;
@@ -1225,10 +1227,11 @@ static gboolean _show_tree_context_menu(GtkWidget *treeview, dt_lib_module_t *se
                  modules = g_list_next(modules))
             {
                 dt_iop_module_t *m = modules->data;
-                dt_masks_form_t *grp = dt_masks_get_from_id(m->dev, m->blend_params->mask_id);
-                if (grp && (grp->type & DT_MASKS_GROUP))
+                dt_masks_form_t *module_group =
+                    dt_masks_get_from_id(m->dev, m->blend_params->mask_id);
+                if (module_group && (module_group->type & DT_MASKS_GROUP))
                 {
-                    for (const GList *pts = grp->points; pts; pts = g_list_next(pts))
+                    for (const GList *pts = module_group->points; pts; pts = g_list_next(pts))
                     {
                         dt_masks_point_group_t *pt = pts->data;
                         if (pt->formid == form->formid)
@@ -1272,8 +1275,8 @@ static gboolean _show_tree_context_menu(GtkWidget *treeview, dt_lib_module_t *se
 
     if (!from_group && nb > 0)
     {
-        dt_masks_form_t *grp = dt_masks_get_from_id(darktable.develop, grpid);
-        if (!(grp && (grp->type & DT_MASKS_GROUP)))
+        dt_masks_form_t *selected_group = dt_masks_get_from_id(darktable.develop, grpid);
+        if (!(selected_group && (selected_group->type & DT_MASKS_GROUP)))
         {
             if (nb == 1)
             {

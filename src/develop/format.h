@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "common/colorspaces.h"
 #include "common/darktable.h"
 
 struct dt_dev_pixelpipe_iop_t;
@@ -60,7 +61,7 @@ typedef struct dt_iop_buffer_dsc_t
     dt_aligned_pixel_t processed_maximum;
 
     /** colorspace of the image */
-    int cst;
+    dt_iop_colorspace_type_t cst;
 
 } dt_iop_buffer_dsc_t;
 
@@ -72,9 +73,12 @@ void default_input_format(struct dt_iop_module_t *self, struct dt_dev_pixelpipe_
 void default_output_format(struct dt_iop_module_t *self, struct dt_dev_pixelpipe_t *pipe,
                            struct dt_dev_pixelpipe_iop_t *piece, struct dt_iop_buffer_dsc_t *dsc);
 
-int default_input_colorspace(struct dt_iop_module_t *self, struct dt_dev_pixelpipe_t *pipe,
-                             struct dt_dev_pixelpipe_iop_t *piece);
-int default_output_colorspace(struct dt_iop_module_t *self, struct dt_dev_pixelpipe_t *pipe,
-                              struct dt_dev_pixelpipe_iop_t *piece);
-int default_blend_colorspace(struct dt_iop_module_t *self, struct dt_dev_pixelpipe_t *pipe,
-                             struct dt_dev_pixelpipe_iop_t *piece);
+dt_iop_colorspace_type_t default_input_colorspace(struct dt_iop_module_t *self,
+                                                  struct dt_dev_pixelpipe_t *pipe,
+                                                  struct dt_dev_pixelpipe_iop_t *piece);
+dt_iop_colorspace_type_t default_output_colorspace(struct dt_iop_module_t *self,
+                                                   struct dt_dev_pixelpipe_t *pipe,
+                                                   struct dt_dev_pixelpipe_iop_t *piece);
+dt_iop_colorspace_type_t default_blend_colorspace(struct dt_iop_module_t *self,
+                                                  struct dt_dev_pixelpipe_t *pipe,
+                                                  struct dt_dev_pixelpipe_iop_t *piece);

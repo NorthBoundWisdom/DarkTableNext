@@ -522,6 +522,8 @@ static inline int dt_pthread_rwlock_unlock(dt_pthread_rwlock_t *rwlock)
 static inline int dt_pthread_rwlock_rdlock_with_caller(dt_pthread_rwlock_t *rwlock,
                                                        const char *file, int line)
 {
+    (void)file;
+    (void)line;
     const int res = pthread_rwlock_rdlock(rwlock);
 #ifdef MUTEX_REPORTING
     if (res)
@@ -537,6 +539,8 @@ static inline int dt_pthread_rwlock_rdlock_with_caller(dt_pthread_rwlock_t *rwlo
 static inline int dt_pthread_rwlock_wrlock_with_caller(dt_pthread_rwlock_t *rwlock,
                                                        const char *file, int line)
 {
+    (void)file;
+    (void)line;
     const int res = pthread_rwlock_wrlock(rwlock);
 #ifdef MUTEX_REPORTING
     if (res)
@@ -552,6 +556,8 @@ static inline int dt_pthread_rwlock_wrlock_with_caller(dt_pthread_rwlock_t *rwlo
 static inline int dt_pthread_rwlock_tryrdlock_with_caller(dt_pthread_rwlock_t *rwlock,
                                                           const char *file, int line)
 {
+    (void)file;
+    (void)line;
     const int res = pthread_rwlock_tryrdlock(rwlock);
 #ifdef MUTEX_REPORTING
     if (res && (res != EBUSY))
@@ -577,6 +583,8 @@ static inline int dt_pthread_rwlock_tryrdlock(dt_pthread_rwlock_t *rwlock)
 static inline int dt_pthread_rwlock_trywrlock_with_caller(dt_pthread_rwlock_t *rwlock,
                                                           const char *file, int line)
 {
+    (void)file;
+    (void)line;
     const int res = pthread_rwlock_trywrlock(rwlock);
 #ifdef MUTEX_REPORTING
     if (res && (res != EBUSY))

@@ -1025,7 +1025,7 @@ wavelets_process(const float *const restrict in, float *const restrict reconstru
     // we know that explains it :
     // https://jo.dreggn.org/home/2010_atrous.pdf the wavelets
     // decomposition here is the same as the equalizer/atrous module,
-    float *restrict residual; // will store the temp buffer containing the last step of blur
+    float *restrict residual = LF_odd; // will store the temp buffer containing the last step of blur
     // allocate a one-row temporary buffer for the decomposition
     size_t padded_size;
     float *const restrict tempbuf =
@@ -1183,9 +1183,9 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     float *restrict in = DT_IS_ALIGNED((float *const restrict)ivoid);
     float *const restrict out = DT_IS_ALIGNED((float *const restrict)ovoid);
 
-    float *restrict temp1, *restrict temp2;
+    float *restrict temp1 = NULL, *restrict temp2 = NULL;
     // temp buffer for blurs. We will need to cycle between them for memory efficiency
-    float *restrict LF_odd, *restrict LF_even;
+    float *restrict LF_odd = NULL, *restrict LF_even = NULL;
 
     float *restrict temp_in = NULL;
     float *restrict temp_out = NULL;
@@ -1204,7 +1204,7 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     const int scales = CLAMP(diffusion_scales, 1, MAX_NUM_SCALES);
 
     // wavelets scales buffers
-    float *restrict HF[MAX_NUM_SCALES];
+    float *restrict HF[MAX_NUM_SCALES] = {NULL};
     for (int s = 0; s < scales; s++)
     {
         HF[s] = out_of_memory ? NULL : dt_alloc_align_float(width * height * 4);
@@ -1305,7 +1305,7 @@ static inline cl_int wavelets_process_cl(const int devid, cl_mem in, cl_mem reco
     // there is a paper from a guy we know that explains it :
     // https://jo.dreggn.org/home/2010_atrous.pdf
     // the wavelets decomposition here is the same as the equalizer/atrous module,
-    cl_mem residual;
+    cl_mem residual = LF_odd;
     for (int s = 0; s < scales; ++s)
     {
         const int mult = 1 << s;

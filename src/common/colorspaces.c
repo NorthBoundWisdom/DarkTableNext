@@ -1846,16 +1846,16 @@ void dt_colorspaces_set_display_profile(const dt_colorspaces_color_profile_type_
                  "[win32 dt_colorspaces_set_display_profile] error getting monitor handle");
         goto cleanup_and_return;
     }
-    MONITORINFOEX monitorInfo;
-    monitorInfo.cbSize = sizeof(MONITORINFOEX);
+    MONITORINFOEXW monitorInfo = {0};
+    monitorInfo.cbSize = sizeof(monitorInfo);
     if (!GetMonitorInfoW(hMonitor, (LPMONITORINFO)&monitorInfo)) //get monitor info
     {
         dt_print(DT_DEBUG_ALWAYS,
                  "[win32 dt_colorspaces_set_display_profile] error getting monitor info");
         goto cleanup_and_return;
     }
-    HDC hdc = CreateIC(L"MONITOR", monitorInfo.szDevice, NULL,
-                       NULL); // get device-info context of the monitor
+    HDC hdc = CreateICW(L"MONITOR", monitorInfo.szDevice, NULL,
+                        NULL); // get device-info context of the monitor
     if (hdc != NULL)
     {
         DWORD len = 0;

@@ -34,7 +34,9 @@ struct dt_view_t;
 
 /* early definition of modules to do type checking */
 
+#if defined(__GNUC__)
 #pragma GCC visibility push(default)
+#endif
 
 #endif // FULL_API_H
 
@@ -105,7 +107,9 @@ DT_MODULE_API_DEFAULT(gboolean, preset_autoapply, struct dt_lib_module_t *self);
 
 #ifdef FULL_API_H
 
+#if defined(__GNUC__)
 #pragma GCC visibility pop
+#endif
 
 G_END_DECLS
 

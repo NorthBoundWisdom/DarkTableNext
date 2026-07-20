@@ -550,8 +550,8 @@ static inline gboolean dt_check_aligned(void *addr)
 
 size_t dt_round_size(const size_t size, const size_t alignment);
 
-#if _DEBUG // debug build makes sure that we get a crash on using
-           // plain free() on an aligned allocation
+#if defined(_WIN32) || defined(_DEBUG) // Windows requires _aligned_free; debug builds make sure
+                                      // that plain free() crashes on an aligned allocation
 void dt_free_align(void *mem);
 #define dt_free_align_ptr dt_free_align
 #else

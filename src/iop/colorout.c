@@ -113,7 +113,7 @@ dt_iop_colorspace_type_t input_colorspace(dt_iop_module_t *self, dt_dev_pixelpip
 dt_iop_colorspace_type_t output_colorspace(dt_iop_module_t *self, dt_dev_pixelpipe_t *pipe,
                                            dt_dev_pixelpipe_iop_t *piece)
 {
-    int cst = IOP_CS_RGB;
+    dt_iop_colorspace_type_t cst = IOP_CS_RGB;
     if (piece)
     {
         const dt_iop_colorout_data_t *const d = piece->data;

@@ -10,6 +10,7 @@
 // this is ugly, but needed, because else compilation will fail with:
 // darktable/src/common/poison.h:16:20: error: poisoning existing macro "strncat" [-Werror]
 //  #pragma GCC poison strncat  // use g_strncat
+#if defined(__GNUC__)
 #pragma GCC system_header
 
 //#pragma GCC poison sprintf  // use snprintf
@@ -22,5 +23,6 @@
 #pragma GCC poison fopen          // use g_fopen
 // #pragma GCC poison open // use g_open -- this one doesn't work
 #pragma GCC poison unlink // use g_unlink
+#endif
 
 #endif

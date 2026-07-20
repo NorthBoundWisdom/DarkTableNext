@@ -406,17 +406,17 @@ static void _zoom_changed(GtkWidget *widget, gpointer user_data)
     int closeup = 0;
     dt_dev_zoom_t zoom = DT_ZOOM_FREE;
 
-    if (val == 0u) // small
+    if (val == 0) // small
         scale = 0.5 * dt_dev_get_zoom_scale(port, DT_ZOOM_FIT, 1.0, FALSE);
-    else if (val == 1u || val == -1u) // fit to screen
+    else if (val == 1 || val == -1) // fit to screen
         zoom = DT_ZOOM_FIT;
-    else if (val == 2u) // fill screen
+    else if (val == 2) // fill screen
         zoom = DT_ZOOM_FILL;
-    else if (val == 3u) // 50%
+    else if (val == 3) // 50%
         scale = 0.5f / ppd;
-    else if (val == 4u && ppd != 1.0f) // 100%
+    else if (val == 4 && ppd != 1.0f) // 100%
         scale = 1.0f / ppd;
-    else if (val >= 4u && val <= 8u) // 100%, 200%, 400%, 800%, 1600%
+    else if (val >= 4 && val <= 8) // 100%, 200%, 400%, 800%, 1600%
     {
         zoom = DT_ZOOM_1;
         closeup = val - 5 + (ppd == 1.0f);
