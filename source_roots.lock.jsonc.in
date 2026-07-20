@@ -66,39 +66,39 @@
   },
   "dependencies": {
     "rawspeed": {
-      "repoName": "rawspeed",
       "remote": "https://github.com/NorthBoundWisdom/rawspeed.git",
-      "commit": "1396fcfc8a1b5fd6af2babd2033334ed8111f5cd"
+      "commit": "d77571487ab94fc17a1a5005d1057343a4170cb9",
+      "repoName": "rawspeed"
     },
     "OpenCL": {
-      "repoName": "OpenCL",
       "remote": "https://github.com/KhronosGroup/OpenCL-Headers.git",
-      "commit": "a98488062f50c77c3e2edaf9c4f8dca7c41781ec"
+      "commit": "a98488062f50c77c3e2edaf9c4f8dca7c41781ec",
+      "repoName": "OpenCL"
     },
     "whereami": {
-      "repoName": "whereami",
       "remote": "https://github.com/gpakosz/whereami.git",
-      "commit": "dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e"
+      "commit": "dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e",
+      "repoName": "whereami"
     },
     "exiv2": {
-      "repoName": "exiv2",
       "remote": "https://github.com/Exiv2/exiv2.git",
-      "commit": "2cd987a731236037b6b78cbff897d08685a8ef49"
+      "commit": "d63f11ed2543331843f275586f17283c057af092",
+      "repoName": "exiv2"
     },
     "Imath": {
-      "repoName": "Imath",
       "remote": "https://github.com/AcademySoftwareFoundation/Imath.git",
-      "commit": "1e480d11cb98b032a2dece9b9a8730512effc7f6"
+      "commit": "f83c0308ca620e12ff17286cc05251330344411f",
+      "repoName": "Imath"
     },
     "inih": {
-      "repoName": "inih",
       "remote": "https://github.com/benhoyt/inih.git",
-      "commit": "26254ee9de7681f8825433415443e7116ff24b98"
+      "commit": "577ae2dee1f0d9c2d11c7f10375c1715f3d6940c",
+      "repoName": "inih"
     },
     "LibRaw": {
-      "repoName": "LibRaw",
       "remote": "https://github.com/LibRaw/LibRaw.git",
-      "commit": "87241b45d8c8178247faca4aa8e6a1896b0b1eeb"
+      "commit": "e419de08001de28ae6988ecb22df47e52b9c5eaa",
+      "repoName": "LibRaw"
     }
   }
 }
