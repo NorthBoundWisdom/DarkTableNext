@@ -11,6 +11,7 @@ add_library(darkroom MODULE "darkroom.c")
 add_library(lighttable MODULE "lighttable.c")
 foreach(module ${MODULES})
     target_link_libraries(${module} lib_darktable)
+    dt_module_configure_link_dependencies(${module})
 endforeach(module)
 
 foreach(module ${MODULES})

@@ -52,6 +52,26 @@ cmake --build --preset mac_clang_debug
 ./build/mac_clang_debug/bin/darktable --version
 ```
 
+### 开发构建的模块重链
+
+应用会在启动时动态加载 IOP、Lighttable、view 与 imageio 模块。正常构建只会在模块自身源码或
+其公共 ABI 头变更时重链这些模块；核心库的实现性改动不会重写全部模块，从而保留 macOS 的文件
+页缓存并缩短编译后的首次启动。
+
+`DT_MODULE_VERSION` 是明确的模块 ABI 失效边界。凡是修改了 loadable module 可见的
+`lib_darktable` 函数、类型、结构布局或调用约定，必须在
+[`src/common/darktable.h`](src/common/darktable.h) 提升该值，再完整构建模块。运行时加载器会拒绝
+ABI epoch 不匹配的模块。
+
+需要排查 ABI 问题时，可恢复每次核心库变动都重链模块的保守模式：
+
+```sh
+cmake --preset mac_clang_debug -DDT_MODULE_RELINK_ON_CORE_CHANGE=ON
+cmake --build --preset mac_clang_debug
+```
+
+该选项只影响本地生成的构建图，不影响数据库、缩略图缓存或 OpenCL 内核缓存的失效规则。
+
 常用预设：
 
 - `mac_clang_debug` / `mac_clang_release`

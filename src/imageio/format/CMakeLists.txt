@@ -16,6 +16,7 @@ add_library(tiff MODULE "tiff.c")
 
 foreach(module ${MODULES})
     target_link_libraries(${module} PUBLIC lib_darktable)
+    dt_module_configure_link_dependencies(${module})
     set_target_properties(${module}
                           PROPERTIES
                           INSTALL_RPATH ${RPATH_ORIGIN}/../../..)

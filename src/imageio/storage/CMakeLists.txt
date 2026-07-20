@@ -13,6 +13,7 @@ endforeach(module)
 
 foreach(module ${MODULES})
     target_link_libraries(${module} lib_darktable)
+    dt_module_configure_link_dependencies(${module})
     set_target_properties(${module}
                           PROPERTIES
                           INSTALL_RPATH ${RPATH_ORIGIN}/../../..)

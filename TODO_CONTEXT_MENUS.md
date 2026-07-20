@@ -299,7 +299,7 @@ Bauhaus、IOP、Lib、Lighttable 图片操作也已经注册了大量 element/ef
 
 ### Phase 3：图片对象
 
-- [x] 接入 Lighttable filemanager 和 zoomable thumbtable。
+- [x] 接入 Lighttable filemanager thumbtable。
 - [x] 接入 Darkroom filmstrip，保留当前编辑图片和延迟单选语义。
 - [x] 接入 Culling 和 Preview 的独立选择模型，并阻止辅助点击误启动平移（两种模式由
       `dt_culling_new()` 的同一事件处理器覆盖）。
@@ -391,7 +391,7 @@ Bauhaus、IOP、Lib、Lighttable 图片操作也已经注册了大量 element/ef
 
 ### 手工验证
 
-- Lighttable filemanager、zoomable、culling、preview；
+- Lighttable filemanager、culling、preview；
 - Darkroom filmstrip、模块标题和普通参数控件；
 - 鼠标右键、触控板辅助点按、Control+单击和 Shift+F10；
 - 无选择、单选、多选、分组、悬停和跨视图切换；

@@ -19,15 +19,11 @@
 #include "dtgtk/thumbnail.h"
 #include <gtk/gtk.h>
 
-// number of images per row in zoomable mode
-#define DT_ZOOMABLE_NB_PER_ROW 13
-
 typedef enum dt_thumbtable_mode_t
 {
     DT_THUMBTABLE_MODE_NONE,
     DT_THUMBTABLE_MODE_FILEMANAGER,
-    DT_THUMBTABLE_MODE_FILMSTRIP,
-    DT_THUMBTABLE_MODE_ZOOM
+    DT_THUMBTABLE_MODE_FILMSTRIP
 } dt_thumbtable_mode_t;
 
 typedef enum dt_thumbtable_move_t
@@ -41,7 +37,6 @@ typedef enum dt_thumbtable_move_t
     DT_THUMBTABLE_MOVE_PAGEDOWN,
     DT_THUMBTABLE_MOVE_START,
     DT_THUMBTABLE_MOVE_END,
-    DT_THUMBTABLE_MOVE_ALIGN,
     DT_THUMBTABLE_MOVE_RESET_FIRST,
     DT_THUMBTABLE_MOVE_LEAVE
 } dt_thumbtable_move_t;
@@ -57,16 +52,14 @@ typedef struct dt_thumbtable_t
 
     // list of thumbnails loaded inside main widget (dt_thumbnail_t)
     // for filmstrip and filemanager, this is all the images drawn at screen (even partially)
-    // for zoommable, this is all the images in the row drawn at screen. We don't load laterals images on fly.
     GList *list;
 
     // rowid of the main shown image inside 'memory.collected_images'
     // for filmstrip this is the image in the center.
-    // for zoomable, this is the top-left image (which can be out of screen)
     int offset;
     int offset_imgid;
 
-    int thumbs_per_row; // number of image in a row (1 for filmstrip ; MAX_ZOOM for zoomable)
+    int thumbs_per_row; // number of images in a row (1 for filmstrip)
     int rows; // number of rows (the last one is not fully visible) for filmstrip it's the number of columns
     int thumb_size;               // demanded thumb size (real size can differ of 1 due to rounding)
     int prefs_size;               // size value to determine overlays mode and css class
@@ -76,11 +69,7 @@ typedef struct dt_thumbtable_t
 
     int center_offset; // in filemanager, we can have a gap, esp. for zoom==1, we need to center everything
 
-    gboolean dragging;
-    int last_x, last_y;            // last position of cursor during move
-    int drag_dx, drag_dy;          // distance of move of the current dragging session
-    dt_thumbnail_t *drag_thumb;    // thumb currently dragged (under the mouse)
-    dt_imgid_t drag_initial_imgid; // image_over_id at the dragging start
+    int last_x, last_y; // last position of cursor during move
 
     gboolean mouse_inside; // is the mouse pointer inside thumbtable widget ?
     gboolean key_inside;   // is the key move pointer inside thumbtable widget ?

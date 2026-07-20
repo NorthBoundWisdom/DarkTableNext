@@ -133,18 +133,10 @@ static void _preview_quit(dt_view_t *self)
         // set offset back
         dt_thumbtable_set_offset(dt_ui_thumbtable(darktable.gui->ui), lib->thumbtable_offset, TRUE);
 
-        // we need to show thumbtable
-        if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
-        {
-            dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                     dt_ui_center_base(darktable.gui->ui),
-                                     DT_THUMBTABLE_MODE_FILEMANAGER);
-        }
-        else if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
-        {
-            dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                     dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_ZOOM);
-        }
+        // restore the grid thumbtable
+        dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
+                                 dt_ui_center_base(darktable.gui->ui),
+                                 DT_THUMBTABLE_MODE_FILEMANAGER);
         gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
         dt_thumbtable_full_redraw(dt_ui_thumbtable(darktable.gui->ui), TRUE);
     }
@@ -169,7 +161,7 @@ static void _lighttable_check_layout(dt_view_t *self)
     // layout has changed, let restore panels
     dt_ui_restore_panels(darktable.gui->ui);
 
-    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER || layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
+    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
         dt_ui_thumbtable(darktable.gui->ui)->navigate_inside_selection = FALSE;
         gtk_widget_hide(lib->preview->widget);
@@ -184,17 +176,9 @@ static void _lighttable_check_layout(dt_view_t *self)
                                      FALSE);
         }
         // we want to reacquire the thumbtable if needed
-        if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
-        {
-            dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                     dt_ui_center_base(darktable.gui->ui),
-                                     DT_THUMBTABLE_MODE_FILEMANAGER);
-        }
-        else
-        {
-            dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                     dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_ZOOM);
-        }
+        dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
+                                 dt_ui_center_base(darktable.gui->ui),
+                                 DT_THUMBTABLE_MODE_FILEMANAGER);
         dt_thumbtable_full_redraw(dt_ui_thumbtable(darktable.gui->ui), TRUE);
         gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
     }
@@ -405,11 +389,10 @@ void expose(dt_view_t *self, cairo_t *cr, const int32_t width, const int32_t hei
             gtk_widget_show(lib->preview->widget);
         gtk_widget_hide(lib->culling->widget);
     }
-    else // we do pass on expose to manager or zoomable
+    else // we do pass on expose to filemanager
     {
         switch (layout)
         {
-        case DT_LIGHTTABLE_LAYOUT_ZOOMABLE:
         case DT_LIGHTTABLE_LAYOUT_FILEMANAGER:
             if (!gtk_widget_get_visible(dt_ui_thumbtable(darktable.gui->ui)->widget))
                 gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
@@ -454,12 +437,6 @@ void enter(dt_view_t *self)
             dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
                                      dt_ui_center_base(darktable.gui->ui),
                                      DT_THUMBTABLE_MODE_FILEMANAGER);
-            gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
-        }
-        else if (layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
-        {
-            dt_thumbtable_set_parent(dt_ui_thumbtable(darktable.gui->ui),
-                                     dt_ui_center_base(darktable.gui->ui), DT_THUMBTABLE_MODE_ZOOM);
             gtk_widget_show(dt_ui_thumbtable(darktable.gui->ui)->widget);
         }
     }
@@ -827,8 +804,7 @@ static float _action_process_move(gpointer target, const dt_action_element_t ele
     // navigation accels for thumbtable layouts this can't be "normal"
     // key accels because it's usually arrow keys and lot of other
     // widgets will capture them before the usual accel is triggered
-    if (!lib->preview_state &&
-        (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER || layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE))
+    if (!lib->preview_state && layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
         dt_thumbtable_move_t move = DT_THUMBTABLE_MOVE_NONE;
         const gboolean select = element == DT_ACTION_ELEMENT_SELECT;
@@ -952,20 +928,11 @@ static void _lighttable_redo_callback(dt_action_t *action)
     dt_undo_do_redo(darktable.undo, DT_UNDO_LIGHTTABLE);
 }
 
-static void _accel_align_to_grid(dt_action_t *action)
-{
-    const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
-
-    if (layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
-        dt_thumbtable_key_move(dt_ui_thumbtable(darktable.gui->ui), DT_THUMBTABLE_MOVE_ALIGN,
-                               FALSE);
-}
-
 static void _accel_reset_first_offset(dt_action_t *action)
 {
     const dt_lighttable_layout_t layout = dt_view_lighttable_get_layout(darktable.view_manager);
 
-    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER || layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
+    if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
         dt_thumbtable_reset_first_offset(dt_ui_thumbtable(darktable.gui->ui));
 }
 
@@ -1066,13 +1033,6 @@ GSList *mouse_actions(const dt_view_t *self)
                                            /* xgettext:no-c-format */
                                            _("zoom current image to 100% and back"));
     }
-    else if (lib->current_layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
-    {
-        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_SCROLL, 0, _("zoom the main view"));
-        lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT_DRAG, 0,
-                                           _("pan inside the main view"));
-    }
-
     lm = dt_mouse_action_create_simple(lm, DT_MOUSE_ACTION_LEFT, GDK_SHIFT_MASK,
                                        dt_conf_get_bool("lighttable/ui/single_module") ?
                                            _("[modules] expand module without closing others") :
@@ -1439,7 +1399,6 @@ void gui_init(dt_view_t *self)
     ac = dt_action_define(sa, NULL, N_("show infos"), NULL, &dt_action_def_infos);
     dt_shortcut_register(ac, DT_ACTION_ELEMENT_DEFAULT, DT_ACTION_EFFECT_HOLD, GDK_KEY_i, 0);
 
-    dt_action_register(DT_ACTION(self), N_("align images to grid"), _accel_align_to_grid, 0, 0);
     dt_action_register(DT_ACTION(self), N_("reset first image offset"), _accel_reset_first_offset,
                        0, 0);
     dt_action_register(DT_ACTION(self), N_("select toggle image"), _accel_select_toggle,

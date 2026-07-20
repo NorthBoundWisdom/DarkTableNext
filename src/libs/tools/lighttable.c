@@ -36,7 +36,6 @@ typedef struct dt_lib_tool_lighttable_t
     GtkWidget *zoom;
     GtkWidget *layout_box;
     GtkWidget *layout_filemanager;
-    GtkWidget *layout_zoomable;
     GtkWidget *layout_culling_dynamic;
     GtkWidget *layout_culling_fix;
     GtkWidget *layout_culling_restricted;
@@ -98,9 +97,6 @@ static void _lib_lighttable_update_btn(dt_lib_module_t *self)
         active = d->layout_culling_dynamic;
     else if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING)
         active = d->layout_culling_fix;
-    else if (d->layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
-        active = d->layout_zoomable;
-
     GList *children = gtk_container_get_children(GTK_CONTAINER(d->layout_box));
     for (GList *l = children; l; l = g_list_delete_link(l, l))
     {
@@ -200,7 +196,7 @@ static void _lib_lighttable_set_layout(dt_lib_module_t *self, const dt_lighttabl
         }
 
         dt_conf_set_int("plugins/lighttable/layout", layout);
-        if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER || layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
+        if (layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
         {
             d->base_layout = layout;
             dt_conf_set_int("plugins/lighttable/base_layout", layout);
@@ -242,8 +238,6 @@ static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton 
         }
         else if (w == d->layout_culling_dynamic)
             new_layout = DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC;
-        else if (w == d->layout_zoomable)
-            new_layout = DT_LIGHTTABLE_LAYOUT_ZOOMABLE;
     }
     else
     {
@@ -254,7 +248,7 @@ static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton 
             new_layout = d->base_layout;
         else
         {
-            // we can't exit from filemanager or zoomable
+            // we can't exit from filemanager
             return TRUE;
         }
     }
@@ -280,12 +274,6 @@ static void _lib_lighttable_key_accel_toggle_filemanager(dt_action_t *action)
 {
     dt_lib_module_t *self = darktable.view_manager->proxy.lighttable.module;
     _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_FILEMANAGER);
-}
-
-static void _lib_lighttable_key_accel_toggle_zoomable(dt_action_t *action)
-{
-    dt_lib_module_t *self = darktable.view_manager->proxy.lighttable.module;
-    _lib_lighttable_set_layout(self, DT_LIGHTTABLE_LAYOUT_ZOOMABLE);
 }
 
 static void _lib_lighttable_key_accel_toggle_culling_dynamic_mode(dt_action_t *action)
@@ -348,6 +336,18 @@ _lib_lighttable_get_culling_initial_restriction(dt_lib_module_t *self)
 {
     dt_lib_tool_lighttable_t *d = self->data;
     return d ? d->culling_init_restriction : DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO;
+}
+
+static dt_lighttable_layout_t _lib_lighttable_get_configured_layout(const char *key)
+{
+    const int layout = dt_conf_get_int(key);
+    if (layout >= DT_LIGHTTABLE_LAYOUT_FILEMANAGER && layout < DT_LIGHTTABLE_LAYOUT_LAST)
+        return layout;
+
+    // Layout 0 was the removed zoomable lighttable. Normalise it, and any
+    // invalid legacy value, before the view selects a thumbtable mode.
+    dt_conf_set_int(key, DT_LIGHTTABLE_LAYOUT_FILEMANAGER);
+    return DT_LIGHTTABLE_LAYOUT_FILEMANAGER;
 }
 
 enum
@@ -447,9 +447,11 @@ void gui_init(dt_lib_module_t *self)
     dt_lib_tool_lighttable_t *d = g_malloc0(sizeof(dt_lib_tool_lighttable_t));
     self->data = (void *)d;
 
-    d->layout = MIN(DT_LIGHTTABLE_LAYOUT_LAST - 1, dt_conf_get_int("plugins/lighttable/layout"));
-    d->base_layout =
-        MIN(DT_LIGHTTABLE_LAYOUT_LAST - 1, dt_conf_get_int("plugins/lighttable/base_layout"));
+    dt_conf_remove_key("lighttable/zoomable/last_offset");
+    dt_conf_remove_key("lighttable/zoomable/last_pos_x");
+    dt_conf_remove_key("lighttable/zoomable/last_pos_y");
+    d->layout = _lib_lighttable_get_configured_layout("plugins/lighttable/layout");
+    d->base_layout = _lib_lighttable_get_configured_layout("plugins/lighttable/base_layout");
 
     if (d->layout == DT_LIGHTTABLE_LAYOUT_CULLING)
         d->current_zoom = dt_conf_get_int("plugins/lighttable/culling_num_images");
@@ -472,16 +474,6 @@ void gui_init(dt_lib_module_t *self)
     dt_gui_add_help_link(d->layout_filemanager, "layout_filemanager");
     gtk_widget_set_tooltip_text(d->layout_filemanager, _("click to enter filemanager layout."));
     g_signal_connect(G_OBJECT(d->layout_filemanager), "button-release-event",
-                     G_CALLBACK(_lib_lighttable_layout_btn_release), self);
-
-    d->layout_zoomable = dtgtk_togglebutton_new(dtgtk_cairo_paint_lt_mode_zoom, 0, NULL);
-    ac = dt_action_define(ltv, NULL, N_("toggle zoomable lighttable layout"), d->layout_zoomable,
-                          NULL);
-    dt_action_register(ac, NULL, _lib_lighttable_key_accel_toggle_zoomable, 0, 0);
-    dt_gui_add_help_link(d->layout_zoomable, "layout_zoomable");
-    gtk_widget_set_tooltip_text(d->layout_zoomable,
-                                _("click to enter zoomable lighttable layout."));
-    g_signal_connect(G_OBJECT(d->layout_zoomable), "button-release-event",
                      G_CALLBACK(_lib_lighttable_layout_btn_release), self);
 
     d->layout_culling_fix =
@@ -517,7 +509,7 @@ void gui_init(dt_lib_module_t *self)
     g_signal_connect(G_OBJECT(d->layout_preview), "button-release-event",
                      G_CALLBACK(_lib_lighttable_layout_btn_release), self);
 
-    d->layout_box = dt_gui_hbox(d->layout_filemanager, d->layout_zoomable, d->layout_culling_fix,
+    d->layout_box = dt_gui_hbox(d->layout_filemanager, d->layout_culling_fix,
                                 d->layout_culling_dynamic, d->layout_preview);
     gtk_widget_set_name(d->layout_box, "lighttable-layouts-box");
 
@@ -576,8 +568,7 @@ static void _set_zoom(dt_lib_module_t *self, int zoom)
         dt_conf_set_int("plugins/lighttable/culling_num_images", zoom);
         dt_control_queue_redraw_center();
     }
-    else if (d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER ||
-             d->layout == DT_LIGHTTABLE_LAYOUT_ZOOMABLE)
+    else if (d->layout == DT_LIGHTTABLE_LAYOUT_FILEMANAGER)
     {
         dt_conf_set_int("plugins/lighttable/images_in_row", zoom);
         dt_thumbtable_zoom_changed(dt_ui_thumbtable(darktable.gui->ui), d->current_zoom, zoom);

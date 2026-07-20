@@ -27,6 +27,20 @@ endif()
 # or assets into a normal configure/build.
 option(BUILD_TESTING "Build DarkTableNext tests" OFF)
 
+# Loadable modules validate their own DT_MODULE_VERSION at runtime. Re-linking every
+# module for a private lib_darktable implementation change only rewrites the module
+# files and turns the next launch into a cold dynamic-loader pass. Keep that legacy
+# behaviour available for conservative ABI investigations, but leave normal builds
+# to rebuild modules when their own sources or ABI headers change.
+option(DT_MODULE_RELINK_ON_CORE_CHANGE
+       "Relink loadable modules whenever a linked shared library changes" OFF)
+
+function(dt_module_configure_link_dependencies target)
+  if(NOT DT_MODULE_RELINK_ON_CORE_CHANGE)
+    set_property(TARGET ${target} PROPERTY LINK_DEPENDS_NO_SHARED TRUE)
+  endif()
+endfunction()
+
 if(NOT APPLE)
   message(FATAL_ERROR "DarkTableNext supports macOS only.")
 endif()

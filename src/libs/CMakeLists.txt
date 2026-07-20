@@ -69,6 +69,7 @@ add_library(log_history MODULE "tools/log_history.c")
 # Add libs references
 foreach(module ${MODULES})
   target_link_libraries(${module} lib_darktable)
+  dt_module_configure_link_dependencies(${module})
 endforeach(module)
 
 # Add installation target for each module

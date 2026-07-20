@@ -427,9 +427,6 @@ void dtgtk_cairo_paint_wand(cairo_t *cr, gint x, gint y, gint w, gint h, gint fl
 /** Lighttable: Grid mode */
 void dtgtk_cairo_paint_lt_mode_grid(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
                                     void *data);
-/** Lighttable: Zoomable */
-void dtgtk_cairo_paint_lt_mode_zoom(cairo_t *cr, gint x, gint y, gint w, gint h, gint flags,
-                                    void *data);
 /** Lighttable: Culling fixed */
 void dtgtk_cairo_paint_lt_mode_culling_fixed(cairo_t *cr, gint x, gint y, gint w, gint h,
                                              gint flags, void *data);

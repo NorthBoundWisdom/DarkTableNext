@@ -24,6 +24,14 @@ if echo "$NEW_VERSION" | grep -q "^[0-9]\+\.[0-9]\+\.[0-9]\++[0-9]\+"; then
 fi
 
 LAST_COMMIT_YEAR=$(date -u "+%Y")
+TMP_C_FILE=$(mktemp "${C_FILE}.tmp.XXXXXX")
+
+cleanup_tmp_file() {
+  if [ -e "$TMP_C_FILE" ]; then
+    rm "$TMP_C_FILE"
+  fi
+}
+trap cleanup_tmp_file EXIT HUP INT TERM
 
 {
   echo "#ifndef RC_BUILD"
@@ -41,6 +49,13 @@ LAST_COMMIT_YEAR=$(date -u "+%Y")
   echo "  #define DT_N_COMMITS ${N_COMMITS}"
   echo "  #define LAST_COMMIT_YEAR \"${LAST_COMMIT_YEAR}\""
   echo "#endif";
-} > "$C_FILE"
+} > "$TMP_C_FILE"
+
+# create_version_gen is an ALL target. Preserve the generated file timestamp when
+# its contents are unchanged so that ordinary builds do not relink lib_darktable
+# and every module merely to reproduce the same version string.
+if ! cmp -s "$TMP_C_FILE" "$C_FILE"; then
+  mv "$TMP_C_FILE" "$C_FILE"
+fi
 
 echo "Version string: ${NEW_VERSION}"

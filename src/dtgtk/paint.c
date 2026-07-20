@@ -3357,37 +3357,6 @@ void dtgtk_cairo_paint_lt_mode_grid(cairo_t *cr, const gint x, const gint y, con
     FINISH
 }
 
-void dtgtk_cairo_paint_lt_mode_zoom(cairo_t *cr, const gint x, const gint y, const gint w,
-                                    const gint h, gint flags, void *data)
-{
-    PREAMBLE(1.4, 1, 0, 0)
-
-    cairo_rectangle(cr, 0.3, 0.2, 0.5, 0.34);
-
-    cairo_move_to(cr, 0, 0.2);
-    cairo_line_to(cr, 0.2, 0.2);
-    cairo_line_to(cr, 0.2, 0.54);
-    cairo_line_to(cr, 0, 0.54);
-
-    cairo_move_to(cr, 1, 0.2);
-    cairo_line_to(cr, 0.9, 0.2);
-    cairo_line_to(cr, 0.9, 0.54);
-    cairo_line_to(cr, 1, 0.54);
-
-    cairo_move_to(cr, 0, 0.65);
-    cairo_line_to(cr, 0.2, 0.65);
-    cairo_line_to(cr, 0.2, 0.8);
-
-    cairo_move_to(cr, 0.3, 0.8);
-    cairo_line_to(cr, 0.3, 0.65);
-    cairo_line_to(cr, 0.8, 0.65);
-    cairo_line_to(cr, 0.8, 0.8);
-
-    cairo_stroke(cr);
-
-    FINISH
-}
-
 void dtgtk_cairo_paint_lt_mode_culling_fixed(cairo_t *cr, const gint x, const gint y, const gint w,
                                              const gint h, gint flags, void *data)
 {

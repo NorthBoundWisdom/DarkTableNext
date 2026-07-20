@@ -55,7 +55,6 @@ typedef enum dt_view_flags_t
 typedef enum dt_lighttable_layout_t
 {
     DT_LIGHTTABLE_LAYOUT_FIRST = -1,
-    DT_LIGHTTABLE_LAYOUT_ZOOMABLE = 0,
     DT_LIGHTTABLE_LAYOUT_FILEMANAGER = 1,
     DT_LIGHTTABLE_LAYOUT_CULLING = 2,
     DT_LIGHTTABLE_LAYOUT_CULLING_DYNAMIC = 3,
