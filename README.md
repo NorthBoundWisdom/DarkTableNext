@@ -27,10 +27,12 @@ ABI, scripting, map and tethering workflows, printing, slideshow, remote
 publishing, or old format compatibility. For the complete product boundary,
 see [TODO_CORE_REDUCTION.md](TODO_CORE_REDUCTION.md).
 
-A proposed clean-slate successor that separates the image engine from the
-desktop UI is documented in [TODO_REWRITE.md](TODO_REWRITE.md). It does not
-change the current 0.9 implementation or support boundary until its decision
-gates are approved.
+The planned C++20 clean-slate successor is **Ravo**, documented in
+[Ravo/README.md](Ravo/README.md) and [TODO_REWRITE.md](TODO_REWRITE.md). Ravo
+delivers a headless image engine and supported CLI before any desktop UI, then
+makes the later UI consume the same engine API. Implementation has not started,
+and the plan does not change the current 0.9 support boundary until its gates
+are met.
 
 ### Bundled styles
 
@@ -176,6 +178,7 @@ submodules. Permanent dependency changes belong in the lock template,
 | `data/` | Runtime resources and configuration data |
 | `benchmarks/` | Reproducible performance and GPU-baseline tools |
 | `DevDocs/` | Developer documentation and source maps |
+| `Ravo/` | Next-generation C++20 headless engine, CLI, architecture, and migration ownership |
 | `FreeCM/` | Dependency-management submodule |
 
 Before contributing, read [AGENTS.md](AGENTS.md). In particular, do not change
@@ -187,8 +190,8 @@ behaviour.
 
 - [Release notes](RELEASE_NOTES.md)
 - [Core reduction plan](TODO_CORE_REDUCTION.md)
-- [C11 consolidation plan](TODO_C11_CONSOLIDATION.md)
-- [GTK 4 migration plan](TODO_GTK4_MIGRATION.md)
+- [Ravo project documentation](Ravo/README.md)
+- [C++20 headless engine and CLI rewrite plan](TODO_REWRITE.md)
 - [Developer documentation index](DevDocs/README.md)
 - [GPU baseline](DevDocs/GPU_Baseline.md)
 

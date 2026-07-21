@@ -17,8 +17,8 @@ This guide maps the existing Image Operation (IOP) modules and darkroom implemen
 | **[maths.md](maths.md)** | Core Math, transposed matrices, and color science helpers |
 | **[GPU_Baseline.md](GPU_Baseline.md)** | OpenCL → Metal Phase 0 workload, correctness, and performance gates |
 | **[Runtime_Persistence.md](Runtime_Persistence.md)** | DevMode checkout isolation and production instance-lock policy |
-| **[GTK4_Migration_Scope.md](GTK4_Migration_Scope.md)** | CMake-reachable GTK UI scope and IOP compatibility gate for the GTK 4 migration |
-| **[../TODO_REWRITE.md](../TODO_REWRITE.md)** | Proposed clean-slate architecture: UI-independent image engine, application services, and rewrite gates |
+| **[../Ravo/README.md](../Ravo/README.md)** | Ravo C++20 headless engine/CLI architecture, one-way legacy migration, testing, and ADR index |
+| **[../TODO_REWRITE.md](../TODO_REWRITE.md)** | Ravo phases, legacy regression-test reuse, deferred desktop UI, and rewrite gates |
 | **[Linux_Packaging.md](Linux_Packaging.md)** | FreeCM-backed GTK AppDir staging, AppImage construction, and validation |
 | **[Windows_Packaging.md](Windows_Packaging.md)** | FreeCM-backed Windows staging, MSI construction, and validation |
 

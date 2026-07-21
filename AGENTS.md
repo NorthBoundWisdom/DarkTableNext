@@ -6,9 +6,9 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
 基线。保留验证过的图像处理核心和现有 GTK 前端，主动删除已确认不属于产品范围的历史
 兼容、插件和外围工作流。
 
-仓库根目录下的约定适用于整个仓库。`FreeCM/` 是独立子模块并由它自己的 `AGENTS.md`
-管理；所有 `build/dependency_*` 内容都是父仓库工作流生成的外部源码，不得把它们当作
-本仓库源码修改。
+仓库根目录下的约定适用于整个仓库。`Ravo/` 是下一代 C++20 无头内核与 CLI 的独立所有权边界，
+并由它自己的 `AGENTS.md` 增加约束；`FreeCM/` 是独立子模块并由它自己的 `AGENTS.md` 管理。所有
+`build/dependency_*` 内容都是父仓库工作流生成的外部源码，不得把它们当作本仓库源码修改。
 
 ## 开始工作前
 
@@ -19,6 +19,17 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
 
 现有行为以 `src/` 为准；`DevDocs/` 是源码地图，不是兼容性承诺。产品边界以
 `TODO_CORE_REDUCTION.md` 为准。
+
+## Ravo 下一代边界
+
+- `Ravo/` 先交付 C++20 Ravo Engine 与正式 `ravo` CLI；无头阶段验收前不创建 desktop target、
+  UI toolkit 依赖或 catalog 数据库。
+- Ravo 生产代码不得依赖 `src/` 私有头、旧库、动态 IOP、GTK 类型或全局 `darktable` 状态。差分验证
+  只能读取冻结 fixture，或把旧 CLI 当独立进程执行。
+- 迁移方向只能独立并行或 `src` → Ravo；不能形成 Ravo → `src`。每项 Ravo 能力验收后，应删除
+  `src` 对应实现、构建项、资源、配置和重复测试，使 Ravo 最终完全取代 `src`。
+- 在 `Ravo/` 工作前必须阅读 `Ravo/AGENTS.md`、`Ravo/ARCHITECTURE.md`、`Ravo/MIGRATION.md` 和
+  `Ravo/TESTING.md`。
 
 ## 实施原则
 
