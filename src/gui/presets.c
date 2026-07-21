@@ -548,7 +548,7 @@ static void _presets_show_edit_dialog(dt_gui_presets_edit_dialog_t *g,
 #endif
     g->name = GTK_ENTRY(gtk_entry_new());
     gtk_entry_set_text(g->name, g->original_name);
-    dt_gui_editable_set_width_chars(GTK_EDITABLE(g->name), 10 + g_utf8_strlen(title, -1));
+    gtk_entry_set_width_chars(g->name, 10 + g_utf8_strlen(title, -1));
     if (allow_name_change)
         gtk_entry_set_activates_default(g->name, TRUE);
     else

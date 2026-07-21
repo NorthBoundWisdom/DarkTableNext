@@ -858,17 +858,15 @@ void reload_defaults(dt_iop_module_t *self)
     }
 }
 
-static void cluster_preview_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                                 gpointer user_data)
+static gboolean cluster_preview_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
 {
-    dt_iop_module_t *self = user_data;
     dt_iop_colormapping_params_t *p = self->params;
     dt_iop_colormapping_gui_data_t *g = self->gui_data;
 
     float2 *mean;
     float2 *var;
 
-    if (GTK_WIDGET(area) == g->source_area)
+    if (widget == g->source_area)
     {
         mean = p->source_mean;
         var = p->source_var;
@@ -879,7 +877,10 @@ static void cluster_preview_draw(GtkDrawingArea *area, cairo_t *crf, int width, 
         var = p->target_var;
     }
 
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
     const int inset = 5;
+    int width = allocation.width, height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
     cairo_set_source_rgb(cr, .2, .2, .2);
@@ -917,6 +918,7 @@ static void cluster_preview_draw(GtkDrawingArea *area, cairo_t *crf, int width, 
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
 static void process_clusters(gpointer instance, dt_iop_module_t *self)
@@ -1021,19 +1023,17 @@ void gui_init(dt_iop_module_t *self)
     g->buffer = NULL;
 
     g->source_area = dtgtk_drawing_area_new_with_aspect_ratio(1.0 / 3.0);
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->source_area), cluster_preview_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->source_area), "draw", G_CALLBACK(cluster_preview_draw), self);
 
     g->target_area = dtgtk_drawing_area_new_with_aspect_ratio(1.0 / 3.0);
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->target_area), cluster_preview_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->target_area), "draw", G_CALLBACK(cluster_preview_draw), self);
 
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 
     g->acquire_source_button =
         dt_iop_button_new(self, N_("acquire as source"), G_CALLBACK(acquire_source_button_pressed),
                           FALSE, 0, 0, NULL, 0, box);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->acquire_source_button))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->acquire_source_button))),
                             PANGO_ELLIPSIZE_START);
     gtk_widget_set_tooltip_text(g->acquire_source_button,
                                 _("analyze this image as a source image"));
@@ -1041,7 +1041,7 @@ void gui_init(dt_iop_module_t *self)
     g->acquire_target_button =
         dt_iop_button_new(self, N_("acquire as target"), G_CALLBACK(acquire_target_button_pressed),
                           FALSE, 0, 0, NULL, 0, box);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->acquire_target_button))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->acquire_target_button))),
                             PANGO_ELLIPSIZE_START);
     gtk_widget_set_tooltip_text(g->acquire_target_button,
                                 _("analyze this image as a target image"));

@@ -140,7 +140,7 @@ static void _module_order_widget_init(dt_lib_filtering_rule_t *rule,
     }
     module_order->combo = dt_bauhaus_combobox_new_full(
         DT_ACTION(self), N_("rules"), N_("module order"),
-        _("filter images based on their module order"), 0, (dt_gui_widget_callback_t)_module_order_changed,
+        _("filter images based on their module order"), 0, (GtkCallback)_module_order_changed,
         module_order, (const char **)_module_order_names);
     dt_bauhaus_widget_hide_label(module_order->combo);
 

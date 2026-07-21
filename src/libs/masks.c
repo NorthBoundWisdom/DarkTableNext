@@ -407,15 +407,15 @@ static void _tree_add_shape(GtkButton *button, gpointer shape)
     dt_control_queue_redraw_center();
 }
 
-static gboolean _bt_add_shape(const guint button, const GdkModifierType state, gpointer shape)
+static gboolean _bt_add_shape(GtkWidget *widget, GdkEventButton *event, gpointer shape)
 {
     DT_GUARD_GUI_UPDATE(FALSE);
 
-    if (button == GDK_BUTTON_PRIMARY)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
         _tree_add_shape(NULL, shape);
 
-        if (dt_modifier_is(state, GDK_CONTROL_MASK))
+        if (dt_modifier_is(event->state, GDK_CONTROL_MASK))
         {
             darktable.develop->form_gui->creation_continuous = TRUE;
             darktable.develop->form_gui->creation_continuous_module =
@@ -425,76 +425,6 @@ static gboolean _bt_add_shape(const guint button, const GdkModifierType state, g
         _lib_masks_inactivate_icons(darktable.develop->proxy.masks.module);
     }
     return TRUE;
-}
-
-static void _bt_add_shape_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                  gpointer user_data)
-{
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (_bt_add_shape(gtk_gesture_single_get_current_button(gesture), state, user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static float _masks_shape_action_process(gpointer target, const dt_action_element_t element,
-                                         const dt_action_effect_t effect, const float move_size)
-{
-    if (!GTK_IS_TOGGLE_BUTTON(target))
-        return DT_ACTION_NOT_VALID;
-
-    float value = gtk_toggle_button_get_active(target);
-    if (DT_ACTION_TOGGLE_NEEDED(effect, move_size, value) &&
-        gtk_widget_get_ancestor(target, GTK_TYPE_WINDOW))
-    {
-        const GdkModifierType state =
-            (effect == DT_ACTION_EFFECT_TOGGLE_CTRL || effect == DT_ACTION_EFFECT_ON_CTRL) ?
-                GDK_CONTROL_MASK :
-                0;
-        const guint button =
-            (effect == DT_ACTION_EFFECT_TOGGLE_RIGHT || effect == DT_ACTION_EFFECT_ON_RIGHT) ?
-                GDK_BUTTON_SECONDARY :
-                GDK_BUTTON_PRIMARY;
-        if (!_bt_add_shape(button, state, g_object_get_data(G_OBJECT(target), "masks-shape")))
-            gtk_button_clicked(GTK_BUTTON(target));
-
-        value = gtk_toggle_button_get_active(target);
-        if (!gtk_widget_is_visible(target))
-            dt_action_widget_toast(NULL, target, value ? _("on") : _("off"));
-    }
-
-    return value;
-}
-
-static const dt_action_element_def_t _action_elements_masks_shape[] = {
-    {NULL, dt_action_effect_toggle},
-    {NULL},
-};
-
-static const dt_shortcut_fallback_t _action_fallbacks_masks_shape[] = {
-    {.mods = GDK_CONTROL_MASK, .effect = DT_ACTION_EFFECT_TOGGLE_CTRL},
-    {.button = DT_SHORTCUT_RIGHT, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
-    {.press = DT_SHORTCUT_LONG, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
-    {},
-};
-
-static const dt_action_def_t _action_def_masks_shape = {
-    N_("toggle"), _masks_shape_action_process, _action_elements_masks_shape,
-    _action_fallbacks_masks_shape};
-
-static GtkWidget *_masks_shape_button_new(dt_lib_module_t *self, const gchar *label,
-                                          DTGTKCairoPaintIconFunc paint, const int shape)
-{
-    GtkWidget *button = dtgtk_togglebutton_new(paint, 0, NULL);
-    g_object_set_data(G_OBJECT(button), "masks-shape", GINT_TO_POINTER(shape));
-    dt_action_define(DT_ACTION(self), N_("shapes"), label, button, &_action_def_masks_shape);
-    dt_gui_connect_click_all(button, _bt_add_shape_pressed, NULL, GINT_TO_POINTER(shape));
-    gtk_widget_set_tooltip_text(button, _(label));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
-    return button;
 }
 
 static void _tree_add_exist_to_group(dt_masks_form_t *grp, const dt_mask_id_t id,
@@ -2054,16 +1984,45 @@ void gui_init(dt_lib_module_t *self)
     d->ic_exclusion = _get_pixbuf_from_cairo(dtgtk_cairo_paint_masks_exclusion, bs2 * 2, bs2);
 
     // initialise widgets
-    d->bt_gradient = _masks_shape_button_new(self, N_("add gradient"),
-                                              dtgtk_cairo_paint_masks_gradient, DT_MASKS_GRADIENT);
-    d->bt_path = _masks_shape_button_new(self, N_("add path"), dtgtk_cairo_paint_masks_path,
-                                          DT_MASKS_PATH);
-    d->bt_ellipse = _masks_shape_button_new(self, N_("add ellipse"),
-                                             dtgtk_cairo_paint_masks_ellipse, DT_MASKS_ELLIPSE);
-    d->bt_circle = _masks_shape_button_new(self, N_("add circle"), dtgtk_cairo_paint_masks_circle,
-                                            DT_MASKS_CIRCLE);
-    d->bt_brush = _masks_shape_button_new(self, N_("add brush"), dtgtk_cairo_paint_masks_brush,
-                                           DT_MASKS_BRUSH);
+    d->bt_gradient = dtgtk_togglebutton_new(dtgtk_cairo_paint_masks_gradient, 0, NULL);
+    dt_action_define(DT_ACTION(self), N_("shapes"), N_("add gradient"), d->bt_gradient,
+                     &dt_action_def_toggle);
+    g_signal_connect(G_OBJECT(d->bt_gradient), "button-press-event", G_CALLBACK(_bt_add_shape),
+                     GINT_TO_POINTER(DT_MASKS_GRADIENT));
+    gtk_widget_set_tooltip_text(d->bt_gradient, _("add gradient"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->bt_gradient), FALSE);
+
+    d->bt_path = dtgtk_togglebutton_new(dtgtk_cairo_paint_masks_path, 0, NULL);
+    dt_action_define(DT_ACTION(self), N_("shapes"), N_("add path"), d->bt_path,
+                     &dt_action_def_toggle);
+    g_signal_connect(G_OBJECT(d->bt_path), "button-press-event", G_CALLBACK(_bt_add_shape),
+                     GINT_TO_POINTER(DT_MASKS_PATH));
+    gtk_widget_set_tooltip_text(d->bt_path, _("add path"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->bt_path), FALSE);
+
+    d->bt_ellipse = dtgtk_togglebutton_new(dtgtk_cairo_paint_masks_ellipse, 0, NULL);
+    dt_action_define(DT_ACTION(self), N_("shapes"), N_("add ellipse"), d->bt_ellipse,
+                     &dt_action_def_toggle);
+    g_signal_connect(G_OBJECT(d->bt_ellipse), "button-press-event", G_CALLBACK(_bt_add_shape),
+                     GINT_TO_POINTER(DT_MASKS_ELLIPSE));
+    gtk_widget_set_tooltip_text(d->bt_ellipse, _("add ellipse"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->bt_ellipse), FALSE);
+
+    d->bt_circle = dtgtk_togglebutton_new(dtgtk_cairo_paint_masks_circle, 0, NULL);
+    dt_action_define(DT_ACTION(self), N_("shapes"), N_("add circle"), d->bt_circle,
+                     &dt_action_def_toggle);
+    g_signal_connect(G_OBJECT(d->bt_circle), "button-press-event", G_CALLBACK(_bt_add_shape),
+                     GINT_TO_POINTER(DT_MASKS_CIRCLE));
+    gtk_widget_set_tooltip_text(d->bt_circle, _("add circle"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->bt_circle), FALSE);
+
+    d->bt_brush = dtgtk_togglebutton_new(dtgtk_cairo_paint_masks_brush, 0, NULL);
+    dt_action_define(DT_ACTION(self), N_("shapes"), N_("add brush"), d->bt_brush,
+                     &dt_action_def_toggle);
+    g_signal_connect(G_OBJECT(d->bt_brush), "button-press-event", G_CALLBACK(_bt_add_shape),
+                     GINT_TO_POINTER(DT_MASKS_BRUSH));
+    gtk_widget_set_tooltip_text(d->bt_brush, _("add brush"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->bt_brush), FALSE);
 
     d->treeview = gtk_tree_view_new();
     GtkTreeViewColumn *col = gtk_tree_view_column_new();

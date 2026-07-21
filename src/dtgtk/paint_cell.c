@@ -73,7 +73,8 @@ static void _paint_cell_render(GtkCellRenderer *r, cairo_t *cr, GtkWidget *widge
         return;
 
     GdkRGBA fg;
-    dt_gui_widget_get_color(widget, &fg);
+    GtkStyleContext *ctx = gtk_widget_get_style_context(widget);
+    gtk_style_context_get_color(ctx, gtk_widget_get_state_flags(widget), &fg);
 
     const int mx = cell_area->width / 5;
     const int my = cell_area->height / 5;

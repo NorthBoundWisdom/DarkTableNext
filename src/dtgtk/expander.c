@@ -26,25 +26,15 @@
 
 G_DEFINE_TYPE(GtkDarktableExpander, dtgtk_expander, GTK_TYPE_BOX);
 
-static void _expander_resize(GtkWidget *widget, GtkWidget *frame);
-
-#if GTK_CHECK_VERSION(4, 0, 0)
-static void _expander_size_allocate(GtkWidget *widget, int width, int height, int baseline);
-#endif
-
 static void dtgtk_expander_class_init(GtkDarktableExpanderClass *class)
 {
-#if GTK_CHECK_VERSION(4, 0, 0)
-    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
-    widget_class->size_allocate = _expander_size_allocate;
-#endif
 }
 
 GtkWidget *dtgtk_expander_get_frame(GtkDarktableExpander *expander)
 {
     g_return_val_if_fail(DTGTK_IS_EXPANDER(expander), NULL);
 
-    return dt_gui_revealer_get_child(GTK_REVEALER(expander->frame));
+    return gtk_bin_get_child(GTK_BIN(expander->frame));
 }
 
 GtkWidget *dtgtk_expander_get_header(GtkDarktableExpander *expander)
@@ -216,7 +206,7 @@ static gboolean _expander_scroll(GtkWidget *widget, GdkFrameClock *frame_clock, 
     return G_SOURCE_REMOVE;
 }
 
-static void _expander_resize(GtkWidget *widget, GtkWidget *frame)
+static void _expander_resize(GtkWidget *widget, GdkRectangle *allocation, gpointer user_data)
 {
     // Already scrolling to this widget
     if (widget == _scroll_widget)
@@ -268,7 +258,7 @@ static void _expander_resize(GtkWidget *widget, GtkWidget *frame)
                 return;
 
             const gboolean frame_selected =
-                gtk_widget_get_state_flags(frame) & GTK_STATE_FLAG_SELECTED;
+                gtk_widget_get_state_flags(user_data) & GTK_STATE_FLAG_SELECTED;
 
             if (!frame_selected && !is_lib_gui_module)
                 return;
@@ -284,20 +274,6 @@ static void _expander_resize(GtkWidget *widget, GtkWidget *frame)
                             dt_conf_get_int("darkroom/ui/transition_duration") * 1000),
             NULL);
 }
-
-#if GTK_CHECK_VERSION(4, 0, 0)
-static void _expander_size_allocate(GtkWidget *widget, int width, int height, int baseline)
-{
-    GTK_WIDGET_CLASS(dtgtk_expander_parent_class)->size_allocate(widget, width, height, baseline);
-    _expander_resize(widget, DTGTK_EXPANDER(widget)->frame);
-}
-#else
-static void _expander_size_allocate(GtkWidget *widget, GdkRectangle *allocation, gpointer user_data)
-{
-    (void)allocation;
-    _expander_resize(widget, user_data);
-}
-#endif
 
 void dtgtk_expander_set_drag_hover(GtkDarktableExpander *expander, gboolean allow, gboolean below,
                                    guint time)
@@ -394,20 +370,18 @@ GtkWidget *dtgtk_expander_new(GtkWidget *header, GtkWidget *body)
     if (expander->body)
         gtk_container_add(GTK_CONTAINER(expander->body_evb), expander->body);
     GtkWidget *frame = gtk_frame_new(NULL);
-    dt_gui_frame_set_child(GTK_FRAME(frame), expander->body_evb);
+    gtk_container_add(GTK_CONTAINER(frame), expander->body_evb);
     expander->frame = gtk_revealer_new();
     gtk_revealer_set_transition_duration(GTK_REVEALER(expander->frame), 0);
     gtk_revealer_set_reveal_child(GTK_REVEALER(expander->frame), TRUE);
-    dt_gui_revealer_set_child(GTK_REVEALER(expander->frame), frame);
+    gtk_container_add(GTK_CONTAINER(expander->frame), frame);
 
     dt_gui_box_add(expander, expander->header_evb, expander->frame);
 
     g_signal_connect(expander->header_evb, "drag-begin", G_CALLBACK(_expander_drag_begin), NULL);
     g_signal_connect(expander->header_evb, "drag-end", G_CALLBACK(_expander_drag_end), NULL);
     g_signal_connect(expander, "drag-leave", G_CALLBACK(_expander_drag_leave), NULL);
-#if !GTK_CHECK_VERSION(4, 0, 0)
-    g_signal_connect(expander, "size-allocate", G_CALLBACK(_expander_size_allocate), frame);
-#endif
+    g_signal_connect(expander, "size-allocate", G_CALLBACK(_expander_resize), frame);
 
     return GTK_WIDGET(expander);
 }

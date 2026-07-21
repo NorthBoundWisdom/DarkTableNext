@@ -3030,14 +3030,15 @@ static void _update_illuminant_color(const dt_iop_module_t *self)
     _update_xy_color(self);
 }
 
-static void _illuminant_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                                   gpointer user_data)
+static gboolean _illuminant_color_draw(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
 {
-    (void)area;
-    const dt_iop_module_t *self = user_data;
     const dt_iop_channelmixer_rgb_params_t *p = self->params;
 
     // Init
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width;
+    int height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -3067,16 +3068,18 @@ static void _illuminant_color_draw(GtkDrawingArea *area, cairo_t *crf, int width
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
-static void _target_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                               gpointer user_data)
+static gboolean _target_color_draw(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
 {
-    (void)area;
-    const dt_iop_module_t *self = user_data;
     const dt_iop_channelmixer_rgb_gui_data_t *g = self->gui_data;
 
     // Init
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width;
+    int height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -3108,16 +3111,18 @@ static void _target_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, in
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
-static void _origin_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                               gpointer user_data)
+static gboolean _origin_color_draw(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
 {
-    (void)area;
-    const dt_iop_module_t *self = user_data;
     const dt_iop_channelmixer_rgb_gui_data_t *g = self->gui_data;
 
     // Init
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width;
+    int height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -3137,6 +3142,7 @@ static void _origin_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, in
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
 static void _update_approx_cct(const dt_iop_module_t *self)
@@ -3921,8 +3927,7 @@ void gui_init(dt_iop_module_t *self)
         _("this is the color of the scene illuminant before chromatic adaptation\n"
           "this color will be turned into pure white by the adaptation."));
 
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->illum_color), _illuminant_color_draw,
-                                      self, NULL);
+    g_signal_connect(G_OBJECT(g->illum_color), "draw", G_CALLBACK(_illuminant_color_draw), self);
 
     g->color_picker = dt_color_picker_new(self, DT_COLOR_PICKER_AREA, NULL);
     dt_action_define_iop(self, NULL, N_("picker"), g->color_picker, &dt_action_def_toggle);
@@ -3988,7 +3993,7 @@ void gui_init(dt_iop_module_t *self)
     const gchar *label = N_("take channel mixing into account");
     g->use_mixing = gtk_check_button_new_with_label(_(label));
     dt_action_define_iop(self, N_("mapping"), label, g->use_mixing, &dt_action_def_toggle);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(GTK_CHECK_BUTTON(g->use_mixing))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->use_mixing))),
                             PANGO_ELLIPSIZE_END);
     gtk_widget_set_tooltip_text(g->use_mixing,
                                 _("compute the target by taking the channel mixing into account.\n"
@@ -4000,8 +4005,7 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_vexpand(g->origin_spot, TRUE);
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->origin_spot),
                                 _("the input color that should be mapped to the target"));
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->origin_spot), _origin_color_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->origin_spot), "draw", G_CALLBACK(_origin_color_draw), self);
 
     g->Lch_origin = gtk_label_new(_("L: \tN/A\nh: \tN/A\nc: \tN/A"));
     gtk_widget_set_tooltip_text(
@@ -4013,8 +4017,7 @@ void gui_init(dt_iop_module_t *self)
                                 DT_PIXEL_APPLY_DPI(darktable.bauhaus->quad_width));
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->target_spot),
                                 _("the desired target color after mapping"));
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->target_spot), _target_color_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->target_spot), "draw", G_CALLBACK(_target_color_draw), self);
 
     g->lightness_spot = dt_bauhaus_slider_new_with_range(self, 0., LIGHTNESS_MAX, 0, 0, 1);
     dt_bauhaus_widget_set_label(g->lightness_spot, N_("mapping"), N_("lightness"));

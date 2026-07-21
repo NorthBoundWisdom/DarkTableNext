@@ -710,13 +710,15 @@ cleanup:
 }
 #endif
 
-static void _draw_thumb(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                        gpointer user_data)
+static gboolean _draw_thumb(GtkWidget *area, cairo_t *crf, const dt_iop_module_t *self)
 {
-    (void)area;
-    const dt_iop_module_t *self = user_data;
     const dt_iop_overlay_gui_data_t *g = self->gui_data;
     const dt_iop_overlay_params_t *p = self->params;
+
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(area, &allocation);
+    const int width = allocation.width;
+    const int height = allocation.height;
 
     if (dt_is_valid_imgid(p->imgid))
     {
@@ -777,6 +779,7 @@ static void _draw_thumb(GtkDrawingArea *area, cairo_t *crf, int width, int heigh
         pango_font_description_free(desc);
         g_object_unref(layout);
     }
+    return FALSE;
 }
 
 static void _alignment_callback(const GtkWidget *tb, dt_iop_module_t *self)
@@ -1051,7 +1054,7 @@ void gui_init(dt_iop_module_t *self)
     int line = 0;
 
     g->area = GTK_DRAWING_AREA(dtgtk_drawing_area_new_with_height(0));
-    dt_gui_drawing_area_set_draw_func(g->area, _draw_thumb, self, NULL);
+    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(_draw_thumb), self);
     gtk_widget_set_size_request(GTK_WIDGET(g->area), 150, 150);
     gtk_grid_attach(grid, GTK_WIDGET(g->area), 0, line++, 1, 2);
 

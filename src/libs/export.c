@@ -545,15 +545,9 @@ static void _scale_changed(GtkEntry *spin, dt_lib_export_t *d)
 static void _width_changed(GtkEditable *entry, gpointer user_data);
 static void _height_changed(GtkEditable *entry, gpointer user_data);
 
-static void _scale_mdlclick(GtkGestureSingle *gesture, int n_press, double x, double y,
-                            gpointer user_data)
+static gboolean _scale_mdlclick(GtkEntry *spin, GdkEventButton *event, dt_lib_export_t *d)
 {
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkEntry *spin = GTK_ENTRY(gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture)));
-    dt_lib_export_t *d = (dt_lib_export_t *)user_data;
-    if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_MIDDLE)
+    if (event->button == GDK_BUTTON_MIDDLE)
     {
         dt_conf_set_string(CONFIG_PREFIX "resizing_factor", "1");
         g_signal_handlers_block_by_func(spin, _scale_changed, d);
@@ -564,16 +558,12 @@ static void _scale_mdlclick(GtkGestureSingle *gesture, int n_press, double x, do
     {
         _scale_changed(spin, d);
     }
+    return FALSE;
 }
 
-static void _widht_mdlclick(GtkGestureSingle *gesture, int n_press, double x, double y,
-                            gpointer user_data)
+static gboolean _widht_mdlclick(GtkEntry *spin, GdkEventButton *event, gpointer user_data)
 {
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkEntry *spin = GTK_ENTRY(gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture)));
-    if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_MIDDLE)
+    if (event->button == GDK_BUTTON_MIDDLE)
     {
         dt_conf_set_int(CONFIG_PREFIX "width", 0);
         g_signal_handlers_block_by_func(spin, _width_changed, user_data);
@@ -584,16 +574,13 @@ static void _widht_mdlclick(GtkGestureSingle *gesture, int n_press, double x, do
     {
         _width_changed(GTK_EDITABLE(spin), user_data);
     }
+
+    return FALSE;
 }
 
-static void _height_mdlclick(GtkGestureSingle *gesture, int n_press, double x, double y,
-                             gpointer user_data)
+static gboolean _height_mdlclick(GtkEntry *spin, GdkEventButton *event, gpointer user_data)
 {
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkEntry *spin = GTK_ENTRY(gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture)));
-    if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_MIDDLE)
+    if (event->button == GDK_BUTTON_MIDDLE)
     {
         dt_conf_set_int(CONFIG_PREFIX "height", 0);
         g_signal_handlers_block_by_func(spin, _height_changed, user_data);
@@ -604,6 +591,7 @@ static void _height_mdlclick(GtkGestureSingle *gesture, int n_press, double x, d
     {
         _height_changed(GTK_EDITABLE(spin), user_data);
     }
+    return FALSE;
 }
 
 static void _size_in_px_update(dt_lib_export_t *d)
@@ -1213,7 +1201,7 @@ static void _on_storage_list_changed(gpointer instance, dt_lib_module_t *self)
     dt_imageio_module_storage_t *storage = dt_imageio_get_storage();
     dt_bauhaus_combobox_clear(d->storage);
 
-    dt_gui_container_remove_children(d->storage_extra_container);
+    dt_gui_container_remove_children(GTK_CONTAINER(d->storage_extra_container));
 
     for (const GList *it = darktable.imageio->plugins_storage; it; it = g_list_next(it))
     {
@@ -1221,7 +1209,7 @@ static void _on_storage_list_changed(gpointer instance, dt_lib_module_t *self)
         dt_bauhaus_combobox_add(d->storage, module->name(module));
         if (module->widget)
         {
-            dt_gui_stack_add_child(GTK_STACK(d->storage_extra_container), module->widget);
+            gtk_container_add(GTK_CONTAINER(d->storage_extra_container), module->widget);
         }
     }
     dt_bauhaus_combobox_set(d->storage, dt_imageio_get_index_of_storage(storage));
@@ -1396,7 +1384,7 @@ void gui_init(dt_lib_module_t *self)
         dt_bauhaus_combobox_add(d->storage, module->name(module));
         if (module->widget)
         {
-            dt_gui_stack_add_child(GTK_STACK(d->storage_extra_container), module->widget);
+            gtk_container_add(GTK_CONTAINER(d->storage_extra_container), module->widget);
         }
     }
 
@@ -1425,7 +1413,7 @@ void gui_init(dt_lib_module_t *self)
         const dt_imageio_module_format_t *module = it->data;
         if (module->widget)
         {
-            dt_gui_stack_add_child(GTK_STACK(d->format_extra_container), module->widget);
+            gtk_container_add(GTK_CONTAINER(d->format_extra_container), module->widget);
         }
     }
 
@@ -1465,28 +1453,30 @@ void gui_init(dt_lib_module_t *self)
     d->print_size = gtk_flow_box_new();
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(d->print_size), 5);
     gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(d->print_size), 3);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->print_size), d->print_width);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->print_size), gtk_label_new(_("x")));
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->print_size), d->print_height);
+    gtk_container_add(GTK_CONTAINER(d->print_size), d->print_width);
+    gtk_container_add(GTK_CONTAINER(d->print_size), gtk_label_new(_("x")));
+    gtk_container_add(GTK_CONTAINER(d->print_size), d->print_height);
     d->unit_label = gtk_label_new(_("cm"));
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->print_size), d->unit_label);
+    gtk_container_add(GTK_CONTAINER(d->print_size), d->unit_label);
     GtkBox *dpi_box = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3));
     gtk_box_pack_start(dpi_box, gtk_label_new(_("@")), FALSE, FALSE, 0);
     gtk_box_pack_start(dpi_box, d->print_dpi, TRUE, TRUE, 0);
     gtk_box_pack_start(dpi_box, gtk_label_new(_("dpi")), FALSE, FALSE, 0);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->print_size), GTK_WIDGET(dpi_box));
-    dt_gui_flow_box_set_children_can_focus(GTK_FLOW_BOX(d->print_size), FALSE);
+    gtk_container_add(GTK_CONTAINER(d->print_size), GTK_WIDGET(dpi_box));
+    gtk_container_foreach(GTK_CONTAINER(d->print_size), (GtkCallback)gtk_widget_set_can_focus,
+                          GINT_TO_POINTER(FALSE));
 
     d->px_size = gtk_flow_box_new();
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(d->px_size), 3);
     gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(d->px_size), 3);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->px_size), d->width);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->px_size), gtk_label_new(_("x")));
+    gtk_container_add(GTK_CONTAINER(d->px_size), d->width);
+    gtk_container_add(GTK_CONTAINER(d->px_size), gtk_label_new(_("x")));
     GtkBox *px_box = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3));
     gtk_box_pack_start(px_box, d->height, TRUE, TRUE, 0);
     gtk_box_pack_start(px_box, gtk_label_new(_("px")), FALSE, FALSE, 0);
-    dt_gui_flow_box_append(GTK_FLOW_BOX(d->px_size), GTK_WIDGET(px_box));
-    dt_gui_flow_box_set_children_can_focus(GTK_FLOW_BOX(d->px_size), FALSE);
+    gtk_container_add(GTK_CONTAINER(d->px_size), GTK_WIDGET(px_box));
+    gtk_container_foreach(GTK_CONTAINER(d->px_size), (GtkCallback)gtk_widget_set_can_focus,
+                          GINT_TO_POINTER(FALSE));
 
     d->scale = dt_action_entry_new(DT_ACTION(self), N_("scale"), G_CALLBACK(_scale_changed), d,
                                    _("it can be an integer, decimal number or simple fraction.\n"
@@ -1647,11 +1637,22 @@ void gui_init(dt_lib_module_t *self)
 
     dt_gui_box_add(d->cs.container, view, d->batch_export_button);
 
-    dt_gui_connect_click_all(d->width, _widht_mdlclick, NULL, d);
-    dt_gui_connect_click_all(d->height, _height_mdlclick, NULL, d);
-    dt_gui_connect_click_all(d->print_width, _widht_mdlclick, NULL, d);
-    dt_gui_connect_click_all(d->print_height, _height_mdlclick, NULL, d);
-    dt_gui_connect_click_all(d->scale, _scale_mdlclick, NULL, d);
+    gtk_widget_add_events(d->width, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(d->height, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(d->print_width, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(d->print_height, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(d->scale, GDK_BUTTON_PRESS_MASK);
+
+    g_signal_connect(G_OBJECT(d->width), "button-press-event", G_CALLBACK(_widht_mdlclick),
+                     (gpointer)d);
+    g_signal_connect(G_OBJECT(d->height), "button-press-event", G_CALLBACK(_height_mdlclick),
+                     (gpointer)d);
+    g_signal_connect(G_OBJECT(d->print_width), "button-press-event", G_CALLBACK(_widht_mdlclick),
+                     (gpointer)d);
+    g_signal_connect(G_OBJECT(d->print_height), "button-press-event", G_CALLBACK(_height_mdlclick),
+                     (gpointer)d);
+    g_signal_connect(G_OBJECT(d->scale), "button-press-event", G_CALLBACK(_scale_mdlclick),
+                     (gpointer)d);
 
     // this takes care of keeping hidden widgets hidden
     gtk_widget_show_all(self->widget);
@@ -1723,14 +1724,14 @@ void gui_cleanup(dt_lib_module_t *self)
     {
         dt_imageio_module_storage_t *module = it->data;
         if (module->widget)
-            dt_gui_stack_remove_child(GTK_STACK(d->storage_extra_container), module->widget);
+            gtk_container_remove(GTK_CONTAINER(d->storage_extra_container), module->widget);
     }
 
     for (const GList *it = darktable.imageio->plugins_format; it; it = g_list_next(it))
     {
         dt_imageio_module_format_t *module = it->data;
         if (module->widget)
-            dt_gui_stack_remove_child(GTK_STACK(d->format_extra_container), module->widget);
+            gtk_container_remove(GTK_CONTAINER(d->format_extra_container), module->widget);
     }
 
     g_free(d->style_name);

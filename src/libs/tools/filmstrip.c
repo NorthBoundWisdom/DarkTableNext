@@ -78,27 +78,27 @@ static dt_thumbtable_t *_filmstrip_thumbtable(void)
     return table;
 }
 
-static void _filmstrip_attach(dt_lib_module_t *self)
+static gboolean _lib_filmstrip_draw_callback(GtkWidget *widget, cairo_t *wcr, gpointer user_data)
 {
+    dt_lib_module_t *self = user_data;
     dt_thumbtable_t *table = _filmstrip_thumbtable();
 
-    GtkWidget *child = dt_gui_container_first_child(self->widget);
+    GtkWidget *child = gtk_bin_get_child(GTK_BIN(widget));
     if (child != table->widget)
     {
         if (child)
-            dt_gui_box_remove(GTK_BOX(self->widget), child);
+            gtk_container_remove(GTK_CONTAINER(widget), child);
         dt_thumbtable_set_parent(table, self->widget, DT_THUMBTABLE_MODE_FILMSTRIP);
         gtk_widget_show(table->widget);
         gtk_widget_queue_draw(table->widget);
     }
-    gtk_widget_show(self->widget);
+    gtk_widget_show(widget);
+    return FALSE;
 }
 
 void view_enter(dt_lib_module_t *self, dt_view_t *old_view, dt_view_t *new_view)
 {
-    _filmstrip_attach(self);
-    (void)old_view;
-    (void)new_view;
+    _lib_filmstrip_draw_callback(self->widget, NULL, self);
 }
 
 static void _filmstrip_center(dt_action_t *action)
@@ -151,7 +151,11 @@ static void _filmstrip_pin_in_second_window(dt_action_t *action)
 void gui_init(dt_lib_module_t *self)
 {
     /* creating container area */
-    self->widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    self->widget = gtk_event_box_new();
+
+    /* connect callbacks */
+    g_signal_connect(G_OBJECT(self->widget), "draw", G_CALLBACK(_lib_filmstrip_draw_callback),
+                     self);
 
     /* initialize view manager proxy */
     darktable.view_manager->proxy.filmstrip.module = self;

@@ -140,7 +140,7 @@ static void _duplicates_widget_init(dt_lib_filtering_rule_t *rule,
 
     duplicates->combo = dt_bauhaus_combobox_new_full(
         DT_ACTION(self), N_("rules"), N_("duplicates"), _("duplicates state filter"), 0,
-        (dt_gui_widget_callback_t)_duplicates_changed, duplicates, _duplicates_names);
+        (GtkCallback)_duplicates_changed, duplicates, _duplicates_names);
     dt_bauhaus_widget_hide_label(duplicates->combo);
 
     gtk_box_pack_start(GTK_BOX(rule->w_special_box), duplicates->combo, TRUE, TRUE, 0);

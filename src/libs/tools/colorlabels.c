@@ -110,17 +110,13 @@ int position(const dt_lib_module_t *self)
     return 1001;
 }
 
-static void _lib_colorlabels_enter(GtkEventControllerMotion *controller, const double x,
-                                   const double y, gpointer user_data)
+static gboolean _lib_colorlabels_enter_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
+                                                       dt_lib_module_t *self)
 {
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     const gint colorlabel = _get_colorlabel(self, widget);
 
     darktable.control->element = (colorlabel + 1) % 6;
-
-    (void)x;
-    (void)y;
+    return FALSE;
 }
 
 static char *_get_tooltip_for(const int coloridx)
@@ -164,7 +160,8 @@ void gui_init(dt_lib_module_t *self)
         gtk_box_pack_start(GTK_BOX(self->widget), button, TRUE, TRUE, 0);
         g_signal_connect(G_OBJECT(button), "button-press-event",
                          G_CALLBACK(_lib_colorlabels_button_clicked_callback), self);
-        dt_gui_connect_motion(button, NULL, _lib_colorlabels_enter, NULL, self);
+        g_signal_connect(G_OBJECT(button), "enter-notify-event",
+                         G_CALLBACK(_lib_colorlabels_enter_notify_callback), self);
         ac = dt_action_define(&darktable.control->actions_thumb, NULL, N_("color label"), button,
                               &dt_action_def_color_label);
     }
@@ -206,17 +203,12 @@ void gui_update(dt_lib_module_t *self)
 
 #define FLOATING_ENTRY_WIDTH DT_PIXEL_APPLY_DPI(150)
 
-static gboolean _lib_colorlabels_key_press(GtkEventControllerKey *controller, const guint keyval,
-                                           const guint keycode, const GdkModifierType state,
-                                           gpointer user_data)
+static gboolean _lib_colorlabels_key_press(GtkWidget *entry, GdkEventKey *event,
+                                           dt_lib_module_t *self)
 {
-    (void)keycode;
-    (void)state;
-    GtkWidget *entry = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     dt_lib_colorlabels_t *d = self->data;
 
-    switch (keyval)
+    switch (event->keyval)
     {
     case GDK_KEY_Escape:
         gtk_widget_destroy(d->floating_window);
@@ -244,16 +236,12 @@ static gboolean _lib_colorlabels_key_press(GtkEventControllerKey *controller, co
     return FALSE; /* event not handled */
 }
 
-static void _lib_colorlabels_destroy(GtkWidget *widget, GParamSpec *pspec,
-                                     dt_lib_module_t *self)
+static gboolean _lib_colorlabels_destroy(GtkWidget *widget, GdkEvent *event, dt_lib_module_t *self)
 {
-    (void)pspec;
-    if (gtk_widget_has_focus(widget))
-        return;
-
     dt_lib_colorlabels_t *d = self->data;
 
     gtk_widget_destroy(d->floating_window);
+    return FALSE;
 }
 
 static void _lib_colorlabels_edit(dt_lib_module_t *self, GdkEventButton *event)
@@ -268,9 +256,10 @@ static void _lib_colorlabels_edit(dt_lib_module_t *self, GdkEventButton *event)
 
     GtkWidget *entry = gtk_entry_new();
     gtk_widget_set_size_request(entry, FLOATING_ENTRY_WIDTH, -1);
+    gtk_widget_add_events(entry, GDK_FOCUS_CHANGE_MASK);
     gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
-    g_signal_connect(entry, "notify::has-focus", G_CALLBACK(_lib_colorlabels_destroy), self);
-    dt_gui_connect_key(entry, _lib_colorlabels_key_press, self);
+    g_signal_connect(entry, "focus-out-event", G_CALLBACK(_lib_colorlabels_destroy), self);
+    g_signal_connect(entry, "key-press-event", G_CALLBACK(_lib_colorlabels_key_press), self);
     gtk_widget_set_tooltip_text(entry, _("enter a description of how you use this color label"));
 
     if (use_popover)
@@ -286,7 +275,7 @@ static void _lib_colorlabels_edit(dt_lib_module_t *self, GdkEventButton *event)
         gtk_popover_set_pointing_to(GTK_POPOVER(d->floating_window), &r);
         gtk_popover_set_modal(GTK_POPOVER(d->floating_window), TRUE);
         gtk_popover_set_position(GTK_POPOVER(d->floating_window), GTK_POS_TOP);
-        dt_gui_popover_set_child(GTK_POPOVER(d->floating_window), entry);
+        gtk_container_add(GTK_CONTAINER(d->floating_window), entry);
         gtk_widget_show_all(d->floating_window);
         gtk_widget_grab_focus(entry);
     }
@@ -296,7 +285,7 @@ static void _lib_colorlabels_edit(dt_lib_module_t *self, GdkEventButton *event)
         const gint x = event->x_root;
         const gint y = event->y_root - DT_PIXEL_APPLY_DPI(50);
 
-        d->floating_window = dt_gui_toplevel_window_new();
+        d->floating_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 #ifdef GDK_WINDOWING_QUARTZ
         dt_osx_disallow_fullscreen(d->floating_window);
 #endif
@@ -305,7 +294,7 @@ static void _lib_colorlabels_edit(dt_lib_module_t *self, GdkEventButton *event)
         gtk_window_set_type_hint(GTK_WINDOW(d->floating_window), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
         gtk_window_set_transient_for(GTK_WINDOW(d->floating_window), GTK_WINDOW(window));
         gtk_widget_set_opacity(d->floating_window, 0.8);
-        dt_gui_window_set_child(GTK_WINDOW(d->floating_window), entry);
+        gtk_container_add(GTK_CONTAINER(d->floating_window), entry);
         gtk_widget_show_all(d->floating_window);
         gtk_window_move(GTK_WINDOW(d->floating_window), x, y);
         gtk_widget_grab_focus(entry);

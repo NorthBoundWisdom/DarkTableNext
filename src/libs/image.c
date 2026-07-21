@@ -184,7 +184,7 @@ static void _image_preference_changed(gpointer instance, dt_lib_module_t *self)
 {
     dt_lib_image_t *d = self->data;
     gboolean trash = dt_conf_get_bool("send_to_trash");
-    gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(d->delete_button))),
+    gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(d->delete_button))),
                        trash ? _("delete (trash)") : _("delete"));
     gtk_widget_set_tooltip_text(d->delete_button,
                                 trash ? _("physically delete from disk (using trash if possible)") :

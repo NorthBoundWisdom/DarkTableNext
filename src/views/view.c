@@ -1371,7 +1371,7 @@ static void _accels_window_sticky(GtkWidget *widget, dt_view_manager_t *vm)
         return;
 
     // creating new window
-    GtkWindow *win = GTK_WINDOW(dt_gui_toplevel_window_new());
+    GtkWindow *win = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
     dt_gui_add_class(GTK_WIDGET(win), "dt_accels_window");
     gtk_window_set_title(win, _("darktable - accels window"));
     GtkAllocation alloc;
@@ -1382,10 +1382,10 @@ static void _accels_window_sticky(GtkWidget *widget, dt_view_manager_t *vm)
     gtk_window_set_default_size(win, alloc.width * 0.7, alloc.height * 0.7);
     g_signal_connect(win, "destroy", G_CALLBACK(_accels_window_destroy), vm);
 
-    GtkWidget *sw = dt_gui_container_first_child(vm->accels_window.window);
+    GtkWidget *sw = dt_gui_container_first_child(GTK_CONTAINER(vm->accels_window.window));
     g_object_ref(sw);
-    dt_gui_window_remove_child(GTK_WINDOW(vm->accels_window.window), sw);
-    dt_gui_window_set_child(win, sw);
+    gtk_container_remove(GTK_CONTAINER(vm->accels_window.window), sw);
+    gtk_container_add(GTK_CONTAINER(win), sw);
     g_object_unref(sw);
 
     gtk_widget_destroy(vm->accels_window.window);
@@ -1436,7 +1436,7 @@ void dt_view_accels_show(dt_view_manager_t *vm)
     GtkWidget *sw = dt_gui_scroll_wrap(hb);
     gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(sw), alloc.height);
     gtk_scrolled_window_set_max_content_width(GTK_SCROLLED_WINDOW(sw), alloc.width);
-    dt_gui_window_set_child(GTK_WINDOW(vm->accels_window.window), sw);
+    gtk_container_add(GTK_CONTAINER(vm->accels_window.window), sw);
 
     gtk_window_set_resizable(GTK_WINDOW(vm->accels_window.window), FALSE);
     gtk_window_set_default_size(GTK_WINDOW(vm->accels_window.window), alloc.width, alloc.height);
@@ -1466,7 +1466,14 @@ void dt_view_accels_refresh(dt_view_manager_t *vm)
         return;
 
     // drop all existing tables
-    dt_gui_container_destroy_children(vm->accels_window.flow_box);
+    GList *lw = gtk_container_get_children(GTK_CONTAINER(vm->accels_window.flow_box));
+
+    for (const GList *lw_iter = lw; lw_iter; lw_iter = g_list_next(lw_iter))
+    {
+        GtkWidget *w = (GtkWidget *)lw_iter->data;
+        gtk_widget_destroy(w);
+    }
+    g_list_free(lw);
 
     // get the list of valid accel for this view
     const dt_view_t *cv = dt_view_manager_get_current_view(vm);

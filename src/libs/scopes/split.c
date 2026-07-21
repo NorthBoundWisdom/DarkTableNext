@@ -233,14 +233,14 @@ static void _responsive_buttons(dt_scopes_t *const s)
     gtk_orientable_set_orientation(GTK_ORIENTABLE(s->button_box_rgb), orient_btn_rgb);
 }
 
-static void _reparent(GtkBox *src, GtkBox *dest, GtkWidget *child)
+static void _reparent(GtkWidget *src, GtkWidget *dest, GtkWidget *child)
 {
     // as enter/leave can be called multiple times, check the child
     // widget is in src
-    if (gtk_widget_get_parent(child) == GTK_WIDGET(src))
+    if (gtk_widget_get_parent(child) == src)
     {
         g_object_ref(child);
-        dt_gui_box_remove(src, child);
+        gtk_container_remove(GTK_CONTAINER(src), child);
         dt_gui_box_add(dest, child);
         g_object_unref(child);
     }
@@ -258,10 +258,9 @@ static void _split_mode_enter(dt_scopes_mode_t *const self)
         dt_scopes_reprocess();
 
     // reparent waveform and RGB channel buttons to left split options
-    _reparent(GTK_BOX(self->scopes->button_box_right), GTK_BOX(self->scopes->button_box_split),
-              d->left->options_box);
+    _reparent(self->scopes->button_box_right, self->scopes->button_box_split, d->left->options_box);
     if (d->left->functions->draw_scope_channels)
-        _reparent(GTK_BOX(self->scopes->button_box_right), GTK_BOX(self->scopes->button_box_split),
+        _reparent(self->scopes->button_box_right, self->scopes->button_box_split,
                   self->scopes->button_box_rgb);
     gtk_widget_show_all(self->scopes->button_box_split);
 }
@@ -272,10 +271,9 @@ static void _split_mode_leave(const dt_scopes_mode_t *const self)
     dt_scopes_call(d->left, mode_leave);
     dt_scopes_call(d->right, mode_leave);
     // move all children back to right options box
-    _reparent(GTK_BOX(self->scopes->button_box_split), GTK_BOX(self->scopes->button_box_right),
-              d->left->options_box);
+    _reparent(self->scopes->button_box_split, self->scopes->button_box_right, d->left->options_box);
     if (d->left->functions->draw_scope_channels)
-        _reparent(GTK_BOX(self->scopes->button_box_split), GTK_BOX(self->scopes->button_box_right),
+        _reparent(self->scopes->button_box_split, self->scopes->button_box_right,
                   self->scopes->button_box_rgb);
     gtk_widget_hide(self->scopes->button_box_split);
     gtk_orientable_set_orientation(GTK_ORIENTABLE(self->scopes->button_box_left),

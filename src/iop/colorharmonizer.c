@@ -943,14 +943,11 @@ static void _sync_to_vectorscope_toggled(GtkToggleButton *button, dt_iop_module_
         gtk_widget_set_sensitive(g->set_from_vectorscope, !active);
 }
 
-static void _swatch_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, int height,
-                                  gpointer user_data)
+static gboolean _swatch_draw_callback(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {
-    (void)width;
-    (void)height;
     dt_iop_module_t *self = user_data;
     dt_iop_colorharmonizer_params_t *p = self->params;
-    const int idx = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(area), "swatch-index"));
+    const int idx = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "swatch-index"));
 
     float hue = 0.0f;
     gboolean show_color = TRUE;
@@ -975,13 +972,14 @@ static void _swatch_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, 
     {
         cairo_set_source_rgb(cr, 0.25, 0.25, 0.25);
         cairo_paint(cr);
-        return;
+        return TRUE;
     }
 
     float r, g, b;
     _hue_to_srgb(hue, &r, &g, &b);
     cairo_set_source_rgb(cr, r, g, b);
     cairo_paint(cr);
+    return TRUE;
 }
 
 static void _custom_hue_changed(GtkWidget *widget, dt_iop_module_t *self)
@@ -1412,7 +1410,7 @@ static GtkWidget *_create_swatch(dt_iop_module_t *self, const int index)
     GtkWidget *swatch = gtk_drawing_area_new();
     gtk_widget_set_size_request(swatch, DT_PIXEL_APPLY_DPI(24), DT_PIXEL_APPLY_DPI(24));
     g_object_set_data(G_OBJECT(swatch), "swatch-index", GINT_TO_POINTER(index));
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(swatch), _swatch_draw_callback, self, NULL);
+    g_signal_connect(G_OBJECT(swatch), "draw", G_CALLBACK(_swatch_draw_callback), self);
     return swatch;
 }
 
@@ -1527,8 +1525,7 @@ void gui_init(dt_iop_module_t *self)
     GtkWidget *sync_row = dt_gui_hbox();
 
     g->sync_to_vectorscope = gtk_check_button_new_with_label(_("vectorscope two-way sync"));
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(
-                                GTK_CHECK_BUTTON(g->sync_to_vectorscope))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->sync_to_vectorscope))),
                             PANGO_ELLIPSIZE_END);
     gtk_widget_set_tooltip_text(
         g->sync_to_vectorscope,

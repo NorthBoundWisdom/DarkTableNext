@@ -64,18 +64,13 @@ static void _import_metadata_changed(GtkWidget *widget, dt_import_metadata_t *me
     gtk_combo_box_set_active(GTK_COMBO_BOX(w), -1);
 }
 
-static void _import_metadata_reset(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                   gpointer user_data)
+static gboolean _import_metadata_reset(GtkWidget *label, GdkEventButton *event, GtkWidget *widget)
 {
-    if (n_press == 2)
+    if (event->type == GDK_2BUTTON_PRESS)
     {
-        GtkWidget *widget = user_data;
         gtk_entry_set_text(GTK_ENTRY(widget), "");
     }
-
-    (void)gesture;
-    (void)x;
-    (void)y;
+    return FALSE;
 }
 
 static void _metadata_reset_all(dt_import_metadata_t *metadata, const gboolean hard)
@@ -105,18 +100,14 @@ static void _metadata_reset_all(dt_import_metadata_t *metadata, const gboolean h
     }
 }
 
-static void _import_metadata_reset_all(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                       gpointer user_data)
+static gboolean _import_metadata_reset_all(GtkWidget *label, GdkEventButton *event,
+                                           dt_import_metadata_t *metadata)
 {
-    if (n_press == 2)
+    if (event->type == GDK_2BUTTON_PRESS)
     {
-        dt_import_metadata_t *metadata = user_data;
         _metadata_reset_all(metadata, FALSE);
     }
-
-    (void)gesture;
-    (void)x;
-    (void)y;
+    return FALSE;
 }
 
 static void _import_metadata_toggled(GtkWidget *widget, dt_import_metadata_t *metadata)
@@ -366,9 +357,10 @@ static GtkWidget *_set_up_label(GtkWidget *label, const int align, const int lin
     gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     gtk_widget_set_halign(label, align);
     gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-    GtkWidget *labelev = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget *labelev = gtk_event_box_new();
     gtk_widget_set_visible(labelev, TRUE);
-    dt_gui_box_add(labelev, label);
+    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
+    gtk_container_add(GTK_CONTAINER(labelev), label);
     gtk_grid_attach(GTK_GRID(metadata->grid), labelev, 0, line, 1, 1);
     return labelev;
 }
@@ -394,7 +386,7 @@ static void _set_up_entry(GtkWidget *entry, const char *str, const char *name, c
     gtk_widget_set_name(entry, name);
     gtk_entry_set_text(GTK_ENTRY(entry), str);
     gtk_widget_set_halign(entry, GTK_ALIGN_FILL);
-    dt_gui_editable_set_width_chars(GTK_EDITABLE(entry), 5);
+    gtk_entry_set_width_chars(GTK_ENTRY(entry), 5);
     gtk_widget_set_hexpand(entry, TRUE);
     gtk_grid_attach(GTK_GRID(metadata->grid), entry, 1, line, 1, 1);
 }
@@ -441,7 +433,8 @@ static void _fill_metadata_grid(dt_import_metadata_t *metadata)
         g_free(setting);
         g_signal_connect(GTK_ENTRY(metadata_entry), "changed", G_CALLBACK(_import_metadata_changed),
                          metadata);
-        dt_gui_connect_click_all(labelev, _import_metadata_reset, NULL, metadata_entry);
+        g_signal_connect(GTK_EVENT_BOX(labelev), "button-press-event",
+                         G_CALLBACK(_import_metadata_reset), metadata_entry);
 
         GtkWidget *metadata_imported = gtk_check_button_new();
         g_object_set_data(G_OBJECT(metadata_imported), "tagname", md->tagname);
@@ -478,7 +471,8 @@ void dt_import_metadata_init(dt_import_metadata_t *metadata)
                                 _("metadata to be applied per default"
                                   "\ndouble-click on a label to clear the corresponding entry"
                                   "\ndouble-click on 'preset' to clear all entries"));
-    dt_gui_connect_click_all(labelev, _import_metadata_reset_all, NULL, metadata);
+    g_signal_connect(GTK_EVENT_BOX(labelev), "button-press-event",
+                     G_CALLBACK(_import_metadata_reset_all), metadata);
 
     GtkWidget *presets = _set_up_combobox(metadata->m_model, DT_META_META_HEADER, metadata);
     g_signal_connect(presets, "changed", G_CALLBACK(_import_metadata_presets_changed), metadata);
@@ -516,7 +510,8 @@ void dt_import_metadata_init(dt_import_metadata_t *metadata)
     _set_up_entry(entry, str, "tags", metadata->num_grid_rows + DT_META_TAGS_HEADER, metadata);
     gtk_widget_set_tooltip_text(entry, _("comma separated list of tags"));
     g_signal_connect(GTK_ENTRY(entry), "changed", G_CALLBACK(_import_tags_changed), metadata);
-    dt_gui_connect_click_all(labelev, _import_metadata_reset, NULL, entry);
+    g_signal_connect(GTK_EVENT_BOX(labelev), "button-press-event",
+                     G_CALLBACK(_import_metadata_reset), entry);
 
     GtkWidget *tags_imported = gtk_check_button_new();
     _set_up_toggle_button(tags_imported, dt_conf_get_bool("ui_last/import_last_tags_imported"),

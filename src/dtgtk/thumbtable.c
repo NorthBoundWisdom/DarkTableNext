@@ -225,7 +225,13 @@ static dt_thumbnail_t *_thumb_get_under_mouse(dt_thumbtable_t *table)
     if (!table->mouse_inside)
         return NULL;
 
-    return _thumb_get_at_pos(table, table->last_x, table->last_y);
+    int x = -1;
+    int y = -1;
+    gdk_window_get_origin(gtk_widget_get_window(table->widget), &x, &y);
+    x = table->last_x - x;
+    y = table->last_y - y;
+
+    return _thumb_get_at_pos(table, x, y);
 }
 
 // get imgid from rowid
@@ -779,8 +785,9 @@ static void _filemanager_zoom(dt_thumbtable_t *table, const int old_size, const 
     if (table->mouse_inside)
     {
         // if the mouse is inside the table, let's use its position
-        x = table->last_x;
-        y = table->last_y;
+        gdk_window_get_origin(gtk_widget_get_window(table->widget), &x, &y);
+        x = table->last_x - x;
+        y = table->last_y - y;
         thumb = _thumb_get_at_pos(table, x, y);
     }
 
@@ -899,33 +906,26 @@ static gboolean _event_scroll_compressed(gpointer user_data)
     return FALSE;
 }
 
-static gboolean _event_scroll(GtkEventControllerScroll *controller, double input_dx,
-                              double input_dy, gpointer user_data)
+static gboolean _event_scroll(GtkWidget *widget, GdkEvent *event, dt_thumbtable_t *table)
 {
-    (void)input_dx;
-    (void)input_dy;
-    dt_thumbtable_t *const table = user_data;
-    dt_gui_controller_scroll_event_t event;
-    if (!dt_gui_controller_get_current_scroll_event(GTK_EVENT_CONTROLLER(controller), &event))
-        return FALSE;
-
+    GdkEventScroll *e = (GdkEventScroll *)event;
     int delta_x, delta_y;
 
     // file manager can either scroll fractionally and smoothly for precision
     // touch pads, or in one-thumbnail increments for clicky scroll wheels,
     // except while control is held, as that indicates zooming
     if (table->mode == DT_THUMBTABLE_MODE_FILEMANAGER &&
-        !dt_modifier_is(event.state, GDK_CONTROL_MASK))
+        !dt_modifier_is(e->state, GDK_CONTROL_MASK))
     {
         gdouble deltaf_x, deltaf_y;
         gboolean did_scroll;
         if (dt_conf_get_bool("thumbtable_fractional_scrolling"))
         {
-            did_scroll = dt_gui_scroll_event_get_deltas(&event, &deltaf_x, &deltaf_y);
+            did_scroll = dt_gui_get_scroll_deltas(e, &deltaf_x, &deltaf_y);
         }
         else
         {
-            did_scroll = dt_gui_scroll_event_get_unit_deltas(&event, &delta_x, &delta_y);
+            did_scroll = dt_gui_get_scroll_unit_deltas(e, &delta_x, &delta_y);
             deltaf_y = (float)delta_y;
         }
         if (did_scroll)
@@ -943,9 +943,9 @@ static gboolean _event_scroll(GtkEventControllerScroll *controller, double input
     }
 
     // Filmstrip and Ctrl+wheel use clicky scroll.
-    if (dt_gui_scroll_event_get_unit_deltas(&event, &delta_x, &delta_y))
+    if (dt_gui_get_scroll_unit_deltas(e, &delta_x, &delta_y))
     {
-        if (dt_modifier_is(event.state, GDK_CONTROL_MASK))
+        if (dt_modifier_is(e->state, GDK_CONTROL_MASK))
         {
             if (table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
             {
@@ -967,7 +967,7 @@ static gboolean _event_scroll(GtkEventControllerScroll *controller, double input
         else if (table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
         {
             _move(table,
-                  -(delta_x + delta_y) * (dt_modifier_is(event.state, GDK_SHIFT_MASK) ?
+                  -(delta_x + delta_y) * (dt_modifier_is(e->state, GDK_SHIFT_MASK) ?
                                               table->view_width - table->thumb_size :
                                               table->thumb_size),
                   0, TRUE);
@@ -999,48 +999,40 @@ static gboolean _event_draw(GtkWidget *widget, cairo_t *cr, dt_thumbtable_t *tab
     return FALSE; // let's propagate this event
 }
 
-static void _event_leave_notify(GtkEventControllerMotion *controller, gpointer user_data)
+static gboolean _event_leave_notify(GtkWidget *widget, GdkEventCrossing *event,
+                                    dt_thumbtable_t *table)
 {
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_thumbtable_t *table = user_data;
-
     // if the leaving cause is the hide of the widget, no mouseover change
     if (!gtk_widget_is_visible(widget))
     {
         table->mouse_inside = FALSE;
-        return;
+        return FALSE;
     }
 
-    dt_gui_controller_crossing_event_t event;
     // if we leave thumbtable in favour of an inferior (a thumbnail)
     // it's not a real leave !  same if this is not a mouse move action
     // (shortcut that activate a button for example)
-    if (!dt_gui_controller_get_current_crossing_event(GTK_EVENT_CONTROLLER(controller), &event) ||
-        event.detail == GDK_NOTIFY_INFERIOR || event.mode == GDK_CROSSING_GTK_GRAB ||
-        event.mode == GDK_CROSSING_GRAB)
-        return;
+    if (event->detail == GDK_NOTIFY_INFERIOR || event->mode == GDK_CROSSING_GTK_GRAB ||
+        event->mode == GDK_CROSSING_GRAB)
+        return FALSE;
 
     table->mouse_inside = FALSE;
     dt_control_set_mouse_over_id(NO_IMGID);
+    return TRUE;
 }
 
-static void _event_enter_notify(GtkEventControllerMotion *controller, double x, double y,
-                                gpointer user_data)
+static gboolean _event_enter_notify(GtkWidget *widget, GdkEventCrossing *event,
+                                    dt_thumbtable_t *table)
 {
     dt_set_backthumb_time(0.0);
 
-    dt_gui_controller_crossing_event_t event;
     // we only handle the case where we enter thumbtable from an inferior (a thumbnail)
     // this is when the mouse enter an "empty" area of thumbtable
-    if (!dt_gui_controller_get_current_crossing_event(GTK_EVENT_CONTROLLER(controller), &event) ||
-        event.detail != GDK_NOTIFY_INFERIOR)
-        return;
+    if (event->detail != GDK_NOTIFY_INFERIOR)
+        return FALSE;
 
     dt_control_set_mouse_over_id(NO_IMGID);
-
-    (void)x;
-    (void)y;
-    (void)user_data;
+    return TRUE;
 }
 
 static gboolean _do_select_single(gpointer user_data)
@@ -1069,27 +1061,20 @@ static void _sync_lighttable_grid_from_filmstrip(dt_thumbtable_t *table, const d
         dt_thumbtable_set_offset_image(grid, imgid, TRUE);
 }
 
-static void _event_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                const double y, gpointer user_data)
+static gboolean _event_button_press(GtkWidget *widget, GdkEventButton *event,
+                                    dt_thumbtable_t *table)
 {
     dt_set_backthumb_time(0.0);
 
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    dt_thumbtable_t *table = user_data;
-    const guint button = gtk_gesture_single_get_current_button(gesture);
     const dt_imgid_t id = dt_control_get_mouse_over_id();
 
-    if (n_press == 1 && button == GDK_BUTTON_SECONDARY)
-    {
-        if (dt_gui_context_menu_show_image(widget, id))
-            dt_gui_claim(gesture);
-        return;
-    }
+    if (event->type == GDK_BUTTON_PRESS && event->button == GDK_BUTTON_SECONDARY)
+        return dt_gui_context_menu_show_image(widget, id);
 
-    if (dt_is_valid_imgid(id) && button == GDK_BUTTON_PRIMARY)
+    if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY)
     {
         //  double-click
-        if (n_press == 2)
+        if (event->type == GDK_2BUTTON_PRESS)
         {
             switch (table->mode)
             {
@@ -1116,24 +1101,25 @@ static void _event_button_press(GtkGestureSingle *gesture, const int n_press, co
                     dt_selection_deselect(darktable.selection, darktable.develop->image_storage.id);
                     dt_selection_select(darktable.selection, id);
                     DT_CONTROL_SIGNAL_RAISE(DT_SIGNAL_VIEWMANAGER_THUMBTABLE_ACTIVATE, id);
-                    return;
+                    return FALSE;
                 }
             default:
                 break;
             }
         }
 
-        if (n_press == 1 && table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
-            return;
+        if (event->type == GDK_BUTTON_PRESS && table->mode == DT_THUMBTABLE_MODE_FILMSTRIP)
+            return FALSE;
     }
 
-    if (button == GDK_BUTTON_PRIMARY && n_press == 1)
+    if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_BUTTON_PRESS)
     {
         // make sure any edition field loses the focus
         gtk_widget_grab_focus(dt_ui_center(darktable.gui->ui));
     }
 
-    if (!dt_is_valid_imgid(id) && button == GDK_BUTTON_PRIMARY && n_press == 1)
+    if (!dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY &&
+        event->type == GDK_BUTTON_PRESS)
     {
         const dt_view_type_flags_t cv = dt_view_get_current();
 
@@ -1147,23 +1133,17 @@ static void _event_button_press(GtkGestureSingle *gesture, const int n_press, co
             dt_selection_select(darktable.selection, darktable.develop->image_storage.id);
         }
 
-        dt_gui_claim(gesture);
-        return;
+        return TRUE;
     }
 
-    dt_gui_claim(gesture);
-    (void)x;
-    (void)y;
+    return TRUE;
 }
 
-static gboolean _event_key_press(GtkEventControllerKey *controller, const guint keyval,
-                                 const guint keycode, const GdkModifierType state,
-                                 gpointer user_data)
+static gboolean _event_key_press(GtkWidget *widget, GdkEventKey *event, dt_thumbtable_t *table)
 {
-    (void)keycode;
-    (void)user_data;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    if (keyval != GDK_KEY_Menu && (keyval != GDK_KEY_F10 || !(state & GDK_SHIFT_MASK)))
+    (void)table;
+    if (event->keyval != GDK_KEY_Menu &&
+        (event->keyval != GDK_KEY_F10 || !(event->state & GDK_SHIFT_MASK)))
         return FALSE;
 
     GList *selection = dt_selection_get_list(darktable.selection, FALSE, FALSE);
@@ -1173,47 +1153,41 @@ static gboolean _event_key_press(GtkEventControllerKey *controller, const guint 
     return dt_gui_context_menu_show_image(widget, image);
 }
 
-static void _event_motion_notify(GtkEventControllerMotion *controller, const double x,
-                                 const double y, gpointer user_data)
+static gboolean _event_motion_notify(GtkWidget *widget, GdkEventMotion *event,
+                                     dt_thumbtable_t *table)
 {
     dt_set_backthumb_time(0.0);
 
-    dt_thumbtable_t *table = user_data;
     table->mouse_inside = TRUE;
 
-    table->last_x = ceil(x);
-    table->last_y = ceil(y);
-
-    (void)controller;
+    table->last_x = ceil(event->x_root);
+    table->last_y = ceil(event->y_root);
+    return FALSE;
 }
 
-static void _event_button_release(GtkGestureSingle *gesture, const int n_press, const double x,
-                                  const double y, gpointer user_data)
+static gboolean _event_button_release(GtkWidget *widget, GdkEventButton *event,
+                                      dt_thumbtable_t *table)
 {
     // we select only in LIGHTTABLE and DARKROOM mode
     const dt_view_type_flags_t cv = dt_view_get_current();
 
     if (cv != DT_VIEW_DARKROOM && cv != DT_VIEW_LIGHTTABLE)
-        return;
+        return FALSE;
 
     dt_set_backthumb_time(0.0);
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    dt_thumbtable_t *table = user_data;
-    const guint button = gtk_gesture_single_get_current_button(gesture);
-    const GdkModifierType state = dt_gui_controller_get_current_event_state(
-        GTK_EVENT_CONTROLLER(gesture));
     const dt_imgid_t id = dt_control_get_mouse_over_id();
 
-    if (dt_is_valid_imgid(id) && button == GDK_BUTTON_PRIMARY)
+    if (dt_is_valid_imgid(id) && event->button == GDK_BUTTON_PRIMARY &&
+        event->type == GDK_BUTTON_RELEASE)
     {
         gboolean selection_changed = FALSE;
-        if (dt_modifier_is(state, GDK_CONTROL_MASK) ||
-            dt_modifier_is(state, GDK_MOD2_MASK)) // CMD key on macOS
+        if (dt_modifier_is(event->state, GDK_CONTROL_MASK) ||
+            dt_modifier_is(event->state, GDK_MOD2_MASK)) // CMD key on macOS
         {
             dt_selection_toggle(darktable.selection, id);
             selection_changed = TRUE;
         }
-        else if (dt_modifier_is(state, GDK_SHIFT_MASK))
+        else if (dt_modifier_is(event->state, GDK_SHIFT_MASK))
         {
             dt_selection_select_range(darktable.selection, id);
             selection_changed = TRUE;
@@ -1262,10 +1236,7 @@ static void _event_button_release(GtkGestureSingle *gesture, const int n_press, 
             _sync_lighttable_grid_from_filmstrip(table, id);
     }
 
-    dt_gui_claim(gesture);
-    (void)n_press;
-    (void)x;
-    (void)y;
+    return TRUE;
 }
 
 // set scrollbars visibility
@@ -2102,7 +2073,10 @@ dt_thumbtable_t *dt_thumbtable_new()
     table->offset = MAX(1, dt_conf_get_int("plugins/lighttable/collect/history_pos0"));
 
     // set widget signals
-    gtk_widget_set_events(table->widget, GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK);
+    gtk_widget_set_events(table->widget, GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
+                                             GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                             GDK_STRUCTURE_MASK | GDK_ENTER_NOTIFY_MASK |
+                                             GDK_LEAVE_NOTIFY_MASK);
     gtk_widget_set_app_paintable(table->widget, TRUE);
     gtk_widget_set_can_focus(table->widget, TRUE);
 
@@ -2118,13 +2092,20 @@ dt_thumbtable_t *dt_thumbtable_new()
     g_signal_connect(table->widget, "drag-data-received",
                      G_CALLBACK(dt_thumbtable_event_dnd_received), table);
 
-    dt_gui_connect_scroll_handled(table->widget, GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES,
-                                  _event_scroll, table);
+    g_signal_connect(G_OBJECT(table->widget), "scroll-event", G_CALLBACK(_event_scroll), table);
     g_signal_connect(G_OBJECT(table->widget), "draw", G_CALLBACK(_event_draw), table);
-    dt_gui_connect_click_all(table->widget, _event_button_press, _event_button_release, table);
-    dt_gui_connect_motion(table->widget, _event_motion_notify, _event_enter_notify,
-                          _event_leave_notify, table);
-    dt_gui_connect_key(table->widget, _event_key_press, table);
+    g_signal_connect(G_OBJECT(table->widget), "leave-notify-event", G_CALLBACK(_event_leave_notify),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "enter-notify-event", G_CALLBACK(_event_enter_notify),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "button-press-event", G_CALLBACK(_event_button_press),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "key-press-event", G_CALLBACK(_event_key_press),
+                     table);
+    g_signal_connect(G_OBJECT(table->widget), "motion-notify-event",
+                     G_CALLBACK(_event_motion_notify), table);
+    g_signal_connect(G_OBJECT(table->widget), "button-release-event",
+                     G_CALLBACK(_event_button_release), table);
 
     // we register globals signals
     DT_CONTROL_SIGNAL_CONNECT(DT_SIGNAL_COLLECTION_CHANGED, _dt_collection_changed_callback, table);
@@ -2358,55 +2339,20 @@ void dt_thumbtable_set_parent(dt_thumbtable_t *table, GtkWidget *new_parent,
                               const dt_thumbtable_mode_t mode)
 {
     GtkWidget *parent = gtk_widget_get_parent(table->widget);
-    if (!new_parent)
+    if (!GTK_IS_CONTAINER(new_parent))
     {
         if (parent)
         {
             // we just want to remove thumbtable from its parent
-#if GTK_CHECK_VERSION(4, 0, 0)
-            if (GTK_IS_OVERLAY(parent))
-                gtk_overlay_remove_overlay(GTK_OVERLAY(parent), table->widget);
-            else if (GTK_IS_BOX(parent))
-                gtk_box_remove(GTK_BOX(parent), table->widget);
-            else
-                g_warning("unsupported GTK4 thumbtable parent %s", G_OBJECT_TYPE_NAME(parent));
-#else
             gtk_container_remove(GTK_CONTAINER(parent), table->widget);
-#endif
         }
         return;
     }
-
-#if GTK_CHECK_VERSION(4, 0, 0)
-    if (!GTK_IS_OVERLAY(new_parent) && !GTK_IS_BOX(new_parent))
-    {
-        g_warning("unsupported GTK4 thumbtable parent %s", G_OBJECT_TYPE_NAME(new_parent));
-        return;
-    }
-#else
-    if (!GTK_IS_CONTAINER(new_parent))
-    {
-        g_warning("unsupported GTK3 thumbtable parent %s", G_OBJECT_TYPE_NAME(new_parent));
-        return;
-    }
-#endif
 
     // if table already has parent, then we remove it
     if (parent && parent != new_parent)
     {
-#if GTK_CHECK_VERSION(4, 0, 0)
-        if (GTK_IS_OVERLAY(parent))
-            gtk_overlay_remove_overlay(GTK_OVERLAY(parent), table->widget);
-        else if (GTK_IS_BOX(parent))
-            gtk_box_remove(GTK_BOX(parent), table->widget);
-        else
-        {
-            g_warning("unsupported GTK4 thumbtable parent %s", G_OBJECT_TYPE_NAME(parent));
-            return;
-        }
-#else
         gtk_container_remove(GTK_CONTAINER(parent), table->widget);
-#endif
     }
 
     // mode change
@@ -2465,13 +2411,8 @@ void dt_thumbtable_set_parent(dt_thumbtable_t *table, GtkWidget *new_parent,
                     gtk_widget_get_parent(dt_ui_toast_msg(darktable.gui->ui)), -1);
             }
         }
-#if GTK_CHECK_VERSION(4, 0, 0)
-        else
-            gtk_box_append(GTK_BOX(new_parent), table->widget);
-#else
         else
             gtk_container_add(GTK_CONTAINER(new_parent), table->widget);
-#endif
     }
     table->code_scrolling = FALSE;
 }

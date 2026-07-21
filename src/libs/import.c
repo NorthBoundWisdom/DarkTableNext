@@ -311,19 +311,15 @@ static void _thumb_set_in_listview(GtkTreeModel *model, GtkTreeIter *iter, const
     g_free(fullname);
 }
 
-static void _files_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                const double y, gpointer user_data)
+static gboolean _files_button_press(GtkWidget *view, GdkEventButton *event, dt_lib_module_t *self)
 {
-    GtkWidget *view = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    dt_lib_module_t *self = user_data;
     dt_lib_import_t *d = self->data;
-    const guint button = gtk_gesture_single_get_current_button(gesture);
-    if (n_press == 1 && button == GDK_BUTTON_PRIMARY)
+    if ((event->type == GDK_BUTTON_PRESS && event->button == GDK_BUTTON_PRIMARY))
     {
         GtkTreePath *path = NULL;
         GtkTreeViewColumn *column = NULL;
         // Get tree path for row that was clicked
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)x, (gint)y,
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)event->x, (gint)event->y,
                                           &path, &column, NULL, NULL))
         {
             if (column == d->from.pixcol)
@@ -335,17 +331,16 @@ static void _files_button_press(GtkGestureSingle *gesture, const int n_press, co
                 gtk_tree_model_get(model, &iter, DT_IMPORT_SEL_THUMB, &thumb_sel, -1);
                 _thumb_set_in_listview(model, &iter, !thumb_sel, self);
                 gtk_tree_path_free(path);
-                dt_gui_claim(gesture);
-                return;
+                return TRUE;
             }
         }
         gtk_tree_path_free(path);
     }
-    else if (n_press == 2 && button == GDK_BUTTON_PRIMARY)
+    else if ((event->type == GDK_2BUTTON_PRESS && event->button == GDK_BUTTON_PRIMARY))
     {
         GtkTreePath *path = NULL;
         // Get tree path for row that was clicked
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)x, (gint)y,
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)event->x, (gint)event->y,
                                           &path, NULL, NULL, NULL))
         {
             GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
@@ -353,10 +348,10 @@ static void _files_button_press(GtkGestureSingle *gesture, const int n_press, co
             gtk_tree_selection_select_path(selection, path);
             gtk_dialog_response(GTK_DIALOG(d->from.dialog), GTK_RESPONSE_ACCEPT);
             gtk_tree_path_free(path);
-            dt_gui_claim(gesture);
-            return;
+            return TRUE;
         }
     }
+    return FALSE;
 }
 
 static gboolean _thumb_set(dt_lib_module_t *self)
@@ -956,15 +951,12 @@ static void _remove_selected_place(GtkWidget *widget, dt_lib_module_t *self)
     _update_files_list(self);
 }
 
-static void _places_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                 const double y, gpointer user_data)
+static gboolean _places_button_press(GtkWidget *view, GdkEventButton *event, dt_lib_module_t *self)
 {
-    GtkWidget *view = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    dt_lib_module_t *self = user_data;
-    const guint button = gtk_gesture_single_get_current_button(gesture);
+    gboolean res = FALSE;
     GtkTreePath *path = NULL;
-    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)x, (gint)y, &path, NULL, NULL,
-                                      NULL))
+    if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), (gint)event->x, (gint)event->y, &path,
+                                      NULL, NULL, NULL))
     {
         GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(view));
         GtkTreeIter iter;
@@ -973,8 +965,10 @@ static void _places_button_press(GtkGestureSingle *gesture, const int n_press, c
         char *folder_name, *folder_path;
         gtk_tree_model_get(model, &iter, 0, &folder_name, 1, &folder_path, -1);
 
+        const int button_pressed = (event->type == GDK_BUTTON_PRESS) ? event->button : 0;
+
         // left-click: set as new root
-        if (n_press == 1 && button == GDK_BUTTON_PRIMARY)
+        if (button_pressed == GDK_BUTTON_PRIMARY)
         {
             GtkTreeSelection *place_selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
             gtk_tree_selection_select_path(place_selection, path);
@@ -988,35 +982,31 @@ static void _places_button_press(GtkGestureSingle *gesture, const int n_press, c
         g_free(folder_name);
         g_free(folder_path);
 
-        dt_gui_claim(gesture);
+        res = TRUE;
     }
 
     gtk_tree_path_free(path);
+    return res;
 }
 
-static void _folders_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                  const double y, gpointer user_data)
+static gboolean _folders_button_press(GtkWidget *view, GdkEventButton *event, dt_lib_module_t *self)
 {
-    GtkWidget *view = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    dt_lib_module_t *self = user_data;
     dt_lib_import_t *d = self->data;
     gboolean res = FALSE;
-    const guint button = gtk_gesture_single_get_current_button(gesture);
-    const GdkModifierType state = dt_gui_controller_get_current_event_state(
-        GTK_EVENT_CONTROLLER(gesture));
-    const gboolean modifier = dt_modifier_is(state, GDK_SHIFT_MASK | GDK_CONTROL_MASK);
-    if (n_press == 1 && button == GDK_BUTTON_PRIMARY && !modifier)
+    const int button_pressed = (event->type == GDK_BUTTON_PRESS) ? event->button : 0;
+    const gboolean modifier = dt_modifier_is(event->state, GDK_SHIFT_MASK | GDK_CONTROL_MASK);
+    if ((button_pressed == GDK_BUTTON_PRIMARY) && !modifier)
     {
         GtkTreePath *path = NULL;
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), x, y, &path, NULL,
+        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), event->x, event->y, &path, NULL,
                                           NULL, NULL))
         {
             GdkRectangle rect;
             gtk_tree_view_get_cell_area(GTK_TREE_VIEW(view), path, d->from.foldercol, &rect);
-            const gboolean blank =
-                gtk_tree_view_is_blank_at_pos(GTK_TREE_VIEW(view), x, y, NULL, NULL, NULL, NULL);
+            const gboolean blank = gtk_tree_view_is_blank_at_pos(GTK_TREE_VIEW(view), event->x,
+                                                                 event->y, NULL, NULL, NULL, NULL);
             // select and save new folder only if not click on expander
-            if (blank || (x > rect.x))
+            if (blank || (event->x > rect.x))
             {
                 GtkTreeSelection *selection = gtk_tree_view_get_selection(d->from.folderview);
                 gtk_tree_selection_select_path(selection, path);
@@ -1035,23 +1025,21 @@ static void _folders_button_press(GtkGestureSingle *gesture, const int n_press, 
         gtk_tree_path_free(path);
     }
 
-    if (n_press == 2)
+    if (event->type == GDK_DOUBLE_BUTTON_PRESS)
     {
         GtkTreePath *path = NULL;
-        if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), x, y, &path, NULL, NULL, NULL))
-        {
-            if (gtk_tree_view_row_expanded(d->from.folderview, path))
-                gtk_tree_view_collapse_row(d->from.folderview, path);
-            else
-                gtk_tree_view_expand_row(d->from.folderview, path, FALSE);
-        }
+        gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view), event->x, event->y, &path, NULL, NULL,
+                                      NULL);
+        if (gtk_tree_view_row_expanded(d->from.folderview, path))
+            gtk_tree_view_collapse_row(d->from.folderview, path);
+        else
+            gtk_tree_view_expand_row(d->from.folderview, path, FALSE);
         gtk_tree_path_free(path);
     }
 
     g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 100, (GSourceFunc)_clear_parasitic_selection, self,
                        NULL);
-    if (res)
-        dt_gui_claim(gesture);
+    return res;
 }
 
 static void _folder_order_clicked(GtkTreeViewColumn *column, dt_lib_module_t *self)
@@ -1144,7 +1132,8 @@ static void _set_places_list(GtkWidget *places_paned, dt_lib_module_t *self)
     gtk_box_pack_start(GTK_BOX(places_top_box), placesWindow, TRUE, TRUE, 0);
     gtk_paned_pack1(GTK_PANED(places_paned), places_top_box, TRUE, TRUE);
 
-    dt_gui_connect_click_all(d->placesView, _places_button_press, NULL, self);
+    g_signal_connect(G_OBJECT(d->placesView), "button-press-event",
+                     G_CALLBACK(_places_button_press), self);
 }
 
 static void _set_folders_list(GtkWidget *places_paned, dt_lib_module_t *self)
@@ -1166,7 +1155,8 @@ static void _set_folders_list(GtkWidget *places_paned, dt_lib_module_t *self)
     gtk_tree_view_column_set_resizable(column, TRUE);
     gtk_tree_view_set_expander_column(d->from.folderview, column);
     g_signal_connect(d->from.folderview, "row-expanded", G_CALLBACK(_row_expanded), self);
-    dt_gui_connect_click_all(d->from.folderview, _folders_button_press, NULL, self);
+    g_signal_connect(G_OBJECT(d->from.folderview), "button-press-event",
+                     G_CALLBACK(_folders_button_press), self);
     gtk_tree_view_column_set_sort_column_id(column, DT_FOLDER_PATH);
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), DT_FOLDER_PATH,
                                          dt_conf_get_bool("ui_last/import_last_folder_descending") ?
@@ -1564,7 +1554,8 @@ static void _set_files_list(GtkWidget *rbox, dt_lib_module_t *self)
     gtk_tree_view_column_set_clickable(column, TRUE);
     gtk_tree_view_column_set_min_width(column, DT_PIXEL_APPLY_DPI(128));
     d->from.pixcol = column;
-    dt_gui_connect_click_all(d->from.treeview, _files_button_press, NULL, self);
+    g_signal_connect(G_OBJECT(d->from.treeview), "button-press-event",
+                     G_CALLBACK(_files_button_press), self);
 
     GtkTreeSelection *selection = gtk_tree_view_get_selection(d->from.treeview);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
@@ -1639,7 +1630,7 @@ static void _set_expander_content(GtkWidget *rbox, dt_lib_module_t *self)
 
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     g_object_ref(basedir);
-    dt_gui_grid_remove_child(grid, basedir);
+    gtk_container_remove(GTK_CONTAINER(grid), basedir);
     gtk_box_pack_start(GTK_BOX(hbox), basedir, TRUE, TRUE, 0);
     g_object_unref(basedir);
     GtkWidget *browsedir = dtgtk_button_new(dtgtk_cairo_paint_directory, CPF_NONE, NULL);
@@ -1685,11 +1676,11 @@ static void _import_from_dialog_new(dt_lib_module_t *self)
 #endif
     dt_gui_dialog_restore_size(GTK_DIALOG(d->from.dialog), "import");
     gtk_window_set_transient_for(GTK_WINDOW(d->from.dialog), GTK_WINDOW(win));
-    dt_gui_connect_key_bubble(d->from.dialog, dt_handle_dialog_enter, self);
+    g_signal_connect(d->from.dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), self);
 
     // images numbers in action-box
-    GtkWidget *box = dt_gui_container_first_child(d->from.dialog);
-    box = dt_gui_container_first_child(box); // action-box
+    GtkWidget *box = dt_gui_container_first_child(GTK_CONTAINER(d->from.dialog));
+    box = dt_gui_container_first_child(GTK_CONTAINER(box)); // action-box
 
     d->select_all = gtk_button_new_with_label(_("select all"));
     gtk_box_pack_start(GTK_BOX(box), d->select_all, FALSE, FALSE, 2);

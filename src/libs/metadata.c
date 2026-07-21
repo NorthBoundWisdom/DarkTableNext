@@ -118,7 +118,7 @@ static gboolean _set_leave_unchanged(GtkTextView *textview, GtkWidget *label)
 
     gtk_widget_set_name(label, this_changed ? "dt-metadata-changed" : NULL);
 
-    gtk_container_foreach(GTK_CONTAINER(textview), (dt_gui_widget_callback_t)gtk_widget_set_visible,
+    gtk_container_foreach(GTK_CONTAINER(textview), (GtkCallback)gtk_widget_set_visible,
                           GINT_TO_POINTER(leave_unchanged && !this_changed));
     return this_changed;
 }
@@ -504,26 +504,22 @@ static void _cancel_button_clicked(GtkButton *button, dt_lib_module_t *self)
     gtk_window_set_focus(GTK_WINDOW(dt_ui_main_window(darktable.gui->ui)), NULL);
 }
 
-static gboolean _key_pressed(GtkEventControllerKey *controller, const guint keyval,
-                             const guint keycode, const GdkModifierType state, gpointer user_data)
+static gboolean _key_pressed(GtkWidget *textview, GdkEventKey *event, dt_lib_module_t *self)
 {
-    (void)controller;
-    (void)keycode;
-    dt_lib_module_t *self = user_data;
     dt_lib_metadata_t *d = self->data;
 
-    switch (keyval)
+    switch (event->keyval)
     {
     case GDK_KEY_Return:
     case GDK_KEY_KP_Enter:
-        if (!dt_modifier_is(state, GDK_CONTROL_MASK))
+        if (!dt_modifier_is(event->state, GDK_CONTROL_MASK))
         {
             gtk_button_clicked(GTK_BUTTON(d->apply_button));
             return TRUE;
         }
         break;
     case GDK_KEY_Escape:
-        if (dt_modifier_is(state, 0))
+        if (dt_modifier_is(event->state, 0))
         {
             gtk_button_clicked(GTK_BUTTON(d->cancel_button));
             return TRUE;
@@ -533,7 +529,7 @@ static gboolean _key_pressed(GtkEventControllerKey *controller, const guint keyv
         break;
     }
 
-    return FALSE;
+    return gtk_text_view_im_context_filter_keypress(GTK_TEXT_VIEW(textview), event);
 }
 
 static gboolean _textview_focus(GtkWidget *widget, GtkDirectionType d, gpointer user_data)
@@ -697,12 +693,10 @@ static gboolean _metadata_context_menu_provider(GtkWidget *widget, const GdkEven
     return TRUE;
 }
 
-static void _metadata_reset(GtkGestureSingle *gesture, int n_press, double x, double y,
-                            gpointer user_data)
+static gboolean _metadata_reset(GtkWidget *label, GdkEventButton *event, GtkWidget *widget)
 {
-    if (n_press == 2)
+    if (event->type == GDK_2BUTTON_PRESS)
     {
-        GtkWidget *widget = user_data;
         g_object_set_data(G_OBJECT(widget), "tv_multiple", GINT_TO_POINTER(FALSE));
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
         if (gtk_text_buffer_get_char_count(buffer))
@@ -710,10 +704,7 @@ static void _metadata_reset(GtkGestureSingle *gesture, int n_press, double x, do
         else
             g_signal_emit_by_name(G_OBJECT(buffer), "changed"); // even if unchanged
     }
-
-    (void)gesture;
-    (void)x;
-    (void)y;
+    return TRUE;
 }
 
 static void _add_grid_row(dt_metadata_t *metadata, int row, dt_lib_module_t *self)
@@ -725,9 +716,10 @@ static void _add_grid_row(dt_metadata_t *metadata, int row, dt_lib_module_t *sel
     GtkWidget *label = dt_ui_label_new(metadata->name);
     gtk_widget_set_halign(label, GTK_ALIGN_FILL);
     gtk_widget_set_valign(label, GTK_ALIGN_START);
-    GtkWidget *labelev = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget *labelev = gtk_event_box_new();
     gtk_widget_set_tooltip_text(labelev, _("double-click to reset"));
-    dt_gui_box_add(labelev, label);
+    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
+    gtk_container_add(GTK_CONTAINER(labelev), label);
     g_object_set_data(G_OBJECT(labelev), "label", label);
     gtk_grid_attach(grid, labelev, 0, row, 1, 1);
 
@@ -774,10 +766,10 @@ static void _add_grid_row(dt_metadata_t *metadata, int row, dt_lib_module_t *sel
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview), GTK_WRAP_WORD_CHAR);
     gtk_text_view_set_accepts_tab(GTK_TEXT_VIEW(textview), FALSE);
     gtk_widget_add_events(textview, GDK_FOCUS_CHANGE_MASK | GDK_ENTER_NOTIFY_MASK);
-    dt_gui_connect_key(textview, _key_pressed, self);
+    g_signal_connect(textview, "key-press-event", G_CALLBACK(_key_pressed), self);
     g_signal_connect(textview, "focus", G_CALLBACK(_textview_focus), self);
     g_signal_connect(textview, "populate-popup", G_CALLBACK(_populate_popup_multi), self);
-    dt_gui_connect_click_all(labelev, _metadata_reset, NULL, textview);
+    g_signal_connect(labelev, "button-press-event", G_CALLBACK(_metadata_reset), textview);
     g_signal_connect(buffer, "changed", G_CALLBACK(_textbuffer_changed), self);
     gtk_widget_set_hexpand(textview, TRUE);
     gtk_widget_set_vexpand(textview, TRUE);
@@ -968,7 +960,7 @@ static void _menuitem_preferences(GtkMenuItem *menuitem, dt_lib_module_t *self)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
     dt_gui_dialog_add_help(GTK_DIALOG(dialog), "metadata_preferences");
     dt_gui_dialog_restore_size(GTK_DIALOG(dialog), "metadata");
-    dt_gui_connect_key_bubble(dialog, dt_handle_dialog_enter, NULL);
+    g_signal_connect(dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), NULL);
 
     GtkListStore *store = gtk_list_store_new(DT_METADATA_PREF_NUM_COLS,
                                              G_TYPE_INT,      // key
@@ -1236,8 +1228,7 @@ static GtkWidget *_copy_metadata_flag_button(dt_lib_module_t *self, const gchar 
 {
     GtkWidget *flag = gtk_check_button_new_with_label(_(label));
     gtk_widget_set_tooltip_text(flag, tooltip);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(GTK_CHECK_BUTTON(flag))),
-                            PANGO_ELLIPSIZE_END);
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(flag))), PANGO_ELLIPSIZE_END);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(flag), dt_conf_get_bool(setting));
     dt_action_define(DT_ACTION(self), N_("copy options"), label, flag, &dt_action_def_toggle);
     g_signal_connect(flag, "clicked", G_CALLBACK(_copy_metadata_flag_callback), (gpointer)setting);

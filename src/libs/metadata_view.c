@@ -51,6 +51,7 @@ typedef struct dt_lib_metadata_view_t
     GtkWidget *grid;
     GList *metadata;
     uint32_t metadata_count;
+    GObject *filmroll_event;
 } dt_lib_metadata_view_t;
 
 typedef struct dt_lib_metadata_info_t
@@ -1120,19 +1121,12 @@ static void _jump_to()
     }
 }
 
-static void _filmroll_clicked(GtkGestureSingle *gesture, int n_press, double x, double y,
-                              gpointer user_data)
+static gboolean _filmroll_clicked(GtkWidget *widget, GdkEventButton *event, gpointer null)
 {
-    (void)x;
-    (void)y;
-    (void)user_data;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    if (n_press != 2 ||
-        !GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "metadata-filmroll-clickable")))
-        return;
-
-    dt_gui_claim(gesture);
+    if (event->type != GDK_2BUTTON_PRESS)
+        return FALSE;
     _jump_to();
+    return TRUE;
 }
 
 static void _jump_to_accel(dt_action_t *data)
@@ -1189,8 +1183,16 @@ static void _lib_metadata_refill_grid(dt_lib_module_t *self)
                                 i == md_exif_model || i == md_exif_lens || i == md_exif_maker ?
                                     PANGO_ELLIPSIZE_END :
                                     PANGO_ELLIPSIZE_MIDDLE);
-        g_object_set_data(G_OBJECT(w_value), "metadata-filmroll-clickable",
-                          GINT_TO_POINTER(i == md_internal_filmroll));
+        if (i == md_internal_filmroll)
+        {
+            // film roll jump to:
+            if (d->filmroll_event && GTK_IS_WIDGET(d->filmroll_event))
+                g_signal_handlers_disconnect_by_func(d->filmroll_event,
+                                                     G_CALLBACK(_filmroll_clicked), NULL);
+            g_signal_connect(G_OBJECT(w_value), "button-press-event", G_CALLBACK(_filmroll_clicked),
+                             NULL);
+            d->filmroll_event = G_OBJECT(w_value);
+        }
 
         gtk_widget_set_visible(w_name, m->visible);
         gtk_widget_set_visible(w_value, m->visible);
@@ -1213,7 +1215,6 @@ static void _add_grid_row(dt_lib_metadata_info_t *m, const int row, dt_lib_modul
     gtk_label_set_selectable(GTK_LABEL(w_value), TRUE);
     gtk_widget_set_halign(w_value, GTK_ALIGN_FILL);
     gtk_label_set_xalign(GTK_LABEL(w_value), 0.0f);
-    dt_gui_connect_click_all(w_value, _filmroll_clicked, NULL, NULL);
 
     gtk_grid_insert_row(GTK_GRID(d->grid), row);
     gtk_grid_attach(GTK_GRID(d->grid), w_name, 0, row, 1, 1);
@@ -1426,7 +1427,7 @@ void _menuitem_preferences(GtkMenuItem *menuitem, dt_lib_module_t *self)
         _("metadata settings"), GTK_WINDOW(win), GTK_DIALOG_DESTROY_WITH_PARENT, _("_default"),
         GTK_RESPONSE_YES, _("_cancel"), GTK_RESPONSE_NONE, _("_save"), GTK_RESPONSE_ACCEPT, NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
-    dt_gui_connect_key_bubble(dialog, dt_handle_dialog_enter, NULL);
+    g_signal_connect(dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), NULL);
 
     GtkListStore *store =
         gtk_list_store_new(DT_METADATA_PREF_NUM_COLS, G_TYPE_INT, G_TYPE_STRING, G_TYPE_BOOLEAN);

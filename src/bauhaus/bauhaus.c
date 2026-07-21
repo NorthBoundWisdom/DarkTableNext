@@ -474,20 +474,18 @@ static void _slider_zoom_toast(dt_bauhaus_widget_t *w)
     g_free(max_text);
 }
 
-static void _popup_scroll(GtkEventControllerScroll *controller, double dx, double dy,
-                          gpointer user_data)
+static gboolean _popup_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer user_data)
 {
-    (void)controller;
-    (void)user_data;
     dt_bauhaus_widget_t *w = darktable.bauhaus->current;
-    const int delta_y = dx + dy;
-    if (!delta_y)
-        return;
-
-    if (w->type == DT_BAUHAUS_COMBOBOX)
-        _combobox_next_sensitive(w, delta_y, 0, w->combobox.mute_scrolling);
-    else
-        _slider_zoom_range(w, delta_y);
+    int delta_y = 0;
+    if (dt_gui_get_scroll_unit_delta(event, &delta_y))
+    {
+        if (w->type == DT_BAUHAUS_COMBOBOX)
+            _combobox_next_sensitive(w, delta_y, 0, w->combobox.mute_scrolling);
+        else
+            _slider_zoom_range(w, delta_y);
+    }
+    return TRUE;
 }
 
 static void _window_moved_to_rect(GdkWindow *window, GdkRectangle *flipped_rect,
@@ -833,11 +831,11 @@ void dt_bauhaus_init()
 
     pop->area = gtk_drawing_area_new();
     g_object_set(pop->area, "expand", TRUE, NULL);
-    dt_gui_window_set_child(GTK_WINDOW(pop->window), pop->area);
+    gtk_container_add(GTK_CONTAINER(pop->window), pop->area);
     gtk_widget_set_can_focus(pop->area, TRUE);
     gtk_widget_add_events(pop->area, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK |
                                          GDK_BUTTON_RELEASE_MASK | GDK_KEY_PRESS_MASK |
-                                         GDK_LEAVE_NOTIFY_MASK);
+                                         GDK_LEAVE_NOTIFY_MASK | darktable.gui->scroll_mask);
 
     GObject *window = G_OBJECT(pop->window);
     GObject *area = G_OBJECT(pop->area);
@@ -852,9 +850,7 @@ void dt_bauhaus_init()
     g_signal_connect(area, "button-press-event", G_CALLBACK(_popup_button_press), NULL);
     g_signal_connect(area, "button-release-event", G_CALLBACK(_popup_button_release), NULL);
     g_signal_connect(area, "key-press-event", G_CALLBACK(_popup_key_press), NULL);
-    dt_gui_connect_scroll(pop->area, GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES |
-                                              GTK_EVENT_CONTROLLER_SCROLL_DISCRETE,
-                          _popup_scroll, NULL);
+    g_signal_connect(area, "scroll-event", G_CALLBACK(_popup_scroll), NULL);
 
     dt_action_define(&darktable.control->actions_focus, NULL, N_("sliders"), NULL,
                      _action_def_focus_slider());
@@ -1384,7 +1380,7 @@ GtkWidget *dt_bauhaus_combobox_new_action(dt_action_t *self)
 }
 
 GtkWidget *dt_bauhaus_combobox_new_full(dt_action_t *action, const char *section, const char *label,
-                                        const char *tip, const int pos, dt_gui_widget_callback_t callback,
+                                        const char *tip, const int pos, GtkCallback callback,
                                         gpointer data, const char **texts)
 {
     GtkWidget *combo = dt_bauhaus_combobox_new_action(action);
@@ -2901,56 +2897,46 @@ static void _slider_add_step(GtkWidget *widget, float delta, const guint state,
         dt_bauhaus_slider_set(widget, CLAMP(value + delta, d->min, d->max));
 }
 
-void dt_bauhaus_widget_scroll(GtkWidget *widget, int delta, GdkModifierType state, gboolean force)
-{
-    if (!delta)
-        return;
-
-    gtk_widget_grab_focus(widget);
-
-    dt_bauhaus_widget_t *w = (dt_bauhaus_widget_t *)widget;
-    _request_focus(w);
-
-    if (w->type == DT_BAUHAUS_SLIDER)
-    {
-        if (force && dt_modifier_is(state, GDK_SHIFT_MASK | GDK_CONTROL_MASK))
-        {
-            _slider_zoom_range(w, delta);
-            _slider_zoom_toast(w);
-        }
-        else
-            _slider_add_step(widget, -delta, state, force);
-    }
-    else
-        _combobox_next_sensitive(w, delta, 0, FALSE);
-}
-
 static void _widget_scroll(GtkEventControllerScroll *controller, double dx, double dy,
                            gpointer user_data)
 {
     GtkWidget *const widget = user_data;
-    dt_gui_controller_scroll_event_t event;
-    if (!dt_gui_controller_get_current_scroll_event(GTK_EVENT_CONTROLLER(controller), &event))
-    {
+    GdkEvent *event = gtk_get_current_event();
+    if (!event || gdk_event_get_event_type(event) != GDK_SCROLL)
         dt_print(DT_DEBUG_ALWAYS, "[_widget_scroll] called on non-scroll event");
-        return;
-    }
-
-    if (darktable.control->mapping_widget)
+    else if (darktable.control->mapping_widget)
     {
         // handle speed adjustment in mapping mode in dispatcher
-        dt_shortcut_dispatcher_scroll(GTK_EVENT_CONTROLLER(controller));
-        return;
+        dt_shortcut_dispatcher(widget, (GdkEvent *)event, NULL);
     }
+    else
+    {
+        gtk_widget_grab_focus(widget);
 
-    gboolean force = darktable.control->element == DT_ACTION_ELEMENT_FORCE;
-#if !GTK_CHECK_VERSION(4, 0, 0)
-    GdkEvent *raw_event = gtk_get_current_event();
-    force = force && raw_event && raw_event->scroll.window == gtk_widget_get_window(widget);
-    if (raw_event)
-        gdk_event_free(raw_event);
-#endif
-    dt_bauhaus_widget_scroll(widget, dx + dy, event.state, force);
+        int delta = dx + dy;
+        if (delta != 0)
+        {
+            dt_bauhaus_widget_t *w = (dt_bauhaus_widget_t *)widget;
+            _request_focus(w);
+
+            if (w->type == DT_BAUHAUS_SLIDER)
+            {
+                const gboolean force = darktable.control->element == DT_ACTION_ELEMENT_FORCE &&
+                                       event->scroll.window == gtk_widget_get_window(widget);
+                if (force && dt_modifier_is(event->scroll.state, GDK_SHIFT_MASK | GDK_CONTROL_MASK))
+                {
+                    _slider_zoom_range(w, delta);
+                    _slider_zoom_toast(w);
+                }
+                else
+                    _slider_add_step(widget, -delta, event->scroll.state, force);
+            }
+            else
+                _combobox_next_sensitive(w, delta, 0, FALSE);
+        }
+    }
+    if (event)
+        gdk_event_free(event);
 }
 
 static gboolean _widget_key_press(GtkWidget *widget, GdkEventKey *event)
@@ -3427,8 +3413,9 @@ static void _widget_button_press(GtkGestureSingle *gesture, const int n_press, c
     }
     else if (button == GDK_BUTTON_SECONDARY || w->type == DT_BAUHAUS_COMBOBOX)
     {
-        bh->opentime =
-            dt_gui_controller_get_current_event_time(GTK_EVENT_CONTROLLER(gesture));
+        GdkEvent *const event = gtk_get_current_event();
+        bh->opentime = gdk_event_get_time(event);
+        gdk_event_free(event);
         bh->mouse_x = x;
         bh->mouse_y = y;
         _popup_show(widget);
@@ -3507,10 +3494,9 @@ static void _widget_motion(GtkEventControllerMotion *controller, const double x,
             const float scaled_step =
                 width * dt_bauhaus_slider_get_step(widget) / (d->max - d->min);
             const float steps = floorf((x - bh->mouse_x) / scaled_step);
-            _slider_add_step(widget, copysignf(1, d->factor) * steps,
-                             dt_gui_controller_get_current_event_state(
-                                 GTK_EVENT_CONTROLLER(controller)),
-                             FALSE);
+            GdkEvent *const event = gtk_get_current_event(); // TODO cleanup
+            _slider_add_step(widget, copysignf(1, d->factor) * steps, event->motion.state, FALSE);
+            gdk_event_free(event);
 
             bh->mouse_x += steps * scaled_step;
         }

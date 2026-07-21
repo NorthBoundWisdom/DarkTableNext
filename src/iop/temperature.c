@@ -1633,7 +1633,7 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
     _update_preset(self, DT_IOP_TEMP_USER);
 }
 
-static gboolean _btn_toggled(GtkWidget *togglebutton, dt_iop_module_t *self)
+static gboolean _btn_toggled(GtkWidget *togglebutton, GdkEventButton *event, dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(TRUE);
 
@@ -1663,30 +1663,6 @@ static gboolean _btn_toggled(GtkWidget *togglebutton, dt_iop_module_t *self)
                   chr->D65coeffs[0], chr->D65coeffs[1], chr->D65coeffs[2], chr->as_shot[0],
                   chr->as_shot[1], chr->as_shot[2]);
     return TRUE;
-}
-
-static void _btn_toggled_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                 gpointer user_data)
-{
-    GtkWidget *button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    if (_btn_toggled(button, user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static GtkWidget *_temperature_togglebutton_new(dt_iop_module_t *self, const gchar *section,
-                                                const gchar *label,
-                                                DTGTKCairoPaintIconFunc paint)
-{
-    GtkWidget *button = dtgtk_togglebutton_new(paint, 0, NULL);
-    gtk_widget_set_tooltip_text(button, _(label));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
-    dt_gui_connect_click_all(button, _btn_toggled_pressed, NULL, self);
-    dt_action_define_iop(self, section, label, button, &dt_action_def_toggle);
-    return button;
 }
 
 static void _preset_tune_callback(GtkWidget *widget, dt_iop_module_t *self)
@@ -1721,7 +1697,10 @@ static void _preset_tune_callback(GtkWidget *widget, dt_iop_module_t *self)
         break;
     case DT_IOP_TEMP_SPOT: // from image area wb, expose callback will set p->rgbg2.
         if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(g->colorpicker)))
-            dt_iop_color_picker_activate(g->colorpicker);
+        {
+            gboolean ret_val;
+            g_signal_emit_by_name(G_OBJECT(g->colorpicker), "button-press-event", NULL, &ret_val);
+        }
         break;
     case DT_IOP_TEMP_USER: // directly changing one of the coeff
                            // sliders also changes the mod_coeff so it
@@ -1910,16 +1889,8 @@ static void _gui_sliders_update(dt_iop_module_t *self)
     gtk_widget_set_visible(GTK_WIDGET(g->scale_y), (img->flags & DT_IMAGE_4BAYER));
 }
 
-static void temp_label_click(GtkGestureSingle *gesture, int n_press, double x, double y,
-                             gpointer user_data)
+static gboolean temp_label_click(GtkWidget *label, GdkEventButton *event, dt_iop_module_t *self)
 {
-    dt_iop_module_t *self = user_data;
-
-    (void)gesture;
-    (void)n_press;
-    (void)x;
-    (void)y;
-
     dt_iop_temperature_gui_data_t *g = self->gui_data;
 
     gchar *old_config = dt_conf_get_string("plugins/darkroom/temperature/colored_sliders");
@@ -1948,6 +1919,7 @@ static void temp_label_click(GtkGestureSingle *gesture, int n_press, double x, d
     _color_temptint_sliders(self);
     _color_rgb_sliders(self);
     _color_finetuning_slider(self);
+    return TRUE;
 }
 
 static void _preference_changed(gpointer instance, dt_iop_module_t *self)
@@ -1979,8 +1951,9 @@ void gui_init(dt_iop_module_t *self)
     const gboolean feedback = g->colored_sliders ? FALSE : TRUE;
     g->button_bar_visible = dt_conf_get_bool("plugins/darkroom/temperature/button_bar");
 
-    g->btn_asshot = _temperature_togglebutton_new(self, N_("settings"), N_("as shot"),
-                                                   dtgtk_cairo_paint_camera);
+    g->btn_asshot =
+        dt_iop_togglebutton_new(self, N_("settings"), N_("as shot"), NULL, G_CALLBACK(_btn_toggled),
+                                FALSE, 0, 0, dtgtk_cairo_paint_camera, NULL);
     gtk_widget_set_tooltip_text(g->btn_asshot, _("set white balance to as shot"));
 
     // create color picker to be able to send its signal when spot
@@ -1997,19 +1970,21 @@ void gui_init(dt_iop_module_t *self)
     dt_gui_add_class(g->colorpicker, "dt_transparent_background");
     gtk_widget_set_tooltip_text(g->colorpicker, _("set white balance to detected from area"));
 
-    g->btn_user = _temperature_togglebutton_new(self, N_("settings"), N_("user modified"),
-                                                 dtgtk_cairo_paint_masks_drawn);
+    g->btn_user = dt_iop_togglebutton_new(self, N_("settings"), N_("user modified"), NULL,
+                                          G_CALLBACK(_btn_toggled), FALSE, 0, 0,
+                                          dtgtk_cairo_paint_masks_drawn, NULL);
     gtk_widget_set_tooltip_text(g->btn_user, _("set white balance to user modified"));
 
-    g->btn_d65 = _temperature_togglebutton_new(self, N_("settings"), N_("camera reference"),
-                                                dtgtk_cairo_paint_bulb);
+    g->btn_d65 = dt_iop_togglebutton_new(self, N_("settings"), N_("camera reference"), NULL,
+                                         G_CALLBACK(_btn_toggled), FALSE, 0, 0,
+                                         dtgtk_cairo_paint_bulb, NULL);
     gtk_widget_set_tooltip_text(
         g->btn_d65,
         _("set white balance to camera reference point\nin most cases it should be D65"));
 
-    g->btn_d65_late = _temperature_togglebutton_new(self, N_("settings"),
-                                                     N_("as shot to reference"),
-                                                     dtgtk_cairo_paint_bulb_mod);
+    g->btn_d65_late = dt_iop_togglebutton_new(self, N_("settings"), N_("as shot to reference"),
+                                              NULL, G_CALLBACK(_btn_toggled), FALSE, 0, 0,
+                                              dtgtk_cairo_paint_bulb_mod, NULL);
     gtk_widget_set_tooltip_text(
         g->btn_d65_late,
         _("set white balance to as shot and later correct to camera reference point,\nin most cases it should be D65"));
@@ -2035,12 +2010,13 @@ void gui_init(dt_iop_module_t *self)
     g->mod_temp = -FLT_MAX;
     for_four_channels(k) g->mod_coeff[k] = 1.0;
 
-    GtkWidget *temp_label_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget *temp_label_box = gtk_event_box_new();
     g->temp_label = dt_ui_section_label_new(C_("section", "scene illuminant temp"));
     gtk_widget_set_tooltip_text(g->temp_label, _("click to cycle color mode on sliders"));
-    dt_gui_box_add(temp_label_box, g->temp_label);
+    gtk_container_add(GTK_CONTAINER(temp_label_box), g->temp_label);
 
-    dt_gui_connect_click_all(temp_label_box, NULL, temp_label_click, self);
+    g_signal_connect(G_OBJECT(temp_label_box), "button-release-event", G_CALLBACK(temp_label_click),
+                     self);
 
     //Match UI order: temp first, then tint (like every other app ever)
     g->scale_k = dt_bauhaus_slider_new_with_range_and_feedback(

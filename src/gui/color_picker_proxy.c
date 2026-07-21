@@ -137,32 +137,31 @@ static void _init_picker(dt_iop_color_picker_t *picker, dt_iop_module_t *module,
     _color_picker_reset(picker);
 }
 
-#define DT_COLOR_PICKER_PROXY_DATA "dt-color-picker-proxy"
-
-static gboolean _color_picker_set_active(dt_iop_color_picker_t *self, const gboolean active,
-                                         const guint button, const GdkModifierType state)
+static gboolean _color_picker_callback_button_press(GtkWidget *button, GdkEventButton *e,
+                                                    dt_iop_color_picker_t *self)
 {
     dt_iop_module_t *module = self->module;
 
     DT_GUARD_GUI_UPDATE(FALSE);
 
     dt_iop_color_picker_t *prior_picker = darktable.lib->proxy.colorpicker.picker_proxy;
+    if (prior_picker && prior_picker != self)
+    {
+        _color_picker_reset(prior_picker);
+        prior_picker->module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
+    }
+
+    if (module->off)
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(module->off), TRUE);
+
+    const GdkModifierType state = e != NULL ? e->state : dt_key_modifier_state();
+    const gboolean to_area_mode =
+        dt_modifier_is(state, GDK_CONTROL_MASK) || (e != NULL && e->button == GDK_BUTTON_SECONDARY);
     dt_iop_color_picker_flags_t flags = self->flags;
 
-    if (active)
+    // setup if a new picker or switching between point/area mode
+    if (prior_picker != self)
     {
-        if (prior_picker == self)
-            return TRUE;
-
-        if (prior_picker)
-        {
-            _color_picker_reset(prior_picker);
-            prior_picker->module->request_color_pick = DT_REQUEST_COLORPICK_OFF;
-        }
-
-        if (module->off)
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(module->off), TRUE);
-
         darktable.lib->proxy.colorpicker.picker_proxy = self;
 
         module->request_color_pick = DT_REQUEST_COLORPICK_MODULE;
@@ -170,9 +169,7 @@ static gboolean _color_picker_set_active(dt_iop_color_picker_t *self, const gboo
         // set point or area mode without stomping on any other flags
         dt_iop_color_picker_flags_t kind = self->flags & DT_COLOR_PICKER_POINT_AREA;
         if (kind == DT_COLOR_PICKER_POINT_AREA)
-            kind = dt_modifier_is(state, GDK_CONTROL_MASK) || button == GDK_BUTTON_SECONDARY
-                       ? DT_COLOR_PICKER_AREA
-                       : DT_COLOR_PICKER_POINT;
+            kind = to_area_mode ? DT_COLOR_PICKER_AREA : DT_COLOR_PICKER_POINT;
         // pull picker's last recorded positions
         if (kind & DT_COLOR_PICKER_AREA)
         {
@@ -208,7 +205,7 @@ static gboolean _color_picker_set_active(dt_iop_color_picker_t *self, const gboo
         // force applying the next incoming sample
         self->changed = TRUE;
     }
-    else if (prior_picker == self)
+    else
     {
         darktable.lib->proxy.colorpicker.picker_proxy = NULL;
         _color_picker_reset(self);
@@ -220,46 +217,9 @@ static gboolean _color_picker_set_active(dt_iop_color_picker_t *self, const gboo
     return TRUE;
 }
 
-gboolean dt_iop_color_picker_toggle(GtkWidget *picker, const guint button,
-                                    const GdkModifierType state)
+static void _color_picker_callback(GtkWidget *button, dt_iop_color_picker_t *self)
 {
-    dt_iop_color_picker_t *self =
-        g_object_get_data(G_OBJECT(picker), DT_COLOR_PICKER_PROXY_DATA);
-    if (!self)
-        return FALSE;
-
-    _color_picker_set_active(self, darktable.lib->proxy.colorpicker.picker_proxy != self, button,
-                             state);
-    return TRUE;
-}
-
-void dt_iop_color_picker_activate(GtkWidget *picker)
-{
-    dt_iop_color_picker_t *self =
-        g_object_get_data(G_OBJECT(picker), DT_COLOR_PICKER_PROXY_DATA);
-    if (self)
-        _color_picker_set_active(self, TRUE, GDK_BUTTON_PRIMARY, 0);
-}
-
-static void _color_picker_button_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                         double y, gpointer user_data)
-{
-    GtkWidget *button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (dt_iop_color_picker_toggle(button, gtk_gesture_single_get_current_button(gesture), state))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-    (void)user_data;
-}
-
-static void _color_picker_quad_pressed(GtkWidget *button, dt_iop_color_picker_t *self)
-{
-    _color_picker_set_active(self, darktable.lib->proxy.colorpicker.picker_proxy != self,
-                             GDK_BUTTON_PRIMARY, dt_key_modifier_state());
+    _color_picker_callback_button_press(button, NULL, self);
 }
 
 void dt_iop_color_picker_set_cst(dt_iop_module_t *module, const dt_iop_colorspace_type_t picker_cst)
@@ -372,11 +332,9 @@ static GtkWidget *_color_picker_new(dt_iop_module_t *module,
             color_picker->picker_cst = cst;
             color_picker->fixed_cst = TRUE;
         }
-        g_object_set_data(G_OBJECT(button), DT_COLOR_PICKER_PROXY_DATA, color_picker);
-        GtkGestureSingle *click = dt_gui_connect_click(button, NULL, NULL, NULL);
-        gtk_gesture_single_set_button(click, 0);
-        g_signal_connect_data(G_OBJECT(click), "pressed", G_CALLBACK(_color_picker_button_pressed),
-                              color_picker, (GClosureNotify)_color_picker_destroy, 0);
+        g_signal_connect_data(G_OBJECT(button), "button-press-event",
+                              G_CALLBACK(_color_picker_callback_button_press), color_picker,
+                              (GClosureNotify)_color_picker_destroy, 0);
         if (w)
             gtk_box_pack_start(GTK_BOX(w), button, FALSE, FALSE, 0);
 
@@ -393,8 +351,7 @@ static GtkWidget *_color_picker_new(dt_iop_module_t *module,
             color_picker->picker_cst = cst;
             color_picker->fixed_cst = TRUE;
         }
-        g_object_set_data(G_OBJECT(w), DT_COLOR_PICKER_PROXY_DATA, color_picker);
-        g_signal_connect_data(G_OBJECT(w), "quad-pressed", G_CALLBACK(_color_picker_quad_pressed),
+        g_signal_connect_data(G_OBJECT(w), "quad-pressed", G_CALLBACK(_color_picker_callback),
                               color_picker, (GClosureNotify)_color_picker_destroy, 0);
 
         return w;

@@ -81,10 +81,6 @@ struct _GtkDarktableRangeSelect
     double current_x_px; // current position of the pointer
     int mouse_inside;    // is the mouse inside the graph widget and does it hover min/max positions
     gboolean set_selection; // are we setting the selection
-    // selection state to restore when an in-progress click gesture is cancelled
-    double selection_start_min_r;
-    double selection_start_max_r;
-    dt_range_bounds_t selection_start_bounds;
 
     cairo_surface_t *surface; // cached graph drawing
 

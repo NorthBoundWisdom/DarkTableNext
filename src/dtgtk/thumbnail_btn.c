@@ -22,12 +22,16 @@
 G_DEFINE_TYPE(GtkDarktableThumbnailBtn, dtgtk_thumbnail_btn, GTK_TYPE_DRAWING_AREA);
 
 static gboolean _thumbnail_btn_draw(GtkWidget *widget, cairo_t *cr);
+static gboolean _thumbnail_btn_enter_leave_notify_callback(GtkWidget *widget,
+                                                           GdkEventCrossing *event);
 
 static void dtgtk_thumbnail_btn_class_init(GtkDarktableThumbnailBtnClass *klass)
 {
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
 
     widget_class->draw = _thumbnail_btn_draw;
+    widget_class->enter_notify_event = _thumbnail_btn_enter_leave_notify_callback;
+    widget_class->leave_notify_event = _thumbnail_btn_enter_leave_notify_callback;
 }
 
 static void dtgtk_thumbnail_btn_init(GtkDarktableThumbnailBtn *button)
@@ -100,6 +104,20 @@ static gboolean _thumbnail_btn_draw(GtkWidget *widget, cairo_t *cr)
     return TRUE;
 }
 
+static gboolean _thumbnail_btn_enter_leave_notify_callback(GtkWidget *widget,
+                                                           GdkEventCrossing *event)
+{
+    g_return_val_if_fail(widget != NULL, FALSE);
+
+    if (event->type == GDK_ENTER_NOTIFY)
+        gtk_widget_set_state_flags(widget, GTK_STATE_FLAG_PRELIGHT, FALSE);
+    else
+        gtk_widget_unset_state_flags(widget, GTK_STATE_FLAG_PRELIGHT);
+
+    gtk_widget_queue_draw(widget);
+    return FALSE;
+}
+
 // Public functions
 GtkWidget *dtgtk_thumbnail_btn_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata)
 {
@@ -109,6 +127,10 @@ GtkWidget *dtgtk_thumbnail_btn_new(DTGTKCairoPaintIconFunc paint, gint paintflag
     button->icon = paint;
     button->icon_flags = paintflags;
     button->icon_data = paintdata;
+    gtk_widget_set_events(GTK_WIDGET(button), GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
+                                                  GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                                  GDK_STRUCTURE_MASK | GDK_ENTER_NOTIFY_MASK |
+                                                  GDK_ALL_EVENTS_MASK);
     gtk_widget_set_app_paintable(GTK_WIDGET(button), TRUE);
     gtk_widget_set_name(GTK_WIDGET(button), "thumbnail_btn");
     return (GtkWidget *)button;

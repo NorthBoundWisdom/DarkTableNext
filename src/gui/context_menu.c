@@ -196,7 +196,7 @@ static void _menu_slider_set(GtkMenuItem *item, gpointer user_data)
     g_free(value);
     gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
-    dt_gui_dialog_add(dialog, entry);
+    gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), entry);
     gtk_widget_show_all(dialog);
 
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
@@ -687,13 +687,11 @@ static gboolean _action_button_press(GtkWidget *widget, GdkEventButton *event, g
     return FALSE;
 }
 
-static gboolean _action_key_pressed(GtkEventControllerKey *controller, const guint keyval,
-                                    const guint keycode, const GdkModifierType state,
-                                    gpointer user_data)
+static gboolean _action_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     (void)user_data;
-    if (keyval == GDK_KEY_Menu || (keyval == GDK_KEY_F10 && (state & GDK_SHIFT_MASK)))
+    if (event->keyval == GDK_KEY_Menu ||
+        (event->keyval == GDK_KEY_F10 && (event->state & GDK_SHIFT_MASK)))
     {
         dt_context_menu_image_provider_t *provider =
             _context_menu_image_quark ? g_object_get_qdata(G_OBJECT(widget),
@@ -712,7 +710,6 @@ static gboolean _action_key_pressed(GtkEventControllerKey *controller, const gui
         return dt_gui_context_menu_show_for_widget(widget);
     }
 
-    (void)keycode;
     return FALSE;
 }
 
@@ -727,9 +724,9 @@ void dt_gui_context_menu_attach(GtkWidget *widget)
         return;
 
     g_object_set_qdata(G_OBJECT(widget), _context_menu_quark, GINT_TO_POINTER(1));
-    gtk_widget_add_events(widget, GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(widget, GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK);
     g_signal_connect(widget, "button-press-event", G_CALLBACK(_action_button_press), NULL);
-    dt_gui_connect_key(widget, _action_key_pressed, NULL);
+    g_signal_connect(widget, "key-press-event", G_CALLBACK(_action_key_press), NULL);
 }
 
 void dt_gui_context_menu_attach_image(GtkWidget *widget,

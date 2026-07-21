@@ -507,8 +507,7 @@ void gui_update(dt_iop_module_t *self)
     gchar *label =
         g_strdup_printf(_("compensate camera exposure (%+.1f EV)"), _get_exposure_bias(self));
     gtk_button_set_label(GTK_BUTTON(g->compensate_exposure_bias), label);
-    gtk_label_set_ellipsize(
-        GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->compensate_exposure_bias))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->compensate_exposure_bias))),
                             PANGO_ELLIPSIZE_MIDDLE);
     g_free(label);
 
@@ -518,8 +517,7 @@ void gui_update(dt_iop_module_t *self)
     /* xgettext:no-c-format */
     label = g_strdup_printf(_("highlight preservation mode (%.1f EV)"), hlbias);
     gtk_button_set_label(GTK_BUTTON(g->compensate_hilite_preserv), label);
-    gtk_label_set_ellipsize(
-        GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->compensate_hilite_preserv))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->compensate_hilite_preserv))),
                             PANGO_ELLIPSIZE_MIDDLE);
     g_free(label);
     gtk_widget_set_visible(GTK_WIDGET(g->compensate_hilite_preserv), hlbias > 0.0f);
@@ -856,14 +854,14 @@ static gboolean _show_computed(gpointer user_data)
     return G_SOURCE_REMOVE;
 }
 
-static void _target_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                               gpointer user_data)
+static gboolean _target_color_draw(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
 {
-    (void)area;
-    const dt_iop_module_t *self = user_data;
     dt_iop_exposure_gui_data_t *g = self->gui_data;
 
     // Init
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width, height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -895,16 +893,18 @@ static void _target_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, in
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
-static void _origin_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                               gpointer user_data)
+static gboolean _origin_color_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
 {
-    (void)area;
-    dt_iop_module_t *self = user_data;
     dt_iop_exposure_gui_data_t *g = self->gui_data;
 
     // Init
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width;
+    int height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -924,6 +924,7 @@ static void _origin_color_draw(GtkDrawingArea *area, cairo_t *crf, int width, in
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
 static void _paint_hue(dt_iop_module_t *self)
@@ -1091,8 +1092,7 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->origin_spot),
                                 _("the input color that should be mapped to the target"));
 
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->origin_spot), _origin_color_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->origin_spot), "draw", G_CALLBACK(_origin_color_draw), self);
 
     g->Lch_origin = gtk_label_new(_("L : \tN/A"));
     gtk_widget_set_tooltip_text(
@@ -1106,8 +1106,7 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->target_spot),
                                 _("the desired target exposure after mapping"));
 
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->target_spot), _target_color_draw, self,
-                                      NULL);
+    g_signal_connect(G_OBJECT(g->target_spot), "draw", G_CALLBACK(_target_color_draw), self);
 
     g->lightness_spot = dt_bauhaus_slider_new_with_range(self, 0., 100., 0, 50.f, 1);
     dt_bauhaus_widget_set_label(g->lightness_spot, NULL, N_("lightness"));

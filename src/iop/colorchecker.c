@@ -1128,13 +1128,15 @@ static void patch_callback(GtkWidget *combo, dt_iop_module_t *self)
     gtk_widget_queue_draw(g->area);
 }
 
-static void checker_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                         gpointer user_data)
+static gboolean checker_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
 {
-    dt_iop_module_t *self = user_data;
     dt_iop_colorchecker_params_t *p = self->params;
     dt_iop_colorchecker_gui_data_t *g = self->gui_data;
 
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    const int width = allocation.width;
+    const int height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
     // clear bg
@@ -1205,22 +1207,23 @@ static void checker_draw(GtkDrawingArea *area, cairo_t *crf, int width, int heig
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
-static void checker_motion_notify(GtkEventControllerMotion *controller, const double x,
-                                  const double y, gpointer user_data)
+static gboolean checker_motion_notify(GtkWidget *widget, GdkEventMotion *event,
+                                      dt_iop_module_t *self)
 {
     // highlight?
-    dt_iop_module_t *self = user_data;
     dt_iop_colorchecker_params_t *p = self->params;
     dt_iop_colorchecker_gui_data_t *g = self->gui_data;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
 
-    const int width = gtk_widget_get_allocated_width(widget);
-    const int height = gtk_widget_get_allocated_height(widget);
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    const int width = allocation.width;
+    const int height = allocation.height;
 
-    const float mouse_x = CLAMP(x, 0, width);
-    const float mouse_y = CLAMP(y, 0, height);
+    const float mouse_x = CLAMP(event->x, 0, width);
+    const float mouse_y = CLAMP(event->y, 0, height);
     int cells_x = 6, cells_y = 4;
     if (p->num_patches > 24)
     {
@@ -1231,7 +1234,7 @@ static void checker_motion_notify(GtkEventControllerMotion *controller, const do
     const float my = mouse_y * cells_y / (float)height;
     const int patch = (int)mx + cells_x * (int)my;
     if (patch < 0 || patch >= p->num_patches)
-        return;
+        return FALSE;
     char tooltip[1024];
     snprintf(tooltip, sizeof(tooltip),
              _("(%2.2f %2.2f %2.2f)\n"
@@ -1242,6 +1245,7 @@ static void checker_motion_notify(GtkEventControllerMotion *controller, const do
                "shift+click while color picking to replace patch"),
              p->source_L[patch], p->source_a[patch], p->source_b[patch]);
     gtk_widget_set_tooltip_text(g->area, tooltip);
+    return TRUE;
 }
 
 typedef struct dt_iop_colorchecker_patch_context_t
@@ -1260,15 +1264,17 @@ enum
 static int _colorchecker_patch_at_position(const dt_iop_colorchecker_params_t *p,
                                            GtkWidget *widget, const double x, const double y)
 {
-    const int width = gtk_widget_get_allocated_width(widget);
-    const int height = gtk_widget_get_allocated_height(widget);
-    if (width <= 0 || height <= 0)
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    if (allocation.width <= 0 || allocation.height <= 0)
         return -1;
 
     const int cells_x = p->num_patches > 24 ? 7 : 6;
     const int cells_y = p->num_patches > 24 ? 7 : 4;
-    const int column = CLAMP((int)(CLAMP(x, 0, width) * cells_x / width), 0, cells_x - 1);
-    const int row = CLAMP((int)(CLAMP(y, 0, height) * cells_y / height), 0, cells_y - 1);
+    const int column = CLAMP((int)(CLAMP(x, 0, allocation.width) * cells_x / allocation.width),
+                             0, cells_x - 1);
+    const int row = CLAMP((int)(CLAMP(y, 0, allocation.height) * cells_y / allocation.height), 0,
+                          cells_y - 1);
     const int patch = column + cells_x * row;
     return patch < p->num_patches ? patch : -1;
 }
@@ -1436,18 +1442,17 @@ static gboolean _colorchecker_patch_context_menu_provider(GtkWidget *widget,
     return TRUE;
 }
 
-static void checker_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                                 const double y, gpointer user_data)
+static gboolean checker_button_press(GtkWidget *widget, GdkEventButton *event,
+                                     dt_iop_module_t *self)
 {
-    dt_iop_module_t *self = user_data;
     dt_iop_colorchecker_params_t *p = self->params;
     dt_iop_colorchecker_gui_data_t *g = self->gui_data;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
 
-    const int width = gtk_widget_get_allocated_width(widget);
-    const int height = gtk_widget_get_allocated_height(widget);
-    const float mouse_x = CLAMP(x, 0, width);
-    const float mouse_y = CLAMP(y, 0, height);
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width, height = allocation.height;
+    const float mouse_x = CLAMP(event->x, 0, width);
+    const float mouse_y = CLAMP(event->y, 0, height);
     int cells_x = 6, cells_y = 4;
     if (p->num_patches > 24)
     {
@@ -1457,10 +1462,10 @@ static void checker_button_press(GtkGestureSingle *gesture, const int n_press, c
     const float mx = mouse_x * cells_x / (float)width;
     const float my = mouse_y * cells_y / (float)height;
     int patch = (int)mx + cells_x * (int)my;
-    if (n_press == 2)
+    if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_2BUTTON_PRESS)
     { // reset on double click
         if (patch < 0 || patch >= p->num_patches)
-            return;
+            return FALSE;
         p->target_L[patch] = p->source_L[patch];
         p->target_a[patch] = p->source_a[patch];
         p->target_b[patch] = p->source_b[patch];
@@ -1469,10 +1474,12 @@ static void checker_button_press(GtkGestureSingle *gesture, const int n_press, c
         _colorchecker_update_sliders(self);
         DT_LEAVE_GUI_UPDATE();
         gtk_widget_queue_draw(g->area);
+        return TRUE;
     }
-    else if (n_press == 1 &&
-             dt_modifier_is(dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture)),
-                            GDK_SHIFT_MASK) &&
+    else if (event->button == GDK_BUTTON_SECONDARY)
+        return _colorchecker_patch_context_menu_provider(widget, event, NULL);
+    else if ((event->button == GDK_BUTTON_PRIMARY) &&
+             dt_modifier_is(event->state, GDK_SHIFT_MASK) &&
              (self->request_color_pick == DT_REQUEST_COLORPICK_MODULE))
     {
         // shift-left while colour picking: replace source colour
@@ -1512,14 +1519,12 @@ static void checker_button_press(GtkGestureSingle *gesture, const int n_press, c
             g->patch = g->drawn_patch = patch;
             gtk_widget_queue_draw(g->area);
         }
-        dt_gui_claim(gesture);
-        return;
+        return TRUE;
     }
-    else if (patch >= p->num_patches)
+    if (patch >= p->num_patches)
         patch = p->num_patches - 1;
-    if (n_press == 1)
-        dt_bauhaus_combobox_set(g->combobox_patch, patch);
-    dt_gui_claim(gesture);
+    dt_bauhaus_combobox_set(g->combobox_patch, patch);
+    return FALSE;
 }
 
 void gui_init(dt_iop_module_t *self)
@@ -1529,10 +1534,13 @@ void gui_init(dt_iop_module_t *self)
 
     // custom 24-patch widget in addition to combo box
     g->area = dtgtk_drawing_area_new_with_aspect_ratio(4.0 / 6.0);
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(g->area), checker_draw, self, NULL);
-    GtkGestureSingle *click = dt_gui_connect_click(g->area, checker_button_press, NULL, self);
-    gtk_gesture_single_set_button(click, GDK_BUTTON_PRIMARY);
-    dt_gui_connect_motion(g->area, checker_motion_notify, NULL, NULL, self);
+    gtk_widget_add_events(GTK_WIDGET(g->area), GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK |
+                                                   GDK_BUTTON_RELEASE_MASK | GDK_LEAVE_NOTIFY_MASK);
+    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(checker_draw), self);
+    g_signal_connect(G_OBJECT(g->area), "button-press-event", G_CALLBACK(checker_button_press),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "motion-notify-event", G_CALLBACK(checker_motion_notify),
+                     self);
     dt_action_t *patch_action =
         dt_action_define_iop(self, NULL, N_("patch"), g->area, &_action_def_colorchecker_patch);
     dt_action_set_context_menu_provider_only(patch_action, TRUE);

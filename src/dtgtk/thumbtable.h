@@ -68,7 +68,7 @@ typedef struct dt_thumbtable_t
 
     int center_offset; // in filemanager, we can have a gap, esp. for zoom==1, we need to center everything
 
-    int last_x, last_y; // last widget-local cursor position during move
+    int last_x, last_y; // last position of cursor during move
 
     gboolean mouse_inside; // is the mouse pointer inside thumbtable widget ?
     gboolean key_inside;   // is the key move pointer inside thumbtable widget ?

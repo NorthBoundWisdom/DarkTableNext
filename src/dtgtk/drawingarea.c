@@ -25,28 +25,6 @@ static GtkSizeRequestMode dtgtk_drawing_area_get_request_mode(GtkWidget *widget)
     return GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH;
 };
 
-#if GTK_CHECK_VERSION(4, 0, 0)
-static void dtgtk_drawing_area_measure(GtkWidget *widget, GtkOrientation orientation, int for_size,
-                                       int *minimum, int *natural, int *minimum_baseline,
-                                       int *natural_baseline)
-{
-    if (orientation != GTK_ORIENTATION_VERTICAL)
-    {
-        GTK_WIDGET_CLASS(dtgtk_drawing_area_parent_class)
-            ->measure(widget, orientation, for_size, minimum, natural, minimum_baseline,
-                      natural_baseline);
-        return;
-    }
-
-    GtkDarktableDrawingArea *da = DTGTK_DRAWING_AREA(widget);
-    const int width = MAX(for_size, 0);
-    const int height = da->height == 0 ? width :
-                       da->height == -1 ? width * da->aspect :
-                                          da->height;
-    *minimum = *natural = height;
-    *minimum_baseline = *natural_baseline = -1;
-}
-#else
 static void dtgtk_drawing_area_get_preferred_height_for_width(GtkWidget *widget, gint for_width,
                                                               gint *min_height, gint *nat_height)
 {
@@ -67,19 +45,14 @@ static void dtgtk_drawing_area_get_preferred_height_for_width(GtkWidget *widget,
         *min_height = *nat_height = da->height;
     }
 }
-#endif
 
 static void dtgtk_drawing_area_class_init(GtkDarktableDrawingAreaClass *class)
 {
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(class);
 
     widget_class->get_request_mode = dtgtk_drawing_area_get_request_mode;
-#if GTK_CHECK_VERSION(4, 0, 0)
-    widget_class->measure = dtgtk_drawing_area_measure;
-#else
     widget_class->get_preferred_height_for_width =
         dtgtk_drawing_area_get_preferred_height_for_width;
-#endif
 }
 
 static void dtgtk_drawing_area_init(GtkDarktableDrawingArea *da)

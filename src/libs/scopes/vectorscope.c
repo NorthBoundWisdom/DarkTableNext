@@ -1252,7 +1252,7 @@ static void _vec_add_options(dt_scopes_mode_t *const self, dt_action_t *dark)
         d->color_harmony_button[i] = rb;
     }
 
-    dt_gui_viewport_set_child(GTK_VIEWPORT(d->harmony_viewport), d->color_harmony_box);
+    gtk_container_add(GTK_CONTAINER(d->harmony_viewport), d->color_harmony_box);
     GtkWidget *colorspace_box = dt_gui_vbox();
     dt_gui_box_add(colorspace_box, d->colorspace_button, d->harmony_viewport);
     dt_gui_box_add(self->options_box, d->vec_scale_button, colorspace_box);

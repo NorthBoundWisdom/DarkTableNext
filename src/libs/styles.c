@@ -258,14 +258,14 @@ static void _styles_show_context_menu(dt_lib_styles_t *d)
                       GDK_GRAVITY_NORTH_WEST);
 }
 
-static gboolean _styles_button_press(const int n_press, const guint button, const double x,
-                                     const double y, dt_lib_styles_t *d)
+static gboolean _styles_button_press(GtkWidget *widget, GdkEventButton *event,
+                                     dt_lib_styles_t *d)
 {
-    if (n_press != 1 || button != GDK_BUTTON_SECONDARY)
+    if (event->type != GDK_BUTTON_PRESS || event->button != GDK_BUTTON_SECONDARY)
         return FALSE;
 
     GtkTreePath *path = NULL;
-    if (!gtk_tree_view_get_path_at_pos(d->tree, (int)x, (int)y, &path, NULL, NULL, NULL))
+    if (!gtk_tree_view_get_path_at_pos(d->tree, event->x, event->y, &path, NULL, NULL, NULL))
         return FALSE;
 
     GtkTreeModel *model = gtk_tree_view_get_model(d->tree);
@@ -287,14 +287,6 @@ static gboolean _styles_button_press(const int n_press, const guint button, cons
     gtk_tree_path_free(path);
     _styles_show_context_menu(d);
     return TRUE;
-}
-
-static void _styles_button_pressed(GtkGestureSingle *gesture, const int n_press, const double x,
-                                   const double y, gpointer user_data)
-{
-    if (_styles_button_press(n_press, gtk_gesture_single_get_current_button(gesture), x, y,
-                             user_data))
-        dt_gui_claim(gesture);
 }
 
 static gboolean _styles_popup_menu(GtkWidget *widget, dt_lib_styles_t *d)
@@ -1111,7 +1103,7 @@ void gui_init(dt_lib_module_t *self)
 
     gtk_widget_set_tooltip_text(GTK_WIDGET(d->tree), _("available styles,\ndouble-click to apply"));
     g_signal_connect(d->tree, "row-activated", G_CALLBACK(_styles_row_activated_callback), d);
-    dt_gui_connect_click_all(d->tree, _styles_button_pressed, NULL, d);
+    g_signal_connect(d->tree, "button-press-event", G_CALLBACK(_styles_button_press), d);
     g_signal_connect(d->tree, "popup-menu", G_CALLBACK(_styles_popup_menu), d);
     g_signal_connect(gtk_tree_view_get_selection(GTK_TREE_VIEW(d->tree)), "changed",
                      G_CALLBACK(_tree_selection_changed), self);
@@ -1126,8 +1118,7 @@ void gui_init(dt_lib_module_t *self)
     d->hide_preview = gtk_check_button_new_with_label(_("hide preview"));
     dt_action_define(DT_ACTION(self), NULL, N_("hide preview"), d->hide_preview,
                      &dt_action_def_toggle);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(
-                                GTK_CHECK_BUTTON(d->hide_preview))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(d->hide_preview))),
                             PANGO_ELLIPSIZE_START);
     g_signal_connect(d->hide_preview, "toggled", G_CALLBACK(_hide_preview_callback), d);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->hide_preview),
@@ -1137,7 +1128,7 @@ void gui_init(dt_lib_module_t *self)
     d->duplicate = gtk_check_button_new_with_label(_("create duplicate"));
     dt_action_define(DT_ACTION(self), NULL, N_("create duplicate"), d->duplicate,
                      &dt_action_def_toggle);
-    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(GTK_CHECK_BUTTON(d->duplicate))),
+    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(d->duplicate))),
                             PANGO_ELLIPSIZE_START);
     g_signal_connect(d->duplicate, "toggled", G_CALLBACK(_duplicate_callback), d);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(d->duplicate),
@@ -1258,7 +1249,7 @@ void _menuitem_preferences(GtkMenuItem *menuitem, dt_lib_module_t *self)
         _("style preview settings"), GTK_WINDOW(win), GTK_DIALOG_DESTROY_WITH_PARENT, _("_cancel"),
         GTK_RESPONSE_NONE, _("_save"), GTK_RESPONSE_ACCEPT, NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
-    dt_gui_connect_key_bubble(dialog, dt_handle_dialog_enter, NULL);
+    g_signal_connect(dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), NULL);
 
     GtkWidget *preview_size;
     DT_BAUHAUS_COMBOBOX_NEW_FULL(preview_size, self, NULL, N_("preview size"),

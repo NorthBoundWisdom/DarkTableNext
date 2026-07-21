@@ -74,13 +74,6 @@ gboolean dt_iop_color_picker_is_visible(const dt_develop_t *dev);
 //* reset current color picker if not keep-active or not keep */
 void dt_iop_color_picker_reset(dt_iop_module_t *module, const gboolean keep);
 
-/* toggle a picker created by dt_color_picker_new(). button and state select the
- * point/area variant for dual-mode pickers. Returns FALSE for unrelated widgets. */
-gboolean dt_iop_color_picker_toggle(GtkWidget *picker, guint button, GdkModifierType state);
-
-/* activate a picker without changing its point/area default or toggling it off */
-void dt_iop_color_picker_activate(GtkWidget *picker);
-
 /* sets the picker colorspace */
 void dt_iop_color_picker_set_cst(dt_iop_module_t *module,
                                  const dt_iop_colorspace_type_t picker_cst);

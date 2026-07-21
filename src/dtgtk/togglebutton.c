@@ -23,55 +23,18 @@
 
 G_DEFINE_TYPE(GtkDarktableToggleButton, dtgtk_togglebutton, GTK_TYPE_TOGGLE_BUTTON);
 
+static gboolean _togglebutton_draw(GtkWidget *widget, cairo_t *cr);
+
+static void dtgtk_togglebutton_class_init(GtkDarktableToggleButtonClass *klass)
+{
+    GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
+
+    widget_class->draw = _togglebutton_draw;
+}
+
 static void dtgtk_togglebutton_init(GtkDarktableToggleButton *slider)
 {
 }
-
-#if GTK_CHECK_VERSION(4, 0, 0)
-static void _togglebutton_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
-{
-    g_return_if_fail(widget != NULL);
-    g_return_if_fail(DTGTK_IS_TOGGLEBUTTON(widget));
-
-    GTK_WIDGET_CLASS(dtgtk_togglebutton_parent_class)->snapshot(widget, snapshot);
-
-    GtkDarktableToggleButton *button = DTGTK_TOGGLEBUTTON(widget);
-    if (!button->icon || !button->canvas)
-        return;
-
-    graphene_rect_t bounds;
-    if (!gtk_widget_compute_bounds(button->canvas, widget, &bounds))
-        return;
-
-    int flags = button->icon_flags;
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
-        flags |= CPF_ACTIVE;
-    else
-        flags &= ~CPF_ACTIVE;
-
-    if ((button->icon_data == dt_dev_gui_module()) && dt_dev_gui_module())
-        flags |= CPF_FOCUS;
-    else
-        flags &= ~CPF_FOCUS;
-
-    if (gtk_widget_get_state_flags(widget) & GTK_STATE_FLAG_PRELIGHT)
-        flags |= CPF_PRELIGHT;
-    else
-        flags &= ~CPF_PRELIGHT;
-
-    if (bounds.size.width <= 0 || bounds.size.height <= 0)
-        return;
-
-    GdkRGBA fg_color;
-    dt_gui_widget_get_color(widget, &fg_color);
-    cairo_t *cr = gtk_snapshot_append_cairo(snapshot, &bounds);
-    gdk_cairo_set_source_rgba(cr, &fg_color);
-    button->icon(cr, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height,
-                 flags, button->icon_data);
-    cairo_destroy(cr);
-}
-#else
-static gboolean _togglebutton_draw(GtkWidget *widget, cairo_t *cr);
 
 static gboolean _togglebutton_draw(GtkWidget *widget, cairo_t *cr)
 {
@@ -82,7 +45,7 @@ static gboolean _togglebutton_draw(GtkWidget *widget, cairo_t *cr)
 
     GdkRGBA fg_color;
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
-    dt_gui_widget_get_color(widget, &fg_color);
+    gtk_style_context_get_color(context, state, &fg_color);
 
     /* fetch flags */
     int flags = DTGTK_TOGGLEBUTTON(widget)->icon_flags;
@@ -166,18 +129,6 @@ static gboolean _togglebutton_draw(GtkWidget *widget, cairo_t *cr)
 
     return FALSE;
 }
-#endif
-
-static void dtgtk_togglebutton_class_init(GtkDarktableToggleButtonClass *klass)
-{
-    GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
-
-#if GTK_CHECK_VERSION(4, 0, 0)
-    widget_class->snapshot = _togglebutton_snapshot;
-#else
-    widget_class->draw = _togglebutton_draw;
-#endif
-}
 
 // Public functions
 GtkWidget *dtgtk_togglebutton_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void *paintdata)
@@ -188,7 +139,7 @@ GtkWidget *dtgtk_togglebutton_new(DTGTKCairoPaintIconFunc paint, gint paintflags
     button->icon_flags = paintflags;
     button->icon_data = paintdata;
     button->canvas = gtk_drawing_area_new();
-    dt_gui_button_set_child(GTK_BUTTON(button), button->canvas);
+    gtk_container_add(GTK_CONTAINER(button), button->canvas);
     dt_gui_add_class(GTK_WIDGET(button), "dt_module_btn");
     gtk_widget_set_name(GTK_WIDGET(button->canvas), "button-canvas");
     g_signal_connect(G_OBJECT(button), "toggled", G_CALLBACK(gtk_widget_queue_draw), NULL);

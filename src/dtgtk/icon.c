@@ -19,35 +19,43 @@
 #include "gui/gtk.h"
 #include <string.h>
 
-G_DEFINE_TYPE(GtkDarktableIcon, dtgtk_icon, GTK_TYPE_DRAWING_AREA);
+G_DEFINE_TYPE(GtkDarktableIcon, dtgtk_icon, GTK_TYPE_EVENT_BOX);
 
-static void _icon_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer user_data);
+static gboolean _icon_draw(GtkWidget *widget, cairo_t *cr);
 
 static void dtgtk_icon_class_init(GtkDarktableIconClass *klass)
 {
+    GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
+    widget_class->draw = _icon_draw;
 }
 
 static void dtgtk_icon_init(GtkDarktableIcon *icon)
 {
-    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(icon), _icon_draw, icon, NULL);
 }
 
-static void _icon_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer user_data)
+static gboolean _icon_draw(GtkWidget *widget, cairo_t *cr)
 {
-    GtkWidget *widget = GTK_WIDGET(area);
-    g_return_if_fail(widget != NULL);
-    g_return_if_fail(DTGTK_IS_ICON(widget));
+    g_return_val_if_fail(widget != NULL, FALSE);
+    g_return_val_if_fail(DTGTK_IS_ICON(widget), FALSE);
+
+    /* begin cairo drawing */
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+
+    GtkStateFlags state = gtk_widget_get_state_flags(widget);
 
     GdkRGBA fg_color;
-    dt_gui_widget_get_color(widget, &fg_color);
+    GtkStyleContext *context = gtk_widget_get_style_context(widget);
+    gtk_style_context_get_color(context, state, &fg_color);
 
     gdk_cairo_set_source_rgba(cr, &fg_color);
 
     /* draw icon */
     if (DTGTK_ICON(widget)->icon)
-        DTGTK_ICON(widget)->icon(cr, 0, 0, width, height,
+        DTGTK_ICON(widget)->icon(cr, 0, 0, allocation.width, allocation.height,
                                  DTGTK_ICON(widget)->icon_flags, DTGTK_ICON(widget)->icon_data);
-    (void)user_data;
+
+    return FALSE;
 }
 
 // Public functions
@@ -55,6 +63,7 @@ GtkWidget *dtgtk_icon_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void *
 {
     GtkDarktableIcon *icon;
     icon = g_object_new(dtgtk_icon_get_type(), NULL);
+    gtk_event_box_set_visible_window(GTK_EVENT_BOX(icon), FALSE);
     icon->icon = paint;
     icon->icon_flags = paintflags;
     icon->icon_data = paintdata;

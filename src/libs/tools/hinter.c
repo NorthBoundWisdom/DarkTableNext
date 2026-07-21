@@ -66,9 +66,10 @@ void gui_init(dt_lib_module_t *self)
     dt_lib_hinter_t *d = g_malloc0(sizeof(dt_lib_hinter_t));
     self->data = (void *)d;
 
+    self->widget = gtk_event_box_new();
     d->label = gtk_label_new("");
-    self->widget = d->label;
     gtk_label_set_ellipsize(GTK_LABEL(d->label), PANGO_ELLIPSIZE_END);
+    gtk_container_add(GTK_CONTAINER(self->widget), d->label);
 
     darktable.control->proxy.hinter.module = self;
     darktable.control->proxy.hinter.set_message = _lib_hinter_set_message;

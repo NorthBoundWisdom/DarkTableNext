@@ -27,6 +27,11 @@ ABI, scripting, map and tethering workflows, printing, slideshow, remote
 publishing, or old format compatibility. For the complete product boundary,
 see [TODO_CORE_REDUCTION.md](TODO_CORE_REDUCTION.md).
 
+A proposed clean-slate successor that separates the image engine from the
+desktop UI is documented in [TODO_REWRITE.md](TODO_REWRITE.md). It does not
+change the current 0.9 implementation or support boundary until its decision
+gates are approved.
+
 ### Bundled styles
 
 The distribution includes only the generic example styles. The historical

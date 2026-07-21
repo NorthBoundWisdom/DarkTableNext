@@ -212,19 +212,17 @@ void gui_update(dt_iop_module_t *self)
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
 }
 
-static void dt_iop_colorcorrection_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height,
-                                        gpointer user_data);
-static void dt_iop_colorcorrection_motion_notify(GtkEventControllerMotion *controller, double x,
-                                                 double y, gpointer user_data);
-static void dt_iop_colorcorrection_button_press(GtkGestureSingle *gesture, int n_press, double x,
-                                                double y, gpointer user_data);
-static void dt_iop_colorcorrection_leave_notify(GtkEventControllerMotion *controller,
-                                                gpointer user_data);
-static void dt_iop_colorcorrection_scrolled(GtkEventControllerScroll *controller, double dx,
-                                            double dy, gpointer user_data);
-static gboolean dt_iop_colorcorrection_key_press(GtkEventControllerKey *controller, guint keyval,
-                                                 guint keycode, GdkModifierType state,
-                                                 gpointer user_data);
+static gboolean dt_iop_colorcorrection_draw(GtkWidget *widget, cairo_t *cr, dt_iop_module_t *self);
+static gboolean dt_iop_colorcorrection_motion_notify(GtkWidget *widget, GdkEventMotion *event,
+                                                     dt_iop_module_t *self);
+static gboolean dt_iop_colorcorrection_button_press(GtkWidget *widget, GdkEventButton *event,
+                                                    dt_iop_module_t *self);
+static gboolean dt_iop_colorcorrection_leave_notify(GtkWidget *widget, GdkEventCrossing *event,
+                                                    dt_iop_module_t *self);
+static gboolean dt_iop_colorcorrection_scrolled(GtkWidget *widget, GdkEventScroll *event,
+                                                dt_iop_module_t *self);
+static gboolean dt_iop_colorcorrection_key_press(GtkWidget *widget, GdkEventKey *event,
+                                                 dt_iop_module_t *self);
 
 void gui_init(dt_iop_module_t *self)
 {
@@ -239,17 +237,22 @@ void gui_init(dt_iop_module_t *self)
                                 _("drag the line for split-toning. "
                                   "bright means highlights, dark means shadows. "
                                   "use mouse wheel to change saturation."));
+    gtk_widget_add_events(GTK_WIDGET(g->area), GDK_POINTER_MOTION_MASK |
+                                                   darktable.gui->scroll_mask |
+                                                   GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                                   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
-    dt_gui_drawing_area_set_draw_func(g->area, dt_iop_colorcorrection_draw, self, NULL);
-    GtkGestureSingle *click = dt_gui_connect_click(g->area, dt_iop_colorcorrection_button_press,
-                                                    NULL, self);
-    gtk_gesture_single_set_button(click, GDK_BUTTON_PRIMARY);
-    dt_gui_connect_motion(g->area, dt_iop_colorcorrection_motion_notify, NULL,
-                          dt_iop_colorcorrection_leave_notify, self);
-    dt_gui_connect_scroll(g->area,
-                          GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES | GTK_EVENT_CONTROLLER_SCROLL_DISCRETE,
-                          dt_iop_colorcorrection_scrolled, self);
-    dt_gui_connect_key(g->area, dt_iop_colorcorrection_key_press, self);
+    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(dt_iop_colorcorrection_draw), self);
+    g_signal_connect(G_OBJECT(g->area), "button-press-event",
+                     G_CALLBACK(dt_iop_colorcorrection_button_press), self);
+    g_signal_connect(G_OBJECT(g->area), "motion-notify-event",
+                     G_CALLBACK(dt_iop_colorcorrection_motion_notify), self);
+    g_signal_connect(G_OBJECT(g->area), "leave-notify-event",
+                     G_CALLBACK(dt_iop_colorcorrection_leave_notify), self);
+    g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(dt_iop_colorcorrection_scrolled),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "key-press-event",
+                     G_CALLBACK(dt_iop_colorcorrection_key_press), self);
 
     self->widget = dt_gui_vbox(g->area);
     g->slider = dt_bauhaus_slider_from_params(self, N_("saturation"));
@@ -268,15 +271,15 @@ void gui_cleanup(dt_iop_module_t *self)
     cmsDeleteTransform(g->xform);
 }
 
-static void dt_iop_colorcorrection_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
-                                        gpointer user_data)
+static gboolean dt_iop_colorcorrection_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
 {
-    (void)area;
-    dt_iop_module_t *self = user_data;
     dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
     dt_iop_colorcorrection_params_t *p = self->params;
 
     const int inset = DT_COLORCORRECTION_INSET;
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width, height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
     // clear bg
@@ -342,23 +345,23 @@ static void dt_iop_colorcorrection_draw(GtkDrawingArea *area, cairo_t *crf, int 
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
+    return TRUE;
 }
 
-static void dt_iop_colorcorrection_motion_notify(GtkEventControllerMotion *controller, const double x,
-                                                 const double y, gpointer user_data)
+static gboolean dt_iop_colorcorrection_motion_notify(GtkWidget *widget, GdkEventMotion *event,
+                                                     dt_iop_module_t *self)
 {
-    dt_iop_module_t *self = user_data;
     dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
     dt_iop_colorcorrection_params_t *p = self->params;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     const int inset = DT_COLORCORRECTION_INSET;
-    const int width = gtk_widget_get_allocated_width(widget) - 2 * inset;
-    const int height = gtk_widget_get_allocated_height(widget) - 2 * inset;
-    const float mouse_x = CLAMP(x - inset, 0, width);
-    const float mouse_y = CLAMP(height - 1 - y + inset, 0, height);
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    int width = allocation.width - 2 * inset, height = allocation.height - 2 * inset;
+    const float mouse_x = CLAMP(event->x - inset, 0, width);
+    const float mouse_y = CLAMP(height - 1 - event->y + inset, 0, height);
     const float ma = (2.0 * mouse_x - width) * DT_COLORCORRECTION_MAX / (float)width;
     const float mb = (2.0 * mouse_y - height) * DT_COLORCORRECTION_MAX / (float)height;
-    if (dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller)) & GDK_BUTTON1_MASK)
+    if (event->state & GDK_BUTTON1_MASK)
     {
         if (g->selected == 1)
         {
@@ -387,17 +390,15 @@ static void dt_iop_colorcorrection_motion_notify(GtkEventControllerMotion *contr
     if (g->selected > 0)
         gtk_widget_grab_focus(widget);
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return TRUE;
 }
 
-static void dt_iop_colorcorrection_button_press(GtkGestureSingle *gesture, const int n_press,
-                                                const double x, const double y, gpointer user_data)
+static gboolean dt_iop_colorcorrection_button_press(GtkWidget *widget, GdkEventButton *event,
+                                                    dt_iop_module_t *self)
 {
-    (void)x;
-    (void)y;
-    if (n_press == 2)
+    if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_2BUTTON_PRESS)
     {
         // double click resets:
-        dt_iop_module_t *self = user_data;
         dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
         dt_iop_colorcorrection_params_t *p = self->params;
         switch (g->selected)
@@ -417,67 +418,67 @@ static void dt_iop_colorcorrection_button_press(GtkGestureSingle *gesture, const
             dt_dev_add_history_item(darktable.develop, self, TRUE);
         }
         }
-        dt_gui_claim(gesture);
+        return TRUE;
     }
+    return FALSE;
 }
 
-static void dt_iop_colorcorrection_leave_notify(GtkEventControllerMotion *controller,
-                                                gpointer user_data)
+static gboolean dt_iop_colorcorrection_leave_notify(GtkWidget *widget, GdkEventCrossing *event,
+                                                    dt_iop_module_t *self)
 {
-    (void)controller;
-    dt_iop_module_t *self = user_data;
     dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return TRUE;
 }
 
-static void dt_iop_colorcorrection_scrolled(GtkEventControllerScroll *controller, const double dx,
-                                            const double dy, gpointer user_data)
+static gboolean dt_iop_colorcorrection_scrolled(GtkWidget *widget, GdkEventScroll *event,
+                                                dt_iop_module_t *self)
 {
-    (void)controller;
-    dt_iop_module_t *self = user_data;
     dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
     dt_iop_colorcorrection_params_t *p = self->params;
-    const int delta = (int)(dx + dy);
-    if (delta != 0)
+
+    if (dt_gui_ignore_scroll(event))
+        return FALSE;
+
+    int delta_y;
+    if (dt_gui_get_scroll_unit_delta(event, &delta_y))
     {
-        p->saturation = CLAMP(p->saturation - 0.1 * delta, -3.0, 3.0);
+        p->saturation = CLAMP(p->saturation - 0.1 * delta_y, -3.0, 3.0);
         dt_bauhaus_slider_set(g->slider, p->saturation);
-        gtk_widget_queue_draw(GTK_WIDGET(g->area));
+        gtk_widget_queue_draw(widget);
     }
+
+    return TRUE;
 }
 
 #define COLORCORRECTION_DEFAULT_STEP (0.5f)
 
-static gboolean dt_iop_colorcorrection_key_press(GtkEventControllerKey *controller,
-                                                 const guint keyval, const guint keycode,
-                                                 const GdkModifierType state, gpointer user_data)
+static gboolean dt_iop_colorcorrection_key_press(GtkWidget *widget, GdkEventKey *event,
+                                                 dt_iop_module_t *self)
 {
-    (void)keycode;
-    dt_iop_module_t *self = user_data;
     dt_iop_colorcorrection_gui_data_t *g = self->gui_data;
     dt_iop_colorcorrection_params_t *p = self->params;
     if (g->selected < 1)
         return FALSE;
 
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     int handled = 0;
     float dx = 0.0f, dy = 0.0f;
-    if (keyval == GDK_KEY_Up || keyval == GDK_KEY_KP_Up)
+    if (event->keyval == GDK_KEY_Up || event->keyval == GDK_KEY_KP_Up)
     {
         handled = 1;
         dy = COLORCORRECTION_DEFAULT_STEP;
     }
-    else if (keyval == GDK_KEY_Down || keyval == GDK_KEY_KP_Down)
+    else if (event->keyval == GDK_KEY_Down || event->keyval == GDK_KEY_KP_Down)
     {
         handled = 1;
         dy = -COLORCORRECTION_DEFAULT_STEP;
     }
-    else if (keyval == GDK_KEY_Right || keyval == GDK_KEY_KP_Right)
+    else if (event->keyval == GDK_KEY_Right || event->keyval == GDK_KEY_KP_Right)
     {
         handled = 1;
         dx = COLORCORRECTION_DEFAULT_STEP;
     }
-    else if (keyval == GDK_KEY_Left || keyval == GDK_KEY_KP_Left)
+    else if (event->keyval == GDK_KEY_Left || event->keyval == GDK_KEY_KP_Left)
     {
         handled = 1;
         dx = -COLORCORRECTION_DEFAULT_STEP;
@@ -486,7 +487,7 @@ static gboolean dt_iop_colorcorrection_key_press(GtkEventControllerKey *controll
     if (!handled)
         return FALSE;
 
-    float multiplier = dt_accel_get_speed_multiplier(widget, state);
+    float multiplier = dt_accel_get_speed_multiplier(widget, event->state);
     dx *= multiplier;
     dy *= multiplier;
 

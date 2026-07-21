@@ -2747,7 +2747,7 @@ static void _camera_set(dt_iop_module_t *self, const lfCamera *cam)
 
     if (!cam)
     {
-        gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->camera_model))), "");
+        gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->camera_model))), "");
         gtk_widget_set_tooltip_text(GTK_WIDGET(g->camera_model), "");
         return;
     }
@@ -2766,7 +2766,7 @@ static void _camera_set(dt_iop_module_t *self, const lfCamera *cam)
             fm = g_strdup_printf("%s, %s", maker, model);
         else
             fm = g_strdup_printf("%s", model);
-        gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->camera_model))), fm);
+        gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->camera_model))), fm);
         g_free(fm);
     }
 
@@ -2980,7 +2980,7 @@ static void _lens_set(dt_iop_module_t *self, const lfLens *lens)
             fm = g_strdup_printf("%s, %s", maker, model);
         else
             fm = g_strdup_printf("%s", model);
-        gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->lens_model))), fm);
+        gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->lens_model))), fm);
         g_free(fm);
     }
 
@@ -3607,8 +3607,8 @@ void gui_update(dt_iop_module_t *self)
 
     // these are the wrong (untranslated) strings in general but that's
     // ok, they will be overwritten further down
-    gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->camera_model))), p->camera);
-    gtk_label_set_text(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(g->lens_model))), p->lens);
+    gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->camera_model))), p->camera);
+    gtk_label_set_text(GTK_LABEL(gtk_bin_get_child(GTK_BIN(g->lens_model))), p->lens);
     gtk_widget_set_tooltip_text(g->camera_model, "");
     gtk_widget_set_tooltip_text(g->lens_model, "");
 

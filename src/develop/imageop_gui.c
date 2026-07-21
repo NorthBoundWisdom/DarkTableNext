@@ -242,7 +242,7 @@ GtkWidget *dt_bauhaus_toggle_from_params(dt_iop_module_t *self, const char *para
         GtkWidget *label = gtk_label_new(_(str));
         gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
         button = gtk_check_button_new();
-        dt_gui_check_button_set_child(GTK_CHECK_BUTTON(button), label);
+        gtk_container_add(GTK_CONTAINER(button), label);
         dt_module_param_t *module_param = g_malloc(sizeof(dt_module_param_t));
         module_param->module = self;
         DT_IOP_SECTION_FOR_PARAMS_UNWIND(module_param->module);
@@ -266,32 +266,13 @@ GtkWidget *dt_bauhaus_toggle_from_params(dt_iop_module_t *self, const char *para
     return button;
 }
 
-static void _iop_togglebutton_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                      gpointer user_data)
-{
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    const dt_iop_togglebutton_callback_t callback =
-        (dt_iop_togglebutton_callback_t)g_object_get_data(G_OBJECT(widget),
-                                                           "iop-togglebutton-callback");
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (callback && callback(widget, gtk_gesture_single_get_current_button(gesture), state,
-                             (dt_iop_module_t *)user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
 GtkWidget *dt_iop_togglebutton_new(dt_iop_module_t *self, const char *section, const gchar *label,
-                                   const gchar *ctrl_label, dt_iop_togglebutton_callback_t callback,
-                                   gboolean local, guint accel_key, GdkModifierType mods,
+                                   const gchar *ctrl_label, GCallback callback, gboolean local,
+                                   guint accel_key, GdkModifierType mods,
                                    DTGTKCairoPaintIconFunc paint, GtkWidget *box)
 {
     GtkWidget *w = dtgtk_togglebutton_new(paint, 0, NULL);
-    g_object_set_data(G_OBJECT(w), "iop-togglebutton-callback", (gpointer)callback);
-    dt_gui_connect_click_all(w, _iop_togglebutton_pressed, NULL, self);
+    g_signal_connect_data(G_OBJECT(w), "button-press-event", callback, self, NULL, 0);
 
     if (!ctrl_label)
         gtk_widget_set_tooltip_text(w, _(label));
@@ -325,8 +306,7 @@ GtkWidget *dt_iop_button_new(dt_iop_module_t *self, const gchar *label, GCallbac
     else
     {
         button = gtk_button_new_with_label(Q_(label));
-        gtk_label_set_ellipsize(GTK_LABEL(dt_gui_button_get_child(GTK_BUTTON(button))),
-                                PANGO_ELLIPSIZE_END);
+        gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(button))), PANGO_ELLIPSIZE_END);
     }
 
     g_signal_connect_data(G_OBJECT(button), "clicked", callback, (gpointer)self, NULL, 0);

@@ -201,7 +201,7 @@ static GtkWidget *_snapshot_context_item(const gchar *label, dt_action_t *action
 }
 
 static void _snapshot_show_context_menu(dt_lib_module_t *self, GtkWidget *button,
-                                        const gboolean at_pointer)
+                                        GdkEventButton *event)
 {
     dt_lib_snapshots_t *d = self->data;
     GtkWidget *menu = gtk_menu_new();
@@ -222,42 +222,27 @@ static void _snapshot_show_context_menu(dt_lib_module_t *self, GtkWidget *button
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
     gtk_widget_show_all(menu);
-    if (at_pointer)
-        dt_gui_menu_popup(GTK_MENU(menu), NULL, 0, 0);
+    if (event)
+        gtk_menu_popup_at_pointer(GTK_MENU(menu), (GdkEvent *)event);
     else
         dt_gui_menu_popup(GTK_MENU(menu), button, GDK_GRAVITY_SOUTH_WEST,
                           GDK_GRAVITY_NORTH_WEST);
 }
 
-static gboolean _snapshot_button_context(const int n_press, const guint button,
-                                         const GdkModifierType state, dt_lib_module_t *self,
-                                         GtkWidget *widget)
+static gboolean _snapshot_button_press_context(GtkWidget *widget, GdkEventButton *event,
+                                               dt_lib_module_t *self)
 {
-    if (n_press != 1 || button != GDK_BUTTON_SECONDARY ||
-        dt_modifier_is(state, GDK_CONTROL_MASK))
+    if (event->type != GDK_BUTTON_PRESS || event->button != GDK_BUTTON_SECONDARY ||
+        dt_modifier_is(event->state, GDK_CONTROL_MASK))
         return FALSE;
 
-    _snapshot_show_context_menu(self, widget, TRUE);
+    _snapshot_show_context_menu(self, widget, event);
     return TRUE;
-}
-
-static void _snapshot_button_context_pressed(GtkGestureSingle *gesture, const int n_press,
-                                             const double x, const double y, gpointer user_data)
-{
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (_snapshot_button_context(n_press, gtk_gesture_single_get_current_button(gesture), state,
-                                 user_data, widget))
-        dt_gui_claim(gesture);
-
-    (void)x;
-    (void)y;
 }
 
 static gboolean _snapshot_popup_menu(GtkWidget *widget, dt_lib_module_t *self)
 {
-    _snapshot_show_context_menu(self, widget, FALSE);
+    _snapshot_show_context_menu(self, widget, NULL);
     return TRUE;
 }
 
@@ -298,8 +283,9 @@ enum _lib_snapshot_button_items
 
 static GtkWidget *_lib_snapshot_button_get_item(GtkWidget *button, const int num)
 {
-    GtkWidget *cont = dt_gui_button_get_child(GTK_BUTTON(button));
-    return dt_gui_container_nth_child(cont, num);
+    GtkWidget *cont = gtk_bin_get_child(GTK_BIN(button));
+    GList *items = gtk_container_get_children(GTK_CONTAINER(cont));
+    return (GtkWidget *)g_list_nth_data(items, num);
 }
 
 // draw snapshot sign
@@ -691,14 +677,14 @@ static void _entry_activated_callback(GtkEntry *entry, dt_lib_module_t *self)
     gtk_widget_grab_focus(d->snapshot[index].button);
 }
 
-static gboolean _lib_snapshot_button_focus(GtkWidget *widget, const GdkModifierType state,
-                                           dt_lib_module_t *self)
+static gboolean _lib_button_button_pressed_callback(GtkWidget *widget, GdkEventButton *event,
+                                                    dt_lib_module_t *self)
 {
     dt_lib_snapshots_t *d = self->data;
 
     const int index = _look_for_widget(self, widget, FALSE);
 
-    if (dt_modifier_is(state, GDK_CONTROL_MASK))
+    if (dt_modifier_is(event->state, GDK_CONTROL_MASK))
     {
         gtk_widget_hide(d->snapshot[index].name);
         gtk_widget_show(d->snapshot[index].entry);
@@ -709,20 +695,6 @@ static gboolean _lib_snapshot_button_focus(GtkWidget *widget, const GdkModifierT
     return gtk_widget_has_focus(d->snapshot[index].entry);
 }
 
-static void _lib_snapshot_button_pressed(GtkGestureSingle *gesture, const int n_press,
-                                         const double x, const double y, gpointer user_data)
-{
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (_lib_snapshot_button_focus(widget, state, user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
 static void _init_snapshot_entry(dt_lib_module_t *self, dt_lib_snapshot_t *s)
 {
     /* create snapshot button */
@@ -730,8 +702,10 @@ static void _init_snapshot_entry(dt_lib_module_t *self, dt_lib_snapshot_t *s)
     gtk_widget_set_name(s->button, "snapshot-button");
     g_signal_connect(G_OBJECT(s->button), "toggled", G_CALLBACK(_lib_snapshots_toggled_callback),
                      self);
-    dt_gui_connect_click_all(s->button, _lib_snapshot_button_pressed, NULL, self);
-    dt_gui_connect_click_all(s->button, _snapshot_button_context_pressed, NULL, self);
+    g_signal_connect(G_OBJECT(s->button), "button-press-event",
+                     G_CALLBACK(_lib_button_button_pressed_callback), self);
+    g_signal_connect(G_OBJECT(s->button), "button-press-event",
+                     G_CALLBACK(_snapshot_button_press_context), self);
     g_signal_connect(G_OBJECT(s->button), "popup-menu", G_CALLBACK(_snapshot_popup_menu), self);
 
     s->num = gtk_label_new("");
@@ -994,7 +968,7 @@ void gui_init(dt_lib_module_t *self)
         // hide entry, will be used only when editing
         gtk_widget_hide(s->entry);
 
-        dt_gui_button_set_child(GTK_BUTTON(s->button), box);
+        gtk_container_add(GTK_CONTAINER(s->button), box);
 
         // add snap button and restore button
         s->bbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);

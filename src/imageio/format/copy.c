@@ -123,9 +123,10 @@ void gui_init(dt_imageio_module_format_t *self)
 {
     self->widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-    dt_gui_box_add(self->widget,
-                   dt_ui_label_new(
-                       _("do a 1:1 copy of the selected files.\nthe global options below do not apply!")));
+    gtk_container_add(
+        GTK_CONTAINER(self->widget),
+        dt_ui_label_new(
+            _("do a 1:1 copy of the selected files.\nthe global options below do not apply!")));
 }
 void gui_cleanup(dt_imageio_module_format_t *self)
 {

@@ -2769,15 +2769,15 @@ void gui_post_expose(dt_iop_module_t *self, cairo_t *cr, const float bb_width,
     }
 }
 
-static gboolean _btn_make_radio(GtkToggleButton *btn, GdkModifierType state,
-                                dt_iop_module_t *self);
+static gboolean btn_make_radio_callback(GtkToggleButton *btn, const GdkEventButton *event,
+                                        dt_iop_module_t *self);
 
 void gui_focus(dt_iop_module_t *self, const gboolean in)
 {
     if (!in)
     {
         dt_collection_hint_message(darktable.collection);
-        _btn_make_radio(NULL, 0, self);
+        btn_make_radio_callback(NULL, NULL, self);
     }
 }
 
@@ -3239,7 +3239,7 @@ int button_released(dt_iop_module_t *self, const float x, const float y, const i
             if (g->creation_continuous)
                 _start_new_shape(self);
             else
-                _btn_make_radio(g->btn_node_tool, 0, self);
+                btn_make_radio_callback(g->btn_node_tool, NULL, self);
             handled = 2;
         }
         else if (gtk_toggle_button_get_active(g->btn_line_tool))
@@ -3302,7 +3302,7 @@ int button_released(dt_iop_module_t *self, const float x, const float y, const i
             else
             {
                 g->status &= ~DT_LIQUIFY_STATUS_PREVIEW;
-                _btn_make_radio(g->btn_node_tool, 0, self);
+                btn_make_radio_callback(g->btn_node_tool, NULL, self);
             }
             handled = 2;
             goto done;
@@ -3311,7 +3311,7 @@ int button_released(dt_iop_module_t *self, const float x, const float y, const i
         // right click on background toggles node tool
         if (g->last_hit.layer == DT_LIQUIFY_LAYER_BACKGROUND)
         {
-            _btn_make_radio(g->btn_node_tool, 0, self);
+            btn_make_radio_callback(g->btn_node_tool, NULL, self);
             handled = 1;
             goto done;
         }
@@ -3517,8 +3517,8 @@ static void _liquify_cairo_paint_node_tool(cairo_t *cr, const gint x, const gint
 
 // we need this only because darktable has no radiobutton support
 
-static gboolean _btn_make_radio(GtkToggleButton *btn, const GdkModifierType state,
-                                dt_iop_module_t *self)
+static gboolean btn_make_radio_callback(GtkToggleButton *btn, const GdkEventButton *event,
+                                        dt_iop_module_t *self)
 {
     dt_iop_liquify_gui_data_t *g = self->gui_data;
     dt_iop_liquify_params_t *p = self->params;
@@ -3530,7 +3530,7 @@ static gboolean _btn_make_radio(GtkToggleButton *btn, const GdkModifierType stat
         return TRUE;
     }
 
-    g->creation_continuous = dt_modifier_is(state, GDK_CONTROL_MASK);
+    g->creation_continuous = event != NULL && dt_modifier_is(event->state, GDK_CONTROL_MASK);
 
     dt_control_hinter_message("");
 
@@ -3586,85 +3586,6 @@ static gboolean _btn_make_radio(GtkToggleButton *btn, const GdkModifierType stat
     return TRUE;
 }
 
-static void _btn_make_radio_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                    gpointer user_data)
-{
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkWidget *button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    const GdkModifierType state =
-        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
-    if (_btn_make_radio(GTK_TOGGLE_BUTTON(button), state, user_data))
-        dt_gui_claim(gesture);
-}
-
-static float _liquify_tool_action_process(gpointer target, const dt_action_element_t element,
-                                          const dt_action_effect_t effect, const float move_size)
-{
-    (void)element;
-    if (!GTK_IS_TOGGLE_BUTTON(target))
-        return DT_ACTION_NOT_VALID;
-
-    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
-    if (!self || !self->gui_data)
-        return DT_ACTION_NOT_VALID;
-
-    float value = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(target));
-    if (DT_ACTION_TOGGLE_NEEDED(effect, move_size, value) &&
-        gtk_widget_get_ancestor(target, GTK_TYPE_WINDOW))
-    {
-        const GdkModifierType state =
-            (effect == DT_ACTION_EFFECT_TOGGLE_CTRL || effect == DT_ACTION_EFFECT_ON_CTRL) ?
-                GDK_CONTROL_MASK :
-                0;
-        _btn_make_radio(GTK_TOGGLE_BUTTON(target), state, self);
-        value = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(target));
-        if (!gtk_widget_is_visible(target))
-            dt_action_widget_toast(NULL, target, value ? _("on") : _("off"));
-    }
-
-    return value;
-}
-
-static const dt_action_element_def_t _action_elements_liquify_tool[] = {
-    {NULL, dt_action_effect_toggle},
-    {NULL},
-};
-
-static const dt_shortcut_fallback_t _action_fallbacks_liquify_tool[] = {
-    {.mods = GDK_CONTROL_MASK, .effect = DT_ACTION_EFFECT_TOGGLE_CTRL},
-    {.button = DT_SHORTCUT_RIGHT, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
-    {.press = DT_SHORTCUT_LONG, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
-    {},
-};
-
-static const dt_action_def_t _action_def_liquify_tool = {
-    N_("toggle"), _liquify_tool_action_process, _action_elements_liquify_tool,
-    _action_fallbacks_liquify_tool};
-
-static GtkWidget *_liquify_tool_button_new(dt_iop_module_t *self, const char *section,
-                                            const gchar *label, const gchar *ctrl_label,
-                                            DTGTKCairoPaintIconFunc paint, GtkWidget *box)
-{
-    GtkWidget *button = dtgtk_togglebutton_new(paint, 0, NULL);
-    if (ctrl_label)
-    {
-        gchar *tooltip = g_strdup_printf(_("%s\nctrl+click to %s"), _(label), _(ctrl_label));
-        gtk_widget_set_tooltip_text(button, tooltip);
-        g_free(tooltip);
-    }
-    else
-        gtk_widget_set_tooltip_text(button, _(label));
-
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
-    if (GTK_IS_BOX(box))
-        gtk_box_pack_end(GTK_BOX(box), button, FALSE, FALSE, 0);
-    dt_action_define_iop(self, section, label, button, &_action_def_liquify_tool);
-    dt_gui_connect_click_all(button, _btn_make_radio_pressed, NULL, self);
-    return button;
-}
-
 void gui_update(dt_iop_module_t *self)
 {
     update_warp_count(self);
@@ -3694,20 +3615,21 @@ void gui_init(dt_iop_module_t *self)
     GtkWidget *hbox = dt_gui_hbox();
     self->widget = dt_gui_vbox(count, hbox);
 
-    g->btn_node_tool = GTK_TOGGLE_BUTTON(_liquify_tool_button_new(
-        self, NULL, N_("edit, add and delete nodes"), NULL, _liquify_cairo_paint_node_tool, hbox));
+    g->btn_node_tool = GTK_TOGGLE_BUTTON(dt_iop_togglebutton_new(
+        self, NULL, N_("edit, add and delete nodes"), NULL, G_CALLBACK(btn_make_radio_callback),
+        TRUE, 0, 0, _liquify_cairo_paint_node_tool, hbox));
 
-    g->btn_curve_tool = GTK_TOGGLE_BUTTON(_liquify_tool_button_new(
+    g->btn_curve_tool = GTK_TOGGLE_BUTTON(dt_iop_togglebutton_new(
         self, N_("shapes"), N_("draw curves"), N_("draw multiple curves"),
-        _liquify_cairo_paint_curve_tool, hbox));
+        G_CALLBACK(btn_make_radio_callback), TRUE, 0, 0, _liquify_cairo_paint_curve_tool, hbox));
 
-    g->btn_line_tool = GTK_TOGGLE_BUTTON(_liquify_tool_button_new(
+    g->btn_line_tool = GTK_TOGGLE_BUTTON(dt_iop_togglebutton_new(
         self, N_("shapes"), N_("draw lines"), N_("draw multiple lines"),
-        _liquify_cairo_paint_line_tool, hbox));
+        G_CALLBACK(btn_make_radio_callback), TRUE, 0, 0, _liquify_cairo_paint_line_tool, hbox));
 
-    g->btn_point_tool = GTK_TOGGLE_BUTTON(_liquify_tool_button_new(
+    g->btn_point_tool = GTK_TOGGLE_BUTTON(dt_iop_togglebutton_new(
         self, N_("shapes"), N_("draw points"), N_("draw multiple points"),
-        _liquify_cairo_paint_point_tool, hbox));
+        G_CALLBACK(btn_make_radio_callback), TRUE, 0, 0, _liquify_cairo_paint_point_tool, hbox));
 
     dt_liquify_layers[DT_LIQUIFY_LAYER_BACKGROUND].hint = "";
     dt_liquify_layers[DT_LIQUIFY_LAYER_PATH].hint =
@@ -3733,7 +3655,7 @@ void gui_reset(dt_iop_module_t *self)
     g->dragging = NOWHERE;
     g->temp = NULL;
     g->status = 0;
-    _btn_make_radio(NULL, 0, self);
+    btn_make_radio_callback(NULL, NULL, self);
 }
 
 // defgroup Button paint functions

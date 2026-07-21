@@ -1572,13 +1572,8 @@ static gboolean _click_on_view_attached(GtkWidget *view, GdkEventButton *event,
     return FALSE;
 }
 
-static gboolean _attached_key_pressed(GtkEventControllerKey *controller, const guint keyval,
-                                      const guint keycode, const GdkModifierType state,
-                                      gpointer user_data)
+static gboolean _attached_key_pressed(GtkWidget *view, GdkEventKey *event, dt_lib_module_t *self)
 {
-    (void)keycode;
-    GtkWidget *view = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     dt_lib_tagging_t *d = self->data;
     _unselect_all_in_view(d->dictionary_view);
 
@@ -1588,11 +1583,11 @@ static gboolean _attached_key_pressed(GtkEventControllerKey *controller, const g
     if (gtk_tree_selection_get_selected(selection, &model, &iter))
     {
         GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-        switch (keyval)
+        switch (event->keyval)
         {
         case GDK_KEY_Menu:
         case GDK_KEY_F10:
-            if (keyval == GDK_KEY_Menu || dt_modifier_is(state, GDK_SHIFT_MASK))
+            if (event->keyval == GDK_KEY_Menu || dt_modifier_is(event->state, GDK_SHIFT_MASK))
             {
                 _pop_menu_attached(view, NULL, self);
                 gtk_tree_path_free(path);
@@ -1609,13 +1604,13 @@ static gboolean _attached_key_pressed(GtkEventControllerKey *controller, const g
         }
         gtk_tree_path_free(path);
     }
-    if (keyval == GDK_KEY_Tab)
+    if (event->keyval == GDK_KEY_Tab)
     {
         gtk_tree_selection_unselect_all(selection);
         gtk_widget_grab_focus(GTK_WIDGET(d->entry));
         return TRUE;
     }
-    else if (keyval == GDK_KEY_ISO_Left_Tab)
+    else if (event->keyval == GDK_KEY_ISO_Left_Tab)
     {
         gtk_tree_selection_unselect_all(selection);
         return TRUE;
@@ -1665,16 +1660,10 @@ static void _new_button_clicked(GtkButton *button, dt_lib_module_t *self)
                       TRUE);
 }
 
-static gboolean _enter_key_pressed(GtkEventControllerKey *controller, const guint keyval,
-                                   const guint keycode, const GdkModifierType state,
-                                   gpointer user_data)
+static gboolean _enter_key_pressed(GtkWidget *entry, GdkEventKey *event, dt_lib_module_t *self)
 {
-    (void)keycode;
-    (void)state;
-    GtkWidget *entry = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     dt_lib_tagging_t *d = self->data;
-    switch (keyval)
+    switch (event->keyval)
     {
     case GDK_KEY_Return:
     case GDK_KEY_KP_Enter:
@@ -2796,13 +2785,8 @@ static gboolean _click_on_view_dictionary(GtkWidget *view, GdkEventButton *event
     return FALSE;
 }
 
-static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const guint keyval,
-                                        const guint keycode, const GdkModifierType state,
-                                        gpointer user_data)
+static gboolean _dictionary_key_pressed(GtkWidget *view, GdkEventKey *event, dt_lib_module_t *self)
 {
-    (void)keycode;
-    GtkWidget *view = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     dt_lib_tagging_t *d = self->data;
     _unselect_all_in_view(d->attached_view);
     GtkTreeIter iter;
@@ -2812,11 +2796,11 @@ static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const
     if (gtk_tree_selection_get_selected(selection, &model, &iter))
     {
         GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-        switch (keyval)
+        switch (event->keyval)
         {
         case GDK_KEY_Menu:
         case GDK_KEY_F10:
-            if (keyval == GDK_KEY_Menu || dt_modifier_is(state, GDK_SHIFT_MASK))
+            if (event->keyval == GDK_KEY_Menu || dt_modifier_is(event->state, GDK_SHIFT_MASK))
             {
                 _pop_menu_dictionary(view, NULL, self);
                 gtk_tree_path_free(path);
@@ -2827,7 +2811,7 @@ static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const
         case GDK_KEY_KP_Enter:
         {
             _attach_selected_tag(self, d);
-            if (dt_modifier_is(state, GDK_SHIFT_MASK))
+            if (dt_modifier_is(event->state, GDK_SHIFT_MASK))
             {
                 gtk_tree_selection_unselect_all(selection);
                 gtk_entry_set_text(GTK_ENTRY(d->entry), "");
@@ -2839,7 +2823,7 @@ static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const
         case GDK_KEY_Left:
             if (path)
             {
-                if (dt_modifier_is(state, GDK_SHIFT_MASK))
+                if (dt_modifier_is(event->state, GDK_SHIFT_MASK))
                     gtk_tree_view_collapse_all(GTK_TREE_VIEW(view));
                 else
                     gtk_tree_view_collapse_row(GTK_TREE_VIEW(view), path);
@@ -2850,7 +2834,7 @@ static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const
             if (path)
             {
                 gtk_tree_view_expand_row(GTK_TREE_VIEW(view), path,
-                                         dt_modifier_is(state, GDK_SHIFT_MASK));
+                                         dt_modifier_is(event->state, GDK_SHIFT_MASK));
                 res = TRUE;
             }
             break;
@@ -2859,12 +2843,12 @@ static gboolean _dictionary_key_pressed(GtkEventControllerKey *controller, const
         }
         gtk_tree_path_free(path);
     }
-    if (keyval == GDK_KEY_Tab)
+    if (event->keyval == GDK_KEY_Tab)
     {
         gtk_tree_selection_unselect_all(selection);
         res = TRUE;
     }
-    else if (keyval == GDK_KEY_ISO_Left_Tab)
+    else if (event->keyval == GDK_KEY_ISO_Left_Tab)
     {
         gtk_tree_selection_unselect_all(selection);
         gtk_widget_grab_focus(GTK_WIDGET(d->entry));
@@ -3557,6 +3541,7 @@ void gui_init(dt_lib_module_t *self)
     renderer = gtk_cell_renderer_toggle_new();
     gtk_tree_view_column_pack_start(col, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(col, renderer, _tree_select_show, NULL, NULL);
+    g_object_set(renderer, "indicator-size", 8, NULL); // too big by default
 
     col = gtk_tree_view_column_new();
     gtk_tree_view_append_column(view, col);
@@ -3576,7 +3561,8 @@ void gui_init(dt_lib_module_t *self)
                                   "\nTab to give the focus to entry"));
     g_signal_connect(G_OBJECT(view), "button-press-event", G_CALLBACK(_click_on_view_attached),
                      (gpointer)self);
-    dt_gui_connect_key(view, _attached_key_pressed, self);
+    g_signal_connect(G_OBJECT(view), "key-press-event", G_CALLBACK(_attached_key_pressed),
+                     (gpointer)self);
     g_signal_connect(gtk_tree_view_get_selection(view), "changed",
                      G_CALLBACK(_tree_selection_changed), self);
 
@@ -3629,8 +3615,10 @@ void gui_init(dt_lib_module_t *self)
              "\npress Tab or Down key to go to the first matching tag"
              "\npress shift+Tab to select the first attached user tag"));
     gtk_box_pack_start(hbox, w, TRUE, TRUE, 0);
+    gtk_widget_add_events(GTK_WIDGET(w), GDK_KEY_RELEASE_MASK);
     g_signal_connect(G_OBJECT(w), "changed", G_CALLBACK(_tag_name_changed), (gpointer)self);
-    dt_gui_connect_key(w, _enter_key_pressed, self);
+    g_signal_connect(G_OBJECT(w), "key-press-event", G_CALLBACK(_enter_key_pressed),
+                     (gpointer)self);
     d->entry = GTK_ENTRY(w);
 
     button = dtgtk_button_new(dtgtk_cairo_paint_multiply_small, 0, NULL);
@@ -3682,6 +3670,7 @@ void gui_init(dt_lib_module_t *self)
     gtk_tree_view_column_pack_start(col, renderer, TRUE);
     gtk_cell_renderer_toggle_set_activatable(GTK_CELL_RENDERER_TOGGLE(renderer), TRUE);
     gtk_tree_view_column_set_cell_data_func(col, renderer, _tree_select_show, NULL, NULL);
+    g_object_set(renderer, "indicator-size", 8, NULL); // too big by default
 
     col = gtk_tree_view_column_new();
     gtk_tree_view_append_column(view, col);
@@ -3703,7 +3692,8 @@ void gui_init(dt_lib_module_t *self)
 
     g_signal_connect(G_OBJECT(view), "button-press-event", G_CALLBACK(_click_on_view_dictionary),
                      (gpointer)self);
-    dt_gui_connect_key(view, _dictionary_key_pressed, self);
+    g_signal_connect(G_OBJECT(view), "key-press-event", G_CALLBACK(_dictionary_key_pressed),
+                     (gpointer)self);
     gtk_tree_view_set_model(view, GTK_TREE_MODEL(d->dictionary_listfilter));
     g_object_unref(d->dictionary_listfilter);
     g_object_set(G_OBJECT(view), "has-tooltip", TRUE, NULL);
@@ -3842,16 +3832,11 @@ void gui_cleanup(dt_lib_module_t *self)
 }
 
 // http://stackoverflow.com/questions/4631388/transparent-floating-gtkentry
-static gboolean _lib_tagging_tag_key_press(GtkEventControllerKey *controller, const guint keyval,
-                                           const guint keycode, const GdkModifierType state,
-                                           gpointer user_data)
+static gboolean _lib_tagging_tag_key_press(GtkWidget *entry, GdkEventKey *event,
+                                           dt_lib_module_t *self)
 {
-    (void)keycode;
-    (void)state;
-    GtkWidget *entry = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
-    dt_lib_module_t *self = user_data;
     dt_lib_tagging_t *d = self->data;
-    switch (keyval)
+    switch (event->keyval)
     {
     case GDK_KEY_Escape:
         g_list_free(d->floating_tag_imgs);
@@ -3887,13 +3872,10 @@ static gboolean _lib_tagging_tag_key_press(GtkEventControllerKey *controller, co
     return FALSE; /* event not handled */
 }
 
-static void _lib_tagging_tag_destroy(GtkWidget *widget, GParamSpec *pspec, gpointer user_data)
+static gboolean _lib_tagging_tag_destroy(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
-    (void)pspec;
-    if (gtk_widget_has_focus(widget))
-        return;
-
     gtk_widget_destroy(GTK_WIDGET(user_data));
+    return FALSE;
 }
 
 static void _lib_tagging_tag_redo(dt_action_t *action)
@@ -3941,7 +3923,7 @@ static void _lib_tagging_tag_show(dt_action_t *action)
     else
     {
         // Other backends: transient undecorated window
-        d->floating_tag_window = dt_gui_toplevel_window_new();
+        d->floating_tag_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 #ifdef GDK_WINDOWING_QUARTZ
         dt_osx_disallow_fullscreen(d->floating_tag_window);
 #endif
@@ -3954,6 +3936,7 @@ static void _lib_tagging_tag_show(dt_action_t *action)
 
     GtkWidget *entry = gtk_entry_new();
     gtk_widget_set_size_request(entry, FLOATING_ENTRY_WIDTH, -1);
+    gtk_widget_add_events(entry, GDK_FOCUS_CHANGE_MASK);
 
     GtkEntryCompletion *completion = gtk_entry_completion_new();
     gtk_entry_completion_set_model(completion,
@@ -3974,13 +3957,10 @@ static void _lib_tagging_tag_show(dt_action_t *action)
     gtk_widget_set_name(entry, "tag-completion");
 
     gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
-    if (on_wayland)
-        dt_gui_popover_set_child(GTK_POPOVER(d->floating_tag_window), entry);
-    else
-        dt_gui_window_set_child(GTK_WINDOW(d->floating_tag_window), entry);
-    g_signal_connect(entry, "notify::has-focus", G_CALLBACK(_lib_tagging_tag_destroy),
+    gtk_container_add(GTK_CONTAINER(d->floating_tag_window), entry);
+    g_signal_connect(entry, "focus-out-event", G_CALLBACK(_lib_tagging_tag_destroy),
                      d->floating_tag_window);
-    dt_gui_connect_key(entry, _lib_tagging_tag_key_press, self);
+    g_signal_connect(entry, "key-press-event", G_CALLBACK(_lib_tagging_tag_key_press), self);
 
     gtk_widget_show_all(d->floating_tag_window);
     gtk_widget_grab_focus(entry);
@@ -4068,7 +4048,7 @@ void _menuitem_preferences(GtkMenuItem *menuitem, dt_lib_module_t *self)
     GtkWidget *dialog = gtk_dialog_new_with_buttons(
         _("tagging settings"), GTK_WINDOW(win), GTK_DIALOG_DESTROY_WITH_PARENT, _("_cancel"),
         GTK_RESPONSE_NONE, _("_save"), GTK_RESPONSE_ACCEPT, NULL);
-    dt_gui_connect_key_bubble(dialog, dt_handle_dialog_enter, NULL);
+    g_signal_connect(dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
     dt_prefs_init_dialog_tagging(dialog);
 

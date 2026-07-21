@@ -1735,12 +1735,10 @@ static void auto_adjust_contrast_boost(GtkWidget *quad, dt_iop_module_t *self)
     dt_iop_color_picker_reset(self, TRUE);
 }
 
-static gboolean show_luminance_mask_callback(GtkWidget *togglebutton, const guint button,
-                                             const GdkModifierType state, dt_iop_module_t *self)
+static void show_luminance_mask_callback(GtkWidget *togglebutton, GdkEventButton *event,
+                                         dt_iop_module_t *self)
 {
-    DT_GUARD_GUI_UPDATE(TRUE);
-    (void)button;
-    (void)state;
+    DT_GUARD_GUI_UPDATE();
     dt_iop_request_focus(self);
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(self->off), TRUE);
@@ -1753,7 +1751,7 @@ static gboolean show_luminance_mask_callback(GtkWidget *togglebutton, const guin
         dt_control_log(_("cannot display masks when the blending mask is displayed"));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g->show_luminance_mask), FALSE);
         g->mask_display = FALSE;
-        return TRUE;
+        return;
     }
     else
         g->mask_display = !g->mask_display;
@@ -1764,7 +1762,6 @@ static gboolean show_luminance_mask_callback(GtkWidget *togglebutton, const guin
 
     // Unlock the colour picker so we can display our own custom cursor
     dt_iop_color_picker_reset(self, TRUE);
-    return TRUE;
 }
 
 /***
@@ -2350,10 +2347,7 @@ static inline gboolean _init_drawing(dt_iop_module_t *const restrict self, GtkWi
                                      dt_iop_toneequalizer_gui_data_t *const restrict g)
 {
     // Cache the equalizer graph objects to avoid recomputing all the view at each redraw
-    g->allocation.x = 0;
-    g->allocation.y = 0;
-    g->allocation.width = gtk_widget_get_allocated_width(widget);
-    g->allocation.height = gtk_widget_get_allocated_height(widget);
+    gtk_widget_get_allocation(widget, &g->allocation);
 
     if (g->cst)
         cairo_surface_destroy(g->cst);
@@ -2515,23 +2509,20 @@ static inline void init_nodes_y(dt_iop_toneequalizer_gui_data_t *g)
     }
 }
 
-static void area_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer user_data)
+static gboolean area_draw(GtkWidget *widget, cairo_t *cr, dt_iop_module_t *self)
 {
-    (void)width;
-    (void)height;
-    dt_iop_module_t *self = user_data;
     // Draw the widget equalizer view
     dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
     if (g == NULL)
-        return;
+        return FALSE;
 
     // Init or refresh the drawing cache
     //if(!g->graph_valid)
 
     // this can be cached and drawn just once, but too lazy to debug a
     // cache invalidation for Cairo objects
-    if (!_init_drawing(self, GTK_WIDGET(area), g))
-        return;
+    if (!_init_drawing(self, widget, g))
+        return FALSE;
 
     // since the widget sizes are not cached and invalidated properly
     // above (yet…)  force the invalidation of the nodes coordinates to
@@ -2705,18 +2696,15 @@ static void area_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height, 
     cairo_set_source_surface(cr, g->cst, 0, 0);
     cairo_paint(cr);
 
+    return TRUE;
 }
 
-static void area_enter_notify(GtkEventControllerMotion *controller, const double x, const double y,
-                              gpointer user_data)
+static gboolean area_enter_leave_notify(GtkWidget *widget, const GdkEventCrossing *event,
+                                        dt_iop_module_t *self)
 {
-    (void)controller;
-    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
-        return;
-
-    dt_iop_module_t *self = user_data;
+    DT_GUARD_GUI_UPDATE(TRUE);
     if (!self->enabled)
-        return;
+        return FALSE;
 
     dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
 
@@ -2730,8 +2718,8 @@ static void area_enter_notify(GtkEventControllerMotion *controller, const double
         dt_dev_add_history_item(darktable.develop, self, FALSE);
     }
     dt_iop_gui_enter_critical_section(self);
-    g->area_x = (x - g->inset);
-    g->area_y = (y - g->inset);
+    g->area_x = (event->x - g->inset);
+    g->area_y = (event->y - g->inset);
     g->area_dragging = FALSE;
     g->area_active_node = -1;
     g->area_cursor_valid = (g->area_x > 0.0f && g->area_x < g->graph_width && g->area_y > 0.0f &&
@@ -2739,49 +2727,19 @@ static void area_enter_notify(GtkEventControllerMotion *controller, const double
     dt_iop_gui_leave_critical_section(self);
 
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return FALSE;
 }
 
-static void area_leave_notify(GtkEventControllerMotion *controller, gpointer user_data)
+static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event,
+                                  dt_iop_module_t *self)
 {
-    (void)controller;
-    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
-        return;
+    DT_GUARD_GUI_UPDATE(TRUE);
 
-    dt_iop_module_t *self = user_data;
-    if (!self->enabled)
-        return;
-
-    dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
-    const dt_iop_toneequalizer_params_t *p = self->params;
-
-    if (g->area_dragging)
-    {
-        update_exposure_sliders(g, p);
-        dt_dev_add_history_item(darktable.develop, self, FALSE);
-    }
-    dt_iop_gui_enter_critical_section(self);
-    g->area_dragging = FALSE;
-    g->area_active_node = -1;
-    g->area_cursor_valid = FALSE;
-    dt_iop_gui_leave_critical_section(self);
-
-    gtk_widget_queue_draw(GTK_WIDGET(g->area));
-}
-
-static void area_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
-                              const double y, gpointer user_data)
-{
-    (void)x;
-    (void)y;
-    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
-        return;
-
-    dt_iop_module_t *self = user_data;
     dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
 
     dt_iop_request_focus(self);
 
-    if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_PRIMARY && n_press == 2)
+    if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_2BUTTON_PRESS)
     {
         dt_iop_toneequalizer_params_t *p = self->params;
         const dt_iop_toneequalizer_params_t *const d = self->default_params;
@@ -2803,10 +2761,9 @@ static void area_button_press(GtkGestureSingle *gesture, const int n_press, cons
         // Redraw graph
         gtk_widget_queue_draw(GTK_WIDGET(g->area));
         dt_dev_add_history_item(darktable.develop, self, TRUE);
-        dt_gui_claim(gesture);
-        return;
+        return TRUE;
     }
-    else if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_PRIMARY)
+    else if (event->button == GDK_BUTTON_PRIMARY)
     {
         if (self->enabled)
         {
@@ -2817,24 +2774,21 @@ static void area_button_press(GtkGestureSingle *gesture, const int n_press, cons
         {
             dt_dev_add_history_item(darktable.develop, self, TRUE);
         }
-        dt_gui_claim(gesture);
-        return;
+        return TRUE;
     }
 
     // Unlock the colour picker so we can display our own custom cursor
     dt_iop_color_picker_reset(self, TRUE);
+
+    return FALSE;
 }
 
-static void area_motion_notify(GtkEventControllerMotion *controller, const double x, const double y,
-                               gpointer user_data)
+static gboolean area_motion_notify(GtkWidget *widget, const GdkEventMotion *event,
+                                   dt_iop_module_t *self)
 {
-    (void)controller;
-    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
-        return;
-
-    dt_iop_module_t *self = user_data;
+    DT_GUARD_GUI_UPDATE(TRUE);
     if (!self->enabled)
-        return;
+        return FALSE;
 
     dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
     dt_iop_toneequalizer_params_t *p = self->params;
@@ -2844,7 +2798,7 @@ static void area_motion_notify(GtkEventControllerMotion *controller, const doubl
         // vertical distance travelled since button_pressed event
         dt_iop_gui_enter_critical_section(self);
         // graph spans over 4 EV
-        const float offset = (-y + g->area_y) / g->graph_height * 4.0f;
+        const float offset = (-event->y + g->area_y) / g->graph_height * 4.0f;
         const float cursor_exposure = g->area_x / g->graph_width * 8.0f - 8.0f;
 
         // Get the desired correction on exposure channels
@@ -2854,8 +2808,8 @@ static void area_motion_notify(GtkEventControllerMotion *controller, const doubl
     }
 
     dt_iop_gui_enter_critical_section(self);
-    g->area_x = x - g->inset;
-    g->area_y = y;
+    g->area_x = event->x - g->inset;
+    g->area_y = event->y;
     g->area_cursor_valid = (g->area_x > 0.0f && g->area_x < g->graph_width && g->area_y > 0.0f &&
                             g->area_y < g->graph_height);
     g->area_active_node = -1;
@@ -2877,43 +2831,50 @@ static void area_motion_notify(GtkEventControllerMotion *controller, const doubl
     dt_iop_gui_leave_critical_section(self);
 
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
+    return TRUE;
 }
 
-static void area_button_release(GtkGestureSingle *gesture, const int n_press, const double x,
-                                const double y, gpointer user_data)
+static gboolean area_button_release(GtkWidget *widget, const GdkEventButton *event,
+                                    dt_iop_module_t *self)
 {
-    (void)gesture;
-    (void)n_press;
-    (void)x;
-    (void)y;
-    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
-        return;
-
-    dt_iop_module_t *self = user_data;
+    DT_GUARD_GUI_UPDATE(TRUE);
     if (!self->enabled)
-        return;
+        return FALSE;
 
     dt_iop_toneequalizer_gui_data_t *g = self->gui_data;
 
     // Give focus to module
     dt_iop_request_focus(self);
 
-    const dt_iop_toneequalizer_params_t *p = self->params;
-
-    if (g->area_dragging)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
-        // Update GUI with new params
-        update_exposure_sliders(g, p);
+        const dt_iop_toneequalizer_params_t *p = self->params;
 
-        dt_dev_add_history_item(darktable.develop, self, FALSE);
+        if (g->area_dragging)
+        {
+            // Update GUI with new params
+            update_exposure_sliders(g, p);
 
-        dt_iop_gui_enter_critical_section(self);
-        g->area_dragging = FALSE;
-        dt_iop_gui_leave_critical_section(self);
+            dt_dev_add_history_item(darktable.develop, self, FALSE);
+
+            dt_iop_gui_enter_critical_section(self);
+            g->area_dragging = FALSE;
+            dt_iop_gui_leave_critical_section(self);
+
+            return TRUE;
+        }
     }
+    return FALSE;
 }
 
-static gboolean notebook_button_press(dt_iop_module_t *self)
+static gboolean area_scroll(GtkWidget *widget, GdkEventScroll *event, gpointer user_data)
+{
+    // do not propagate to tab bar unless scrolling sidebar
+    return !dt_gui_ignore_scroll(event);
+}
+
+static gboolean notebook_button_press(GtkWidget *widget, GdkEventButton *event,
+                                      dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(TRUE);
 
@@ -2924,17 +2885,6 @@ static gboolean notebook_button_press(dt_iop_module_t *self)
     dt_iop_color_picker_reset(self, TRUE);
 
     return FALSE;
-}
-
-static void notebook_button_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                    gpointer user_data)
-{
-    if (notebook_button_press(user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
 }
 
 GSList *mouse_actions(dt_iop_module_t *self)
@@ -3076,11 +3026,23 @@ void gui_init(dt_iop_module_t *self)
     g_object_set_data(G_OBJECT(wrapper), "iop-instance", self);
     gtk_widget_set_name(GTK_WIDGET(wrapper), "toneeqgraph");
     dt_action_define_iop(self, NULL, N_("graph"), GTK_WIDGET(wrapper), NULL);
+    gtk_widget_add_events(GTK_WIDGET(g->area), GDK_POINTER_MOTION_MASK |
+                                                   darktable.gui->scroll_mask |
+                                                   GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                                   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
     gtk_widget_set_vexpand(GTK_WIDGET(g->area), TRUE);
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
-    dt_gui_drawing_area_set_draw_func(g->area, area_draw, self, NULL);
-    dt_gui_connect_click_all(g->area, area_button_press, area_button_release, self);
-    dt_gui_connect_motion(g->area, area_motion_notify, area_enter_notify, area_leave_notify, self);
+    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(area_draw), self);
+    g_signal_connect(G_OBJECT(g->area), "button-press-event", G_CALLBACK(area_button_press), self);
+    g_signal_connect(G_OBJECT(g->area), "button-release-event", G_CALLBACK(area_button_release),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "leave-notify-event", G_CALLBACK(area_enter_leave_notify),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "enter-notify-event", G_CALLBACK(area_enter_leave_notify),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "motion-notify-event", G_CALLBACK(area_motion_notify),
+                     self);
+    g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(area_scroll), self);
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->area), _("double-click to reset the curve"));
 
     g->smoothing = dt_bauhaus_slider_new_with_range(self, -2.33f, +1.67f, 0, 0.0f, 2);
@@ -3171,10 +3133,11 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_show(gtk_notebook_get_nth_page(g->notebook, active_page));
     gtk_notebook_set_current_page(g->notebook, active_page);
 
-    dt_gui_connect_click_all(g->notebook, notebook_button_pressed, NULL, self);
+    g_signal_connect(G_OBJECT(g->notebook), "button-press-event", G_CALLBACK(notebook_button_press),
+                     self);
 
     g->show_luminance_mask = dt_iop_togglebutton_new(self, NULL, N_("display exposure mask"), NULL,
-                                                     show_luminance_mask_callback,
+                                                     G_CALLBACK(show_luminance_mask_callback),
                                                      FALSE, 0, 0, dtgtk_cairo_paint_showmask, NULL);
     dt_gui_add_class(g->show_luminance_mask, "dt_transparent_background");
     dtgtk_togglebutton_set_paint(DTGTK_TOGGLEBUTTON(g->show_luminance_mask),

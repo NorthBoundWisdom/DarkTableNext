@@ -167,13 +167,14 @@ static void *_lib_backgroundjobs_added(dt_lib_module_t *self, gboolean has_progr
         return NULL;
     }
 
-    instance->widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    instance->widget = gtk_event_box_new();
 
     /* initialize the ui elements for job */
     gtk_widget_set_name(GTK_WIDGET(instance->widget), "background-job-eventbox");
     dt_gui_add_class(GTK_WIDGET(instance->widget), "dt_big_btn_canvas");
-    GtkBox *vbox = GTK_BOX(instance->widget);
+    GtkBox *vbox = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
     instance->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_container_add(GTK_CONTAINER(instance->widget), GTK_WIDGET(vbox));
 
     /* add job label */
     instance->label = gtk_label_new(message);
@@ -210,11 +211,11 @@ static gboolean _destroyed_gui_thread(gpointer user_data)
 
     /* remove job widget from jobbox */
     if (params->instance->widget && GTK_IS_WIDGET(params->instance->widget))
-        dt_gui_box_remove(GTK_BOX(params->self->widget), params->instance->widget);
+        gtk_container_remove(GTK_CONTAINER(params->self->widget), params->instance->widget);
     params->instance->widget = NULL;
 
     /* if jobbox is empty let's hide */
-    if (!dt_gui_container_has_children(params->self->widget))
+    if (!dt_gui_container_has_children(GTK_CONTAINER(params->self->widget)))
         gtk_widget_hide(params->self->widget);
 
     // free data

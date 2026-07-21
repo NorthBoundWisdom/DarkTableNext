@@ -843,7 +843,7 @@ static void _event_rule_disable(GtkWidget *widget, dt_lib_filtering_rule_t *rule
                                     : _("this rule is disabled"));
 }
 
-static gboolean _event_rule_close(GtkWidget *widget, dt_lib_module_t *self)
+static gboolean _event_rule_close(GtkWidget *widget, GdkEventButton *event, dt_lib_module_t *self)
 {
     dt_lib_filtering_rule_t *rule =
         (dt_lib_filtering_rule_t *)g_object_get_data(G_OBJECT(widget), "rule");
@@ -887,17 +887,6 @@ static gboolean _event_rule_close(GtkWidget *widget, dt_lib_module_t *self)
     dt_collection_update_query(darktable.collection, DT_COLLECTION_CHANGE_RELOAD, rule->prop, NULL);
 
     return TRUE;
-}
-
-static void _event_rule_close_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                      gpointer user_data)
-{
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    if (_event_rule_close(widget, (dt_lib_module_t *)user_data))
-        dt_gui_claim(gesture);
 }
 
 // initialise or update a rule widget. Return if the a new widget has been created
@@ -977,7 +966,8 @@ static gboolean _widget_init(dt_lib_filtering_rule_t *rule, const dt_collection_
         // remove button
         rule->w_close = dtgtk_button_new(dtgtk_cairo_paint_remove, 0, NULL);
         g_object_set_data(G_OBJECT(rule->w_close), "rule", rule);
-        dt_gui_connect_click_all(rule->w_close, _event_rule_close_pressed, NULL, self);
+        g_signal_connect(G_OBJECT(rule->w_close), "button-press-event",
+                         G_CALLBACK(_event_rule_close), self);
         gtk_box_pack_end(GTK_BOX(rule->w_btn_box), rule->w_close, FALSE, FALSE, 0);
     }
 
@@ -1192,7 +1182,7 @@ static void _proxy_reset_filter(dt_lib_module_t *self, gboolean smart_filter)
     }
 }
 
-static gboolean _sort_close(GtkWidget *widget, dt_lib_module_t *self)
+static gboolean _sort_close(GtkWidget *widget, GdkEventButton *event, dt_lib_module_t *self)
 {
     _widgets_sort_t *sort = (_widgets_sort_t *)g_object_get_data(G_OBJECT(widget), "sort");
     if (sort->lib->manual_sort_set)
@@ -1225,17 +1215,6 @@ static gboolean _sort_close(GtkWidget *widget, dt_lib_module_t *self)
                                DT_COLLECTION_PROP_SORT, NULL);
 
     return TRUE;
-}
-
-static void _sort_close_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
-                                gpointer user_data)
-{
-    (void)n_press;
-    (void)x;
-    (void)y;
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    if (_sort_close(widget, (dt_lib_module_t *)user_data))
-        dt_gui_claim(gesture);
 }
 
 static gboolean _sort_init(_widgets_sort_t *sort, const dt_collection_sort_t sortid,
@@ -1296,7 +1275,8 @@ static gboolean _sort_init(_widgets_sort_t *sort, const dt_collection_sort_t sor
         gtk_widget_set_no_show_all(sort->close, TRUE);
         g_object_set_data(G_OBJECT(sort->close), "sort", sort);
         gtk_widget_set_tooltip_text(sort->close, _("remove this sort order"));
-        dt_gui_connect_click_all(sort->close, _sort_close_pressed, NULL, self);
+        g_signal_connect(G_OBJECT(sort->close), "button-press-event", G_CALLBACK(_sort_close),
+                         self);
         gtk_box_pack_start(GTK_BOX(sort->box), sort->close, FALSE, FALSE, 0);
     }
 

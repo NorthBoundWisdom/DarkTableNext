@@ -4937,18 +4937,18 @@ static void cropmode_callback(GtkWidget *widget, dt_iop_module_t *self)
     _swap_shadow_crop_box(p, g);
 }
 
-static int _event_fit_v_button_clicked(const guint button, const GdkModifierType state,
+static int _event_fit_v_button_clicked(GtkWidget *widget, const GdkEventButton *event,
                                        dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(FALSE);
 
-    if (button == GDK_BUTTON_PRIMARY)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
         dt_iop_ashift_params_t *p = self->params;
         dt_iop_ashift_gui_data_t *g = self->gui_data;
 
-        const int control = dt_modifiers_include(state, GDK_CONTROL_MASK);
-        const int shift = dt_modifiers_include(state, GDK_SHIFT_MASK);
+        const int control = dt_modifiers_include(event->state, GDK_CONTROL_MASK);
+        const int shift = dt_modifiers_include(event->state, GDK_SHIFT_MASK);
 
         dt_iop_ashift_fitaxis_t fitaxis = ASHIFT_FIT_NONE;
 
@@ -4984,32 +4984,18 @@ static int _event_fit_v_button_clicked(const guint button, const GdkModifierType
     return FALSE;
 }
 
-static void _event_fit_v_button_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                        double y, gpointer user_data)
-{
-    if (_event_fit_v_button_clicked(gtk_gesture_single_get_current_button(gesture),
-                                    dt_gui_controller_get_current_event_state(
-                                        GTK_EVENT_CONTROLLER(gesture)),
-                                    user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static int _event_fit_h_button_clicked(const guint button, const GdkModifierType state,
+static int _event_fit_h_button_clicked(GtkWidget *widget, const GdkEventButton *event,
                                        dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(FALSE);
 
-    if (button == GDK_BUTTON_PRIMARY)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
         dt_iop_ashift_params_t *p = self->params;
         dt_iop_ashift_gui_data_t *g = self->gui_data;
 
-        const int control = dt_modifiers_include(state, GDK_CONTROL_MASK);
-        const int shift = dt_modifiers_include(state, GDK_SHIFT_MASK);
+        const int control = dt_modifiers_include(event->state, GDK_CONTROL_MASK);
+        const int shift = dt_modifiers_include(event->state, GDK_SHIFT_MASK);
 
         dt_iop_ashift_fitaxis_t fitaxis = ASHIFT_FIT_NONE;
 
@@ -5045,32 +5031,18 @@ static int _event_fit_h_button_clicked(const guint button, const GdkModifierType
     return FALSE;
 }
 
-static void _event_fit_h_button_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                        double y, gpointer user_data)
-{
-    if (_event_fit_h_button_clicked(gtk_gesture_single_get_current_button(gesture),
-                                    dt_gui_controller_get_current_event_state(
-                                        GTK_EVENT_CONTROLLER(gesture)),
-                                    user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static int _event_fit_both_button_clicked(const guint button, const GdkModifierType state,
+static int _event_fit_both_button_clicked(GtkWidget *widget, const GdkEventButton *event,
                                           dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(FALSE);
 
-    if (button == GDK_BUTTON_PRIMARY)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
         dt_iop_ashift_params_t *p = self->params;
         dt_iop_ashift_gui_data_t *g = self->gui_data;
 
-        const int control = dt_modifiers_include(state, GDK_CONTROL_MASK);
-        const int shift = dt_modifiers_include(state, GDK_SHIFT_MASK);
+        const int control = dt_modifiers_include(event->state, GDK_CONTROL_MASK);
+        const int shift = dt_modifiers_include(event->state, GDK_SHIFT_MASK);
 
         dt_iop_ashift_fitaxis_t fitaxis = ASHIFT_FIT_NONE;
 
@@ -5108,35 +5080,20 @@ static int _event_fit_both_button_clicked(const guint button, const GdkModifierT
     return FALSE;
 }
 
-static void _event_fit_both_button_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                           double y, gpointer user_data)
-{
-    if (_event_fit_both_button_clicked(gtk_gesture_single_get_current_button(gesture),
-                                       dt_gui_controller_get_current_event_state(
-                                           GTK_EVENT_CONTROLLER(gesture)),
-                                       user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static int _event_structure_auto_clicked(GtkWidget *widget, const guint button,
-                                         const GdkModifierType state,
+static int _event_structure_auto_clicked(GtkWidget *widget, const GdkEventButton *event,
                                          dt_iop_module_t *self)
 {
     DT_GUARD_GUI_UPDATE(FALSE);
 
-    if (button == GDK_BUTTON_PRIMARY)
+    if (event->button == GDK_BUTTON_PRIMARY)
     {
         dt_iop_ashift_params_t *p = self->params;
         dt_iop_ashift_gui_data_t *g = self->gui_data;
 
         _do_clean_structure(self, p, TRUE);
 
-        const int control = dt_modifiers_include(state, GDK_CONTROL_MASK);
-        const int shift = dt_modifiers_include(state, GDK_SHIFT_MASK);
+        const int control = dt_modifiers_include(event->state, GDK_CONTROL_MASK);
+        const int shift = dt_modifiers_include(event->state, GDK_SHIFT_MASK);
 
         dt_iop_ashift_enhance_t enhance;
 
@@ -5187,21 +5144,6 @@ static int _event_structure_auto_clicked(GtkWidget *widget, const guint button,
         return TRUE;
     }
     return FALSE;
-}
-
-static void _event_structure_auto_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                          double y, gpointer user_data)
-{
-    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
-    if (_event_structure_auto_clicked(widget, gtk_gesture_single_get_current_button(gesture),
-                                      dt_gui_controller_get_current_event_state(
-                                          GTK_EVENT_CONTROLLER(gesture)),
-                                      user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
 }
 
 // routine that is called after preview image has been processed. we
@@ -5515,7 +5457,8 @@ static float log2_curve(const float inval, const dt_bauhaus_curve_t dir)
     return outval;
 }
 
-static int _event_structure_quad_clicked(dt_iop_module_t *self)
+static int _event_structure_quad_clicked(GtkWidget *widget, GdkEventButton *event,
+                                         dt_iop_module_t *self)
 {
     dt_iop_ashift_gui_data_t *g = self->gui_data;
     DT_GUARD_GUI_UPDATE(FALSE);
@@ -5541,18 +5484,8 @@ static int _event_structure_quad_clicked(dt_iop_module_t *self)
     return TRUE;
 }
 
-static void _event_structure_quad_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                          double y, gpointer user_data)
-{
-    if (_event_structure_quad_clicked(user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
-}
-
-static int _event_structure_lines_clicked(dt_iop_module_t *self)
+static int _event_structure_lines_clicked(GtkWidget *widget, GdkEventButton *event,
+                                          dt_iop_module_t *self)
 {
     dt_iop_ashift_gui_data_t *g = self->gui_data;
     DT_GUARD_GUI_UPDATE(FALSE);
@@ -5576,17 +5509,6 @@ static int _event_structure_lines_clicked(dt_iop_module_t *self)
     dt_dev_add_history_item(darktable.develop, self, TRUE);
 
     return TRUE;
-}
-
-static void _event_structure_lines_pressed(GtkGestureSingle *gesture, int n_press, double x,
-                                           double y, gpointer user_data)
-{
-    if (_event_structure_lines_clicked(user_data))
-        dt_gui_claim(gesture);
-
-    (void)n_press;
-    (void)x;
-    (void)y;
 }
 
 void gui_init(dt_iop_module_t *self)
@@ -5776,12 +5698,18 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(g->structure_quad, _("manually define perspective rectangle"));
     gtk_widget_set_tooltip_text(g->structure_lines, _("manually draw structure lines"));
 
-    dt_gui_connect_click_all(g->fit_v, _event_fit_v_button_pressed, NULL, self);
-    dt_gui_connect_click_all(g->fit_h, _event_fit_h_button_pressed, NULL, self);
-    dt_gui_connect_click_all(g->fit_both, _event_fit_both_button_pressed, NULL, self);
-    dt_gui_connect_click_all(g->structure_quad, _event_structure_quad_pressed, NULL, self);
-    dt_gui_connect_click_all(g->structure_lines, _event_structure_lines_pressed, NULL, self);
-    dt_gui_connect_click_all(g->structure_auto, _event_structure_auto_pressed, NULL, self);
+    g_signal_connect(G_OBJECT(g->fit_v), "button-press-event",
+                     G_CALLBACK(_event_fit_v_button_clicked), (gpointer)self);
+    g_signal_connect(G_OBJECT(g->fit_h), "button-press-event",
+                     G_CALLBACK(_event_fit_h_button_clicked), (gpointer)self);
+    g_signal_connect(G_OBJECT(g->fit_both), "button-press-event",
+                     G_CALLBACK(_event_fit_both_button_clicked), (gpointer)self);
+    g_signal_connect(G_OBJECT(g->structure_quad), "button-press-event",
+                     G_CALLBACK(_event_structure_quad_clicked), (gpointer)self);
+    g_signal_connect(G_OBJECT(g->structure_lines), "button-press-event",
+                     G_CALLBACK(_event_structure_lines_clicked), (gpointer)self);
+    g_signal_connect(G_OBJECT(g->structure_auto), "button-press-event",
+                     G_CALLBACK(_event_structure_auto_clicked), (gpointer)self);
     g_signal_connect(G_OBJECT(self->widget), "draw", G_CALLBACK(_event_draw), self);
 
     dt_action_define_iop(self, N_("fit"), N_("vertical"), g->fit_v, &dt_action_def_button);
