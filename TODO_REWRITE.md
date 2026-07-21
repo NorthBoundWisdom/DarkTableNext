@@ -1,9 +1,11 @@
 # Ravo：C++20 无头内核、CLI 与后续 UI 重写计划
 
-> 状态：名称与路线已确认，尚未开工（2026-07-21）。Ravo 的第一交付物是 C++20 无头图像引擎库和
-> 长期受支持的 CLI；桌面 UI 明确延后，且只能复用同一内核/API。它不是 GTK 3 → GTK 4 的迁移。
-> 本文不授权立即删除或替换 `src/`。在新内核通过验收前，0.9 现有实现仍是行为、CPU 结果和兼容性
-> 判断的唯一基线。
+> 状态：Phase 0 文档与 fixture 盘点已建立，生产代码尚未开工（2026-07-21）。Ravo 的第一交付物是
+> C++20 无头图像引擎库和长期受支持的 CLI；桌面 UI 明确延后，且只能复用同一内核/API。它不是
+> GTK 3 → GTK 4 的迁移。
+> 0.9 从现在起冻结，不再承接功能删减、架构演进或 GPU 后端改造；它只作为行为、CPU 结果、fixture
+> 与兼容性判断的只读基线。原计划在 0.9 上完成的剩余工作全部转入 Ravo，最终由 Ravo 验收后整体
+> 退役 `src/`。
 
 ## 决策与范围
 
@@ -17,11 +19,16 @@
 在无头内核达到出口后再开始。不得把旧 GTK 代码或旧 IOP ABI 包在“兼容层”后继续当作新架构内部
 实现；这只会把当前耦合移动到新的目录中。
 
-新产品的最低工作流仍以 [`TODO_CORE_REDUCTION.md`](TODO_CORE_REDUCTION.md) 为准：本地导入与
-目录、图库、暗房、非破坏性编辑、蒙版、历史、色彩管理，以及 JPEG、PNG、TIFF 和原文件复制到
-本地磁盘。该文件的功能删减和 IOP 兼容性决定仍然有效；本计划不重新引入已删除的工作流。
+0.9 与 Ravo 共同遵守的最低产品范围是：本地目录/导入、图库、暗房、必要的非破坏性开发管线、
+蒙版、历史、色彩管理，以及 JPEG、PNG、TIFF 和原文件复制到本地磁盘。0.9 输入保留 RAW、JPEG、
+PNG、TIFF、RGBE/HDR、QOI 与原文件复制；GPS 只保留已有坐标的读取、保存和展示，不保留地图、
+位置搜索、GPX 或主动地理标记。本计划不重新引入已删除的 Lua、脚本、历史插件/UI ABI、打印、
+幻灯片、联机拍摄、远程发布或 AI/ONNX 工作流。
+
 第一阶段 CLI 不需要提前实现图库或交互 UI，但必须完整表达后续桌面产品会消费的解码、recipe、
-操作图、蒙版/混合、色彩管理、预览/全尺寸渲染和本地导出能力。
+操作图、蒙版/混合、色彩管理、预览/全尺寸渲染和本地导出能力。下文的“0.9 冻结基线与 Ravo
+承接项”记录旧计划如何转入新架构；它不授权修改 0.9，也不授权 Ravo 依赖旧 OpenCL、动态 IOP ABI
+或 `src`。
 
 ## 已确认的技术决策
 
@@ -44,14 +51,14 @@
 
 以下产品与兼容性决定仍需在写代码前冻结：
 
-- [ ] 指定第一版产品 owner，明确 0.9 并行维护窗口和只允许进入旧实现的修复类型。
+- [ ] 指定第一版产品 owner 和 Ravo code review owner；记录 0.9 冻结点，后续不再向旧实现合入变更。
 - [ ] 冻结第一版重写产品范围、支持平台、离线/隐私要求和发布门槛。
 - [ ] 确定新应用与旧 catalog、XMP、styles、presets 和编辑历史的兼容策略；不承诺的项目必须
       写成显式不兼容项。
 - [ ] 为并行工程分配 CI 目标、测试语料、签名/包标识和用户数据目录，避免新旧应用相互污染。
 
-旧 GTK 4 迁移计划与范围清单已经退役，当前 `src/` 才是旧应用源码地图。除 0.9 阻塞修复外，不再
-启动大规模 GTK 4 迁移；新 UI 的工作集由冻结后的产品用例和应用服务契约重新产生。
+旧 GTK 4 迁移计划与范围清单已经退役，当前 `src/` 只作为旧应用源码地图和只读 oracle；不再启动
+0.9 修复、删减或 GTK 迁移。新 UI 的工作集由冻结后的产品用例和应用服务契约重新产生。
 
 ## 目标架构
 
@@ -353,7 +360,7 @@ rg -n '^[[:space:]]*add_iop\(' src/iop/CMakeLists.txt | wc -l
 - [ ] 先进行并行试用和可逆迁移；保留旧应用、用户 catalog/sidecar 备份和明确的回滚说明，直到
       新版本满足发布门槛。
 - [ ] 确认新应用覆盖冻结范围、迁移报告可读、支持流程可处理失败后，再将默认发行物切换到新应用。
-- [ ] 旧 `src/`、GTK 迁移资料、OpenCL 迁移实现和旧打包图只能在切换决定完成后分批删除；每一批
+- [ ] 旧 `src/`、GTK 资料、冻结的 OpenCL 实现和旧打包图只能在切换决定完成后分批删除；每一批
       都要同步清理 CMake、资源、文档、测试、配置和消费者，并保留可回退的提交边界。
 - [ ] 退役完成后更新本计划、README、架构索引和产品边界，明确哪些旧数据/功能不再受支持。
 
@@ -383,26 +390,134 @@ IOP ABI 或旧 GPU 后端残留。
 
 ## 与现有计划的关系
 
-- `TODO_CORE_REDUCTION.md` 继续定义 0.9 的产品边界和当前代码的删减/GPU 约束。重写期间旧应用只做
-  已批准的维护与生成基线，不再承担下一代架构演进。
+- 本文已合并原“核心收缩与 GPU 后端改造计划”。其中未完成的产品收缩、IOP 决策、语料补齐、GPU
+  抽象与 Metal 工作全部由 Ravo 承接；0.9 保持冻结，不再形成第二条实施路线。
 - 已删除的 `TODO_GTK4_MIGRATION.md` 和 `DevDocs/GTK4_Migration_Scope.md` 不再是实施路线，也不因
   开始新 UI 而恢复；新 UI 的选择由阶段 4 原型决定。
-- 现有 Metal/OpenCL 工作不应在新架构定型前扩张。新引擎首先交付 CPU 参考路径；任何 GPU 投入都
-  必须遵循阶段 6 的后端隔离和基准验收。
+- 旧 `src` 的 OpenCL 保持原样直到整个旧应用退役，不在 0.9 内替换为 Metal。Ravo 首先交付 CPU
+  参考路径；任何 GPU 投入都必须遵循阶段 6 的后端隔离和基准验收。
 - 本文不能单独改变历史编辑、styles、presets 或 XMP 的兼容性承诺。每项具体决定要同时更新
   产品边界、迁移说明和相应测试。
 
+## 0.9 冻结基线与 Ravo 承接项
+
+本节合并原 0.9 核心收缩与 GPU 后端计划，但不再保留任何 0.9 实施待办。`src/`、GTK 前端、动态
+IOP、pixelpipe 和 OpenCL 以当前状态冻结，只能被测试读取或作为独立旧进程运行；不会再通过修补旧
+实现来完成基线、功能删减或 Metal 迁移。所有未完成项改由 Ravo 在自己的 target、契约和 adapter 中
+实现，最后通过阶段 7 整体删除冻结的旧应用。
+
+### 已完成的收缩基线
+
+- [x] 删除 Lua 运行时、绑定、脚本、构建接线、测试、`USE_LUA` 和所有 Lua 兼容路径；完成无 Lua
+      构建图、动态链接和版本输出验证。
+- [x] 删除幻灯片、打印、地图、联机拍摄、相机/实时取景、打印/地图设置、位置查询、GPX 和主动
+      地理标记；删除 MIDI、游戏手柄、邮件和 Piwigo，仅保留本地磁盘导出。
+- [x] 输入/输出收缩至 RAW、JPEG、PNG、TIFF、RGBE/HDR、QOI 和原文件复制；对外导出范围为 JPEG、
+      PNG、TIFF 和原文件复制。
+- [x] 删除 GraphicsMagick、ImageMagick、G'MIC 压缩 LUT、Colord、非产品可执行文件、旧通用
+      profiling、AI/ONNX、神经修复、对象蒙版及其模型、文档、偏好项和测试。
+- [x] Lighttable 收缩：删除顶部快捷筛选/排序栏、规则置顶状态、筛选/排序快照历史和时间线；左侧
+      筛选器为唯一规则编辑入口，底部保留固定评分/色标/布局/缩放工具栏与共享 collection/selection
+      的横向照片浏览条。Grid 按可用宽度派生每行 2–10 张，网格按钮只调整目标缩略图尺寸。
+- [x] Lighttable Grid/Loupe 成为显式状态：`G` 返回 Grid，`E` 或底栏方框进入保留 filmstrip 和面板的
+      Loupe；单击切换 Fit/100%，放大后空格加左键拖动平移，双击在两者之间切换。
+- [x] 删除全局顶部工具箱、分组、缩略图叠加层、上下文帮助、快捷键映射、全局偏好入口、底栏显示
+      ICC/焦点峰值/日志历史按钮、首次启动欢迎向导和空集合帮助覆盖层；焦点峰值、日志历史等保留的
+      能力只从相应快捷键或 `View` 菜单进入。
+- [x] 删除 duplicate manager、全局 color picker/live samples 旧面板，以及 selection 中重复的
+      metadata 页签；保留多版本数据、Lighttable duplicate 操作、模块吸管和 metadata editor 的
+      复制/粘贴、合并、EXIF 刷新及单色标记能力。
+- [x] 开发构建使用内嵌并签名 app bundle 加载项目模块；XML 验证、ISOBMFF/CR3、LibRaw 与 ICU
+      是固定构建行为。
+
+已删除的构建开关：`USE_LUA`、`USE_DARKTABLE_PROFILING`、`USE_XMLLINT`、`USE_ISOBMFF`、
+`USE_LIBRAW`、`USE_AI`、`USE_ICU`、`FORCE_COLORED_OUTPUT`、`USE_MAP`、`BUILD_PRINT`、
+`USE_CAMERA_SUPPORT`、`USE_PORTMIDI`、`USE_SDL2`、`USE_OPENJPEG`、`USE_JXL`、`USE_WEBP`、
+`USE_AVIF`、`USE_HEIF`、`USE_XCF`、`USE_OPENEXR`、`USE_GRAPHICSMAGICK`、`USE_IMAGEMAGICK`、
+`USE_GMIC`、`USE_COLORD` 与 `BUILD_CMSTEST`。
+
+### Ravo 承接的数据与 IOP 边界
+
+Ravo 决定是否支持某个 IOP 前，必须先决定旧历史记录、styles 和 presets 的迁移、只读或显式拒绝
+策略；不得因 0.9 中存在 operation 名就自动承诺兼容。创意或专用候选包括 bloom、soften、overlay、
+velvia、vignette、split-toning、grain、borders、liquify、retouch、watermark、censorize、negadoctor 与
+agx。产品范围排除的能力由 Ravo legacy adapter 返回结构化不兼容错误；旧 0.9 模块本身不再删除或
+修改。最终保留清单同时决定 Ravo CPU operation、fixture 分类和未来 GPU 覆盖范围。
+
+### 原 0.9 待办的 Ravo 归属
+
+| 原计划工作 | 新归属 | 0.9 处理方式 |
+| --- | --- | --- |
+| 第二轮外围/过时代码清理 | 阶段 0 决定新产品不支持项；阶段 7 随旧 owner 整体删除 | 不再清理或重构 |
+| 最终保留 IOP 与历史兼容清单 | 阶段 0 inventory、阶段 1 schema/legacy adapter、阶段 3 operation 验收 | 不删除旧 IOP |
+| RAW/XMP、浮点金样、metadata 与性能语料 | 阶段 0–2 的只读 fixture 与独立旧进程 oracle | 不为生成基线修补旧实现 |
+| 后端中立 GPU API、资源状态与错误回退 | 阶段 6 的 Ravo engine 私有 port/adapter | 不改 `pixelpipe_hb.c` 或 OpenCL API |
+| Metal runtime、shader、连续热点链与性能验收 | 阶段 6 的 Ravo Metal adapter | 不在 0.9 增加 Metal |
+| 删除 OpenCL、动态模块和旧配置 | 阶段 7 在 Ravo 完成替代后删除整个对应 `src` 所有权 | OpenCL 随冻结的 0.9 保留到退役 |
+
+因此当前顺序只有一条：先完成 Ravo 阶段 0–3，使 headless engine/CLI 在真实 CPU 工作流上基本稳定；
+再完成 Ravo 产品与桌面工作流；最后在阶段 6 为 Ravo 增加受测 GPU adapter，并在阶段 7 整体退役
+0.9。不存在“回到 0.9 做第二轮清理或 Metal 改造”的中间阶段。
+
+### Ravo 承接的 GPU 准入与 Metal 路线
+
+旧代码面（63 个 `process_cl()` IOP、71 个直接接触 OpenCL 的 IOP、41 个约 1.8 万行 `.cl` 内核、
+约 5,300 行 `common/opencl*`/`common/dlopencl*`，以及职责过载的 `pixelpipe_hb.c`）只作为反面边界和
+算法研究资料，不是移植目标。Ravo 不建立 OpenCL adapter，也不机械翻译 `.cl`；只在 CPU engine 与
+CLI 已验收后，从已迁入且通过金样的 operation 中按端到端收益选择 GPU 链。
+
+Ravo GPU API 使用自有不透明 port/资源类型，不能向 recipe、operation schema、UI 或公共 facade 泄漏
+Metal/OpenCL 对象、错误码或 shader 标识。每个 CPU/GPU 边界显式表达资源驻留、唯一写 owner、同步、
+ROI/tiling 与缓存状态；统一内存不等于无同步或无格式代价。GPU 失败必须丢弃部分结果并从可信 CPU
+输入安全重跑。
+
+详细工作负载、报告 schema 与比较方法继续使用 [`DevDocs/GPU_Baseline.md`](DevDocs/GPU_Baseline.md)，
+但 runner 要改为比较 Ravo CPU 与 Ravo GPU，而不是推动旧 pixelpipe 演进。正式准入包含四类版本化
+RAW/XMP（细节、噪声、几何、蒙版）和快速预览、100% 暗房、全尺寸 32-bit float TIFF 三条路径；记录
+输入、recipe/XMP、二进制和色彩配置哈希，并测量首帧、交互、内存、能耗、吞吐及连续 GPU 段。
+
+初始正确性门槛继续沿用：普通浮点算子 `RMSE <= 2e-6`、`max_abs <= 2e-5`；迭代、归约、去噪或
+去马赛克为 `RMSE <= 2e-5`、`max_abs <= 2e-4`；显示参考图 CIEDE2000 P99 `<= 0.25`、最大值
+`<= 1.0`。所有输出必须有限，尺寸、通道、ROI、alpha、蒙版、几何和离散标签语义必须一致，且人工
+检查边缘、暗部、高光与蒙版边界。
+
+阶段 6 内部按以下顺序执行：
+
+1. **基线与准入**：在稳定 Ravo CPU 工作流上完成语料、金样、性能/能耗和连续热点链选择；若边界
+   成本无法被端到端收益抵消，则暂停 GPU 工作。
+2. **后端中立边界**：在 engine 私有 port 中定义设备、队列、命令、资源状态、同步、错误和计时；
+   CPU 测试与公开 API 不依赖 GPU runtime。
+3. **Metal 最小闭环**：macOS 私有 Objective-C++ adapter，构建期预编译并打包 shader；先完成 CPU
+   输入—连续 Metal 操作—可信结果/CPU 回退闭环，再优化资源池和 in-flight 策略。
+4. **按收益迁移**：先实现色彩/格式、混合/蒙版、缩放/插值及可复用算法设施，再迁测得的热点
+   operation；未迁移项保持 Ravo CPU，不降低精度、不跳过蒙版。
+5. **验收**：分层运行合成图与真实 RAW 的 CPU/Metal 测试，覆盖预览、导出、ROI/tiling、色彩、
+   取消、设备失败、长批处理、内存压力和资源销毁，并设置端到端性能、内存和能耗门槛。
+6. **旧后端退役**：Ravo 自身不含 OpenCL；只有 Ravo 全产品达到阶段 7 切换门槛时，才随整个冻结的
+   0.9 源码、构建、配置与包删除旧 OpenCL。
+
 ## 下一次开工的最小任务
 
-1. [ ] 指定第一版产品 owner、0.9 维护窗口以及 Ravo 代码 review owner。
+1. [ ] 指定第一版产品 owner 与 Ravo code review owner，并记录 0.9 冻结点；后续提交不得修改旧
+       产品实现，只能在 Ravo 或独立测试/fixture 层增长。
 2. [x] 以 [`Ravo/docs/adr/0001-cpp20-headless-first.md`](Ravo/docs/adr/0001-cpp20-headless-first.md)
        固化 C++20、CMake/FreeCM、CPU-first、无旧库链接和无首版 Rust 的决定；以
-       [`ADR-0002`](Ravo/docs/adr/0002-ravo-consumes-src.md) 固化 Ravo 单向取代 `src` 的迁移方向。
-3. [ ] 建立产品/IOP/数据兼容性盘点表，完成“保留 / 延后 / 不支持 / 只迁移读取”结论。
+       [`ADR-0004`](Ravo/docs/adr/0004-freeze-09-ravo-only-growth.md) 固化 0.9 冻结、Ravo 唯一增长和
+       发行切换后整体退役旧应用的方向；以
+       [`ADR-0003`](Ravo/docs/adr/0003-versioned-machine-contract.md) 固化 CLI JSON、recipe 与 operation
+       schema 的版本化机器契约。
+3. [ ] 以 [`Ravo/docs/phase0/capability-inventory.md`](Ravo/docs/phase0/capability-inventory.md) 的
+       registry/数据盘点为起点，由产品 owner 完成“保留 / 延后 / 不支持 / 只迁移读取”决定；不得把当前
+       “pending/defer”标为已承诺兼容。
 4. [ ] 在未修改基线的前提下实跑并归档 3 个 CTest target 与 158 组旧 CPU 图像测试，列出测试缺口。
+       当前 3 个 legacy CTest 只在调查性 Windows build 上通过，不能认证冻结 0.9；
+       `legacy_manifest.json` 已盘点 158 组资产，未修改旧实现的 Windows `0000-nop` 结果不可用。详见
+       [`legacy baseline`](Ravo/docs/phase0/legacy-baseline-2026-07-21.md)。
 5. [ ] 固定首个无头垂直切片的 RAW、XMP、canonical recipe、PNG/浮点金样、元数据和性能基线。
 6. [ ] 在 `Ravo/` 中创建隔离的 C++20 构建骨架，先让无 UI、无 catalog、无旧库依赖的
-       foundation/recipe/engine/CLI 测试通过。
+       foundation/recipe/engine/CLI 测试通过；新测试统一使用 GoogleTest（GoogleMock 只用于交互契约），
+       不链接 legacy CMocka。
 
-在这六项完成前，不开始改写控件、不把旧模块套入新 UI、也不删除旧实现。等待开工期间只维护本文
-与基线资产，不提前创建会与最终 ADR 冲突的代码骨架。
+可以开始第 6 项的无头契约/构建骨架；它不依赖产品 owner 名称，也不会执行像素算法或改变 legacy
+基线。第 1、3、4、5 项仍是进入阶段 2 CPU 垂直切片和任何“Ravo 已验收”声明的硬门槛。在这些门槛
+满足前，不开始改写控件、不把旧模块套入新 UI、也不删除旧实现。

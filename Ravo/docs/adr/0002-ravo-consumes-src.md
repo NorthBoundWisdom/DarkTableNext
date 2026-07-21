@@ -1,7 +1,10 @@
 # ADR-0002: Ravo consumes and retires legacy `src`
 
-- Status: Accepted
+- Status: Superseded by ADR-0004
 - Date: 2026-07-21
+
+ADR-0004 keeps the one-way replacement goal but supersedes this ADR's
+incremental old-side adapters and capability-by-capability deletion strategy.
 
 ## Context
 

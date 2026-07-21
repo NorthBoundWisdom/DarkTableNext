@@ -1,14 +1,14 @@
 # DarkTableNext
 
 DarkTableNext is a cross-platform photo-workflow and RAW-editing application
-derived from a proven image-processing core. Version 0.9 is a focused
-maintenance baseline: it preserves the C/C++ processing pipeline and GTK front
-end while removing historical compatibility layers and peripheral features that
-no longer belong to the product.
+derived from a proven image-processing core. Version 0.9 is now a frozen
+reference baseline: it preserves the current C/C++ processing pipeline, GTK
+front end, fixtures, and OpenCL implementation without further product or
+architecture work.
 
-This repository is under active development and is not a general-availability
-release. The implementation in `src/` is the source of truth for current
-behaviour.
+This repository is under active Ravo development and is not a
+general-availability release. The frozen implementation in `src/` remains the
+source of truth for 0.9 behaviour; new production work belongs in `Ravo/`.
 
 ## Supported workflow
 
@@ -17,22 +17,21 @@ Darkroom, non-destructive editing, masks, history, colour management, and
 local-disk export. The supported export formats are JPEG, PNG, TIFF, and an
 unchanged copy of the original file.
 
-The maintained desktop targets are macOS (Apple Silicon and Intel), Windows,
-and Linux. The GTK interface remains part of the application. The CPU pipeline
-is always the reference implementation and reliable fallback; OpenCL remains
-available only while the planned GPU transition is validated.
+The frozen 0.9 desktop baseline covers macOS (Apple Silicon and Intel), Windows,
+and Linux. Its GTK interface and OpenCL path remain unchanged. The CPU pipeline
+is the behavioural reference; Ravo will build its own CPU-first engine and only
+later add independent GPU adapters.
 
 The project does not maintain removed Lua support, historical plugins or UI
 ABI, scripting, map and tethering workflows, printing, slideshow, remote
-publishing, or old format compatibility. For the complete product boundary,
-see [TODO_CORE_REDUCTION.md](TODO_CORE_REDUCTION.md).
+publishing, or old format compatibility. For the frozen boundary and the work
+now inherited by Ravo, see [TODO_REWRITE.md](TODO_REWRITE.md).
 
 The planned C++20 clean-slate successor is **Ravo**, documented in
 [Ravo/README.md](Ravo/README.md) and [TODO_REWRITE.md](TODO_REWRITE.md). Ravo
 delivers a headless image engine and supported CLI before any desktop UI, then
-makes the later UI consume the same engine API. Implementation has not started,
-and the plan does not change the current 0.9 support boundary until its gates
-are met.
+makes the later UI consume the same engine API. Ravo is the only active
+implementation path; 0.9 remains a read-only oracle until Ravo replaces it.
 
 ### Bundled styles
 
@@ -189,9 +188,8 @@ behaviour.
 ## Further reading
 
 - [Release notes](RELEASE_NOTES.md)
-- [Core reduction plan](TODO_CORE_REDUCTION.md)
+- [Frozen 0.9 baseline and Ravo implementation plan](TODO_REWRITE.md)
 - [Ravo project documentation](Ravo/README.md)
-- [C++20 headless engine and CLI rewrite plan](TODO_REWRITE.md)
 - [Developer documentation index](DevDocs/README.md)
 - [GPU baseline](DevDocs/GPU_Baseline.md)
 

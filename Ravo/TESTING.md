@@ -23,6 +23,16 @@ rg -n '^[[:space:]]*add_iop\(' src/iop/CMakeLists.txt | wc -l
 这些数字是测试资产盘点，不是覆盖率。旧图像测试适合作为端到端 oracle，但不能替代新模型、参数、
 边界、所有权和错误路径测试。
 
+## Test framework boundary
+
+All new Ravo C++ unit, contract, and integration tests use GoogleTest;
+GoogleMock is permitted when a port interaction itself is the contract under
+test. CMocka is a legacy `src/tests` dependency only and must not be linked by
+a Ravo target. GoogleTest 1.17.0 is installed for this Windows workspace, but
+there is not yet a Ravo target or a command to run it. The first CMake change
+must document its fixed dependency source and the actual test invocation
+without adding `FetchContent` or a network download.
+
 ## 测试层次
 
 | 层次 | 目标 | 典型内容 |

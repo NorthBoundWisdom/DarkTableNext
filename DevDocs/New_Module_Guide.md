@@ -1,5 +1,10 @@
 # Guide to Creating a New IOP Module
 
+> **Archived 0.9 reference:** do not create or register new modules under
+> `src/iop/`. The 0.9 module graph is frozen. New image operations belong to
+> Ravo as versioned `OperationDescriptor` data plus a tested CPU engine
+> implementation; see [`TODO_REWRITE.md`](../TODO_REWRITE.md).
+
 This guide walks you through the process of creating a new Image Operation (IOP) module in DarkTableNext.
 
 ## 1. Files to Create

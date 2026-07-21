@@ -2,9 +2,9 @@
 
 ## 项目定位
 
-DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与 RAW 编辑维护
-基线。保留验证过的图像处理核心和现有 GTK 前端，主动删除已确认不属于产品范围的历史
-兼容、插件和外围工作流。
+DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作流与 RAW 编辑基线。
+它保留当前图像处理核心、GTK 前端和 OpenCL 实现，只作为行为、fixture 与兼容性 oracle；新增产品
+实现、功能收缩和架构演进统一进入 Ravo。
 
 仓库根目录下的约定适用于整个仓库。`Ravo/` 是下一代 C++20 无头内核与 CLI 的独立所有权边界，
 并由它自己的 `AGENTS.md` 增加约束；`FreeCM/` 是独立子模块并由它自己的 `AGENTS.md` 管理。所有
@@ -14,11 +14,12 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
 
 1. 运行 `git status --short --branch`，识别用户已有改动并保留它们。
 2. 阅读与任务直接相关的源文件和文档，不根据上游 darktable 习惯猜测当前行为。
-3. 功能删减先读 `TODO_CORE_REDUCTION.md`；GPU 任务先读 `DevDocs/GPU_Baseline.md`。
+3. 产品删减先读 `TODO_REWRITE.md` 的“0.9 冻结基线与 Ravo 承接项”；GPU 任务先读
+   `DevDocs/GPU_Baseline.md`。
 4. 跨层改动先明确所有权、生命周期、线程边界和最小验证集。
 
-现有行为以 `src/` 为准；`DevDocs/` 是源码地图，不是兼容性承诺。产品边界以
-`TODO_CORE_REDUCTION.md` 为准。
+现有行为以冻结的 `src/` 和 fixture 为准；`DevDocs/` 是源码地图，不是兼容性承诺。新产品边界以
+`TODO_REWRITE.md` 为准。除非用户明确重新开放 0.9，任务不得修改 `src/`、旧 UI、旧构建图或旧资源。
 
 ## Ravo 下一代边界
 
@@ -26,8 +27,8 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
   UI toolkit 依赖或 catalog 数据库。
 - Ravo 生产代码不得依赖 `src/` 私有头、旧库、动态 IOP、GTK 类型或全局 `darktable` 状态。差分验证
   只能读取冻结 fixture，或把旧 CLI 当独立进程执行。
-- 迁移方向只能独立并行或 `src` → Ravo；不能形成 Ravo → `src`。每项 Ravo 能力验收后，应删除
-  `src` 对应实现、构建项、资源、配置和重复测试，使 Ravo 最终完全取代 `src`。
+- 迁移期间 Ravo 与冻结的 `src` 独立并行；不创建 `src` → Ravo 或 Ravo → `src` 的生产依赖。只有
+  Ravo 全产品达到切换门槛后，才在退役阶段删除旧实现、构建项、资源、配置和重复测试。
 - 在 `Ravo/` 工作前必须阅读 `Ravo/AGENTS.md`、`Ravo/ARCHITECTURE.md`、`Ravo/MIGRATION.md` 和
   `Ravo/TESTING.md`。
 
@@ -35,10 +36,12 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
 
 - 本项目没有维护 darktable 历史插件、Lua、旧格式或旧 UI ABI 的默认义务；不要为
   已明确移除的能力增加空壳、兼容开关或迁移 shim。
-- 删除功能时必须同时清理构建项、注册表、资源、配置、文档和测试；用全仓搜索确认
-  没有可达消费者或残留用户入口。
-- 维护现有 GTK 前端与 C/C++ 核心时，不要顺手改变 pixelpipe、IOP 算法或 CPU 图像结果。
-- OpenCL 只有在 `TODO_CORE_REDUCTION.md` 的 Metal 阶段验收完成后才能删除。
+- Ravo 决定不支持某项旧功能时，先记录显式拒绝或迁移策略，不在冻结的 0.9 中提前删除。阶段 7
+  退役旧 owner 时才同步清理构建项、注册表、资源、配置、文档和测试，并用全仓搜索确认无消费者。
+- 不维护或修改现有 GTK 前端与旧 C/C++ 核心；发现差异或缺陷时记录为 oracle 限制，不用修补 `src`
+  推进 Ravo。
+- 0.9 OpenCL 保持冻结，不在旧应用内替换为 Metal；它只在阶段 7 随整个旧实现退役。Ravo GPU 按
+  `TODO_REWRITE.md` 阶段 6 独立实现，不复用 OpenCL API。
 - 遵循相邻 C/C++/CMake 文件的现有风格，只格式化触及的代码。不要借任务批量格式化
   遗留源码。
 - 新依赖、公共 API、线程模型、数据库 schema 和产品范围变化都应在同一变更中记录
@@ -47,11 +50,10 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的照片工作流与
 
 ## 现有 UI 与核心边界
 
-- GTK 前端、dtgtk/Bauhaus 控件、Lighttable、Darkroom、导入、导出、catalog、history、
-  masks、色彩空间和 pixelpipe 都保留在本仓库的既有 C/C++ 模块中。
-- UI 改动必须遵循相邻 GTK 模块的生命周期、线程与信号约定；不得绕过图像缓存、数据库
-  事务或任务队列直接修改共享状态。
-- 不要在 UI 维护改动中引入第二套应用入口、运行时、工具包或跨仓库 UI 依赖。
+- GTK 前端、dtgtk/Bauhaus 控件、Lighttable、Darkroom、导入、导出、catalog、history、masks、
+  色彩空间和 pixelpipe 保留为只读旧实现；新 UI/服务工作只进入 Ravo 的后续阶段。
+- 不在旧 UI 中增加入口、运行时、工具包、adapter 或 Ravo 调用。需要的行为通过只读源码研究、fixture
+  或独立旧进程取证。
 
 ## FreeCM 与依赖源码
 

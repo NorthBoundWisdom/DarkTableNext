@@ -1,6 +1,6 @@
 # DarkTableNext 0.9.0 Release Notes
 
-DarkTableNext 0.9.0 establishes the project's independent maintenance baseline.
+DarkTableNext 0.9.0 establishes the project's frozen reference baseline.
 It keeps the proven photo-processing core and GTK interface while narrowing the
 product to a focused desktop workflow.
 
@@ -14,8 +14,8 @@ product to a focused desktop workflow.
 - The application retains local import and cataloguing, Lighttable, Darkroom,
   non-destructive editing, colour management, history, masks, and local-disk
   export.
-- The existing CPU image pipeline remains the correctness reference. OpenCL is
-  still available during the planned GPU transition.
+- The existing CPU image pipeline remains the correctness reference. Its
+  OpenCL implementation remains frozen and is not the basis of Ravo GPU work.
 
 ## Scope reduction
 
@@ -30,12 +30,13 @@ and legacy UI behaviour is not provided.
 
 ## Development status
 
-Version 0.9.0 is a maintenance and reduction baseline, not a general-availability
-release. The immediate work is to finish the remaining legacy-code audit and
-freeze the long-term IOP boundary. Metal replaces OpenCL only after the
-documented correctness and performance gates are met; until then, OpenCL must
-remain intact.
+Version 0.9.0 is a frozen baseline, not a general-availability release. No
+further feature reduction, IOP cleanup, architecture work, or Metal migration
+is planned in 0.9. Those unfinished goals now belong to Ravo: first its
+CPU-first headless engine and CLI, then product services and independently
+designed GPU adapters. The old OpenCL path remains unchanged until the entire
+0.9 application is retired.
 
 See [the README](README.md) for build instructions and
-[the core reduction plan](TODO_CORE_REDUCTION.md) for the maintained product
+[the frozen 0.9 and Ravo implementation plan](TODO_REWRITE.md) for the product
 boundary and roadmap.

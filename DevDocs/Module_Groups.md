@@ -1,5 +1,9 @@
 # Module Groups
 
+> **Frozen 0.9 reference:** group registration described here must not be
+> changed in `src`. Future operation presentation belongs to Ravo schema and
+> desktop services after the headless stages.
+
 Module groups organize IOP modules into logical categories (Technical, Grading, Effects, etc.) in the darkroom view. This helps users find tools relevant to their current task.
 
 ## The Concept

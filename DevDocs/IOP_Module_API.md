@@ -1,5 +1,9 @@
 # IOP Module API Reference
 
+> **Frozen legacy API:** this document is retained for reading 0.9 behaviour
+> and fixtures. It is not an extension guide, and Ravo must not implement or
+> load this dynamic ABI.
+
 This guide documents the functions that DarkTableNext Image Operation (IOP) modules can implement. The API is defined in `src/iop/iop_api.h` and used via `src/develop/imageop.h`. See `src/iop/useless.c` for a fully documented example module.
 
 See also:

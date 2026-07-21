@@ -1,0 +1,6593 @@
+{
+  "fixture_count": 158,
+  "fixtures": [
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0000-nop/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0000-nop/expected.png",
+          "sha256": "207ecde1f59eadea107d830bf0b6b9fd33147db333e46d86e122f6bf3c5221d5",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0000-nop",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0000-nop/nop.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
+          "size_bytes": 4495
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0001-exposure/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0001-exposure/expected.png",
+          "sha256": "48906ecaca2a32f1eeb45237f8aed3b9a9c60b296661c669ed3be79607d83c1b",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0001-exposure",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0001-exposure/exposure.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "6bc9f5f2ae684b84ff374e97990c99fa4086875fc4a4f4cb43185866e26a5401",
+          "size_bytes": 4889
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0002-local-contrast/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0002-local-contrast/expected.png",
+          "sha256": "7b71ef73f228156e72798215038be275fc121aa0caf192193313a6f8c1d97ecc",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0002-local-contrast",
+      "xmp": [
+        {
+          "operations": [
+            "bilat",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0002-local-contrast/local-contrast.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "625162d7de1ec6af93d27cb75e7b57acd682d92f4fe1c96179183c8638ec7a37",
+          "size_bytes": 5281
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0003-denoise-bilateral/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0003-denoise-bilateral/expected.png",
+          "sha256": "3eb1abee55e7ffb48fd44d98f4987f298199e3551c7018a071eef3b704e25c72",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0003-denoise-bilateral",
+      "xmp": [
+        {
+          "operations": [
+            "bilateral",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0003-denoise-bilateral/denoise-bilateral.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "df0d5805e7385ae2a0a3c6c2811b83231847ebcbf308d52df157eecc2177697d",
+          "size_bytes": 5209
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0004-masks/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0004-masks/expected.png",
+          "sha256": "9158b8bd996f80fc5cdbe3e84f2c90c9691edc2322e33a6efb96ac3fc0394ea2",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0004-masks",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0004-masks/masks.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b23f4785edc96f7020b7caf5b2b170a024e3b867b09f4120fee37c1461faac4f",
+          "size_bytes": 13414
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0005-orientation-minus-90/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0005-orientation-minus-90/expected.png",
+          "sha256": "1a07530f3f1e3bf63f36d02473afec08bacb96b60e042994a9e720957d701494",
+          "size_bytes": 5154824
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0005-orientation-minus-90",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0005-orientation-minus-90/orientation-minus-90.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "dd1dcceeedb5e8722a116e01a7a323a5e46cfe0b0da2e8851d127476c7b335cf",
+          "size_bytes": 12967
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0006-orientation-plus-90/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0006-orientation-plus-90/expected.png",
+          "sha256": "47a0f54b3bdf909819854272a2e5f08d48b8ce22df483cdba138bcca9ba46129",
+          "size_bytes": 5154824
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0006-orientation-plus-90",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0006-orientation-plus-90/orientation-plus-90.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ba77b0ab220dbffff0c4bbbff3528a2ddc325b4e8f4c14e0df5c04841e46e595",
+          "size_bytes": 12967
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0007-orientation-180/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0007-orientation-180/expected.png",
+          "sha256": "4c94c484c71d1ba4e4281ac6b8217e26bbf23f784f1185ff13b2b568d9a968ce",
+          "size_bytes": 5154824
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0007-orientation-180",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0007-orientation-180/orientation-180.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5c87bfc09ac450449a3d337a05d310b3e740ae71b776fa18bd6086b9ee40fa79",
+          "size_bytes": 13326
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0011-gdnd-90/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0011-gdnd-90/expected.png",
+          "sha256": "c13c43f6557bc9c5f218601dc72768cf2b63893a785d6750e4225674c093d5ef",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0011-gdnd-90",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "graduatednd",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0011-gdnd-90/gdnd-90.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e01690d8c784ab6822c52ad59b0468a24b6ef544be042e739697f33fc40057ad",
+          "size_bytes": 4264
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0012-gdnd-45/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0012-gdnd-45/expected.png",
+          "sha256": "b5fa391de05dededf542414bebcf4c5baa945f16f8a37224cc86c3713aa52a95",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0012-gdnd-45",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "graduatednd",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0012-gdnd-45/gdnd-45.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7cdb4a730c2b45ffe267ddadfc630039c9668f89b85b2d8315b6b6b804138e08",
+          "size_bytes": 4669
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0013-denoiseprofile-wavelets/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0013-denoiseprofile-wavelets/expected.png",
+          "sha256": "2e3732cb5befeb6ae3e2a0bb9e4f1a7e20e13b325fdbce68bfa3b71070c0bd2d",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0013-denoiseprofile-wavelets",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0013-denoiseprofile-wavelets/denoiseprofile-wavelets.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "8332158d6ee5f6a37daf9a2e0ffa34e7441af91bf432b4958a1137656eadd550",
+          "size_bytes": 4951
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0014-filmic-rgb/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0014-filmic-rgb/expected.png",
+          "sha256": "0f54432f7c10a0ed90d00d8ca5a4f9f36d2c63b489ee456f8826c9585846d681",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0014-filmic-rgb",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0014-filmic-rgb/filmic-rgb.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4ac86ade49c1729c5ffc5d011310e776cb128a396b61db056a2488f4c4815840",
+          "size_bytes": 4318
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0015-shadhi-bilateral/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0015-shadhi-bilateral/expected.png",
+          "sha256": "caec8b6c82927b221d911200038f7fac233dc2dddd791a3692fc10377a7a387d",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0015-shadhi-bilateral",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "shadhi",
+            "temperature"
+          ],
+          "path": "darktable-tests/0015-shadhi-bilateral/shadhi-bilateral.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5068c1ed1a38e9ab552282c1b657027be3aac9276a688326cf35e145f6da0f2a",
+          "size_bytes": 6337
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0016-lowpass-bilateral/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0016-lowpass-bilateral/expected.png",
+          "sha256": "02d6fd0c2a9e8ee7b903f8af8a55c9f5f28015b829ca3ad90b7b8703fba46b43",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0016-lowpass-bilateral",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "lowpass",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0016-lowpass-bilateral/lowpass-bilateral.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "8828386ef6c126d12533558b31f7f06d8cf0cde2cd6cb0910bec583a8dd11d83",
+          "size_bytes": 6298
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0017-monochrome/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0017-monochrome/expected.png",
+          "sha256": "105c87c7d9ff159aee4363d29c9c2134155346e865349b0429ce4786f6f9d1ae",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0017-monochrome",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "monochrome",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0017-monochrome/monochrome.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ecfcb93604e50acd9aafcca9c4ec83e2635dd5846761f03807e50ad1363679fe",
+          "size_bytes": 6277
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0018-perspective-corr/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0018-perspective-corr/expected.png",
+          "sha256": "acb09f70461a4ab28a56fceb1cbce2a43cec93549f3abe63611fa7655722ed49",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0018-perspective-corr",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0018-perspective-corr/perspective-corr.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
+          "size_bytes": 6361
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0019-color-mapping/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0019-color-mapping/expected.png",
+          "sha256": "867a9c24acb74b80e071c47d7983b6744a736bf23ba69a80e88a83dfdd931893",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0019-color-mapping",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colormapping",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0019-color-mapping/color-mapping.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "1bca7b63fcdeaaed6e8eed221f26e3879cb0a5ba3c5adb2e250938fdb30abde6",
+          "size_bytes": 12087
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0020-denoise-nlmeans/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0020-denoise-nlmeans/expected.png",
+          "sha256": "d4138fd57e3a3d73e619e4164b6bd7f811271fdbc2fe405f3867399aa1e8b889",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0020-denoise-nlmeans",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "nlmeans",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0020-denoise-nlmeans/denoise-nlmeans.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d089e7dff4dcc02eedf9ac2f3cefbbbd3c7c5d3a2a257e945cd8f1a89ada231f",
+          "size_bytes": 4839
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0021-retouch-wavelets/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0021-retouch-wavelets/expected.png",
+          "sha256": "700c5a38aab014ff30441c26d092a9c6dfe94ebea750ea2b00f14eb28eafb280",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0021-retouch-wavelets",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "retouch",
+            "temperature"
+          ],
+          "path": "darktable-tests/0021-retouch-wavelets/retouch-wavelets.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "6bb78a897c85b7be129c26cfafcfa65357b897895ac7baf6487003eb0e37ae90",
+          "size_bytes": 6003
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0022-color-zones/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0022-color-zones/expected.png",
+          "sha256": "a2f0c8c1cf345aca8d26456ce5f81e203ae6eac5fa63fa9e61c6260e0485719d",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0022-color-zones",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "colorzones",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0022-color-zones/color-zones.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "82af6acca79859e49b0d3db5f7a9631ccfbfa7ff52a1d5796166e66c555e571b",
+          "size_bytes": 5605
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0024-contrast-equalizer/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0024-contrast-equalizer/expected.png",
+          "sha256": "4cf042587ecfb155f5a772340b7d095a00ab1078485cab6bc2c2369874f1dab2",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0024-contrast-equalizer",
+      "xmp": [
+        {
+          "operations": [
+            "atrous",
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0024-contrast-equalizer/contrast-equalizer.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "601200032535fa60239599e62aea2b76106ba9625037deab331dfbfd798af2b7",
+          "size_bytes": 4878
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0025-exposure-guided-filter/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0025-exposure-guided-filter/expected.png",
+          "sha256": "0aeb2be04aacba13c382b087f542d636d84ac0bc1081f826d9cb5d3063b1a1fa",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0025-exposure-guided-filter",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0025-exposure-guided-filter/exposure-guided-filter.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "bf372f0dcd2ea0677361b6577f9a42400945a3acb3d89b0d050d0d6febf929fa",
+          "size_bytes": 6097
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0026-haze-removal/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0026-haze-removal/expected.png",
+          "sha256": "59fac09366c3dae6263cef770c371f41dcbfb3ddc1dc205f992d8f92449a1fa7",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0026-haze-removal",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "hazeremoval",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0026-haze-removal/haze-removal.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "af06fb024385e837792e4422e1274a3f4052aa3c1e89623f08bed367371613eb",
+          "size_bytes": 6262
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0027-denoiseprofile-nlmeans/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0027-denoiseprofile-nlmeans/expected.png",
+          "sha256": "bf5904bd2ab340930ac3ccd27a17132275c5d779213b3219175320fd7c69fcea",
+          "size_bytes": 5146453
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0027-denoiseprofile-nlmeans",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0027-denoiseprofile-nlmeans/denoiseprofile-nlmeans.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d3406317d7aafc425a813172bc953f6cbc74cba30061eeccab111687599cf323",
+          "size_bytes": 4347
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0028-highpass-overlay/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0028-highpass-overlay/expected.png",
+          "sha256": "f9ac8508eb54f3519126fc264a00ff95a5815fa38d86e745baf91281c9a48280",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0028-highpass-overlay",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "highpass",
+            "rawprepare",
+            "sharpen",
+            "temperature"
+          ],
+          "path": "darktable-tests/0028-highpass-overlay/highpass-overlay.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "aef91def465863a1099a7b9fc454fcce562a2f62e9ebb23f13430de643155fa6",
+          "size_bytes": 6525
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0029-color-correction/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0029-color-correction/expected.png",
+          "sha256": "0c9833b2197f4a4277dbb74c8f0b5c57d12b8f5e4e4e6d7914a16f7670e8a41e",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0029-color-correction",
+      "xmp": [
+        {
+          "operations": [
+            "colorcorrection",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sharpen",
+            "temperature"
+          ],
+          "path": "darktable-tests/0029-color-correction/color-correction.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4aca95856362c996a328ad90ae23ae769db436be80afa2f0f61e8509e5028cbb",
+          "size_bytes": 6216
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0030-framing/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0030-framing/expected.png",
+          "sha256": "20c35c527626a3aa690a66fa5b3cce9b5e1e34d476369c325105b9e309fc0ce6",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0030-framing",
+      "xmp": [
+        {
+          "operations": [
+            "borders",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0030-framing/framing.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5177f4f0ea2fc09fc3e08aa3031b9be314fda2a598688c761d9ecc715203bf39",
+          "size_bytes": 5075
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0032-watermark/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0032-watermark/expected.png",
+          "sha256": "1573e1b491c324cefd6613209173a5397a86a6f129c900f5eea1410b1a8a9d88",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0032-watermark",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "watermark"
+          ],
+          "path": "darktable-tests/0032-watermark/watermark.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "741deb1660ba137dd4c7f0287d2387298e3a5eba098280a72c0f76a68f27b1e7",
+          "size_bytes": 5037
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0033-blending-modes-uniform/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0033-blending-modes-uniform/expected.png",
+          "sha256": "a6f9aa9c0edcaa8b9e6e771e2ad19e0228e7a1db47c30d86dc843040fce9a2ba",
+          "size_bytes": 5137898
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0033-blending-modes-uniform",
+      "xmp": [
+        {
+          "operations": [
+            "colorbalance",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0033-blending-modes-uniform/blending-modes-uniform.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9c747fbc7cdcbd6e5275c3d083c53ef9fc3806cb9bcadeda69bacb164c1a2fdd",
+          "size_bytes": 8338
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0034-blending-modes-parametric/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0034-blending-modes-parametric/expected.png",
+          "sha256": "a0e94e9371dd18c7cdbd598e6d33ce3cb93715024583dff5bbe90d1b9d0f562b",
+          "size_bytes": 5137898
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0034-blending-modes-parametric",
+      "xmp": [
+        {
+          "operations": [
+            "colorbalance",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0034-blending-modes-parametric/blending-modes-parametric.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9f6cf52d42ffcd6c55d2b250a06cb3d42fff2d1c1f0f4d6b3490dfb557f4f704",
+          "size_bytes": 8622
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0036-liquify/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0036-liquify/expected.png",
+          "sha256": "84a0cfdd57fb250ab2156b4ed71e4a198e827443f9407bf75050bdaedb765ceb",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0036-liquify",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "liquify",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0036-liquify/liquify.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0f905728ee019e677810e081ee915be202cf0e548f1aa4d968e486ed6efd88c8",
+          "size_bytes": 5703
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0037-filmic-reconstruction/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0037-filmic-reconstruction/expected.png",
+          "sha256": "5a5b1f5b21cfc5125cc570d95ac90e4cb06ba23f8e848c014b64b46ad5229ab0",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0037-filmic-reconstruction",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0037-filmic-reconstruction/filmic-reconstruction.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b2b53354c770cf22d73c9d67a19a2a961a35ddbfd2cea58d82c024f0219aac66",
+          "size_bytes": 5492
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0038-colorcontrast/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0038-colorcontrast/expected.png",
+          "sha256": "7e15128e8f53289ffa33e5830807a943ab8dd0b344d5fef6700092703d3fb6e0",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0038-colorcontrast",
+      "xmp": [
+        {
+          "operations": [
+            "colorcontrast",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0038-colorcontrast/colorcontrast.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4839163a96b6d6259b0bd0bea786800d7539dc26bc58e9d69a2b5b7c1b7f3345",
+          "size_bytes": 6255
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0043-dithering-fs/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0043-dithering-fs/expected.png",
+          "sha256": "8e2819b74fe39e72ab0e5b9b63b750f2fdf4eaeb513f517782eb6760419e727a",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0043-dithering-fs",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "dither",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0043-dithering-fs/dithering-fs.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ff36c5e078cc97c65a7c8e75dd1ae386053975146f5570e0c67d0bc9c32a8ecc",
+          "size_bytes": 6268
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0044-dithering-random/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0044-dithering-random/expected.png",
+          "sha256": "15195876de3f9935d1e268561e051286816fb46052cb64c42905c576dc84298f",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0044-dithering-random",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "dither",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0044-dithering-random/dithering-random.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "42bcd4c9efa0e75a64968cbd134ce6f2f827984d8728e5f0786de65415b1cb52",
+          "size_bytes": 6268
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0045-vignetting/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0045-vignetting/expected.png",
+          "sha256": "959420b0706858f0fabfd963d8d198453677fa322d60437890488c7a9bb13f8c",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0045-vignetting",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature",
+            "vignette"
+          ],
+          "path": "darktable-tests/0045-vignetting/vignetting.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "cd9648bc165101688af3e7bdd5cff6d2c615b37a07967ae4ec9ad4e789dbdd96",
+          "size_bytes": 6658
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0046-demosaic-greens/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0046-demosaic-greens/expected.png",
+          "sha256": "a32fdce5bdf0c650165ab1f0ff850544d3fa9d8440c6b233e35b0b169962f36b",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0046-demosaic-greens",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0046-demosaic-greens/demosaic-greens.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0e3dd2a67ae1828ac791d5ee6dd8466d531204b4255134ebcdf4efa6d9646f82",
+          "size_bytes": 6606
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0047-demosaic-amaze/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0047-demosaic-amaze/expected.png",
+          "sha256": "1f776e134306e3728cbe4850d286e8aed31d61c9151ce18bb7c4be6143307e3a",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0047-demosaic-amaze",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0047-demosaic-amaze/demosaic-amaze.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5e190515c36458607f88b2ada9e50d82f663ffa9bed535df6775883286f8dd52",
+          "size_bytes": 7002
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0048-demosaic-vng/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0048-demosaic-vng/expected.png",
+          "sha256": "e915399e2a191acf91f8a830faec75d2f58a3f749cc5b069ad060c4694fbfffd",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0048-demosaic-vng",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0048-demosaic-vng/demosaic-vng.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4f450913de6926ef9d3ccf20f058a9d58d70b015a428563bd71994801304c9d5",
+          "size_bytes": 7398
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0049-rawdenoise/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0049-rawdenoise/expected.png",
+          "sha256": "5ed0f7b5335fc1d6293608086a4d7c0dec41d5cdb00821d7a391d297fc58f128",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0049-rawdenoise",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawdenoise",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0049-rawdenoise/rawdenoise.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "032754cbe542cb9c7bc1b1f83c4ef399663d6af75aa642e969d531df78026e45",
+          "size_bytes": 6692
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0050-bloom/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0050-bloom/expected.png",
+          "sha256": "5611c9e3816c99582a76b35676f1d22d06847008ffe7709abe906ed0edc84ad3",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0050-bloom",
+      "xmp": [
+        {
+          "operations": [
+            "bloom",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0050-bloom/bloom.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d6e3c05ecfd69c4152e10972edb258d44c56a7568c983579ffe699a1a03fa697",
+          "size_bytes": 4823
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0051-soften/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0051-soften/expected.png",
+          "sha256": "51b08b1cfa841c2fa405594c97f41b069ce9abe027f53b9531c48079df7b44c5",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0051-soften",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "soften",
+            "temperature"
+          ],
+          "path": "darktable-tests/0051-soften/soften.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "da9cb8ec7b233b10195e5608cb2f1abafa53c2bf737d7f2fb3d6a80a548f8f78",
+          "size_bytes": 4832
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0052-color-reconstruction/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0052-color-reconstruction/expected.png",
+          "sha256": "11ad0629c98a4df001f7fc5aa9e89e7dc972f877bb88ef1e8561bc3859badafc",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0052-color-reconstruction",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "colorreconstruct",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0052-color-reconstruction/color-reconstruction.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5b83af1e0145f4731fee79d53312ecf8c60fb44b68d507e2c5909fd8997d8d71",
+          "size_bytes": 4850
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0054-rgblevels-linked/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0054-rgblevels-linked/expected.png",
+          "sha256": "331edd81304863342d1879e1eebafb83d8b5d1bf30067bf8bf4801883e40c983",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0054-rgblevels-linked",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "rgblevels",
+            "temperature"
+          ],
+          "path": "darktable-tests/0054-rgblevels-linked/rgblevels-linked.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b57f7bfeeec2d6292cadd8bda638b7e9668e445fa6db423236ab22018f768bae",
+          "size_bytes": 4891
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0055-rgblevels-indep/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0055-rgblevels-indep/expected.png",
+          "sha256": "fb063524bdf1057e4b72839fdd6f8f30eccd1fc1fc2de58b4d089e09ee939869",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0055-rgblevels-indep",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "rgblevels",
+            "temperature"
+          ],
+          "path": "darktable-tests/0055-rgblevels-indep/rgblevels-indep.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0cac2433ed9c5d1f4b196b4d720c56f107171849a49d322b1974b58fb4f417f8",
+          "size_bytes": 5340
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0057-colorize/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0057-colorize/expected.png",
+          "sha256": "84694533a3d378604f5e95eb51f72b8829b2ffd64088358222072ae89fd92f40",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0057-colorize",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorize",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0057-colorize/colorize.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "169883782b72d3c7e5e7b19f03952cf74c2025e11d4b3ed5e0ed7306fccf54c4",
+          "size_bytes": 4842
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0059-grain/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0059-grain/expected.png",
+          "sha256": "d74feabb7e200447a88f663e850ea2a7f8c4b0bb9af80ae480db67fefbbe3a83",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0059-grain",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "grain",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0059-grain/grain.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "aba97b6878b017214ac54574e0d63f54a2f63b6ed1649394a81b052708060280",
+          "size_bytes": 4831
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0060-rgbcurve-indep/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0060-rgbcurve-indep/expected.png",
+          "sha256": "019875177f1761aaddb5e7df98a6303dde9e77345dec835478c3c9eefb75bdf0",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0060-rgbcurve-indep",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "rgbcurve",
+            "temperature"
+          ],
+          "path": "darktable-tests/0060-rgbcurve-indep/rgbcurve-indep.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "821294a9ced36ae0e15942463b8f9c3bcbafc456f352e8e3fb39fc740384c8db",
+          "size_bytes": 5006
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0061-lowlight/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0061-lowlight/expected.png",
+          "sha256": "9c180e7f1ae4aa581af2b7a1c1e7269f6cda73e9253e29d285893eabc10d7106",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0061-lowlight",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "lowlight",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0061-lowlight/lowlight.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9427ea812f9e118535db87f09c3ce281fb0587ff6ee91adffc8b6f31fd2d5da6",
+          "size_bytes": 4906
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0062-splittoning/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0062-splittoning/expected.png",
+          "sha256": "c92e72255b9a6ccf0ba13d5281f974e0c2a5f6fb05727af589b4723b955c8198",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0062-splittoning",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "splittoning",
+            "temperature"
+          ],
+          "path": "darktable-tests/0062-splittoning/splittoning.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ae41f57bcef38bc232a07ff6dfe2fa2b5283481d103c25ad8cc1ff410e9b9da7",
+          "size_bytes": 4853
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0063-velvia/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0063-velvia/expected.png",
+          "sha256": "b13df3d049e924731de58137d3ea3a4f54dc2b3ace3f99e3f303573c5b720eed",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0063-velvia",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "velvia"
+          ],
+          "path": "darktable-tests/0063-velvia/velvia.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "77f4430736e594de0e4782649ba2255e2153627166f7b7d3d14c513d37325fc2",
+          "size_bytes": 4816
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0064-demosaic-xtrans-vng/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0064-demosaic-xtrans-vng/expected.png",
+          "sha256": "778c13a44d846ecb55d44bd3f7ca48ca42ebb698d525fb0d00d0306b5daa3058",
+          "size_bytes": 3886687
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0064-demosaic-xtrans-vng",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0064-demosaic-xtrans-vng/demosaic-xtrans-vng.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "6985b8e85dd853865965ebbd0302c7b4be350474c2629b4b43871985b9211525",
+          "size_bytes": 5665
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0065-demosaic-mark1/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0065-demosaic-mark1/expected.png",
+          "sha256": "3a025919201f8111f580336e7c969af8f5e3d51e233977897807502d027b8aa0",
+          "size_bytes": 3886687
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0065-demosaic-mark1",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0065-demosaic-mark1/demosaic-mark1.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "11dfd6da4e16c15203ae8ac9933366604b65f3613c812ed161c4c8b594545db1",
+          "size_bytes": 4865
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0066-demosaic-mark3/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0066-demosaic-mark3/expected.png",
+          "sha256": "13803355616ccbf201f4095ceec4e38dd5402d0d1f232391a0e337b816af4a1f",
+          "size_bytes": 3886687
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0066-demosaic-mark3",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0066-demosaic-mark3/demosaic-mark3.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e8f1f3bc913595ba2efaad7f4d6bda5692252206eb5b18cd8cd0e3ad3807ed78",
+          "size_bytes": 5269
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0067-demosaic-fdc/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0067-demosaic-fdc/expected.png",
+          "sha256": "05c11b2b8291e0ae5cea8e0c7e3ff7426de1185ffd417d767410748f47cbaee5",
+          "size_bytes": 3886687
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0067-demosaic-fdc",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0067-demosaic-fdc/demosaic-fdc.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e89192036e6d5d459b764d66e086519c3d8ad716035a55b288419d802f0c7cbf",
+          "size_bytes": 6061
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0068-rawdenoise-xtrans/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0068-rawdenoise-xtrans/expected.png",
+          "sha256": "f91a9519105d2529cb4ad90db9716fee230cfdbf9ca0f0b8328e8d32b06eb314",
+          "size_bytes": 3886687
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0068-rawdenoise-xtrans",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawdenoise",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0068-rawdenoise-xtrans/rawdenoise-xtrans.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f2ba56d71933e8f8d3a6ce35cdd5823d912b867194f9682888f292fa60c39084",
+          "size_bytes": 5432
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0069-tonecurve-rgb-linked/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0069-tonecurve-rgb-linked/expected.png",
+          "sha256": "266b791dea70a6694ebce9c715d551afb4aa2547839d409c5479d199d1d3e724",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0069-tonecurve-rgb-linked",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0069-tonecurve-rgb-linked/tonecurve-rgb-linked.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "438a85726743d94945b11296d4ed1a40d3dc0d5efb367e69eadbc0b4a2072680",
+          "size_bytes": 5142
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0070-tonecurve-xyz-linked/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0070-tonecurve-xyz-linked/expected.png",
+          "sha256": "60d86c0f9d47357bc1deae39d7fcf39a6f23befa5ff7d2887920a710f91307d6",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0070-tonecurve-xyz-linked",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0070-tonecurve-xyz-linked/tonecurve-xyz-linked.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7ecb4bf33a9674ca531d5228fda54ecd9eafb594e2fb0d2cc49fe4b62906b483",
+          "size_bytes": 5498
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0071-tonecurve-lab-linked/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0071-tonecurve-lab-linked/expected.png",
+          "sha256": "a648344afee4f8d6f123e1dc99f1a39a4b1d9d9b24d8a5c1a0f2d1953611e15c",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0071-tonecurve-lab-linked",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0071-tonecurve-lab-linked/tonecurve-lab-linked.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7da6b84b5f06ee5a76fbfbecb2359b0e949c655caa1ad1d5a67bb538458b47af",
+          "size_bytes": 5498
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0072-tonecurve-lab-indep/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0072-tonecurve-lab-indep/expected.png",
+          "sha256": "0f035cfa6aab0abf37905190bc71ccf392c5287bec0e3812ff539a38d9326e53",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0072-tonecurve-lab-indep",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0072-tonecurve-lab-indep/tonecurve-lab-indep.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "173ccdc8e51c80c06cb6f8d117170ac897d6996257d27ccc51f6635c64e9f1b4",
+          "size_bytes": 5546
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0074-retouch-clone/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0074-retouch-clone/expected.png",
+          "sha256": "6eb8eb25aacd96cb94a9efdafda89a941960a8822e370ac0760db1e0bc1dfa81",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0074-retouch-clone",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "retouch",
+            "temperature"
+          ],
+          "path": "darktable-tests/0074-retouch-clone/retouch-clone.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "70256bb36dc555c599096f6d0a91ec7d12f618379788897edd736a36a3e23592",
+          "size_bytes": 8391
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0075-retouch-heal/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0075-retouch-heal/expected.png",
+          "sha256": "4ff326720e8165bde3843c26f8186d0e57196fb6dd8f1a70def2083c70eb40aa",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0075-retouch-heal",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "retouch",
+            "temperature"
+          ],
+          "path": "darktable-tests/0075-retouch-heal/retouch-heal.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7b48034e96a5d55de597fb10419e355501830fd9c10fe4baebf46b901af9cab6",
+          "size_bytes": 10915
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0076-retouch-blur-fill/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0076-retouch-blur-fill/expected.png",
+          "sha256": "ed92a4b5bf96e0476f124bbc178c686aed1c90ac6225518f084be0edd2657c29",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0076-retouch-blur-fill",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "retouch",
+            "temperature"
+          ],
+          "path": "darktable-tests/0076-retouch-blur-fill/retouch-blur-fill.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "c139b0771da8bc988d2b0d52cd39705a505c80845c2a97802f80b723b9a3726c",
+          "size_bytes": 19821
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0078-basecurve-fusion/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0078-basecurve-fusion/expected.png",
+          "sha256": "c88201835398b50f81ee2a94d751a63c805c63f6abe8d1f464c1eb4e62fbebec",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0078-basecurve-fusion",
+      "xmp": [
+        {
+          "operations": [
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0078-basecurve-fusion/basecurve-fusion.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3de2fb24002a7b6f03e2820efeec2a73aec50b7ae3bbee3fe5887ee97a89a1f3",
+          "size_bytes": 5134
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0079-toneequal-gf/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0079-toneequal-gf/expected.png",
+          "sha256": "dad09b92db83ef1380e3ae09a415b8cd58cd08263fcf505441865f760b411159",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0079-toneequal-gf",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0079-toneequal-gf/toneequal-gf.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ce8662478231d07ca53324b486ab463768556353e815b1435d29c33d599d49e3",
+          "size_bytes": 5182
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0080-toneequal-eigf/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0080-toneequal-eigf/expected.png",
+          "sha256": "f0b1eb3d23733fb67c0c59919f46dd1f8eab83f83b9d857db01fc70788c46a05",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0080-toneequal-eigf",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0080-toneequal-eigf/toneequal-eigf.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f7e2a9cc3add9794e2388653602156c81a5648ebfc29d4128e812c508751b8a2",
+          "size_bytes": 5699
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0081-mask-groups/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0081-mask-groups/expected.png",
+          "sha256": "4220e9768fbf86e08fc1979061a1f5005af8f0be004ff5bbeea5c72f81bb2441",
+          "size_bytes": 5137613
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0081-mask-groups",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0081-mask-groups/mask-groups.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0ca5b1923a29a5fb154d82288f15e3ca9e17207ea3fa296a23fd362022cddd97",
+          "size_bytes": 9532
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0082-demosaic-rcd/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0082-demosaic-rcd/expected.png",
+          "sha256": "0b247bbedd7093831f7bc37728bfdf93c0832e4e90130b630ee299b0a4f40f36",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0082-demosaic-rcd",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0082-demosaic-rcd/demosaic-rcd.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e115114e62a7d25ae287672984ed3e8f1321bd23dab051048608caa6db8fe2dc",
+          "size_bytes": 5601
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0083-colorbalancergb/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0083-colorbalancergb/expected.png",
+          "sha256": "dba4f5090d755ab314d1123ee8ae9847efd274f0fcf8d016f5595d118bf8d478",
+          "size_bytes": 5145942
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0083-colorbalancergb",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorbalancergb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0083-colorbalancergb/colorbalancergb.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "741c0578b3862042e3249164b1779b21869bd3283fe00a8eb4f25955feaedfbf",
+          "size_bytes": 6189
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0084-cacorrect/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0084-cacorrect/expected.png",
+          "sha256": "2e4b2cf2dffa92cb15e470d704326c1daf93eb128e7f4a024990324ee93554ff",
+          "size_bytes": 5145942
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0084-cacorrect",
+      "xmp": [
+        {
+          "operations": [
+            "cacorrect",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0084-cacorrect/cacorrect.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b33208c111158fb1c7bf59dfa50bb62e6612197d531ae5900ffcca653e07d79f",
+          "size_bytes": 5999
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0085-channelmixerrgb/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0085-channelmixerrgb/expected.png",
+          "sha256": "2f22effe7b73af532d5ef4e366ba1505a1c1e3fae90fc6593c9cb32ff6665cdc",
+          "size_bytes": 5145942
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0085-channelmixerrgb",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0085-channelmixerrgb/channelmixerrgb.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5f4638e83310661c74140a53dafcb4da1662bc97d5f6346f83c948e86017fe28",
+          "size_bytes": 6129
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0086-diffuse/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0086-diffuse/expected.png",
+          "sha256": "07e24d0bf1f54cf4d813bdb8d7c0b3df86e4106bdd11d3c8ffaa560d894ebb60",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0086-diffuse",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "diffuse",
+            "dither",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "hotpixels",
+            "lens",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0086-diffuse/diffuse.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "13a23e5c5ac34f8cbe373353112bbdeb362946c4d27cbbc0b796d63aebbf8117",
+          "size_bytes": 25280
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0087-blendif-and-or/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0087-blendif-and-or/expected.png",
+          "sha256": "119cedf4a0520b87e65a24ba27c3f9ed0d95711adf7188118e443264f0c6ccf6",
+          "size_bytes": 5145942
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0087-blendif-and-or",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "rgbcurve",
+            "sharpen",
+            "temperature"
+          ],
+          "path": "darktable-tests/0087-blendif-and-or/blendif-and-or.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e4e1051e5a9661343defb28791d525b04fa8f23fc8590b6395c9136e2c3dedf8",
+          "size_bytes": 11439
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0088-blendif-diff-excl/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0088-blendif-diff-excl/expected.png",
+          "sha256": "2dc939815edca311dec354d42f5c350f622fec5c70016a84ff4a32311777d5cb",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0088-blendif-diff-excl",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "rgbcurve",
+            "temperature"
+          ],
+          "path": "darktable-tests/0088-blendif-diff-excl/blendif-diff-excl.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9ca918248f4430aff7a91203705758694ababad87ea8636277c6f02746b774fd",
+          "size_bytes": 11407
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0089-blurs/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0089-blurs/expected.png",
+          "sha256": "6ec77b6b4e1f6fd466b1a59ab17d0614e7ae92130d0ed01e86d3690216195f4f",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0089-blurs",
+      "xmp": [
+        {
+          "operations": [
+            "blurs",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0089-blurs/blurs.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "724718eec9164585cf566a877e099d0dc0e095d3dd01ffd1545388f6cb68ba63",
+          "size_bytes": 7162
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0090-mask-combine/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0090-mask-combine/expected.png",
+          "sha256": "2911a90b426f1b385146ad74e33573c11257b27bd306ee354c07bd619b66ad1f",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0090-mask-combine",
+      "xmp": [
+        {
+          "operations": [
+            "bilat",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "rgbcurve",
+            "rgblevels",
+            "temperature"
+          ],
+          "path": "darktable-tests/0090-mask-combine/mask-combine.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "c1ca4bc8ad9e5ed34c54404c2247374d2fbfc53a3b05087686bbd93299066235",
+          "size_bytes": 27989
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0091-mask-combine-intersection-inverted/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0091-mask-combine-intersection-inverted/expected.png",
+          "sha256": "627251092e259ef4e11a48d843d7e52c6dca06f97fd438695da3344554f8a167",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0091-mask-combine-intersection-inverted",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0091-mask-combine-intersection-inverted/mask-combine-intersection-inverted.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "13fbebbfa5fc9c6e8d90d0b60056602b4c2ded3cd1efbdf44e49fc2972e98441",
+          "size_bytes": 8982
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0092-filmicrgb-v6/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0092-filmicrgb-v6/expected.png",
+          "sha256": "71dfcb3fe47c9fad2ca96374c1e426c4a7efc1329cb3432f3c67e6e628320ea9",
+          "size_bytes": 5137397
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0092-filmicrgb-v6",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorcorrection",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0092-filmicrgb-v6/filmicrgb-v6.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0a5699aab1f53302d98c2bff5a81dfbbab2d3836f220d95cb08e37587148a467",
+          "size_bytes": 7591
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0093-colorbalancergb-ucs/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0093-colorbalancergb-ucs/expected.png",
+          "sha256": "c7458c19545e3849460916967408a5be672458edad7fc3a468ae1ad5fcd5e400",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0093-colorbalancergb-ucs",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorbalancergb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0093-colorbalancergb-ucs/colorbalancergb-ucs.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "70a02eedbecbc9c000a280f2da18ff4c61278d5e91449ed0a281a4b725e8073f",
+          "size_bytes": 6613
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "86",
+          "path": "darktable-tests/0094-highlight-segmentation/cpugpu.maxpix",
+          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0094-highlight-segmentation/expected.png",
+          "sha256": "dfd8c44f2692bcd763b9b7a501763f46254bd6d0b62d88d28d88e84a14ed1492",
+          "size_bytes": 4056071
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0094-highlight-segmentation",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "crop",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0094-highlight-segmentation/highlight-segmentation.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "87c6b63464a40a7b26bce9528ea4008426c7b742667bd724837500cf061d7a51",
+          "size_bytes": 7331
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "86",
+          "path": "darktable-tests/0095-highlight-opposed/cpugpu.maxpix",
+          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0095-highlight-opposed/expected.png",
+          "sha256": "22fcaf7dabe24effda3f6f58478a622115ce62466e55595ae711e01a53d5290d",
+          "size_bytes": 4056071
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0095-highlight-opposed",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "crop",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0095-highlight-opposed/highlight-opposed.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "eec199c35db65b4715b78572772b6acfa876d0d5036b29c387b11288e0bf59ac",
+          "size_bytes": 6873
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "86",
+          "path": "darktable-tests/0096-lensfun/cpugpu.maxpix",
+          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0096-lensfun/expected.png",
+          "sha256": "47eb6c57c38f922a9e3f2b4fa376fc061f61b356a7c2e1a696f64a3069dd3a88",
+          "size_bytes": 4056071
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0096-lensfun",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "lens",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0096-lensfun/lensfun.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "a1dbbbca762a4f929910fc800ea05409f700a01fb505661497c42d89c035c4ec",
+          "size_bytes": 6984
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0097-sigmoid/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0097-sigmoid/expected.png",
+          "sha256": "b83904160454add00bf3139759d444e5cc516eddd01c8dce39240f66cdfdbbe0",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0097-sigmoid",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "lens",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0097-sigmoid/sigmoid.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7974ba80e1a0fe3e1b0db4c802eb6a28b04066090ee59c6d4b96f91745bbd196",
+          "size_bytes": 7463
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0098-colorchecker/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0098-colorchecker/expected.png",
+          "sha256": "0676e44792495fd1efe9fd0dced3252c4f6dca13545fbed4ec1d75d19024b09f",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0098-colorchecker",
+      "xmp": [
+        {
+          "operations": [
+            "colorchecker",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0098-colorchecker/colorchecker.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "450d3e6320e66aa54bb2f323556df984c34b9493d5c537fc48c416162cc8379c",
+          "size_bytes": 5289
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0099-surfblur-small-radius/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0099-surfblur-small-radius/expected.png",
+          "sha256": "58e5e4d9b050885f1a3cd168234a6aca0de81ddac0263ca95ca1ddfaa2643712",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0099-surfblur-small-radius",
+      "xmp": [
+        {
+          "operations": [
+            "bilateral",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0099-surfblur-small-radius/surfblur-small-radius.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "eee2216a9bbc479d85bbc665c99e23c23fca8f1108379d843aaeaf70c70c1e78",
+          "size_bytes": 6342
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0101-lowpass-gaussian/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0101-lowpass-gaussian/expected.png",
+          "sha256": "3f2ab48a8e97c8d9f831973bcda010089e3a2647eb392dd4386c2458bf018495",
+          "size_bytes": 5137696
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0101-lowpass-gaussian",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "lowpass",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0101-lowpass-gaussian/lowpass-gaussian.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "fbcfa88c0d8c3d0845f9d574fb080eedc6b8f614be8de89ec476fc710c879d16",
+          "size_bytes": 11116
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0102-censorize/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0102-censorize/expected.png",
+          "sha256": "db2040e9adf6e175d6a1e871ae4f7dfbcde884b29d6cb4ce373585708d9f6602",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0102-censorize",
+      "xmp": [
+        {
+          "operations": [
+            "censorize",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0102-censorize/censorize.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "e81dbba9ee10a7558c7754ad6b252d858155d9bc45e2d3b3707ceb6164f49e58",
+          "size_bytes": 6779
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0107-colorin-gamma/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0107-colorin-gamma/expected.png",
+          "sha256": "8719c09dec47b5b0b4f60458a752a6d009b1e23967c7b797e8b1f856ce81d2da",
+          "size_bytes": 5146218
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0107-colorin-gamma",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0107-colorin-gamma/colorin-gamma.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "526f5b06d3f6c2f518f0ebdf71776dd44becccc38e40535ef46f93c19cfcfeca",
+          "size_bytes": 6711
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0108-colorin-clip/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0108-colorin-clip/expected.png",
+          "sha256": "90f648ab4ee8dba871962a879e43528e23f3365f1a495eaad0dcba6f0868458f",
+          "size_bytes": 5146218
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0108-colorin-clip",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0108-colorin-clip/colorin-clip.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3abbb0ac98e3cd38787819d263048034c0c181f0d5d66c30d613257c56306000",
+          "size_bytes": 7150
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0109-colorin-gamma-and-clip/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0109-colorin-gamma-and-clip/expected.png",
+          "sha256": "6517afa7adebffc14c87c23019f8a18d01a752d87d3eb75f946f9b1f991f0b7a",
+          "size_bytes": 5146218
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0109-colorin-gamma-and-clip",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0109-colorin-gamma-and-clip/colorin-gamma-and-clip.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "20c756707df41c251de7590b9837545947361ff79cb5a05f9d4b3cabf3d9bf6f",
+          "size_bytes": 7589
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0110-perspective-bilinear/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0110-perspective-bilinear/expected.png",
+          "sha256": "6404b7739e67a6d88d8cd74a0dce680ed43b8262963511cfe58eca30ee2a584d",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0110-perspective-bilinear",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0110-perspective-bilinear/perspective-bilinear.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
+          "size_bytes": 6361
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0111-perspective-lanczos2/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0111-perspective-lanczos2/expected.png",
+          "sha256": "cabfdd15cc424d78362ddf548c9e2a9214a7d6108b640b3deb2359765dd1d550",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0111-perspective-lanczos2",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0111-perspective-lanczos2/perspective-lanczos2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
+          "size_bytes": 6361
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0112-perspective-lanczos3/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0112-perspective-lanczos3/expected.png",
+          "sha256": "3910e1dfc5a4e7e6530e0cc13497c34d412d9909f9e64fe0c4ff6d0c9afc4db4",
+          "size_bytes": 5147494
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0112-perspective-lanczos3",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "basecurve",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "mask_manager",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0112-perspective-lanczos3/perspective-lanczos3.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
+          "size_bytes": 6361
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "96",
+          "path": "darktable-tests/0113-resample-bilinear/cpugpu.maxpix",
+          "sha256": "5a0081df5238d2726e6dd73f3b4c8be269b0120e82313d8a05152b86423c28fd",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0113-resample-bilinear/expected.png",
+          "sha256": "c94f7376be1f145e70292a174de0ee57aed1b81835d92fb7928b67bbd74ca746",
+          "size_bytes": 4912564
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0113-resample-bilinear",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0113-resample-bilinear/resample-bilinear.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
+          "size_bytes": 4495
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "106",
+          "path": "darktable-tests/0114-resample-bicubic/cpugpu.maxpix",
+          "sha256": "bf5bf3cd1c59ae7ae1d174d870561e3c6a393575352753468859967cc66a0d8f",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0114-resample-bicubic/expected.png",
+          "sha256": "3c4acd595f389f49fcc305ee92201fc4b9fa79d6c19cd3a3bfe3ff2887dd12cb",
+          "size_bytes": 4929243
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0114-resample-bicubic",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0114-resample-bicubic/resample-bicubic.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
+          "size_bytes": 4495
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "107",
+          "path": "darktable-tests/0115-resample-lanczos2/cpugpu.maxpix",
+          "sha256": "1faa00f8717f19d85577fa51d29cb48c752cea8fe4653d6ea1c4d23ad22883ac",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0115-resample-lanczos2/expected.png",
+          "sha256": "f3ea8e4f6acccee2fde451b7a7dd23a4009ff8675d8d01689cba2e16caed36f2",
+          "size_bytes": 4937183
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0115-resample-lanczos2",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0115-resample-lanczos2/resample-lanczos2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
+          "size_bytes": 4495
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0116-blending-rgb-display-1/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0116-blending-rgb-display-1/expected.png",
+          "sha256": "d5496a2dfd5eb6bc0458af8e1f842c5a352480f80b9e57ddb78ee6899ae815db",
+          "size_bytes": 5137466
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0116-blending-rgb-display-1",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0116-blending-rgb-display-1/blending-rgb-display-1.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f9328fcaa5f5ad26020f00e3856d0153cc24f59106d247bb249326313cffafcf",
+          "size_bytes": 8132
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0117-blending-rgb-display-2/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0117-blending-rgb-display-2/expected.png",
+          "sha256": "4cf30f551e8085362ba1f037fb7b865bd56e4627bf1d8b12cd0647a06e865ea5",
+          "size_bytes": 5137451
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0117-blending-rgb-display-2",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0117-blending-rgb-display-2/blending-rgb-display-2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "df775e33feb19887a8aa842ae5b947801f7ec35eb5dbad58946f2a1ba390545b",
+          "size_bytes": 8078
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0118-blending-rgb-display-3/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0118-blending-rgb-display-3/expected.png",
+          "sha256": "c29f52488ec8bf9fb63884e7ec75b4f3d772f78bc45b7e5dedec1dbb980bfc0d",
+          "size_bytes": 5137451
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0118-blending-rgb-display-3",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0118-blending-rgb-display-3/blending-rgb-display-3.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "94c1f6cbe6edd0690959b25b35b6de97d5cd96033eb50e6274654b228aa6ce8b",
+          "size_bytes": 8129
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0119-blending-rgb-scene-1/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0119-blending-rgb-scene-1/expected.png",
+          "sha256": "640cb39f28eb556e8dc6b500ca59619790abe74a2259e85613e60d24bc905bea",
+          "size_bytes": 5137451
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0119-blending-rgb-scene-1",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0119-blending-rgb-scene-1/blending-rgb-scene-1.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "59601912d9b060a6f5c8416fd473e476a30f65d7a16cca44a8a94e11de030493",
+          "size_bytes": 8009
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0120-blending-rgb-scene-2/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0120-blending-rgb-scene-2/expected.png",
+          "sha256": "741aae7bba5bdd18327abecb5fd7661b5403c1f2890ffa5e70e088a0b4dcac79",
+          "size_bytes": 5137451
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0120-blending-rgb-scene-2",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0120-blending-rgb-scene-2/blending-rgb-scene-2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "6346b7170282c2771d7aa28798ca39717cb29e7da96918fad9bde04d2f3de2e9",
+          "size_bytes": 8033
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0121-blending-rgb-scene-3/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0121-blending-rgb-scene-3/expected.png",
+          "sha256": "f8cd2d544cf8f9dd929d8d22ce83df4d74eab300c17660f2849b61ceded25443",
+          "size_bytes": 5137451
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0121-blending-rgb-scene-3",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0121-blending-rgb-scene-3/blending-rgb-scene-3.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "c44b917fdde1f46ac1815141b2c325d32d7465dd71ea002812e48579b89aa9d2",
+          "size_bytes": 8093
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0122-blending-lab-1/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0122-blending-lab-1/expected.png",
+          "sha256": "97811d1bb2ccca3a16d6e2f9e14b2145b2063d3f174674269b9418d1a584c789",
+          "size_bytes": 5137455
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0122-blending-lab-1",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0122-blending-lab-1/blending-lab-1.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "19109443bd360759ec4d5547dce69dbba66065e382e45f3eba3900f1e5998949",
+          "size_bytes": 8378
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0123-blending-lab-2/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0123-blending-lab-2/expected.png",
+          "sha256": "9758b5daea86bd91deb4c1f876f760205d4c7ff316639f8bdcbbcb01be29554a",
+          "size_bytes": 5137455
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0123-blending-lab-2",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0123-blending-lab-2/blending-lab-2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ea4ea6f22c719269cc54073ca151e5bbda16ee0c9c590984871f67ac8f0e2fc4",
+          "size_bytes": 8375
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0124-blending-lab-3/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0124-blending-lab-3/expected.png",
+          "sha256": "cfd848e2e5d044594b2a09161e50678d024e48f00ea1437d57d4a0168c7f40ed",
+          "size_bytes": 5137455
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0124-blending-lab-3",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0124-blending-lab-3/blending-lab-3.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f4dc63af6a00ab7de94a728e3b6566b2188ed951aa803e95892e72690e91f07c",
+          "size_bytes": 8374
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0125-blending-lab-4/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0125-blending-lab-4/expected.png",
+          "sha256": "ab88e09eaa549d514c188a6f8c5d4329b52e839475e63e2d532d4cbbbe7c2724",
+          "size_bytes": 5137455
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0125-blending-lab-4",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "tonecurve"
+          ],
+          "path": "darktable-tests/0125-blending-lab-4/blending-lab-4.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b5001f92a6786370ff6bed159f86b4dd78defa483f4e5c6155589ac64bc183ba",
+          "size_bytes": 8374
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0126-CAT-linear-Bradford/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0126-CAT-linear-Bradford/expected.png",
+          "sha256": "11a8f96161bcc70af440e773057e875b800d891d312a6e3a5dac5783ff18c4b0",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0126-CAT-linear-Bradford",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0126-CAT-linear-Bradford/CAT-linear-Bradford.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "85239f7b0f9349e15b9eed9280de9a920ad56ea1d32a87fcb7f1392950a1065b",
+          "size_bytes": 5736
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0127-CAT-nonlinear-Bradford/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0127-CAT-nonlinear-Bradford/expected.png",
+          "sha256": "ae77ff860c532f00fe07ad97b6304b993ef44ca5d7e5b54d856445ad6f10f622",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0127-CAT-nonlinear-Bradford",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0127-CAT-nonlinear-Bradford/CAT-nonlinear-Bradford.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "46cc058567fb5540b57c1f41b9e06ee80df1dcf0b15f141274087e5b2d82a64b",
+          "size_bytes": 6283
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0128-CAT-adapt-XYZ/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0128-CAT-adapt-XYZ/expected.png",
+          "sha256": "7da36eb5ad37dc6c067d65845b80778b941a416e956aecb97535b33292c43532",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0128-CAT-adapt-XYZ",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0128-CAT-adapt-XYZ/CAT-adapt-XYZ.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4c51013dd96f2b27c55789b7a4d59aedd42b21776343d07aa63ed9cbac096dc4",
+          "size_bytes": 6834
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0129-toneeq-RGB-average/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0129-toneeq-RGB-average/expected.png",
+          "sha256": "bea68b61a8036325e74ab06851f164b8e47618461b146fac9c7267a6645c7dd9",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0129-toneeq-RGB-average",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0129-toneeq-RGB-average/toneeq-RGB-average.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9a288b304f6980e0f0d328f6de25c5244173a791f44876f29315e81dd5fbee28",
+          "size_bytes": 5201
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0130-toneeq-HSL-lightness/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0130-toneeq-HSL-lightness/expected.png",
+          "sha256": "1d3d385b2c75c42e203e0a178a6c1db40a5bc0aae47e1e663c11d60c4f2b1211",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0130-toneeq-HSL-lightness",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0130-toneeq-HSL-lightness/toneeq-HSL-lightness.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "76f7ff45c9dd04bd25e86e63c3a0519bdd2f3d9ccf3cc1858aae932dc13dc43b",
+          "size_bytes": 5762
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0131-toneeq-RGB-max/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0131-toneeq-RGB-max/expected.png",
+          "sha256": "cdfbc189966ec5460ce3f57ab69268ec7580e5803d3f06768ed2923d2453098e",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0131-toneeq-RGB-max",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0131-toneeq-RGB-max/toneeq-RGB-max.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "c76f4be17050a51d0ee1c302272d92702fd1b994af0d8975d63f2656ccc77a31",
+          "size_bytes": 6323
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0132-toneeq-RGB-sum/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0132-toneeq-RGB-sum/expected.png",
+          "sha256": "bb9a6bfa62493be90c10659a37536accb1e191901c4cabcecd5c26c3e007e976",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0132-toneeq-RGB-sum",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0132-toneeq-RGB-sum/toneeq-RGB-sum.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "303124ac39a821b55a023e7acea3cd5999cfe5f018ed85eccbccd9e692d81f86",
+          "size_bytes": 6884
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0133-toneeq-power/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0133-toneeq-power/expected.png",
+          "sha256": "1062d36e956d09a55181b362e65742df834a02b65c9f0239bde6c816ec91653d",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0133-toneeq-power",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0133-toneeq-power/toneeq-power.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "47399b08047b93986665e6f474c254d66db642d184a5f723246ce9b5022efe26",
+          "size_bytes": 5201
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0134-toneeq-geomean/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0134-toneeq-geomean/expected.png",
+          "sha256": "cf5c5ac2119e7f38b4a6731249921f997085ccde4137c0730764ec6bd6789b0b",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0134-toneeq-geomean",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature",
+            "toneequal"
+          ],
+          "path": "darktable-tests/0134-toneeq-geomean/toneeq-geomean.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "1a2bf71dd664146d985c4e433235515185a9704578019f276d0e1a804911c48c",
+          "size_bytes": 5201
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0135-negadoctor/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0135-negadoctor/expected.png",
+          "sha256": "dbc6baf1078976155e7f5ecaf4e1bbf68034212e675d444202e13dfaae81d880",
+          "size_bytes": 5146230
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0135-negadoctor",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "negadoctor",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0135-negadoctor/negadoctor.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f66554f44866a1dbadbf73f3ceedac515d355515b0a27890abdaaaf8aab1f9c4",
+          "size_bytes": 5230
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0136-posterize/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0136-posterize/expected.png",
+          "sha256": "9ad996ce336bb9cc0d5de7ba0136fe966d9e162438d08919ac5c2f0116d3a8a1",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0136-posterize",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "dither",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0136-posterize/posterize.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "35fc0bf899183aa07fa17244b5c9f9d957ed5cfd0a5cd963c1872806714ea830",
+          "size_bytes": 5585
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0137-shadhi-gauss/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0137-shadhi-gauss/expected.png",
+          "sha256": "429fe973d62dbef29b993874534c62f4390645163ae4cf7be9dd0d6a82537024",
+          "size_bytes": 5146216
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0137-shadhi-gauss",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "shadhi",
+            "temperature"
+          ],
+          "path": "darktable-tests/0137-shadhi-gauss/shadhi-gauss.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d1c3797b0d54fad28b5bd6633837390d6dc2772eb5860975de0c4ab9e782d0f3",
+          "size_bytes": 5605
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0138-filmic-v7/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0138-filmic-v7/expected.png",
+          "sha256": "1fbcd78804bb475aa5b91f5995ee51ba388f3d38aecabcdf47e61b56d6a419eb",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0138-filmic-v7",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0138-filmic-v7/filmic-v7.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7d5a7be37ccc83e791413943cdc614a527d485a68a96bc68e55383355a14e94c",
+          "size_bytes": 5679
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0139-filmicrgb-v3-nochroma/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0139-filmicrgb-v3-nochroma/expected.png",
+          "sha256": "05d73a784cd3527a17baa5e29271877171cc569e6f48ccc4734492b631abe47f",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0139-filmicrgb-v3-nochroma",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0139-filmicrgb-v3-nochroma/filmicrgb-v3-nochroma.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "8e691d254b7d93c6d9170dc7765bad4c750caa6dc9f031459ad182c3c1f8898d",
+          "size_bytes": 5722
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0140-filmicrgb-v4-nochroma/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0140-filmicrgb-v4-nochroma/expected.png",
+          "sha256": "8614a2feaa6d2bf5d6dd21706419f689d7683a00964c64a7d864eda3cd269bbc",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0140-filmicrgb-v4-nochroma",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0140-filmicrgb-v4-nochroma/filmicrgb-v4-nochroma.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5c1ff1553da5ea5cb8f79be5411578ef705e463743dde5bdd445930b00f38981",
+          "size_bytes": 6049
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0141-filmicrgb-v5-nochroma/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0141-filmicrgb-v5-nochroma/expected.png",
+          "sha256": "37890ab4d54a6316dcbe34b729b3a39c2308bb9513eb63ccadd18c49d4edbcb2",
+          "size_bytes": 5137407
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0141-filmicrgb-v5-nochroma",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0141-filmicrgb-v5-nochroma/filmicrgb-v5-nochroma.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "acb09cb7d36da5acf6a3c485487d9ba06283a4f65f5abd2a6253dff18d99fde3",
+          "size_bytes": 7770
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0142-filmicrgb-v6-euclidean/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0142-filmicrgb-v6-euclidean/expected.png",
+          "sha256": "d431c3cf97398bae025defdf633dbcfee7f88027b74a73c11b7862376cc144e5",
+          "size_bytes": 5137407
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0142-filmicrgb-v6-euclidean",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0142-filmicrgb-v6-euclidean/filmicrgb-v6-euclidean.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "fe67710d92ee2fd814dd5cc1323f70904b1a86477df16cdb905d25c80961b8c5",
+          "size_bytes": 6715
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0143-denoiseprofiled-wave-rgb/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0143-denoiseprofiled-wave-rgb/expected.png",
+          "sha256": "14402fe4e0dabcba7fa51e1440369e88690fe3b79279e28ff382a63e1f7a7de5",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0143-denoiseprofiled-wave-rgb",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0143-denoiseprofiled-wave-rgb/denoiseprofiled-wave-rgb.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "63d51fc7ecdeda3e4df5535f53b7cdb1e88e8265e03e33f295689458138c6614",
+          "size_bytes": 5214
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0144-masks-combine-sum/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0144-masks-combine-sum/expected.png",
+          "sha256": "be35bbaa617cf0f3167f13dd213f50816d3739e13853a40c42b44edf682e59cf",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0144-masks-combine-sum",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "mask_manager",
+            "rawprepare",
+            "rgbcurve",
+            "temperature"
+          ],
+          "path": "darktable-tests/0144-masks-combine-sum/masks-combine-sum.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9430c6d4cffab6d50220e445bebfabe0ab74ce1fdd128f0835723a0d262fd030",
+          "size_bytes": 9211
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "443",
+          "path": "darktable-tests/0145-lens-metadata-xtransIV-modversion-6/cpugpu.maxpix",
+          "sha256": "a62ffa3d82bb2c5d951d615c59cbf9e57d7cc2740cccf9f67ca1488b5a28365b",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0145-lens-metadata-xtransIV-modversion-6/expected.png",
+          "sha256": "27d87e51fae7b35597cbd0be5636081ecec3d08cbfe701ae2bb496ba5eb68b41",
+          "size_bytes": 3389995
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0145-lens-metadata-xtransIV-modversion-6",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "lens",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0145-lens-metadata-xtransIV-modversion-6/lens-metadata-xtransIV-modversion-6.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "01538333a4986d38ef1fd144e06f41262a15fdd7b9a33e0442e941548dfcea6b",
+          "size_bytes": 5735
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "443",
+          "path": "darktable-tests/0146-lens-metadata-xtransIV-modversion-7/cpugpu.maxpix",
+          "sha256": "a62ffa3d82bb2c5d951d615c59cbf9e57d7cc2740cccf9f67ca1488b5a28365b",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0146-lens-metadata-xtransIV-modversion-7/expected.png",
+          "sha256": "f30cc8258f42055961827b9bd49bb9a7075715d8a323852fdbb3af1d4707db04",
+          "size_bytes": 3389995
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0146-lens-metadata-xtransIV-modversion-7",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "lens",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0146-lens-metadata-xtransIV-modversion-7/lens-metadata-xtransIV-modversion-7.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "b3b607c347addbb5b658354d8575217fd4668ffdd516a19417fbf5c23e5e7ddc",
+          "size_bytes": 6836
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0147-liquify-grow-shrink/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0147-liquify-grow-shrink/expected.png",
+          "sha256": "c1ba155af1402e5a1fd0e90edcd03d10b4929911be21eae8447edc6fd5006470",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0147-liquify-grow-shrink",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "liquify",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0147-liquify-grow-shrink/liquify-grow-shrink.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "43b982b222555f8209700fe42a8a6e72cdfd419617f82e3297f6a5f803fa47c0",
+          "size_bytes": 6346
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0148-filmicv7-gamut-mapping/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0148-filmicv7-gamut-mapping/expected.png",
+          "sha256": "8aed064926df7b3d67c56830a9b4659eaefd5d10a1fe1a9678df604eadf7b0df",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0148-filmicv7-gamut-mapping",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0148-filmicv7-gamut-mapping/filmicv7-gamut-mapping.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "773a8879e8cf07aef5a6547485254d834ce50f9f2ea2b9f2f6ab36a38d412081",
+          "size_bytes": 6739
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0149-gdnd-neg/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0149-gdnd-neg/expected.png",
+          "sha256": "d6fe730c22927a34ed6c104ea08cbe4b33b42c61cdff3a9910c0af4fdd477f1b",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0149-gdnd-neg",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "graduatednd",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0149-gdnd-neg/gdnd-neg.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "31642deb1fa74d59df10bc4326f08cd8f061b7ca90868b0eee41c81acbba3c83",
+          "size_bytes": 5671
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0150-detail-mask/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0150-detail-mask/expected.png",
+          "sha256": "f47076b7e2641c0f39a5da57242176410b9fddca55ee223a936cb09038f13688",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0150-detail-mask",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorize",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0150-detail-mask/detail-mask.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "70de160c33f0511c0984ad747cb97a0f3168156b9f9fdbd38c2d943ccc38c45a",
+          "size_bytes": 6808
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0151-sigmoid-no-hue-preservation/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0151-sigmoid-no-hue-preservation/expected.png",
+          "sha256": "622b07307bf61d80e3460515d673caf364c70d2eee476db5afa0fb0b0c65a2af",
+          "size_bytes": 5145953
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0151-sigmoid-no-hue-preservation",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "lens",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0151-sigmoid-no-hue-preservation/sigmoid-no-hue-preservation.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9b8f378a2b2e5e93f439f8e194a882d849647a6580d228ebe4ae51725db7667d",
+          "size_bytes": 8772
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0152-rgb-primaries/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0152-rgb-primaries/expected.png",
+          "sha256": "4ba829711bbf7a0fd32e1dc7b2ae5a548760523026ea290de5e681e7b55aa2df",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0152-rgb-primaries",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "primaries",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0152-rgb-primaries/rgb-primaries.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d95cb84ed4e03832d8daefa8e0ee87d0a0b7ba9c456701bad0a546c1d8b17a68",
+          "size_bytes": 6787
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "86",
+          "path": "darktable-tests/0153-hl-reconstruct-filmicrgb/cpugpu.maxpix",
+          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0153-hl-reconstruct-filmicrgb/expected.png",
+          "sha256": "5e030b1a31b9408aee41f82b40f080d0749fe31660116f2b56471c8049c8174f",
+          "size_bytes": 4056044
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0153-hl-reconstruct-filmicrgb",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0153-hl-reconstruct-filmicrgb/hl-reconstruct-filmicrgb.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "ded0880451a84c8eb45760612a9ff4f103d224428adadbae16be74a163004482",
+          "size_bytes": 8187
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0154-framing-100/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0154-framing-100/expected.png",
+          "sha256": "5f366f88eb178d4095e9d4643c0d4528759953f41ad33a8e5c29ffefa91f08dc",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0154-framing-100",
+      "xmp": [
+        {
+          "operations": [
+            "borders",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0154-framing-100/framing-100.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d7d57321ae97d95bb7cd75d61432b6eb2b7f168e0251e821945c3787485d92d4",
+          "size_bytes": 6823
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0155-framing-line-169/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0155-framing-line-169/expected.png",
+          "sha256": "98edbbe3558d39c021ca6c71ed9cb11bb7aa414dda6fd36ae8aa58df2205e291",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0155-framing-line-169",
+      "xmp": [
+        {
+          "operations": [
+            "borders",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "filmicrgb",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0155-framing-line-169/framing-line-169.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4929421b671dbfa74161a744782ab8d928a6e743bdffd7db9938ca70df76e3f3",
+          "size_bytes": 6851
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0156-exposure-guided-filter-new-feather/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0156-exposure-guided-filter-new-feather/expected.png",
+          "sha256": "2099a2c96cdea3dda1a1ce698e3dfa6390cca7489c90903ab3437b939a8eae02",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0156-exposure-guided-filter-new-feather",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0156-exposure-guided-filter-new-feather/exposure-guided-filter-new-feather.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "a307b4f29410191c8422496eb2e733c3ff3d885834c17beb68ba1dcf0e04521d",
+          "size_bytes": 6766
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0157-enlarge-canvas/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0157-enlarge-canvas/expected.png",
+          "sha256": "e82bd25e894859da1914fdb5550f73ff2cf57e57b6931f42cd59e21eeaad22f5",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0157-enlarge-canvas",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "enlargecanvas",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0157-enlarge-canvas/enlarge-canvas.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "079e68198b883b6b3f89936c98aaac6a80932c21329a43a52b12450c4d927a71",
+          "size_bytes": 6973
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0158-coloreq-no-guided-filter/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0158-coloreq-no-guided-filter/expected.png",
+          "sha256": "f24af5af4d92c5c646b62bb520c31b9bdbd2af40676275760f58181fbb025314",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0158-coloreq-no-guided-filter",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorequal",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0158-coloreq-no-guided-filter/coloreq-no-guided-filter.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3b2e9d479f989e51695b4ad9c99be770312ec09f3205d14a735ac3d53c516291",
+          "size_bytes": 7663
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0159-coloreq-guided-filter/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0159-coloreq-guided-filter/expected.png",
+          "sha256": "78f23dfb845dd472a106fa72f985cee55412d0ec27954d13c0506bba8b10948f",
+          "size_bytes": 5145941
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0159-coloreq-guided-filter",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorequal",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0159-coloreq-guided-filter/coloreq-guided-filter.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "73850c169329b70320246ba985a7e592d8cd92a281fcec8d83d9d9a02eefe024",
+          "size_bytes": 7113
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0160-overlay/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0160-overlay/expected.png",
+          "sha256": "ab95c2c5af91ee64dec96cd13fa87ad916fdca078387c7dbfdfbdaccc180f472",
+          "size_bytes": 5146090
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0160-overlay",
+      "xmp": [
+        {
+          "operations": [
+            "bilat",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "overlay",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0160-overlay/overlay.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "34b3201f3640c6ba09d88255ac11bff74d857ec2da5e547577a326d30ec6eaf8",
+          "size_bytes": 9970
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0161-overlay-modules-before-after/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0161-overlay-modules-before-after/expected.png",
+          "sha256": "a21070a712cad13522d662cd9a1e13c0196b627695138ff72bb8956008551d20",
+          "size_bytes": 5146090
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0161-overlay-modules-before-after",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "bilat",
+            "channelmixerrgb",
+            "colorbalancergb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "overlay",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0161-overlay-modules-before-after/overlay-modules-before-after.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "f27f37c0e8a9941d41433fd93407c269122e0217b7e17dc94dedf4c761aa3c8f",
+          "size_bytes": 11530
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0162-demosaic-lmmse/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0162-demosaic-lmmse/expected.png",
+          "sha256": "915b0ac2484c446d5deb441555e3c11a33c675f8370e74321c7be44864b8d488",
+          "size_bytes": 5146090
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0162-demosaic-lmmse",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0162-demosaic-lmmse/demosaic-lmmse.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "9cc5008f82b396f192fd760724d81beba2f61b44d8f695107895692177cdc933",
+          "size_bytes": 7347
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0163-demosaic-rcd-vng4/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0163-demosaic-rcd-vng4/expected.png",
+          "sha256": "a8fb73792c86f2f31b61593afabc2d9eab8c5b19d395893ec7c370c216db13a8",
+          "size_bytes": 5146090
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0163-demosaic-rcd-vng4",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0163-demosaic-rcd-vng4/demosaic-rcd-vng4.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3d5ae8be2a0ded91c4a877a4813ec26b6b8fb27970b036642565120a7265c585",
+          "size_bytes": 7807
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0164-demosaic-amaze-vng4/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0164-demosaic-amaze-vng4/expected.png",
+          "sha256": "d2a970d6eb43f8d8d4d63c49abae32c37b15c9f88e2ab2baf3ddb9bb363b7699",
+          "size_bytes": 5146090
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0164-demosaic-amaze-vng4",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0164-demosaic-amaze-vng4/demosaic-amaze-vng4.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "75dc878b11c27b3aff59bafd6a91e4cd3b7aa6bea2a2d3df6cfe34c0df677c9f",
+          "size_bytes": 8267
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "326",
+          "path": "darktable-tests/0165-demosaic-markesteijn-vng/cpugpu.maxpix",
+          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0165-demosaic-markesteijn-vng/expected.png",
+          "sha256": "6f1a553c013805c8e159e8910d0356f78ea4eb5e99e58bb78d8fb940711e84aa",
+          "size_bytes": 3886824
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0165-demosaic-markesteijn-vng",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0165-demosaic-markesteijn-vng/demosaic-markesteijn-vng.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "3a1461e54eef1effac6f3f93ece4446683f8f69287e7e4ed9c04502e4e44a796",
+          "size_bytes": 7240
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0166-haze-removal-v2/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0166-haze-removal-v2/expected.png",
+          "sha256": "fce4769f7e1f3025eb9310ce46321e13da28b2deb7f2476191a56c021fec5a11",
+          "size_bytes": 5146125
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0166-haze-removal-v2",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "hazeremoval",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0166-haze-removal-v2/haze-removal-v2.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "fecd50d30468f63922235711e0da56957891388b7d811df90f4b9cf083f0f272",
+          "size_bytes": 6226
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "66",
+          "path": "darktable-tests/0167-raster-mask/cpugpu.maxpix",
+          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
+          "size_bytes": 4
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0167-raster-mask/expected.png",
+          "sha256": "4e879b5e5af06d6a8e61277b27fd288c436326845a8b7ef78391afd35893d77b",
+          "size_bytes": 5137700
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0167-raster-mask",
+      "xmp": [
+        {
+          "operations": [
+            "bilat",
+            "channelmixerrgb",
+            "colorbalancergb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0167-raster-mask/raster-mask.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "660e5c181cb3962b20161e29a670aa7b5b9c1e2d304f328edf6a9bc798a0f65f",
+          "size_bytes": 9254
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0168-lut3d-srgb-pyramid/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0168-lut3d-srgb-pyramid/expected.png",
+          "sha256": "b684b853d583857d989b3ff5def879c3b94aeecb9e696368aa1b3d3224f6ad50",
+          "size_bytes": 5146317
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0168-lut3d-srgb-pyramid",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "lut3d",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0168-lut3d-srgb-pyramid/lut3d-srgb-pyramid.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "659324ab4e6ca665df7bb1dac7c539a0cf75546a834db63ed5e82b7c539e310c",
+          "size_bytes": 19191
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0169-lut3d-adobe-trilinear/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0169-lut3d-adobe-trilinear/expected.png",
+          "sha256": "4ab20d36639f7c57882b986259758a8862f21ecc9551c7fe2b615f07b9dba34d",
+          "size_bytes": 5146317
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0169-lut3d-adobe-trilinear",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "lut3d",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0169-lut3d-adobe-trilinear/lut3d-adobe-trilinear.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "8e9b6ccd015a685861d2529f23000429a0730a2946580de3e65fbdb1836f5478",
+          "size_bytes": 19199
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "110",
+          "path": "darktable-tests/0170-lut3d-prophoto-tetrahedral/cpugpu.maxpix",
+          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0170-lut3d-prophoto-tetrahedral/expected.png",
+          "sha256": "bcf9f4dc700f124cfa7e819cf48ae9cefac66a9cba8bbcaf62a1e49d235cf4b7",
+          "size_bytes": 5146317
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0170-lut3d-prophoto-tetrahedral",
+      "xmp": [
+        {
+          "operations": [
+            "colorin",
+            "colorout",
+            "demosaic",
+            "flip",
+            "gamma",
+            "highlights",
+            "lut3d",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0170-lut3d-prophoto-tetrahedral/lut3d-prophoto-tetrahedral.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "5b2f5f7df44c776d365c44adb96eaa8bbfbaa7a95bd2c9d02a52f1977f1b6b6f",
+          "size_bytes": 19195
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "220",
+          "path": "darktable-tests/0171-capture-sharpen/cpugpu.maxpix",
+          "sha256": "25062b82bdadf69b7033151e00810c4af2757a2c0a21255246ff9677007b8bb4",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0171-capture-sharpen/expected.png",
+          "sha256": "2ad7094e1ff8d712565de67becabe9cd079de283224c367aa632cbcf43fa421f",
+          "size_bytes": 5275198
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0171-capture-sharpen",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0171-capture-sharpen/capture-sharpen.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "4aea3999bf35fcad5851668118a37aee8f5f73c1db3cf0c80bab1b0173f5c5c0",
+          "size_bytes": 8800
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "220",
+          "path": "darktable-tests/0172-capture-dual-rcd/cpugpu.maxpix",
+          "sha256": "25062b82bdadf69b7033151e00810c4af2757a2c0a21255246ff9677007b8bb4",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0172-capture-dual-rcd/expected.png",
+          "sha256": "611e7cc3c32d368c74a20df67f8b0f541c4550a7bfb6ec35c6c4781c2e76b34e",
+          "size_bytes": 5275198
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0172-capture-dual-rcd",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0172-capture-dual-rcd/capture-dual-rcd.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "7d62c123872ac6667788f314eef723972d458a320813ce8caf382cc0b3fa0ded",
+          "size_bytes": 8800
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "440",
+          "path": "darktable-tests/0173-capture-dual-markesteijn/cpugpu.maxpix",
+          "sha256": "bcd453e4a7f97c683f284a517319cd084c940fb13b98ef111bb4f345f7d34c2a",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0173-capture-dual-markesteijn/expected.png",
+          "sha256": "13dde6c63e91cc7eef7a0115571d947a8e0a7360ec451ff0c2100e3fe35bc291",
+          "size_bytes": 4064521
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0173-capture-dual-markesteijn",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0173-capture-dual-markesteijn/capture-dual-markesteijn.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "0bcb411aae32c91a73bcd5819e41d642d922125e9458be06b3c2f8f79e8cb749",
+          "size_bytes": 7585
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "187",
+          "path": "darktable-tests/0174-agx-default/cpugpu.maxpix",
+          "sha256": "5c199e77c6d6a01d7d6c6057af58cb8adbe13a14d75689a2ae4d62aba86034d6",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0174-agx-default/expected.png",
+          "sha256": "19ce5ed87ff21b783ba2478a3597e848a4c141f48f74270e8071e11dfe2cc74c",
+          "size_bytes": 5192562
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0174-agx-default",
+      "xmp": [
+        {
+          "operations": [
+            "agx",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0174-agx-default/agx-default.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "342b40ce9361de2223b7b0ffb75064fa77e5f6ef83bab81466e4d16a4a2cf71b",
+          "size_bytes": 8198
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "255",
+          "path": "darktable-tests/0175-agx/cpugpu.maxpix",
+          "sha256": "a730e9f4fecef62a7023b1b3b6b11312e9689ef5a5c2109737bc7e12db929948",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0175-agx/expected.png",
+          "sha256": "24aa23ddec50e555ec0fced738410899fcd8c1219b60604cbe85e8943edae39e",
+          "size_bytes": 5305567
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0175-agx",
+      "xmp": [
+        {
+          "operations": [
+            "agx",
+            "channelmixerrgb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "temperature"
+          ],
+          "path": "darktable-tests/0175-agx/agx.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "d8e0fec282b0ce80e25f97cf01e65a28c6397df162970f262009e458c4db2154",
+          "size_bytes": 7858
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "612",
+          "path": "darktable-tests/0176-color-harmonizer/cpugpu.maxpix",
+          "sha256": "b325d16da76b0876b2f61257659a8da671609324392b42c34f007958c10a2995",
+          "size_bytes": 5
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0176-color-harmonizer/expected.png",
+          "sha256": "59d20f6b0d87268b8d85ebb00c80bfd5083398df6fd44b7dd4b116b227d54fda",
+          "size_bytes": 5651021
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0176-color-harmonizer",
+      "xmp": [
+        {
+          "operations": [
+            "channelmixerrgb",
+            "colorharmonizer",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "denoiseprofile",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0176-color-harmonizer/color-harmonizer.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "bd7985b499523b78df4b9524953de5ea4788c1515729a2e08878c643a92e781f",
+          "size_bytes": 9967
+        }
+      ]
+    },
+    {
+      "cpu_gpu_limits": [
+        {
+          "maximum_differing_pixels": "16897",
+          "path": "darktable-tests/0177-bayer4/cpugpu.maxpix",
+          "sha256": "1c992a7ec40e7fdcb732244595fc6c6b38eb635b2a39726cc3921350e0f6896d",
+          "size_bytes": 7
+        }
+      ],
+      "expected_png": [
+        {
+          "path": "darktable-tests/0177-bayer4/expected.png",
+          "sha256": "c6ebca905da19ca393439892fe0ad21ea981a82aa4f7b838ab10b319302444f3",
+          "size_bytes": 5073118
+        }
+      ],
+      "has_custom_driver": false,
+      "id": "0177-bayer4",
+      "xmp": [
+        {
+          "operations": [
+            "ashift",
+            "bilat",
+            "channelmixerrgb",
+            "colorbalancergb",
+            "colorin",
+            "colorout",
+            "demosaic",
+            "exposure",
+            "flip",
+            "gamma",
+            "highlights",
+            "rawprepare",
+            "sigmoid",
+            "temperature"
+          ],
+          "path": "darktable-tests/0177-bayer4/bayer4.xmp",
+          "schema_versions": [
+            "6"
+          ],
+          "sha256": "79da1883abd6174a504b052a3b2263f18dd922ec8dbb5efb1b0816c33fd48449",
+          "size_bytes": 8967
+        }
+      ]
+    }
+  ],
+  "legacy_xmp_schema_versions": [
+    "6"
+  ],
+  "manifest_schema_version": 1,
+  "notice": "Hashes identify committed legacy assets. They do not certify that a legacy CPU run reproduced expected_png; consult Ravo/docs/phase0/legacy-baseline-2026-07-21.md.",
+  "operations": [
+    "agx",
+    "ashift",
+    "atrous",
+    "basecurve",
+    "bilat",
+    "bilateral",
+    "bloom",
+    "blurs",
+    "borders",
+    "cacorrect",
+    "censorize",
+    "channelmixerrgb",
+    "colorbalance",
+    "colorbalancergb",
+    "colorchecker",
+    "colorcontrast",
+    "colorcorrection",
+    "colorequal",
+    "colorharmonizer",
+    "colorin",
+    "colorize",
+    "colormapping",
+    "colorout",
+    "colorreconstruct",
+    "colorzones",
+    "crop",
+    "demosaic",
+    "denoiseprofile",
+    "diffuse",
+    "dither",
+    "enlargecanvas",
+    "exposure",
+    "filmicrgb",
+    "flip",
+    "gamma",
+    "graduatednd",
+    "grain",
+    "hazeremoval",
+    "highlights",
+    "highpass",
+    "hotpixels",
+    "lens",
+    "liquify",
+    "lowlight",
+    "lowpass",
+    "lut3d",
+    "mask_manager",
+    "monochrome",
+    "negadoctor",
+    "nlmeans",
+    "overlay",
+    "primaries",
+    "rawdenoise",
+    "rawprepare",
+    "retouch",
+    "rgbcurve",
+    "rgblevels",
+    "shadhi",
+    "sharpen",
+    "sigmoid",
+    "soften",
+    "splittoning",
+    "temperature",
+    "tonecurve",
+    "toneequal",
+    "velvia",
+    "vignette",
+    "watermark"
+  ],
+  "source_images": [
+    {
+      "path": "darktable-tests/images/bayer4.crw",
+      "sha256": "f39be5acf14057ce04527fd8d0574e57ec8ed5fed082d7bfaff763075a44ee8a",
+      "size_bytes": 2300702
+    },
+    {
+      "path": "darktable-tests/images/hlrecovery.arw",
+      "sha256": "0cc9c842f163c40b02f7dc97e4b6d6a4f159c58a77f9b338338ff45621ed32d0",
+      "size_bytes": 20908544
+    },
+    {
+      "path": "darktable-tests/images/mire1-xtrans.raf",
+      "sha256": "07ea642656074834ffe5c661870a612ffa2e80fc1218a05166ee966bbe5f6fae",
+      "size_bytes": 27949104
+    },
+    {
+      "path": "darktable-tests/images/mire1.cr2",
+      "sha256": "578dc1b45add995be167802f9f874a95de3113d2f133cc86d2cf931448f76f3f",
+      "size_bytes": 15855600
+    },
+    {
+      "path": "darktable-tests/images/xtransIV.raf",
+      "sha256": "53c4f64a9bb9d25eec1919721f5b4d8dfd9c7d7d3fe7b726a31888f74b209cd9",
+      "size_bytes": 30844144
+    }
+  ],
+  "state": "inventory-only"
+}
