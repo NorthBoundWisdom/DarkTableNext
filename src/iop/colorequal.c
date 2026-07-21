@@ -2552,23 +2552,44 @@ static void _area_reset_nodes(dt_iop_colorequal_gui_data_t *g)
     }
 }
 
-static gboolean _area_scrolled_callback(GtkWidget *widget, GdkEventScroll *event,
-                                        const dt_iop_module_t *self)
+static gboolean _area_scrolled_callback(GtkEventControllerScroll *controller, double dx, double dy,
+                                        gpointer user_data)
 {
+    (void)dx;
+    (void)dy;
+    const dt_iop_module_t *const self = user_data;
     const dt_iop_colorequal_gui_data_t *g = self->gui_data;
 
-    GtkWidget *w = dt_modifier_is(event->state, GDK_MOD1_MASK) ? GTK_WIDGET(g->notebook) :
-                                                                 _get_slider(g, g->selected);
-    return gtk_widget_event(w, (GdkEvent *)event);
+    if (darktable.control->mapping_widget)
+    {
+        dt_shortcut_dispatcher_scroll(GTK_EVENT_CONTROLLER(controller));
+        return TRUE;
+    }
+
+    dt_gui_controller_scroll_event_t event;
+    if (!dt_gui_controller_get_current_scroll_event(GTK_EVENT_CONTROLLER(controller), &event))
+        return FALSE;
+
+    int delta = 0;
+    if (!dt_gui_scroll_event_get_unit_delta(&event, &delta))
+        return TRUE;
+
+    if (dt_modifier_is(event.state, GDK_MOD1_MASK))
+        dt_ui_notebook_scroll(g->notebook, delta);
+    else
+        dt_bauhaus_widget_scroll(_get_slider(g, g->selected), delta, event.state, FALSE);
+
+    return TRUE;
 }
 
-static gboolean _area_motion_notify_callback(GtkWidget *widget, const GdkEventMotion *event,
-                                             const dt_iop_module_t *self)
+static void _area_motion_notify_callback(GtkEventControllerMotion *controller, double x, double y,
+                                         gpointer user_data)
 {
+    const dt_iop_module_t *self = user_data;
     dt_iop_colorequal_gui_data_t *g = self->gui_data;
 
     if (g->dragging && g->on_node)
-        _area_set_pos(g, event->y);
+        _area_set_pos(g, y);
     else
     {
         // look if close to a node
@@ -2576,16 +2597,16 @@ static gboolean _area_motion_notify_callback(GtkWidget *widget, const GdkEventMo
         const int oldsel = g->selected;
         const int oldon = g->on_node;
         g->selected =
-            (int)(((float)event->x - g->points[0][0]) / (g->points[1][0] - g->points[0][0]) +
+            (int)(((float)x - g->points[0][0]) / (g->points[1][0] - g->points[0][0]) +
                   0.5f) %
             NODES;
-        g->on_node = fabsf(g->points[g->selected][1] - (float)event->y) < epsilon;
+        g->on_node = fabsf(g->points[g->selected][1] - (float)y) < epsilon;
         darktable.control->element = g->selected;
         if (oldsel != g->selected || oldon != g->on_node)
             gtk_widget_queue_draw(GTK_WIDGET(g->area));
     }
 
-    return TRUE;
+    (void)controller;
 }
 
 static gboolean _area_button_press_callback(GtkWidget *widget, GdkEventButton *event,
@@ -2830,17 +2851,16 @@ void gui_init(dt_iop_module_t *self)
         GTK_WIDGET(g->area),
         _("double-click to reset the curve\nmiddle-click to toggle sliders visibility\nalt+scroll to change page"));
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
-    gtk_widget_add_events(GTK_WIDGET(g->area), GDK_BUTTON_PRESS_MASK | GDK_POINTER_MOTION_MASK |
-                                                   GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK |
-                                                   GDK_SMOOTH_SCROLL_MASK);
+    gtk_widget_add_events(GTK_WIDGET(g->area),
+                          GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
     g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(_iop_colorequalizer_draw), self);
     g_signal_connect(G_OBJECT(g->area), "button-press-event",
                      G_CALLBACK(_area_button_press_callback), self);
     g_signal_connect(G_OBJECT(g->area), "button-release-event",
                      G_CALLBACK(_area_button_release_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "motion-notify-event",
-                     G_CALLBACK(_area_motion_notify_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(_area_scrolled_callback), self);
+    dt_gui_connect_motion(g->area, _area_motion_notify_callback, NULL, NULL, self);
+    dt_gui_connect_scroll_handled(g->area, GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES,
+                                  _area_scrolled_callback, self);
     g_signal_connect(G_OBJECT(g->area), "size-allocate", G_CALLBACK(_area_size_callback), self);
 
     GtkWidget *box = self->widget = dt_gui_vbox(g->notebook, g->area);

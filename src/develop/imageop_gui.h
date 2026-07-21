@@ -51,8 +51,12 @@ GtkWidget *dt_bauhaus_toggle_from_params(dt_iop_module_t *self, const char *para
 #endif
 #define DT_IOP_SECTION_FOR_PARAMS(...) &DT_IOP_SECTION_FOR_PARAMS_DECL(__VA_ARGS__)
 
+typedef gboolean (*dt_iop_togglebutton_callback_t)(GtkWidget *, guint, GdkModifierType,
+                                                    dt_iop_module_t *);
+
 GtkWidget *dt_iop_togglebutton_new(dt_iop_module_t *self, const char *section, const gchar *label,
-                                   const gchar *ctrl_label, GCallback callback, gboolean local,
+                                   const gchar *ctrl_label, dt_iop_togglebutton_callback_t callback,
+                                   gboolean local,
                                    guint accel_key, GdkModifierType mods,
                                    DTGTKCairoPaintIconFunc paint, GtkWidget *box);
 

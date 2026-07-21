@@ -312,7 +312,7 @@ static void _lib_lighttable_direct_survey(dt_action_t *action)
                                         DT_LIGHTTABLE_DIRECT_MODE_SURVEY);
 }
 
-static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton *event,
+static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, const GdkModifierType state,
                                                    dt_lib_module_t *self)
 {
     dt_lib_tool_lighttable_t *d = self->data;
@@ -325,7 +325,7 @@ static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton 
         // that means we want to activate the button
         if (w == d->layout_culling_fix)
         {
-            if (dt_modifier_is(event->state, GDK_CONTROL_MASK))
+            if (dt_modifier_is(state, GDK_CONTROL_MASK))
                 d->culling_init_restriction = DT_LIGHTTABLE_CULLING_RESTRICTION_COLLECTION;
             else
                 d->culling_init_restriction = DT_LIGHTTABLE_CULLING_RESTRICTION_AUTO;
@@ -350,8 +350,7 @@ static gboolean _lib_lighttable_layout_btn_release(GtkWidget *w, GdkEventButton 
     return TRUE;
 }
 
-static gboolean _lib_lighttable_restricted_btn_release(GtkWidget *w, GdkEventButton *event,
-                                                       dt_lib_module_t *self)
+static gboolean _lib_lighttable_restricted_btn_release(GtkWidget *w, dt_lib_module_t *self)
 {
     dt_lighttable_culling_restriction_t restriction = DT_LIGHTTABLE_CULLING_RESTRICTION_SELECTION;
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(w)))
@@ -361,6 +360,33 @@ static gboolean _lib_lighttable_restricted_btn_release(GtkWidget *w, GdkEventBut
     dt_view_lighttable_set_culling_restricted_state(darktable.view_manager, restriction);
     _lib_lighttable_update_btn(self);
     return TRUE;
+}
+
+static void _lib_lighttable_layout_btn_released(GtkGestureSingle *gesture, int n_press, double x,
+                                                double y, gpointer user_data)
+{
+    dt_lib_module_t *self = user_data;
+    dt_lib_tool_lighttable_t *d = self->data;
+    GtkWidget *button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    const GdkModifierType state =
+        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+    const gboolean handled = button == d->layout_culling_restricted
+                                 ? _lib_lighttable_restricted_btn_release(button, self)
+                                 : _lib_lighttable_layout_btn_release(button, state, self);
+    if (handled)
+        dt_gui_claim(gesture);
+
+    (void)n_press;
+    (void)x;
+    (void)y;
+}
+
+static void _lib_lighttable_connect_layout_btn(GtkWidget *button, dt_lib_module_t *self)
+{
+    GtkGestureSingle *click = dt_gui_connect_click(button, NULL, NULL, NULL);
+    gtk_gesture_single_set_button(click, 0);
+    gtk_event_controller_set_propagation_phase(GTK_EVENT_CONTROLLER(click), GTK_PHASE_CAPTURE);
+    g_signal_connect(click, "released", G_CALLBACK(_lib_lighttable_layout_btn_released), self);
 }
 
 static void _lib_lighttable_grid_smaller_clicked(GtkWidget *widget, dt_lib_module_t *self)
@@ -423,7 +449,7 @@ static void _lib_lighttable_key_accel_toggle_restricted_mode(dt_action_t *action
         dt_view_lighttable_preview_state(darktable.view_manager))
     {
         // if we are already in culling layout or fullpreview, we switch between restricted and unrestricted
-        _lib_lighttable_restricted_btn_release(d->layout_culling_restricted, NULL, self);
+        _lib_lighttable_restricted_btn_release(d->layout_culling_restricted, self);
     }
 }
 
@@ -563,8 +589,7 @@ void gui_init(dt_lib_module_t *self)
     dt_shortcut_register(ac, DT_ACTION_ELEMENT_CULLING_NO_RESTRICTION, DT_ACTION_EFFECT_HOLD_TOGGLE,
                          GDK_KEY_x, GDK_SHIFT_MASK);
     dt_gui_add_help_link(d->layout_culling_fix, "layout_culling");
-    g_signal_connect(G_OBJECT(d->layout_culling_fix), "button-release-event",
-                     G_CALLBACK(_lib_lighttable_layout_btn_release), self);
+    _lib_lighttable_connect_layout_btn(d->layout_culling_fix, self);
 
     d->layout_culling_dynamic =
         dtgtk_togglebutton_new(dtgtk_cairo_paint_lt_mode_culling_dynamic, 0, NULL);
@@ -573,8 +598,7 @@ void gui_init(dt_lib_module_t *self)
     dt_action_register(ac, NULL, _lib_lighttable_key_accel_toggle_culling_dynamic_mode, GDK_KEY_x,
                        GDK_CONTROL_MASK);
     dt_gui_add_help_link(d->layout_culling_dynamic, "layout_culling");
-    g_signal_connect(G_OBJECT(d->layout_culling_dynamic), "button-release-event",
-                     G_CALLBACK(_lib_lighttable_layout_btn_release), self);
+    _lib_lighttable_connect_layout_btn(d->layout_culling_dynamic, self);
 
     d->layout_box = dt_gui_hbox(d->grid_smaller, d->grid_larger, d->loupe,
                                 d->layout_culling_fix, d->layout_culling_dynamic);
@@ -588,8 +612,7 @@ void gui_init(dt_lib_module_t *self)
                        GDK_CONTROL_MASK);
     dt_gui_add_help_link(d->layout_culling_restricted, "layout_culling");
     gtk_widget_set_no_show_all(d->layout_culling_restricted, TRUE);
-    g_signal_connect(G_OBJECT(d->layout_culling_restricted), "button-release-event",
-                     G_CALLBACK(_lib_lighttable_restricted_btn_release), self);
+    _lib_lighttable_connect_layout_btn(d->layout_culling_restricted, self);
 
     self->widget = dt_gui_hbox(d->layout_box, d->layout_culling_restricted);
 

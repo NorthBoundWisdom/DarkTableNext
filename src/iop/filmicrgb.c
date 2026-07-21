@@ -2126,15 +2126,81 @@ void color_picker_apply(dt_iop_module_t *self, GtkWidget *picker, dt_dev_pixelpi
         apply_autotune(self);
 }
 
-static void show_mask_callback(GtkToggleButton *button, GdkEventButton *event,
-                               const dt_iop_module_t *self)
+static gboolean _show_mask_toggle(GtkToggleButton *button, const dt_iop_module_t *self)
 {
-    DT_TRY_GUI_UPDATE();
+    DT_TRY_GUI_UPDATE(FALSE);
     dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
     g->show_mask = !(g->show_mask);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(g->show_highlight_mask), g->show_mask);
+    gtk_toggle_button_set_active(button, g->show_mask);
     DT_LEAVE_GUI_UPDATE();
     dt_dev_reprocess_center(self->dev);
+    return TRUE;
+}
+
+static void _show_mask_pressed(GtkGestureSingle *gesture, int n_press, double x, double y,
+                               gpointer user_data)
+{
+    GtkWidget *button = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    if (_show_mask_toggle(GTK_TOGGLE_BUTTON(button), user_data))
+        dt_gui_claim(gesture);
+
+    (void)n_press;
+    (void)x;
+    (void)y;
+}
+
+static float _show_mask_action_process(gpointer target, const dt_action_element_t element,
+                                       const dt_action_effect_t effect, const float move_size)
+{
+    (void)element;
+    if (!GTK_IS_TOGGLE_BUTTON(target))
+        return DT_ACTION_NOT_VALID;
+
+    dt_iop_module_t *self = g_object_get_data(G_OBJECT(target), "iop-instance");
+    if (!self || !self->gui_data)
+        return DT_ACTION_NOT_VALID;
+
+    float value = gtk_toggle_button_get_active(target);
+    if (DT_ACTION_TOGGLE_NEEDED(effect, move_size, value) &&
+        gtk_widget_get_ancestor(target, GTK_TYPE_WINDOW))
+    {
+        _show_mask_toggle(GTK_TOGGLE_BUTTON(target), self);
+        value = gtk_toggle_button_get_active(target);
+        if (!gtk_widget_is_visible(target))
+            dt_action_widget_toast(NULL, target, value ? _("on") : _("off"));
+    }
+
+    return value;
+}
+
+static const dt_action_element_def_t _action_elements_show_mask[] = {
+    {NULL, dt_action_effect_toggle},
+    {NULL},
+};
+
+static const dt_shortcut_fallback_t _action_fallbacks_show_mask[] = {
+    {.mods = GDK_CONTROL_MASK, .effect = DT_ACTION_EFFECT_TOGGLE_CTRL},
+    {.button = DT_SHORTCUT_RIGHT, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
+    {.press = DT_SHORTCUT_LONG, .effect = DT_ACTION_EFFECT_TOGGLE_RIGHT},
+    {},
+};
+
+static const dt_action_def_t _action_def_show_mask = {
+    N_("toggle"), _show_mask_action_process, _action_elements_show_mask,
+    _action_fallbacks_show_mask};
+
+static GtkWidget *_show_mask_button_new(dt_iop_module_t *self, GtkWidget *box)
+{
+    GtkWidget *button = dtgtk_togglebutton_new(dtgtk_cairo_paint_showmask, 0, NULL);
+    g_object_set_data(G_OBJECT(button), "iop-instance", self);
+    gtk_widget_set_tooltip_text(button, _("display highlight reconstruction mask"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
+    if (GTK_IS_BOX(box))
+        dt_gui_box_add(box, button);
+    dt_action_define_iop(self, NULL, N_("display highlight reconstruction mask"), button,
+                         &_action_def_show_mask);
+    dt_gui_connect_click_all(button, _show_mask_pressed, NULL, self);
+    return button;
 }
 
 #define ORDER_4 5
@@ -2742,15 +2808,17 @@ void filmic_gui_draw_icon(cairo_t *cr, const dt_iop_filmicrgb_gui_button_data_t 
     cairo_restore(cr);
 }
 
-static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
+static void dt_iop_tonecurve_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
+                                  gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_filmicrgb_params_t *p = self->params;
     dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
     gboolean contrast_clamped = dt_iop_filmic_rgb_compute_spline(p, &g->spline);
 
     // Cache the graph objects to avoid recomputing all the view at each redraw
-    gtk_widget_get_allocation(widget, &g->allocation);
-    g->allocation.height -= DT_RESIZE_HANDLE_SIZE;
+    g->allocation.width = width;
+    g->allocation.height = height - DT_RESIZE_HANDLE_SIZE;
 
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, g->allocation.width,
                                                          g->allocation.height);
@@ -2761,7 +2829,7 @@ static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_mo
 
     pango_layout_set_font_description(layout, desc);
     pango_cairo_context_set_resolution(pango_layout_get_context(layout), darktable.gui->dpi);
-    g->context = gtk_widget_get_style_context(widget);
+    g->context = gtk_widget_get_style_context(GTK_WIDGET(area));
 
     char text[256];
 
@@ -3610,7 +3678,6 @@ static gboolean dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, dt_iop_mo
     cairo_surface_destroy(cst);
     g_object_unref(layout);
     pango_font_description_free(desc);
-    return FALSE;
 }
 
 enum
@@ -3729,18 +3796,22 @@ static gboolean _filmic_graph_context_menu_provider(GtkWidget *widget,
     return TRUE;
 }
 
-static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event,
-                                  dt_iop_module_t *self)
+static void area_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
+                              const double y, gpointer user_data)
 {
-    DT_GUARD_GUI_UPDATE(TRUE);
+    (void)x;
+    (void)y;
+    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
+        return;
 
+    dt_iop_module_t *self = user_data;
     dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
 
     dt_iop_request_focus(self);
 
     if (g->active_button != DT_FILMIC_GUI_BUTTON_LAST)
     {
-        if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_2BUTTON_PRESS)
+        if (n_press == 2)
         {
             // double click resets view
             if (g->active_button == DT_FILMIC_GUI_BUTTON_TYPE)
@@ -3748,14 +3819,10 @@ static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event
                 g->gui_mode = DT_FILMIC_GUI_LOOK;
                 gtk_widget_queue_draw(GTK_WIDGET(g->area));
                 dt_conf_set_int("plugins/darkroom/filmicrgb/graph_view", g->gui_mode);
-                return TRUE;
-            }
-            else
-            {
-                return FALSE;
+                dt_gui_claim(gesture);
             }
         }
-        else if (event->button == GDK_BUTTON_PRIMARY)
+        else
         {
             // simple left click cycles through modes in positive direction
             if (g->active_button == DT_FILMIC_GUI_BUTTON_TYPE)
@@ -3768,52 +3835,58 @@ static gboolean area_button_press(GtkWidget *widget, const GdkEventButton *event
 
                 gtk_widget_queue_draw(GTK_WIDGET(g->area));
                 dt_conf_set_int("plugins/darkroom/filmicrgb/graph_view", g->gui_mode);
-                return TRUE;
+                dt_gui_claim(gesture);
             }
             else if (g->active_button == DT_FILMIC_GUI_BUTTON_LABELS)
             {
                 g->gui_show_labels = !g->gui_show_labels;
                 gtk_widget_queue_draw(GTK_WIDGET(g->area));
                 dt_conf_set_int("plugins/darkroom/filmicrgb/graph_show_labels", g->gui_show_labels);
-                return TRUE;
-            }
-            else
-            {
-                // we should never get there since (g->active_button != DT_FILMIC_GUI_BUTTON_LAST)
-                // and any other case has been processed above.
-                return FALSE;
+                dt_gui_claim(gesture);
             }
         }
-        else if (event->button == GDK_BUTTON_SECONDARY)
-            return _filmic_graph_context_menu_provider(widget, event, NULL);
     }
-
-    return FALSE;
 }
 
-static gboolean area_enter_leave_notify(GtkWidget *widget, const GdkEventCrossing *event,
-                                        const dt_iop_module_t *self)
+static void area_enter_notify(GtkEventControllerMotion *controller, const double x, const double y,
+                              gpointer user_data)
 {
+    (void)controller;
+    (void)x;
+    (void)y;
+    dt_iop_module_t *self = user_data;
     dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
-    g->gui_hover = event->type == GDK_ENTER_NOTIFY;
+    g->gui_hover = TRUE;
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
-    return FALSE;
 }
 
-static gboolean area_motion_notify(GtkWidget *widget, const GdkEventMotion *event,
-                                   const dt_iop_module_t *self)
+static void area_leave_notify(GtkEventControllerMotion *controller, gpointer user_data)
 {
-    DT_GUARD_GUI_UPDATE(1);
+    (void)controller;
+    dt_iop_module_t *self = user_data;
+    dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
+    g->gui_hover = FALSE;
+    gtk_widget_queue_draw(GTK_WIDGET(g->area));
+}
 
+static void area_motion_notify(GtkEventControllerMotion *controller, const double x, const double y,
+                               gpointer user_data)
+{
+    (void)controller;
+    if (dt_atomic_get_int(&darktable.gui->reset) != 0)
+        return;
+
+    dt_iop_module_t *self = user_data;
     dt_iop_filmicrgb_gui_data_t *g = self->gui_data;
     if (!g->gui_sizes_inited)
-        return FALSE;
+        return;
 
     // get in-widget coordinates
-    const float y = event->y;
-    const float x = event->x;
+    const float mouse_y = y;
+    const float mouse_x = x;
 
-    if (x > 0. && x < g->allocation.width && y > 0. && y < g->allocation.height)
+    if (mouse_x > 0. && mouse_x < g->allocation.width && mouse_y > 0. &&
+        mouse_y < g->allocation.height)
         g->gui_hover = TRUE;
 
     const gint save_active_button = g->active_button;
@@ -3825,8 +3898,8 @@ static gboolean area_motion_notify(GtkWidget *widget, const GdkEventMotion *even
         for (int i = 0; i < DT_FILMIC_GUI_BUTTON_LAST; i++)
         {
             // check if mouse in in the button's bounds
-            if (x > g->buttons[i].left && x < g->buttons[i].right && y > g->buttons[i].top &&
-                y < g->buttons[i].bottom)
+            if (mouse_x > g->buttons[i].left && mouse_x < g->buttons[i].right &&
+                mouse_y > g->buttons[i].top && mouse_y < g->buttons[i].bottom)
             {
                 // yeah, mouse is over that button
                 g->buttons[i].mouse_hover = TRUE;
@@ -3844,7 +3917,7 @@ static gboolean area_motion_notify(GtkWidget *widget, const GdkEventMotion *even
             g->active_button = DT_FILMIC_GUI_BUTTON_LAST; // mouse is over no known button
 
         // update the tooltips
-        if (g->active_button == DT_FILMIC_GUI_BUTTON_LAST && x < g->buttons[0].left)
+        if (g->active_button == DT_FILMIC_GUI_BUTTON_LAST && mouse_x < g->buttons[0].left)
         {
             // we are over the graph area
             gtk_widget_set_tooltip_text(GTK_WIDGET(g->area),
@@ -3872,14 +3945,12 @@ static gboolean area_motion_notify(GtkWidget *widget, const GdkEventMotion *even
 
         if (save_active_button != g->active_button)
             gtk_widget_queue_draw(GTK_WIDGET(g->area));
-        return TRUE;
     }
     else
     {
         g->active_button = DT_FILMIC_GUI_BUTTON_LAST;
         if (save_active_button != g->active_button)
-            (GTK_WIDGET(g->area));
-        return FALSE;
+            gtk_widget_queue_draw(GTK_WIDGET(g->area));
     }
 }
 
@@ -3903,14 +3974,10 @@ void gui_init(dt_iop_module_t *self)
                                         NULL, NULL);
 
     gtk_widget_set_can_focus(GTK_WIDGET(g->area), TRUE);
-    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(dt_iop_tonecurve_draw), self);
-    g_signal_connect(G_OBJECT(g->area), "button-press-event", G_CALLBACK(area_button_press), self);
-    g_signal_connect(G_OBJECT(g->area), "leave-notify-event", G_CALLBACK(area_enter_leave_notify),
-                     self);
-    g_signal_connect(G_OBJECT(g->area), "enter-notify-event", G_CALLBACK(area_enter_leave_notify),
-                     self);
-    g_signal_connect(G_OBJECT(g->area), "motion-notify-event", G_CALLBACK(area_motion_notify),
-                     self);
+    dt_gui_drawing_area_set_draw_func(g->area, dt_iop_tonecurve_draw, self, NULL);
+    GtkGestureSingle *click = dt_gui_connect_click(g->area, area_button_press, NULL, self);
+    gtk_gesture_single_set_button(click, GDK_BUTTON_PRIMARY);
+    dt_gui_connect_motion(g->area, area_motion_notify, area_enter_notify, area_leave_notify, self);
 
     // Init GTK notebook
     static struct dt_action_def_t notebook_def = {};
@@ -4003,9 +4070,7 @@ void gui_init(dt_iop_module_t *self)
 
     // Highlight Reconstruction Mask
     GtkWidget *hbox = dt_gui_hbox(dt_ui_label_new(_("display highlight reconstruction mask")));
-    g->show_highlight_mask = dt_iop_togglebutton_new(
-        self, NULL, N_("display highlight reconstruction mask"), NULL,
-        G_CALLBACK(show_mask_callback), FALSE, 0, 0, dtgtk_cairo_paint_showmask, hbox);
+    g->show_highlight_mask = _show_mask_button_new(self, hbox);
     dtgtk_togglebutton_set_paint(DTGTK_TOGGLEBUTTON(g->show_highlight_mask),
                                  dtgtk_cairo_paint_showmask, 0, NULL);
     dt_gui_add_class(g->show_highlight_mask, "dt_bauhaus_alignment");

@@ -45,6 +45,7 @@ void dt_shortcuts_reinitialise(dt_action_t *action);
 void dt_shortcuts_select_view(dt_view_type_flags_t view);
 
 gboolean dt_shortcut_dispatcher(GtkWidget *w, GdkEvent *event, gpointer user_data);
+gboolean dt_shortcut_dispatcher_scroll(GtkEventController *controller);
 gboolean dt_shortcut_tooltip_callback(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode,
                                       GtkTooltip *tooltip, GtkWidget *vbox);
 /** Apply the current platform's shortcut modifier policy to an input event. */

@@ -137,7 +137,7 @@ static void _history_widget_init(dt_lib_filtering_rule_t *rule,
 
     history->combo = dt_bauhaus_combobox_new_full(
         DT_ACTION(self), N_("rules"), N_("history"), _("filter on history state"), 0,
-        (GtkCallback)_history_changed, history, _history_names);
+        (dt_gui_widget_callback_t)_history_changed, history, _history_names);
     dt_bauhaus_widget_hide_label(history->combo);
 
     gtk_box_pack_start(GTK_BOX(rule->w_special_box), history->combo, TRUE, TRUE, 0);

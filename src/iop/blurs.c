@@ -866,17 +866,21 @@ void gui_changed(dt_iop_module_t *self, GtkWidget *w, void *previous)
     }
 }
 
-static gboolean _dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
+static void _dt_iop_tonecurve_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
+                                   gpointer user_data)
 {
+    const dt_iop_module_t *self = user_data;
     dt_iop_blurs_gui_data_t *g = self->gui_data;
     const dt_iop_blurs_params_t *p = self->params;
 
-    GtkAllocation allocation;
-    GtkStyleContext *context = gtk_widget_get_style_context(widget);
-    gtk_widget_get_allocation(widget, &allocation);
-    gtk_render_background(context, crf, 0, 0, allocation.width, allocation.height);
+#if !GTK_CHECK_VERSION(4, 0, 0)
+    GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(area));
+    gtk_render_background(context, crf, 0, 0, width, height);
+#else
+    (void)area;
+#endif
 
-    if (allocation.width != g->img_width)
+    if (width != g->img_width)
     {
         // Widget size changed, flush the cache buffer and restart
         g->img_cached = FALSE;
@@ -886,8 +890,8 @@ static gboolean _dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, const dt
 
     if (!g->img_cached)
     {
-        g->img = dt_alloc_align_type(unsigned char, 4 * allocation.width * allocation.width);
-        g->img_width = allocation.width;
+        g->img = dt_alloc_align_type(unsigned char, 4 * width * width);
+        g->img_width = width;
         g->img_cached = TRUE;
         _build_gui_kernel(g->img, g->img_width, g->img_width, p);
 
@@ -904,7 +908,6 @@ static gboolean _dt_iop_tonecurve_draw(GtkWidget *widget, cairo_t *crf, const dt
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
-    return TRUE;
 }
 
 void gui_update(dt_iop_module_t *self)
@@ -925,7 +928,7 @@ void gui_init(dt_iop_module_t *self)
     g->img_width = 0.f;
 
     g->area = GTK_DRAWING_AREA(dtgtk_drawing_area_new_with_height(0));
-    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(_dt_iop_tonecurve_draw), self);
+    dt_gui_drawing_area_set_draw_func(g->area, _dt_iop_tonecurve_draw, self, NULL);
     self->widget = dt_gui_vbox(g->area);
 
     g->radius = dt_bauhaus_slider_from_params(self, "radius");

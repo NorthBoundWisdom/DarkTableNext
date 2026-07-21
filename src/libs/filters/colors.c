@@ -52,10 +52,11 @@ static void _set_mask(dt_lib_filtering_rule_t *rule, const int mask, const gbool
     g_free(txt);
 }
 
-static gboolean _colors_clicked(GtkWidget *w, GdkEventButton *e, _widgets_colors_t *colors)
+static gboolean _colors_apply_click(GtkWidget *w, const guint button, const int n_press,
+                                    const GdkModifierType state, _widgets_colors_t *colors)
 {
     // double click reset the widget
-    if (e->button == GDK_BUTTON_PRIMARY && e->type == GDK_2BUTTON_PRESS)
+    if (button == GDK_BUTTON_PRIMARY && n_press == 2)
     {
         _set_mask(colors->rule, CL_AND_MASK, TRUE);
         _colors_update(colors->rule);
@@ -71,9 +72,9 @@ static gboolean _colors_clicked(GtkWidget *w, GdkEventButton *e, _widgets_colors
     {
         if (mask & mask_k)
             new_mask = 0;
-        else if (dt_modifier_is(e->state, GDK_CONTROL_MASK))
+        else if (dt_modifier_is(state, GDK_CONTROL_MASK))
             new_mask = CL_ALL_EXCLUDED | CL_GREY_EXCLUDED;
-        else if (dt_modifier_is(e->state, 0))
+        else if (dt_modifier_is(state, 0))
             new_mask = CL_ALL_INCLUDED | CL_GREY_INCLUDED;
         new_mask |= (mask & CL_AND_MASK);
     }
@@ -81,9 +82,9 @@ static gboolean _colors_clicked(GtkWidget *w, GdkEventButton *e, _widgets_colors
     {
         if (mask & mask_k)
             new_mask = 0;
-        else if (dt_modifier_is(e->state, GDK_CONTROL_MASK))
+        else if (dt_modifier_is(state, GDK_CONTROL_MASK))
             new_mask = 1 << (k + 12);
-        else if (dt_modifier_is(e->state, 0))
+        else if (dt_modifier_is(state, 0))
             new_mask = 1 << k;
         new_mask |= (mask & ~mask_k);
     }
@@ -100,6 +101,19 @@ static gboolean _colors_clicked(GtkWidget *w, GdkEventButton *e, _widgets_colors
     _set_mask(colors->rule, new_mask, TRUE);
     _colors_update(rule);
     return FALSE;
+}
+
+static void _colors_clicked(GtkGestureSingle *gesture, int n_press, double x, double y,
+                            gpointer user_data)
+{
+    (void)x;
+    (void)y;
+    GtkWidget *w = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    const GdkModifierType state =
+        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+    const guint button = gtk_gesture_single_get_current_button(gesture);
+    if (_colors_apply_click(w, button, n_press, state, (_widgets_colors_t *)user_data))
+        dt_gui_claim(gesture);
 }
 
 static void _colors_operator_clicked(GtkWidget *w, _widgets_colors_t *colors)
@@ -148,10 +162,13 @@ static gboolean _colors_update(dt_lib_filtering_rule_t *rule)
     return TRUE;
 }
 
-static gboolean _colors_enter_notify(GtkWidget *widget, GdkEventCrossing *event, gpointer user_data)
+static void _colors_enter_notify(GtkEventControllerMotion *controller, double x, double y,
+                                 gpointer user_data)
 {
+    (void)controller;
+    (void)x;
+    (void)y;
     darktable.control->element = GPOINTER_TO_INT(user_data) + 1;
-    return FALSE;
 }
 
 static float _action_process_colors(gpointer target, dt_action_element_t element,
@@ -168,13 +185,14 @@ static float _action_process_colors(gpointer target, dt_action_element_t element
 
     if (DT_PERFORM_ACTION(move_size))
     {
-        GdkEventButton e = {.state = effect == DT_ACTION_EFFECT_TOGGLE_CTRL ? GDK_CONTROL_MASK : 0};
+        const GdkModifierType state =
+            effect == DT_ACTION_EFFECT_TOGGLE_CTRL ? GDK_CONTROL_MASK : 0;
 
         if ((!mask || (effect != DT_ACTION_EFFECT_ON && effect != DT_ACTION_EFFECT_ON_CTRL)) &&
             (mask || effect != DT_ACTION_EFFECT_OFF))
         {
             if (element)
-                _colors_clicked(w, &e, colors);
+                _colors_apply_click(w, GDK_BUTTON_PRIMARY, 1, state, colors);
             else
                 _colors_operator_clicked(w, colors);
         }
@@ -226,10 +244,9 @@ static void _colors_widget_init(dt_lib_filtering_rule_t *rule,
                                       "\nclick to toggle the color label selection"
                                       "\nctrl+click to exclude the color label"
                                       "\nthe gray button affects all color labels"));
-        g_signal_connect(G_OBJECT(colors->colors[k]), "button-press-event",
-                         G_CALLBACK(_colors_clicked), colors);
-        g_signal_connect(G_OBJECT(colors->colors[k]), "enter-notify-event",
-                         G_CALLBACK(_colors_enter_notify), GINT_TO_POINTER(k));
+        dt_gui_connect_click_all(colors->colors[k], _colors_clicked, NULL, colors);
+        dt_gui_connect_motion(colors->colors[k], NULL, _colors_enter_notify, NULL,
+                              GINT_TO_POINTER(k));
         dt_action_define(DT_ACTION(self), N_("rules"), N_("color label"), colors->colors[k],
                          &dt_action_def_colors_rule);
     }
@@ -241,8 +258,8 @@ static void _colors_widget_init(dt_lib_filtering_rule_t *rule,
                             "\nunion: images with at least one of the selected color labels"));
     g_signal_connect(G_OBJECT(colors->operator), "clicked", G_CALLBACK(_colors_operator_clicked),
                      colors);
-    g_signal_connect(G_OBJECT(colors->operator), "enter-notify-event",
-                     G_CALLBACK(_colors_enter_notify), GINT_TO_POINTER(-1));
+    dt_gui_connect_motion(colors->operator, NULL, _colors_enter_notify, NULL,
+                          GINT_TO_POINTER(-1));
     dt_action_t *ac = dt_action_define(DT_ACTION(self), N_("rules"), N_("color label"),
                                        colors->operator, & dt_action_def_colors_rule);
 

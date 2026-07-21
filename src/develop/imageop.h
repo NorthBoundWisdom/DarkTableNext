@@ -518,8 +518,8 @@ void dt_iop_refresh_preview2(const dt_iop_module_t *module);
 void dt_iop_refresh_all(const dt_iop_module_t *module);
 
 /** (un)hide iop module header right side buttons */
-gboolean dt_iop_show_hide_header_buttons(dt_iop_module_t *module, GdkEventCrossing *event,
-                                         gboolean show_buttons, const gboolean always_hide);
+gboolean dt_iop_show_hide_header_buttons(dt_iop_module_t *module, gboolean show_buttons,
+                                         const gboolean always_hide);
 
 /** add/remove mask indicator to iop module header */
 void dt_iop_add_remove_mask_indicator(dt_iop_module_t *module, gboolean add);

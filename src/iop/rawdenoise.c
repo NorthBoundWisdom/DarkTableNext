@@ -544,8 +544,11 @@ static void dt_iop_rawdenoise_get_params(dt_iop_rawdenoise_params_t *p, const in
     }
 }
 
-static gboolean rawdenoise_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
+static void rawdenoise_draw(GtkDrawingArea *area, cairo_t *crf, int width, int height,
+                            gpointer user_data)
 {
+    (void)area;
+    dt_iop_module_t *self = user_data;
     dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
     dt_iop_rawdenoise_params_t p = *(dt_iop_rawdenoise_params_t *)self->params;
 
@@ -558,9 +561,6 @@ static gboolean rawdenoise_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t
                             p.y[ch][DT_IOP_RAWDENOISE_BANDS - 1]);
 
     const int inset = DT_IOP_RAWDENOISE_INSET;
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    int width = allocation.width, height = allocation.height;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
     cairo_set_source_rgb(cr, .2, .2, .2);
@@ -743,21 +743,21 @@ static gboolean rawdenoise_draw(GtkWidget *widget, cairo_t *crf, dt_iop_module_t
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
-    return FALSE;
 }
 
-static gboolean rawdenoise_motion_notify(GtkWidget *widget, GdkEventMotion *event,
-                                         dt_iop_module_t *self)
+static void rawdenoise_motion_notify(GtkEventControllerMotion *controller, const double x,
+                                     const double y, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
     dt_iop_rawdenoise_params_t *p = self->params;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     const int inset = DT_IOP_RAWDENOISE_INSET;
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    int height = allocation.height - 2 * inset, width = allocation.width - 2 * inset;
+    const int height = gtk_widget_get_allocated_height(widget) - 2 * inset;
+    const int width = gtk_widget_get_allocated_width(widget) - 2 * inset;
     if (!g->dragging)
-        g->mouse_x = CLAMP(event->x - inset, 0, width) / (float)width;
-    g->mouse_y = 1.0 - CLAMP(event->y - inset, 0, height) / (float)height;
+        g->mouse_x = CLAMP(x - inset, 0, width) / (float)width;
+    g->mouse_y = 1.0 - CLAMP(y - inset, 0, height) / (float)height;
     if (g->dragging)
     {
         *p = g->drag_params;
@@ -774,15 +774,16 @@ static gboolean rawdenoise_motion_notify(GtkWidget *widget, GdkEventMotion *even
         g->x_move = -1;
         gtk_widget_queue_draw(widget);
     }
-    return TRUE;
 }
 
-static gboolean rawdenoise_button_press(GtkWidget *widget, GdkEventButton *event,
-                                        dt_iop_module_t *self)
+static void rawdenoise_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
+                                    const double y, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
     const int ch = g->channel;
-    if (event->button == GDK_BUTTON_PRIMARY && event->type == GDK_2BUTTON_PRESS)
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    if (n_press == 2)
     {
         // reset current curve
         dt_iop_rawdenoise_params_t *p = self->params;
@@ -795,63 +796,68 @@ static gboolean rawdenoise_button_press(GtkWidget *widget, GdkEventButton *event
         dt_dev_add_history_item_target(darktable.develop, self, TRUE, widget + ch);
         gtk_widget_queue_draw(GTK_WIDGET(g->area));
     }
-    else if (event->button == GDK_BUTTON_PRIMARY)
+    else
     {
         g->drag_params = *(dt_iop_rawdenoise_params_t *)self->params;
         const int inset = DT_IOP_RAWDENOISE_INSET;
-        GtkAllocation allocation;
-        gtk_widget_get_allocation(widget, &allocation);
-        int height = allocation.height - 2 * inset, width = allocation.width - 2 * inset;
+        const int height = gtk_widget_get_allocated_height(widget) - 2 * inset;
+        const int width = gtk_widget_get_allocated_width(widget) - 2 * inset;
         g->mouse_pick = dt_draw_curve_calc_value(g->transition_curve,
-                                                 CLAMP(event->x - inset, 0, width) / (float)width);
-        g->mouse_pick -= 1.0 - CLAMP(event->y - inset, 0, height) / (float)height;
+                                                 CLAMP(x - inset, 0, width) / (float)width);
+        g->mouse_pick -= 1.0 - CLAMP(y - inset, 0, height) / (float)height;
         g->dragging = 1;
-        return TRUE;
     }
-    return FALSE;
+    dt_gui_claim(gesture);
 }
 
-static gboolean rawdenoise_button_release(GtkWidget *widget, GdkEventButton *event,
-                                          dt_iop_module_t *self)
+static void rawdenoise_button_release(GtkGestureSingle *gesture, const int n_press, const double x,
+                                      const double y, gpointer user_data)
 {
-    if (event->button == GDK_BUTTON_PRIMARY)
-    {
-        dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
-        g->dragging = 0;
-        return TRUE;
-    }
-    return FALSE;
+    (void)gesture;
+    (void)n_press;
+    (void)x;
+    (void)y;
+    dt_iop_module_t *self = user_data;
+    dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
+    g->dragging = 0;
 }
 
-static gboolean rawdenoise_leave_notify(GtkWidget *widget, GdkEventCrossing *event,
-                                        dt_iop_module_t *self)
+static void rawdenoise_leave_notify(GtkEventControllerMotion *controller, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
     if (!g->dragging)
         g->mouse_y = -1.0;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     gtk_widget_queue_draw(widget);
-    return TRUE;
 }
 
-static gboolean rawdenoise_scrolled(GtkWidget *widget, GdkEventScroll *event, dt_iop_module_t *self)
+static void rawdenoise_scrolled(GtkEventControllerScroll *controller, const double dx,
+                                const double dy, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rawdenoise_gui_data_t *g = self->gui_data;
 
-    if (dt_gui_ignore_scroll(event))
-        return FALSE;
+    const int delta = (int)(dx + dy);
+    if (delta == 0)
+        return;
 
-    if (dt_modifier_is(event->state, GDK_MOD1_MASK))
-        return gtk_widget_event(GTK_WIDGET(g->channel_tabs), (GdkEvent *)event);
-
-    int delta_y;
-    if (dt_gui_get_scroll_unit_delta(event, &delta_y))
+    const GdkModifierType state =
+        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller));
+    if (dt_modifier_is(state, GDK_MOD1_MASK))
     {
-        g->mouse_radius =
-            CLAMP(g->mouse_radius * (1.0 + 0.1 * delta_y), 0.2 / DT_IOP_RAWDENOISE_BANDS, 1.0);
-        gtk_widget_queue_draw(widget);
+        for (int step = 0; step < abs(delta); step++)
+            if (delta < 0)
+                gtk_notebook_next_page(g->channel_tabs);
+            else
+                gtk_notebook_prev_page(g->channel_tabs);
+        return;
     }
 
-    return TRUE;
+    g->mouse_radius =
+        CLAMP(g->mouse_radius * (1.0 + 0.1 * delta), 0.2 / DT_IOP_RAWDENOISE_BANDS, 1.0);
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
+    gtk_widget_queue_draw(widget);
 }
 
 static void rawdenoise_tab_switch(GtkNotebook *notebook, GtkWidget *page, guint page_num,
@@ -903,16 +909,14 @@ void gui_init(dt_iop_module_t *self)
 
     GtkWidget *box_raw = self->widget = dt_gui_vbox(g->channel_tabs, g->area);
 
-    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(rawdenoise_draw), self);
-    g_signal_connect(G_OBJECT(g->area), "button-press-event", G_CALLBACK(rawdenoise_button_press),
-                     self);
-    g_signal_connect(G_OBJECT(g->area), "button-release-event",
-                     G_CALLBACK(rawdenoise_button_release), self);
-    g_signal_connect(G_OBJECT(g->area), "motion-notify-event", G_CALLBACK(rawdenoise_motion_notify),
-                     self);
-    g_signal_connect(G_OBJECT(g->area), "leave-notify-event", G_CALLBACK(rawdenoise_leave_notify),
-                     self);
-    g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(rawdenoise_scrolled), self);
+    dt_gui_drawing_area_set_draw_func(g->area, rawdenoise_draw, self, NULL);
+    GtkGestureSingle *click =
+        dt_gui_connect_click(g->area, rawdenoise_button_press, rawdenoise_button_release, self);
+    gtk_gesture_single_set_button(click, GDK_BUTTON_PRIMARY);
+    dt_gui_connect_motion(g->area, rawdenoise_motion_notify, NULL, rawdenoise_leave_notify, self);
+    dt_gui_connect_scroll(g->area,
+                          GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES | GTK_EVENT_CONTROLLER_SCROLL_DISCRETE,
+                          rawdenoise_scrolled, self);
 
     g->threshold = dt_bauhaus_slider_from_params(self, "threshold");
     dt_bauhaus_slider_set_soft_max(g->threshold, 0.1);

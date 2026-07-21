@@ -539,9 +539,7 @@ static inline GdkPixbuf *dt_draw_paint_to_pixbuf(
                                   const gint h, const gint flags, void *data))
 {
     GdkRGBA fg_color;
-    GtkStyleContext *context = gtk_widget_get_style_context(widget);
-    GtkStateFlags state = gtk_widget_get_state_flags(widget);
-    gtk_style_context_get_color(context, state, &fg_color);
+    dt_gui_widget_get_color(widget, &fg_color);
 
     const int dim = DT_PIXEL_APPLY_DPI(pixbuf_size);
     cairo_surface_t *cst = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, dim, dim);

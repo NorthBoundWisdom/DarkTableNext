@@ -611,12 +611,12 @@ static void _settings_update_visibility(const _guides_settings_t *gw)
 
     if ((guide && guide->widget))
     {
-        GtkWidget *w = gtk_bin_get_child(GTK_BIN(gw->g_widgets));
+        GtkWidget *w = dt_gui_container_first_child(gw->g_widgets);
         if (w)
-            gtk_widget_destroy(w);
+            dt_gui_container_destroy_children(gw->g_widgets);
 
         GtkWidget *extra = guide->widget(NULL, guide->user_data);
-        gtk_container_add(GTK_CONTAINER(gw->g_widgets), extra);
+        dt_gui_box_add(gw->g_widgets, extra);
         gtk_widget_show_all(extra);
     }
 }
@@ -725,7 +725,7 @@ GtkWidget *dt_guides_popover(dt_view_t *self, GtkWidget *button)
     dt_gui_add_class(lb, "dt_section_label");
 
     // global guides section
-    gw->g_widgets = gtk_event_box_new();
+    gw->g_widgets = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_no_show_all(gw->g_widgets, TRUE);
 
     DT_BAUHAUS_COMBOBOX_NEW_FULL(gw->g_flip, self, N_("guide lines"), N_("flip"), _("flip guides"),
@@ -735,7 +735,7 @@ GtkWidget *dt_guides_popover(dt_view_t *self, GtkWidget *button)
 
     darktable.view_manager->guides = dt_bauhaus_combobox_new_full(
         DT_ACTION(self), N_("guide lines"), N_("type"), _("setup guide lines"), 0,
-        (GtkCallback)_settings_guides_changed, gw, _guide_names);
+        (dt_gui_widget_callback_t)_settings_guides_changed, gw, _guide_names);
 
     // color section
     DT_BAUHAUS_COMBOBOX_NEW_FULL(darktable.view_manager->guides_colors, self, N_("guide lines"),
@@ -757,7 +757,7 @@ GtkWidget *dt_guides_popover(dt_view_t *self, GtkWidget *button)
     GtkWidget *vbox = dt_gui_vbox(lb, gw->g_widgets, gw->g_flip, darktable.view_manager->guides,
                                   gtk_separator_new(GTK_ORIENTATION_HORIZONTAL),
                                   darktable.view_manager->guides_colors, contrast);
-    gtk_container_add(GTK_CONTAINER(pop), vbox);
+    dt_gui_popover_set_child(GTK_POPOVER(pop), vbox);
 
     gtk_widget_show_all(vbox);
 
@@ -912,7 +912,8 @@ void dt_guides_init_module_widget(GtkWidget *iopw, dt_iop_module_t *module)
         return;
 
     GtkWidget *cb = module->guides_combo = gtk_check_button_new_with_label(_("show guides"));
-    gtk_label_set_ellipsize(GTK_LABEL(gtk_bin_get_child(GTK_BIN(cb))), PANGO_ELLIPSIZE_START);
+    gtk_label_set_ellipsize(GTK_LABEL(dt_gui_check_button_get_child(GTK_CHECK_BUTTON(cb))),
+                            PANGO_ELLIPSIZE_START);
 
     gchar *key = _conf_get_path(module->op, "autoshow", NULL);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb), dt_conf_get_bool(key));

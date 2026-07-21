@@ -68,7 +68,7 @@ typedef struct dt_culling_t
     float zoom_ratio;
 
     gboolean panning;      // are we moving zoomed images ?
-    double pan_x;          // last position during panning
+    double pan_x;          // last widget-local position during panning
     double pan_y;          //
     gboolean mouse_inside; // is the mouse inside culling center view ?
 
@@ -92,7 +92,7 @@ typedef struct dt_culling_t
     gboolean click_candidate;
     gboolean drag_moved;
     dt_imgid_t pressed_imgid;
-    double press_x;
+    double press_x; // widget-local position at button press
     double press_y;
 
     // Keep a pinned information overlay independent from the configured

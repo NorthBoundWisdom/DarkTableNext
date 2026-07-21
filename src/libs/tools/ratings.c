@@ -40,19 +40,17 @@ typedef struct dt_lib_ratings_t
 } dt_lib_ratings_t;
 
 /* redraw the ratings */
-static gboolean _lib_ratings_draw_callback(GtkWidget *widget, cairo_t *cr, dt_lib_module_t *self);
+static void _lib_ratings_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, int height,
+                                       gpointer user_data);
 /* motion notify handler*/
-static gboolean _lib_ratings_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
-                                                    dt_lib_module_t *self);
+static void _lib_ratings_motion_notify_callback(GtkEventControllerMotion *controller, double x,
+                                                double y, gpointer user_data);
 /* motion leavel handler */
-static gboolean _lib_ratings_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
-                                                   dt_lib_module_t *self);
+static void _lib_ratings_leave_notify_callback(GtkEventControllerMotion *controller,
+                                               gpointer user_data);
 /* button press handler */
-static gboolean _lib_ratings_button_press_callback(GtkWidget *widget, GdkEventButton *event,
-                                                   dt_lib_module_t *self);
-/* button release handler */
-static gboolean _lib_ratings_button_release_callback(GtkWidget *widget, GdkEventButton *event,
-                                                     dt_lib_module_t *self);
+static void _lib_ratings_button_press_callback(GtkGestureSingle *gesture, int n_press, double x,
+                                               double y, gpointer user_data);
 
 static int _selected_rating(void)
 {
@@ -121,23 +119,16 @@ void gui_init(dt_lib_module_t *self)
     GtkWidget *drawing = gtk_drawing_area_new();
     d->drawing = drawing;
 
-    gtk_widget_set_events(drawing, GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK |
-                                       GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                                       GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                                       GDK_STRUCTURE_MASK);
-
     /* connect callbacks */
     gtk_widget_set_tooltip_text(drawing, _("set star rating for selected images"));
+#if !GTK_CHECK_VERSION(4, 0, 0)
     gtk_widget_set_app_paintable(drawing, TRUE);
-    g_signal_connect(G_OBJECT(drawing), "draw", G_CALLBACK(_lib_ratings_draw_callback), self);
-    g_signal_connect(G_OBJECT(drawing), "button-press-event",
-                     G_CALLBACK(_lib_ratings_button_press_callback), self);
-    g_signal_connect(G_OBJECT(drawing), "button-release-event",
-                     G_CALLBACK(_lib_ratings_button_release_callback), self);
-    g_signal_connect(G_OBJECT(drawing), "motion-notify-event",
-                     G_CALLBACK(_lib_ratings_motion_notify_callback), self);
-    g_signal_connect(G_OBJECT(drawing), "leave-notify-event",
-                     G_CALLBACK(_lib_ratings_leave_notify_callback), self);
+#endif
+    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing), _lib_ratings_draw_callback, self,
+                                      NULL);
+    dt_gui_connect_click_all(drawing, _lib_ratings_button_press_callback, NULL, self);
+    dt_gui_connect_motion(drawing, _lib_ratings_motion_notify_callback, NULL,
+                          _lib_ratings_leave_notify_callback, self);
 
     gtk_box_pack_start(GTK_BOX(self->widget), drawing, TRUE, TRUE, 0);
 
@@ -163,30 +154,27 @@ void gui_cleanup(dt_lib_module_t *self)
     self->data = NULL;
 }
 
-static gboolean _lib_ratings_draw_callback(GtkWidget *widget, cairo_t *crf, dt_lib_module_t *self)
+static void _lib_ratings_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, int height,
+                                       gpointer user_data)
 {
+    GtkWidget *widget = GTK_WIDGET(area);
+    dt_lib_module_t *self = (dt_lib_module_t *)user_data;
     dt_lib_ratings_t *d = self->data;
 
     if (!dt_control_running())
-        return TRUE;
+        return;
 
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
+    const float star_size = height;
+    const float star_spacing = (width - 5.0 * star_size) / 4.0;
 
-    const float star_size = allocation.height;
-    const float star_spacing = (allocation.width - 5.0 * star_size) / 4.0;
-
-    cairo_surface_t *cst =
-        dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, allocation.width, allocation.height);
-    cairo_t *cr = cairo_create(cst);
-
+#if !GTK_CHECK_VERSION(4, 0, 0)
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
-
-    gtk_render_background(context, cr, 0, 0, allocation.width, allocation.height);
+    gtk_render_background(context, cr, 0, 0, width, height);
+#endif
 
     /* get current style */
     GdkRGBA fg_color;
-    gtk_style_context_get_color(context, gtk_widget_get_state_flags(widget), &fg_color);
+    dt_gui_widget_get_color(widget, &fg_color);
 
     /* lets draw stars */
     int x = 0;
@@ -214,14 +202,6 @@ static gboolean _lib_ratings_draw_callback(GtkWidget *widget, cairo_t *crf, dt_l
             cairo_stroke(cr);
         x += star_size + star_spacing;
     }
-
-    /* blit memsurface onto widget*/
-    cairo_destroy(cr);
-    cairo_set_source_surface(crf, cst, 0, 0);
-    cairo_paint(crf);
-    cairo_surface_destroy(cst);
-
-    return TRUE;
 }
 
 void gui_update(dt_lib_module_t *self)
@@ -231,20 +211,26 @@ void gui_update(dt_lib_module_t *self)
     gtk_widget_queue_draw(d->drawing);
 }
 
-static gboolean _lib_ratings_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
-                                                    dt_lib_module_t *self)
+static void _lib_ratings_motion_notify_callback(GtkEventControllerMotion *controller, double x,
+                                                double y, gpointer user_data)
 {
+    (void)controller;
+    dt_lib_module_t *self = (dt_lib_module_t *)user_data;
     dt_lib_ratings_t *d = self->data;
 
-    d->pointerx = event->x;
-    d->pointery = event->y;
-    gtk_widget_queue_draw(self->widget);
-    return TRUE;
+    d->pointerx = x;
+    d->pointery = y;
+    gtk_widget_queue_draw(d->drawing);
 }
 
-static gboolean _lib_ratings_button_press_callback(GtkWidget *widget, GdkEventButton *event,
-                                                   dt_lib_module_t *self)
+static void _lib_ratings_button_press_callback(GtkGestureSingle *gesture, int n_press, double x,
+                                               double y, gpointer user_data)
 {
+    (void)n_press;
+    (void)x;
+    (void)y;
+    dt_gui_claim(gesture);
+    dt_lib_module_t *self = (dt_lib_module_t *)user_data;
     dt_lib_ratings_t *d = self->data;
     if (d->current > 0)
     {
@@ -255,20 +241,14 @@ static gboolean _lib_ratings_button_press_callback(GtkWidget *widget, GdkEventBu
 
         dt_control_queue_redraw_center();
     }
-    return TRUE;
 }
 
-static gboolean _lib_ratings_button_release_callback(GtkWidget *widget, GdkEventButton *event,
-                                                     dt_lib_module_t *self)
+static void _lib_ratings_leave_notify_callback(GtkEventControllerMotion *controller,
+                                               gpointer user_data)
 {
-    return TRUE;
-}
-
-static gboolean _lib_ratings_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
-                                                   dt_lib_module_t *self)
-{
+    (void)controller;
+    dt_lib_module_t *self = (dt_lib_module_t *)user_data;
     dt_lib_ratings_t *d = self->data;
     d->pointery = d->pointerx = 0;
-    gtk_widget_queue_draw(self->widget);
-    return TRUE;
+    gtk_widget_queue_draw(d->drawing);
 }

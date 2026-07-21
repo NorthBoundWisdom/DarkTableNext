@@ -126,11 +126,10 @@ void gui_init(dt_lib_module_t *self)
     dt_lib_imageinfo_t *d = g_malloc0(sizeof(dt_lib_imageinfo_t));
     self->data = (void *)d;
 
-    self->widget = gtk_event_box_new();
     d->tview = gtk_label_new("");
+    self->widget = d->tview;
     gtk_label_set_ellipsize(GTK_LABEL(d->tview), PANGO_ELLIPSIZE_MIDDLE);
     gtk_label_set_justify(GTK_LABEL(d->tview), GTK_JUSTIFY_CENTER);
-    gtk_container_add(GTK_CONTAINER(self->widget), d->tview);
     gtk_widget_set_name(GTK_WIDGET(d->tview), "image-info");
 
     gtk_widget_show_all(self->widget);

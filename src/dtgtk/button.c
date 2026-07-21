@@ -27,6 +27,40 @@ static void dtgtk_button_init(GtkDarktableButton *button)
 {
 }
 
+#if GTK_CHECK_VERSION(4, 0, 0)
+static void _button_snapshot(GtkWidget *widget, GtkSnapshot *snapshot)
+{
+    g_return_if_fail(widget != NULL);
+    g_return_if_fail(DTGTK_IS_BUTTON(widget));
+
+    GTK_WIDGET_CLASS(dtgtk_button_parent_class)->snapshot(widget, snapshot);
+
+    GtkDarktableButton *button = DTGTK_BUTTON(widget);
+    if (!button->icon || !button->canvas)
+        return;
+
+    graphene_rect_t bounds;
+    if (!gtk_widget_compute_bounds(button->canvas, widget, &bounds))
+        return;
+
+    int flags = button->icon_flags;
+    if (gtk_widget_get_state_flags(widget) & GTK_STATE_FLAG_PRELIGHT)
+        flags |= CPF_PRELIGHT;
+    else
+        flags &= ~CPF_PRELIGHT;
+
+    if (bounds.size.width <= 0 || bounds.size.height <= 0)
+        return;
+
+    GdkRGBA fg_color;
+    dt_gui_widget_get_color(widget, &fg_color);
+    cairo_t *cr = gtk_snapshot_append_cairo(snapshot, &bounds);
+    gdk_cairo_set_source_rgba(cr, &fg_color);
+    button->icon(cr, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height,
+                 flags, button->icon_data);
+    cairo_destroy(cr);
+}
+#else
 static gboolean _button_draw(GtkWidget *widget, cairo_t *cr)
 {
     g_return_val_if_fail(widget != NULL, FALSE);
@@ -36,7 +70,7 @@ static gboolean _button_draw(GtkWidget *widget, cairo_t *cr)
 
     GdkRGBA fg_color;
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
-    gtk_style_context_get_color(context, state, &fg_color);
+    dt_gui_widget_get_color(widget, &fg_color);
 
     /* update paint flags depending of states */
     int flags = DTGTK_BUTTON(widget)->icon_flags;
@@ -102,12 +136,17 @@ static gboolean _button_draw(GtkWidget *widget, cairo_t *cr)
 
     return FALSE;
 }
+#endif
 
 static void dtgtk_button_class_init(GtkDarktableButtonClass *klass)
 {
     GtkWidgetClass *widget_class = (GtkWidgetClass *)klass;
 
+#if GTK_CHECK_VERSION(4, 0, 0)
+    widget_class->snapshot = _button_snapshot;
+#else
     widget_class->draw = _button_draw;
+#endif
 }
 
 // Public functions
@@ -119,7 +158,7 @@ GtkWidget *dtgtk_button_new(DTGTKCairoPaintIconFunc paint, gint paintflags, void
     button->icon_flags = paintflags;
     button->icon_data = paintdata;
     button->canvas = gtk_drawing_area_new();
-    gtk_container_add(GTK_CONTAINER(button), button->canvas);
+    dt_gui_button_set_child(GTK_BUTTON(button), button->canvas);
     dt_gui_add_class(GTK_WIDGET(button), "dt_module_btn");
     gtk_widget_set_name(GTK_WIDGET(button->canvas), "button-canvas");
     return (GtkWidget *)button;

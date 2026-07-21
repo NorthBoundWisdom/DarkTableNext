@@ -83,8 +83,8 @@ static void export_preset(GtkButton *button, gpointer data);
 static void tree_row_activated_presets(GtkTreeView *tree, GtkTreePath *path,
                                        GtkTreeViewColumn *column, gpointer data);
 static void tree_selection_changed(GtkTreeSelection *selection, gpointer data);
-static gboolean tree_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data);
-static gboolean tree_key_press_presets(GtkWidget *widget, GdkEventKey *event, gpointer data);
+static gboolean tree_key_press_presets(GtkEventControllerKey *controller, guint keyval,
+                                       guint keycode, GdkModifierType state, gpointer data);
 
 static GtkWidget *_preferences_dialog;
 
@@ -260,8 +260,15 @@ static void _reset_panels_clicked(GtkButton *button, gpointer user_data)
 }
 
 // forward declaration for use in init_tab_general
-static gboolean _gui_preferences_bool_click(GtkWidget *label, GdkEventButton *event,
-                                            GtkWidget *widget);
+static void _gui_preferences_bool_click(GtkGestureSingle *gesture, int n_press, double x, double y,
+                                        gpointer user_data);
+
+static GtkWidget *_preferences_label_wrap(GtkWidget *label)
+{
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    dt_gui_box_add(box, label);
+    return box;
+}
 
 static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetweak_widgets_t *tw)
 {
@@ -285,9 +292,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
     GtkWidget *widget = dt_bauhaus_combobox_new(NULL);
     dt_bauhaus_combobox_set_selected_text_align(widget, DT_BAUHAUS_COMBOBOX_ALIGN_LEFT);
 
-    GtkWidget *labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
+    GtkWidget *labelev = _preferences_label_wrap(label);
     gtk_grid_attach(GTK_GRID(grid), labelev, 0, line++, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), widget, labelev, GTK_POS_RIGHT, 1, 1);
 
@@ -330,9 +335,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
 
     label = gtk_label_new(_("use system font size"));
     gtk_widget_set_halign(label, GTK_ALIGN_START);
-    labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
+    labelev = _preferences_label_wrap(label);
     gtk_grid_attach(GTK_GRID(grid), labelev, i, i ? 2 : line++, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), usesysfont, labelev, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_tooltip_text(usesysfont, _("use system font size"));
@@ -340,8 +343,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
                                  dt_conf_get_bool("use_system_font"));
     g_signal_connect(G_OBJECT(usesysfont), "toggled", G_CALLBACK(use_sys_font_callback),
                      (gpointer)fontsize);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event",
-                     G_CALLBACK(_gui_preferences_bool_click), (gpointer)usesysfont);
+    dt_gui_connect_click_all(labelev, _gui_preferences_bool_click, NULL, usesysfont);
 
     //font size selector
     if (dt_conf_get_float("font_size") < 5.0f || dt_conf_get_float("font_size") > 20.0f)
@@ -351,9 +353,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
 
     label = gtk_label_new(_("font size in points"));
     gtk_widget_set_halign(label, GTK_ALIGN_START);
-    labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
+    labelev = _preferences_label_wrap(label);
     gtk_grid_attach(GTK_GRID(grid), labelev, i, i ? 0 : line++, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), fontsize, labelev, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_tooltip_text(fontsize, _("font size in points"));
@@ -364,9 +364,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
     GtkWidget *screen_dpi_overwrite = gtk_spin_button_new_with_range(-1.0f, 360, 1.f);
     label = gtk_label_new(_("GUI controls and text DPI"));
     gtk_widget_set_halign(label, GTK_ALIGN_START);
-    labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
+    labelev = _preferences_label_wrap(label);
     gtk_grid_attach(GTK_GRID(grid), labelev, i, i ? 1 : line++, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), screen_dpi_overwrite, labelev, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_tooltip_text(
@@ -392,9 +390,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
     gtk_widget_set_halign(label, GTK_ALIGN_START);
     tw->apply_toggle = gtk_check_button_new();
     gtk_widget_set_name(tw->apply_toggle, "themes/usercss");
-    labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), label);
+    labelev = _preferences_label_wrap(label);
     gtk_grid_attach(GTK_GRID(grid), labelev, 0, line++, 1, 1);
     gtk_grid_attach_next_to(GTK_GRID(grid), tw->apply_toggle, labelev, GTK_POS_RIGHT, 1, 1);
     gtk_widget_set_tooltip_text(tw->apply_toggle,
@@ -402,8 +398,7 @@ static void init_tab_general(GtkWidget *dialog, GtkWidget *stack, dt_gui_themetw
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tw->apply_toggle),
                                  dt_conf_get_bool("themes/usercss"));
     g_signal_connect(G_OBJECT(tw->apply_toggle), "toggled", G_CALLBACK(usercss_callback), 0);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event",
-                     G_CALLBACK(_gui_preferences_bool_click), (gpointer)tw->apply_toggle);
+    dt_gui_connect_click_all(labelev, _gui_preferences_bool_click, NULL, tw->apply_toggle);
 
     //scrollable textarea with save button to allow user to directly modify user.css file
     GtkWidget *usercssbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -847,15 +842,24 @@ static void init_tab_presets(GtkWidget *stack)
 
     GtkWidget *search_presets = gtk_search_entry_new();
     gtk_box_pack_start(GTK_BOX(hbox), search_presets, FALSE, TRUE, 0);
+#if GTK_CHECK_VERSION(4, 0, 0)
+    gtk_search_entry_set_placeholder_text(GTK_SEARCH_ENTRY(search_presets), _("search presets list"));
+#else
     gtk_entry_set_placeholder_text(GTK_ENTRY(search_presets), _("search presets list"));
+#endif
     gtk_widget_set_tooltip_text(GTK_WIDGET(search_presets),
                                 _("incrementally search the list of presets\n"
                                   "press up or down keys to cycle through matches"));
     g_signal_connect(G_OBJECT(search_presets), "activate", G_CALLBACK(dt_gui_search_stop), tree);
     g_signal_connect(G_OBJECT(search_presets), "stop-search", G_CALLBACK(dt_gui_search_stop), tree);
+#if GTK_CHECK_VERSION(4, 0, 0)
+    gtk_search_entry_set_key_capture_widget(GTK_SEARCH_ENTRY(search_presets), GTK_WIDGET(tree));
+    gtk_tree_view_set_search_entry(tree, GTK_EDITABLE(search_presets));
+#else
     g_signal_connect(G_OBJECT(tree), "key-press-event", G_CALLBACK(dt_gui_search_start),
                      search_presets);
     gtk_tree_view_set_search_entry(tree, GTK_ENTRY(search_presets));
+#endif
 
     GtkWidget *button = gtk_button_new_with_label(C_("preferences", "import..."));
     gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, TRUE, 0);
@@ -876,8 +880,7 @@ static void init_tab_presets(GtkWidget *stack)
     g_signal_connect(G_OBJECT(tree), "row-activated", G_CALLBACK(tree_row_activated_presets), NULL);
 
     // A keypress may delete preset
-    g_signal_connect(G_OBJECT(tree), "key-press-event", G_CALLBACK(tree_key_press_presets),
-                     (gpointer)model);
+    dt_gui_connect_key(tree, tree_key_press_presets, model);
 
     // Setting up the search functionality
     gtk_tree_view_set_search_equal_func(tree, _search_func, tree, NULL);
@@ -980,17 +983,18 @@ static void tree_row_activated_presets(GtkTreeView *tree, GtkTreePath *path,
     }
 }
 
-static gboolean tree_key_press_presets(GtkWidget *widget, GdkEventKey *event, gpointer data)
+static gboolean tree_key_press_presets(GtkEventControllerKey *controller, const guint keyval,
+                                       const guint keycode, const GdkModifierType state,
+                                       gpointer data)
 {
+    (void)keycode;
+    (void)state;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     GtkTreeModel *model = (GtkTreeModel *)data;
     GtkTreeIter iter;
     GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget));
 
-    // We can just ignore mod key presses outright
-    if (event->is_modifier)
-        return FALSE;
-
-    if (event->keyval == GDK_KEY_Delete || event->keyval == GDK_KEY_BackSpace)
+    if (keyval == GDK_KEY_Delete || keyval == GDK_KEY_BackSpace)
     {
         // If a leaf node is selected, delete that preset
 
@@ -1158,21 +1162,24 @@ void dt_gui_preferences_bool_reset(GtkWidget *widget)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), def);
 }
 
-static gboolean _gui_preferences_bool_click(GtkWidget *label, GdkEventButton *event,
-                                            GtkWidget *widget)
+static void _gui_preferences_bool_click(GtkGestureSingle *gesture, int n_press, double x, double y,
+                                        gpointer user_data)
 {
-    if (event->type == GDK_BUTTON_PRESS)
+    GtkWidget *widget = user_data;
+
+    if (n_press == 1)
     {
         const gboolean cur = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), !cur);
-        return TRUE;
     }
-    if (event->type == GDK_2BUTTON_PRESS)
+    else if (n_press == 2)
     {
         dt_gui_preferences_bool_reset(widget);
-        return TRUE;
     }
-    return FALSE;
+
+    (void)gesture;
+    (void)x;
+    (void)y;
 }
 
 void dt_gui_preferences_bool_update(GtkWidget *widget)
@@ -1187,9 +1194,7 @@ GtkWidget *dt_gui_preferences_bool(GtkGrid *grid, const char *key, const guint c
 {
     GtkWidget *w_label = dt_ui_label_new(_(dt_confgen_get_label(key)));
     gtk_widget_set_tooltip_markup(w_label, _(dt_confgen_get_tooltip(key)));
-    GtkWidget *labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), w_label);
+    GtkWidget *labelev = _preferences_label_wrap(w_label);
     GtkWidget *w = gtk_check_button_new();
     gtk_widget_set_name(w, key);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), dt_conf_get_bool(key));
@@ -1198,8 +1203,7 @@ GtkWidget *dt_gui_preferences_bool(GtkGrid *grid, const char *key, const guint c
     gtk_grid_attach(GTK_GRID(grid), w, swap ? col : (col + 1), line, 1, 1);
     g_signal_connect(G_OBJECT(w), "toggled", G_CALLBACK(_gui_preferences_bool_callback),
                      (gpointer)key);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event",
-                     G_CALLBACK(_gui_preferences_bool_click), (gpointer)w);
+    dt_gui_connect_click_all(labelev, _gui_preferences_bool_click, NULL, w);
     return w;
 }
 
@@ -1215,15 +1219,18 @@ void dt_gui_preferences_int_reset(GtkWidget *widget)
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget), def);
 }
 
-static gboolean _gui_preferences_int_reset(GtkWidget *label, GdkEventButton *event,
-                                           GtkWidget *widget)
+static void _gui_preferences_int_reset(GtkGestureSingle *gesture, int n_press, double x, double y,
+                                       gpointer user_data)
 {
-    if (event->type == GDK_2BUTTON_PRESS)
+    if (n_press == 2)
     {
+        GtkWidget *widget = user_data;
         dt_gui_preferences_int_reset(widget);
-        return TRUE;
     }
-    return FALSE;
+
+    (void)gesture;
+    (void)x;
+    (void)y;
 }
 
 void dt_gui_preferences_int_update(GtkWidget *widget)
@@ -1237,9 +1244,7 @@ GtkWidget *dt_gui_preferences_int(GtkGrid *grid, const char *key, const guint co
 {
     GtkWidget *w_label = dt_ui_label_new(_(dt_confgen_get_label(key)));
     gtk_widget_set_tooltip_markup(w_label, _(dt_confgen_get_tooltip(key)));
-    GtkWidget *labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), w_label);
+    GtkWidget *labelev = _preferences_label_wrap(w_label);
     const gint min = MAX(G_MININT, dt_confgen_get_int(key, DT_MIN));
     const gint max = MIN(G_MAXINT, dt_confgen_get_int(key, DT_MAX));
     GtkWidget *w = gtk_spin_button_new_with_range(min, max, 1.0);
@@ -1251,8 +1256,7 @@ GtkWidget *dt_gui_preferences_int(GtkGrid *grid, const char *key, const guint co
     gtk_grid_attach(GTK_GRID(grid), w, col + 1, line, 1, 1);
     g_signal_connect(G_OBJECT(w), "value-changed", G_CALLBACK(_gui_preferences_int_callback),
                      (gpointer)key);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event",
-                     G_CALLBACK(_gui_preferences_int_reset), (gpointer)w);
+    dt_gui_connect_click_all(labelev, _gui_preferences_int_reset, NULL, w);
     return w;
 }
 
@@ -1318,15 +1322,18 @@ void dt_gui_preferences_string_reset(GtkWidget *widget)
     gtk_entry_set_text(GTK_ENTRY(widget), str);
 }
 
-static gboolean _gui_preferences_string_reset(GtkWidget *label, GdkEventButton *event,
-                                              GtkWidget *widget)
+static void _gui_preferences_string_reset(GtkGestureSingle *gesture, int n_press, double x,
+                                          double y, gpointer user_data)
 {
-    if (event->type == GDK_2BUTTON_PRESS)
+    if (n_press == 2)
     {
+        GtkWidget *widget = user_data;
         dt_gui_preferences_string_reset(widget);
-        return TRUE;
     }
-    return FALSE;
+
+    (void)gesture;
+    (void)x;
+    (void)y;
 }
 
 void dt_gui_preferences_string_update(GtkWidget *widget)
@@ -1341,9 +1348,7 @@ GtkWidget *dt_gui_preferences_string(GtkGrid *grid, const char *key, const guint
 {
     GtkWidget *w_label = dt_ui_label_new(_(dt_confgen_get_label(key)));
     gtk_widget_set_tooltip_markup(w_label, _(dt_confgen_get_tooltip(key)));
-    GtkWidget *labelev = gtk_event_box_new();
-    gtk_widget_add_events(labelev, GDK_BUTTON_PRESS_MASK);
-    gtk_container_add(GTK_CONTAINER(labelev), w_label);
+    GtkWidget *labelev = _preferences_label_wrap(w_label);
 
     GtkWidget *w = gtk_entry_new();
     const char *str = dt_conf_get_string_const(key);
@@ -1355,7 +1360,6 @@ GtkWidget *dt_gui_preferences_string(GtkGrid *grid, const char *key, const guint
     gtk_grid_attach(GTK_GRID(grid), w, col + 1, line, 1, 1);
     g_signal_connect(G_OBJECT(w), "changed", G_CALLBACK(_gui_preferences_string_callback),
                      (gpointer)key);
-    g_signal_connect(G_OBJECT(labelev), "button-press-event",
-                     G_CALLBACK(_gui_preferences_string_reset), (gpointer)w);
+    dt_gui_connect_click_all(labelev, _gui_preferences_string_reset, NULL, w);
     return w;
 }

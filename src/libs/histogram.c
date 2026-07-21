@@ -388,24 +388,18 @@ static void _drawable_drag_update(GtkGestureDrag *gesture, const gdouble offset_
 {
     dt_scopes_t *const s = user_data;
     dt_scopes_mode_t *const cur_mode = s->cur_mode;
-    // GTK4: use gtk_event_controller_get_current_event_state()
-    GdkEvent *event = gtk_get_current_event();
-    if (!event)
-        return;
-    if (gdk_event_get_event_type(event) == GDK_MOTION_NOTIFY)
-    {
-        // at any time user may user a modifier key to adjust speed
-        // multiplier, so calculate delta since last move, rather than
-        // offset since drag start
-        const gdouble ox = offset_x - s->last_offset_x;
-        const gdouble oy = offset_y - s->last_offset_y;
-        const double delta = dt_scopes_call(cur_mode, get_exposure_delta, ox, oy);
-        dt_dev_exposure_handle_event(1, delta, event->motion.state,
-                                     s->highlight == DT_SCOPES_HIGHLIGHT_BLACK_POINT);
-        s->last_offset_x = offset_x;
-        s->last_offset_y = offset_y;
-    }
-    gdk_event_free(event);
+    const GdkModifierType state =
+        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+
+    // At any time the user may use a modifier key to adjust the speed multiplier, so calculate
+    // the delta since the last move rather than the offset since drag start.
+    const gdouble ox = offset_x - s->last_offset_x;
+    const gdouble oy = offset_y - s->last_offset_y;
+    const double delta = dt_scopes_call(cur_mode, get_exposure_delta, ox, oy);
+    dt_dev_exposure_handle_event(1, delta, state,
+                                 s->highlight == DT_SCOPES_HIGHLIGHT_BLACK_POINT);
+    s->last_offset_x = offset_x;
+    s->last_offset_y = offset_y;
 }
 
 static void _drawable_button_press(GtkGestureSingle *gesture, const int n_press, const double x,
@@ -641,23 +635,12 @@ static void _eventbox_leave_notify_callback(GtkEventControllerMotion *controller
                                             gpointer user_data)
 {
     dt_scopes_t *const s = user_data;
-    // when click between buttons on the buttonbox a leave event is
-    // generated -- ignore it (for GTK 4, replace this with the simpler
-    // gtk_event_controller_get_current_event())
-    GdkEvent *event = gtk_get_current_event();
-    if (event)
-    {
-        if (gdk_event_get_event_type(event) == GDK_LEAVE_NOTIFY)
-        {
-            const GdkEventCrossing *xc = &event->crossing;
-            if (xc->mode == GDK_CROSSING_UNGRAB && xc->detail == GDK_NOTIFY_INFERIOR)
-            {
-                gdk_event_free(event);
-                return;
-            }
-        }
-        gdk_event_free(event);
-    }
+    // Moving between buttons produces an ungrab leave into a child; ignore it.
+    dt_gui_controller_crossing_event_t event;
+    if (dt_gui_controller_get_current_crossing_event(GTK_EVENT_CONTROLLER(controller), &event) &&
+        event.mode == GDK_CROSSING_UNGRAB && event.detail == GDK_NOTIFY_INFERIOR)
+        return;
+
     gtk_widget_hide(s->button_box_left);
     gtk_widget_hide(s->button_box_right);
     gtk_widget_hide(s->button_box_split);
@@ -735,7 +718,7 @@ static gboolean _overlay_get_child_position(GtkOverlay *overlay, GtkWidget *chil
         return FALSE;
     GtkAllocation main_alloc;
     GtkRequisition req;
-    GtkWidget *main = gtk_bin_get_child(GTK_BIN(overlay));
+    GtkWidget *main = dt_gui_overlay_get_child(overlay);
     gtk_widget_get_allocation(main, &main_alloc);
     gtk_widget_get_preferred_size(child, NULL, &req);
     alloc->width = req.width;
@@ -812,7 +795,7 @@ void gui_init(dt_lib_module_t *self)
     // a row of control buttons, split in two button boxes, on left and right side
     // overlaying the current scope
     //
-    // self->widget (GtkEventBox)
+    // self->widget (GtkBox)
     //   '--> GtkOverlay
     //          |--> scope_draw (DtGtkDrawingArea with dt_ui_resize_wrap)
     //          |--> button_box_left (GtkBox hori)
@@ -842,7 +825,7 @@ void gui_init(dt_lib_module_t *self)
     gtk_widget_set_hexpand(s->button_box_right, TRUE);
 
     s->overlay = gtk_overlay_new();
-    gtk_container_add(GTK_CONTAINER(s->overlay), s->scope_draw);
+    dt_gui_overlay_set_child(GTK_OVERLAY(s->overlay), s->scope_draw);
     gtk_overlay_add_overlay(GTK_OVERLAY(s->overlay), s->button_box_left);
     gtk_overlay_add_overlay(GTK_OVERLAY(s->overlay), s->button_box_right);
     gtk_overlay_add_overlay(GTK_OVERLAY(s->overlay), outer_box_split);
@@ -931,13 +914,11 @@ void gui_init(dt_lib_module_t *self)
 
     // FIXME: add a brightness control (via GtkScaleButton?). Different per each mode?
 
-    // The overlay has no window, and hence can't catch events. We need
-    // something on top to catch events to show/hide the buttons. The
-    // drawable is below the buttons, and hence won't catch motion
-    // events for the buttons, and gets a leave event when the cursor
-    // moves over the buttons.
-    GtkWidget *eventbox = gtk_event_box_new();
-    gtk_container_add(GTK_CONTAINER(eventbox), s->overlay);
+    // The outer box owns the event controllers which coordinate the scope
+    // and button overlays. The drawable is below the buttons and gets a
+    // leave event while the cursor moves over them.
+    GtkWidget *eventbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    dt_gui_box_add(eventbox, s->overlay);
     self->widget = eventbox;
     gtk_widget_set_name(self->widget, "main-histogram");
 

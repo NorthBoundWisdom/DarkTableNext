@@ -24,11 +24,11 @@
 G_BEGIN_DECLS
 
 #define DTGTK_TYPE_ICON dtgtk_icon_get_type()
-G_DECLARE_FINAL_TYPE(GtkDarktableIcon, dtgtk_icon, DTGTK, ICON, GtkEventBox)
+G_DECLARE_FINAL_TYPE(GtkDarktableIcon, dtgtk_icon, DTGTK, ICON, GtkDrawingArea)
 
 struct _GtkDarktableIcon
 {
-    GtkEventBox widget;
+    GtkDrawingArea widget;
     DTGTKCairoPaintIconFunc icon;
     gint icon_flags;
     void *icon_data;

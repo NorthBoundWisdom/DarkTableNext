@@ -206,11 +206,6 @@ typedef struct dt_iop_agx_gui_data_t
     // basic curve controls for 'settings' and 'curve' page (if enabled)
     dt_iop_basic_curve_controls_t basic_curve_controls;
 
-    // curve graph/plot
-    GtkAllocation allocation;
-    PangoRectangle ink;
-    GtkStyleContext *context;
-
     GtkWidget *disable_primaries_adjustments;
     GtkWidget *primaries_controls_vbox;
     GtkWidget *completely_reverse_primaries;
@@ -1355,18 +1350,17 @@ void process(dt_iop_module_t *self, dt_dev_pixelpipe_iop_t *piece, const void *c
     }
 }
 
-static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_module_t *self)
+static void _agx_draw_curve(GtkDrawingArea *area, cairo_t *crf, int width, int height,
+                            gpointer user_data)
 {
+    const dt_iop_module_t *self = user_data;
     const dt_iop_agx_params_t *p = self->params;
-    dt_iop_agx_gui_data_t *g = self->gui_data;
 
     const tone_mapping_params_t tone_mapping_params = _calculate_tone_mapping_params(p);
+    const int content_height = height - DT_RESIZE_HANDLE_SIZE;
 
-    gtk_widget_get_allocation(widget, &g->allocation);
-    g->allocation.height -= DT_RESIZE_HANDLE_SIZE;
-
-    cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, g->allocation.width,
-                                                         g->allocation.height);
+    cairo_surface_t *cst =
+        dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, content_height);
     PangoFontDescription *desc =
         pango_font_description_copy_static(darktable.bauhaus->pango_font_desc);
     cairo_t *cr = cairo_create(cst);
@@ -1374,9 +1368,9 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
 
     pango_layout_set_font_description(layout, desc);
     pango_cairo_context_set_resolution(pango_layout_get_context(layout), darktable.gui->dpi);
-    g->context = gtk_widget_get_style_context(widget);
 
     char text[32];
+    PangoRectangle ink;
 
     // text metrics
     const gint font_size = pango_font_description_get_size(desc);
@@ -1385,8 +1379,8 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
 
     g_strlcpy(text, "X", sizeof(text));
     pango_layout_set_text(layout, text, -1);
-    pango_layout_get_pixel_extents(layout, &g->ink, NULL);
-    const float line_height = g->ink.height;
+    pango_layout_get_pixel_extents(layout, &ink, NULL);
+    const float line_height = ink.height;
 
     // set graph dimensions and margins
     const int inner_padding = DT_PIXEL_APPLY_DPI(4);
@@ -1396,10 +1390,15 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
     const float margin_top = inset + 0.5f * line_height;
     const float margin_right = inset;
 
-    const float graph_width = g->allocation.width - margin_right - margin_left;
-    const float graph_height = g->allocation.height - margin_bottom - margin_top;
+    const float graph_width = width - margin_right - margin_left;
+    const float graph_height = content_height - margin_bottom - margin_top;
 
-    gtk_render_background(g->context, cr, 0, 0, g->allocation.width, g->allocation.height);
+#if !GTK_CHECK_VERSION(4, 0, 0)
+    GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(area));
+    gtk_render_background(context, cr, 0, 0, width, content_height);
+#else
+    (void)area;
+#endif
 
     // translate origin to bottom-left of graph area for easier plotting
     cairo_translate(cr, margin_left, margin_top + graph_height);
@@ -1457,16 +1456,16 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
 
         snprintf(text, sizeof(text), "%.0f%%", 100.0f * y_linear); // Format the linear value
         pango_layout_set_text(layout, text, -1);
-        pango_layout_get_pixel_extents(layout, &g->ink, NULL);
+        pango_layout_get_pixel_extents(layout, &ink, NULL);
 
         // position label slightly to the left of the graph
-        const float label_x = margin_left - g->ink.width - inset / 2.f;
+        const float label_x = margin_left - ink.width - inset / 2.f;
         // vertically center label on the guide line
-        float label_y = margin_top + graph_height - y_graph - g->ink.height / 2.f - g->ink.y;
+        float label_y = margin_top + graph_height - y_graph - ink.height / 2.f - ink.y;
 
         // ensure label stays within vertical bounds of the graph area
-        label_y = CLAMPF(label_y, margin_top - g->ink.height / 2.f - g->ink.y,
-                         margin_top + graph_height - g->ink.height / 2.f - g->ink.y);
+        label_y = CLAMPF(label_y, margin_top - ink.height / 2.f - ink.y,
+                         margin_top + graph_height - ink.height / 2.f - ink.y);
 
         cairo_move_to(cr, label_x, label_y);
         pango_cairo_show_layout(cr, layout);
@@ -1510,13 +1509,13 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
                 set_color(cr, darktable.bauhaus->graph_fg);
                 snprintf(text, sizeof(text), "%d", ev);
                 pango_layout_set_text(layout, text, -1);
-                pango_layout_get_pixel_extents(layout, &g->ink, NULL);
+                pango_layout_get_pixel_extents(layout, &ink, NULL);
                 // label slightly below the x-axis, centered horizontally
-                float label_x = margin_left + x_graph - g->ink.width / 2.f - g->ink.x;
+                float label_x = margin_left + x_graph - ink.width / 2.f - ink.x;
                 const float label_y = margin_top + graph_height + inset / 2.f;
                 // stay within horizontal bounds
-                label_x = CLAMPF(label_x, margin_left - g->ink.width / 2.f - g->ink.x,
-                                 margin_left + graph_width - g->ink.width / 2.f - g->ink.x);
+                label_x = CLAMPF(label_x, margin_left - ink.width / 2.f - ink.x,
+                                 margin_left + graph_width - ink.width / 2.f - ink.x);
                 cairo_move_to(cr, label_x, label_y);
                 pango_cairo_show_layout(cr, layout);
                 cairo_restore(cr);
@@ -1615,8 +1614,6 @@ static gboolean _agx_draw_curve(GtkWidget *widget, cairo_t *crf, const dt_iop_mo
     cairo_surface_destroy(cst);
     g_object_unref(layout);
     pango_font_description_free(desc);
-
-    return FALSE;
 }
 
 void init(dt_iop_module_t *self)
@@ -1886,7 +1883,7 @@ static GtkWidget *_create_curve_graph_box(dt_iop_module_t *self, dt_iop_agx_gui_
     g_object_set_data(G_OBJECT(g->graph_drawing_area), "iop-instance", self);
     dt_action_define_iop(self, N_("curve"), N_("graph"), GTK_WIDGET(g->graph_drawing_area), NULL);
     gtk_widget_set_can_focus(GTK_WIDGET(g->graph_drawing_area), TRUE);
-    g_signal_connect(G_OBJECT(g->graph_drawing_area), "draw", G_CALLBACK(_agx_draw_curve), self);
+    dt_gui_drawing_area_set_draw_func(g->graph_drawing_area, _agx_draw_curve, self, NULL);
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->graph_drawing_area), _("tone mapping curve"));
 
     // Pack drawing area at the top
@@ -2341,7 +2338,7 @@ static void _notebook_page_changed(GtkNotebook *notebook, GtkWidget *page, const
         if (current_parent != target_container)
         {
             g_object_ref(basics);
-            gtk_container_remove(GTK_CONTAINER(current_parent), basics);
+            dt_gui_box_remove(GTK_BOX(current_parent), basics);
             dt_gui_box_add(target_container, basics);
             g_object_unref(basics);
         }

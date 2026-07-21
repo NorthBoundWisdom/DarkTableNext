@@ -129,7 +129,7 @@ void dt_splash_screen_create(const gboolean force)
         return;
     }
 
-    darktable.splash.start_screen = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    darktable.splash.start_screen = dt_gui_toplevel_window_new();
     gtk_window_set_decorated(GTK_WINDOW(darktable.splash.start_screen), FALSE);
     gtk_window_set_resizable(GTK_WINDOW(darktable.splash.start_screen), FALSE);
     gtk_window_set_position(GTK_WINDOW(darktable.splash.start_screen), GTK_WIN_POS_CENTER);

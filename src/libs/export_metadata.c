@@ -129,10 +129,13 @@ static void _delete_tag_button_clicked(GtkButton *button, dt_lib_export_metadata
     _remove_tag_from_list(d);
 }
 
-static gboolean _key_press_on_list(GtkWidget *widget, GdkEventKey *event,
-                                   dt_lib_export_metadata_t *d)
+static gboolean _key_pressed_on_list(GtkEventControllerKey *controller, guint keyval,
+                                     guint keycode, GdkModifierType state, gpointer user_data)
 {
-    if (event->type == GDK_KEY_PRESS && event->keyval == GDK_KEY_Delete && !event->state)
+    (void)controller;
+    (void)keycode;
+    dt_lib_export_metadata_t *d = user_data;
+    if (keyval == GDK_KEY_Delete && !state)
     {
         _remove_tag_from_list(d);
         return TRUE;
@@ -243,8 +246,7 @@ char *dt_lib_export_metadata_configuration_dialog(char *metadata_presets, const 
           "otherwise the corresponding metadata is calculated and added to exported file\n"
           "click on formula cell to edit\n"
           "type '$(' to activate the completion and see the list of variables"));
-    g_signal_connect(G_OBJECT(view), "key_press_event", G_CALLBACK(_key_press_on_list),
-                     (gpointer)d);
+    dt_gui_connect_key(view, _key_pressed_on_list, d);
 
     GtkListStore *liststore = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
     d->liststore = liststore;

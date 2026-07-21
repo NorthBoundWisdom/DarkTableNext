@@ -378,25 +378,25 @@ void gui_post_expose(dt_iop_module_t *self, cairo_t *cr, const float width, cons
     cairo_stroke(cr);
 }
 
-static gboolean _area_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
-                                            dt_iop_module_t *self)
+static void _area_leave_notify_callback(GtkEventControllerMotion *controller, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rgblevels_gui_data_t *g = self->gui_data;
     g->mouse_x = g->mouse_y = -1.0;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     gtk_widget_queue_draw(widget);
-    return TRUE;
 }
 
-static gboolean _area_draw_callback(GtkWidget *widget, cairo_t *crf, dt_iop_module_t *self)
+static void _area_draw_callback(GtkDrawingArea *area, cairo_t *crf, int width, int height,
+                                gpointer user_data)
 {
+    (void)area;
+    dt_iop_module_t *self = user_data;
     dt_iop_rgblevels_gui_data_t *g = self->gui_data;
     dt_iop_rgblevels_params_t *p = self->params;
 
     const int inset = DT_GUI_CURVE_EDITOR_INSET;
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(GTK_WIDGET(g->area), &allocation);
-    int width = allocation.width;
-    int height = allocation.height - DT_RESIZE_HANDLE_SIZE;
+    height -= DT_RESIZE_HANDLE_SIZE;
     cairo_surface_t *cst = dt_cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(cst);
 
@@ -517,7 +517,6 @@ static gboolean _area_draw_callback(GtkWidget *widget, cairo_t *crf, dt_iop_modu
     cairo_set_source_surface(crf, cst, 0, 0);
     cairo_paint(crf);
     cairo_surface_destroy(cst);
-    return FALSE;
 }
 
 static void _rgblevels_move_handle(dt_iop_module_t *self, const int handle_move,
@@ -567,29 +566,29 @@ static void _rgblevels_move_handle(dt_iop_module_t *self, const int handle_move,
     gtk_widget_queue_draw(GTK_WIDGET(g->area));
 }
 
-static gboolean _area_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
-                                             dt_iop_module_t *self)
+static void _area_motion_notify_callback(GtkEventControllerMotion *controller, const double x,
+                                         const double y, gpointer user_data)
 {
+    dt_iop_module_t *self = user_data;
     dt_iop_rgblevels_gui_data_t *g = self->gui_data;
     dt_iop_rgblevels_params_t *p = self->params;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     const int inset = DT_GUI_CURVE_EDITOR_INSET;
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    int height = allocation.height - 2 * inset - DT_RESIZE_HANDLE_SIZE,
-        width = allocation.width - 2 * inset;
+    const int height = gtk_widget_get_allocated_height(widget) - 2 * inset - DT_RESIZE_HANDLE_SIZE;
+    const int width = gtk_widget_get_allocated_width(widget) - 2 * inset;
     if (!g->dragging)
     {
-        g->mouse_x = CLAMP(event->x - inset, 0, width);
+        g->mouse_x = CLAMP(x - inset, 0, width);
         g->drag_start_percentage = (p->levels[g->channel][1] - p->levels[g->channel][0]) /
                                    (p->levels[g->channel][2] - p->levels[g->channel][0]);
     }
-    g->mouse_y = CLAMP(event->y - inset, 0, height);
+    g->mouse_y = CLAMP(y - inset, 0, height);
 
     if (g->dragging)
     {
         if (g->handle_move >= 0 && g->handle_move < 3)
         {
-            const float mx = (CLAMP(event->x - inset, 0, width)) / (float)width;
+            const float mx = (CLAMP(x - inset, 0, width)) / (float)width;
 
             _rgblevels_move_handle(self, g->handle_move, mx, p->levels[g->channel],
                                    g->drag_start_percentage);
@@ -598,7 +597,7 @@ static gboolean _area_motion_notify_callback(GtkWidget *widget, GdkEventMotion *
     else
     {
         g->handle_move = 0;
-        const float mx = CLAMP(event->x - inset, 0, width) / (float)width;
+        const float mx = CLAMP(x - inset, 0, width) / (float)width;
         float dist = fabsf(p->levels[g->channel][0] - mx);
         for (int k = 1; k < 3; k++)
         {
@@ -614,92 +613,88 @@ static gboolean _area_motion_notify_callback(GtkWidget *widget, GdkEventMotion *
 
         gtk_widget_queue_draw(widget);
     }
-
-    return TRUE;
 }
 
-static gboolean _area_button_press_callback(GtkWidget *widget, GdkEventButton *event,
-                                            dt_iop_module_t *self)
+static void _area_button_press_callback(GtkGestureSingle *gesture, const int n_press, const double x,
+                                        const double y, gpointer user_data)
 {
+    (void)x;
+    dt_iop_module_t *self = user_data;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    if (y >= gtk_widget_get_allocated_height(widget) - DT_RESIZE_HANDLE_SIZE)
+        return;
+
     // set active point
-    if (event->button == GDK_BUTTON_PRIMARY)
+    if (darktable.develop->gui_module != self)
+        dt_iop_request_focus(self);
+
+    if (n_press == 2)
     {
-        if (darktable.develop->gui_module != self)
-            dt_iop_request_focus(self);
+        _turn_selregion_picker_off(self);
 
-        if (event->type == GDK_2BUTTON_PRESS)
-        {
-            _turn_selregion_picker_off(self);
-
-            // Reset
-            dt_iop_rgblevels_gui_data_t *g = self->gui_data;
-            dt_iop_rgblevels_params_t *p = self->params;
-            const dt_iop_rgblevels_params_t *const default_params = self->default_params;
-
-            for (int i = 0; i < 3; i++)
-                p->levels[g->channel][i] = default_params->levels[g->channel][i];
-
-            // Needed in case the user scrolls or drags immediately after a reset,
-            // as drag_start_percentage is only updated when the mouse is moved.
-            g->drag_start_percentage = 0.5;
-            dt_dev_add_history_item(darktable.develop, self, TRUE);
-            gtk_widget_queue_draw(GTK_WIDGET(g->area));
-        }
-        else
-        {
-            _turn_selregion_picker_off(self);
-
-            dt_iop_rgblevels_gui_data_t *g = self->gui_data;
-            g->dragging = 1;
-        }
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static gboolean _area_button_release_callback(GtkWidget *widget, GdkEventButton *event,
-                                              dt_iop_module_t *self)
-{
-    if (event->button == GDK_BUTTON_PRIMARY)
-    {
+        // Reset
         dt_iop_rgblevels_gui_data_t *g = self->gui_data;
-        g->dragging = 0;
-        return TRUE;
+        dt_iop_rgblevels_params_t *p = self->params;
+        const dt_iop_rgblevels_params_t *const default_params = self->default_params;
+
+        for (int i = 0; i < 3; i++)
+            p->levels[g->channel][i] = default_params->levels[g->channel][i];
+
+        // Needed in case the user scrolls or drags immediately after a reset,
+        // as drag_start_percentage is only updated when the mouse is moved.
+        g->drag_start_percentage = 0.5;
+        dt_dev_add_history_item(darktable.develop, self, TRUE);
+        gtk_widget_queue_draw(GTK_WIDGET(g->area));
     }
-    return FALSE;
+    else
+    {
+        _turn_selregion_picker_off(self);
+
+        dt_iop_rgblevels_gui_data_t *g = self->gui_data;
+        g->dragging = 1;
+    }
+    dt_gui_claim(gesture);
 }
 
-static gboolean _area_scroll_callback(GtkWidget *widget, GdkEventScroll *event,
-                                      dt_iop_module_t *self)
+static void _area_button_release_callback(GtkGestureSingle *gesture, const int n_press, const double x,
+                                          const double y, gpointer user_data)
 {
+    (void)gesture;
+    (void)n_press;
+    (void)x;
+    (void)y;
+    dt_iop_module_t *self = user_data;
+    dt_iop_rgblevels_gui_data_t *g = self->gui_data;
+    g->dragging = 0;
+}
+
+static void _area_scroll_callback(GtkEventControllerScroll *controller, const double dx,
+                                  const double dy, gpointer user_data)
+{
+    dt_iop_module_t *self = user_data;
     dt_iop_rgblevels_gui_data_t *g = self->gui_data;
     dt_iop_rgblevels_params_t *p = self->params;
-
-    if (dt_gui_ignore_scroll(event))
-        return FALSE;
 
     _turn_selregion_picker_off(self);
 
     if (g->dragging)
-    {
-        return FALSE;
-    }
+        return;
 
     if (darktable.develop->gui_module != self)
         dt_iop_request_focus(self);
 
-    const float interval = 0.002 * dt_accel_get_speed_multiplier(widget, event->state);
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
+    const GdkModifierType state =
+        dt_gui_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller));
+    const float interval = 0.002 * dt_accel_get_speed_multiplier(widget, state);
     // Distance moved for each scroll event
-    int delta_y;
-    if (dt_gui_get_scroll_unit_delta(event, &delta_y))
+    const int delta = (int)(dx + dy);
+    if (delta != 0)
     {
-        const float new_position = p->levels[g->channel][g->handle_move] - interval * delta_y;
+        const float new_position = p->levels[g->channel][g->handle_move] - interval * delta;
         _rgblevels_move_handle(self, g->handle_move, new_position, p->levels[g->channel],
                                g->drag_start_percentage);
-        return TRUE;
     }
-
-    return TRUE; // Ensure that scrolling the widget cannot move side panel
 }
 
 static void _auto_levels_callback(GtkButton *button, dt_iop_module_t *self)
@@ -1058,16 +1053,14 @@ void gui_init(dt_iop_module_t *self)
     gtk_widget_set_tooltip_text(GTK_WIDGET(g->area),
                                 _("drag handles to set black, gray, and white points. "
                                   "operates on L channel."));
-    g_signal_connect(G_OBJECT(g->area), "draw", G_CALLBACK(_area_draw_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "button-press-event",
-                     G_CALLBACK(_area_button_press_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "button-release-event",
-                     G_CALLBACK(_area_button_release_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "motion-notify-event",
-                     G_CALLBACK(_area_motion_notify_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "leave-notify-event",
-                     G_CALLBACK(_area_leave_notify_callback), self);
-    g_signal_connect(G_OBJECT(g->area), "scroll-event", G_CALLBACK(_area_scroll_callback), self);
+    dt_gui_drawing_area_set_draw_func(g->area, _area_draw_callback, self, NULL);
+    GtkGestureSingle *click =
+        dt_gui_connect_click(g->area, _area_button_press_callback, _area_button_release_callback, self);
+    gtk_gesture_single_set_button(click, GDK_BUTTON_PRIMARY);
+    dt_gui_connect_motion(g->area, _area_motion_notify_callback, NULL, _area_leave_notify_callback, self);
+    dt_gui_connect_scroll(g->area,
+                          GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES | GTK_EVENT_CONTROLLER_SCROLL_DISCRETE,
+                          _area_scroll_callback, self);
 
 #define PICKER_SETUP(color, name, tooltip)                                                         \
     g->color##pick = dt_color_picker_new(self, DT_COLOR_PICKER_POINT, NULL);                       \

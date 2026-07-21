@@ -49,9 +49,9 @@ typedef struct dt_lib_navigation_t
 
 /* expose function for navigation module */
 static gboolean _lib_navigation_draw_callback(GtkWidget *widget, cairo_t *crf, gpointer user_data);
-/* motion notify callback handler*/
-static gboolean _lib_navigation_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
-                                                       dt_lib_module_t *self);
+/* motion callback handler*/
+static void _lib_navigation_motion_notify_callback(GtkEventControllerMotion *controller, double x,
+                                                   double y, gpointer user_data);
 /* scroll callback */
 static void _lib_navigation_scroll_callback(GtkEventControllerScroll *controller, double dx,
                                             double dy, gpointer user_data);
@@ -67,9 +67,6 @@ static gboolean _lib_navigation_button_press_callback(GtkWidget *widget, GdkEven
 /* button release callback */
 static gboolean _lib_navigation_button_release_callback(GtkWidget *widget, GdkEventButton *event,
                                                         dt_lib_module_t *self);
-/* leave notify callback */
-static gboolean _lib_navigation_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
-                                                      dt_lib_module_t *self);
 
 /* helper function for position set */
 static void _lib_navigation_set_position(struct dt_lib_module_t *self, const double x,
@@ -134,7 +131,7 @@ static void _lib_navigation_control_redraw_callback(gpointer instance, dt_lib_mo
     DT_LEAVE_GUI_UPDATE();
     g_free(zoomline);
 
-    gtk_widget_queue_draw(gtk_bin_get_child(GTK_BIN(self->widget)));
+    gtk_widget_queue_draw(dt_gui_overlay_get_child(GTK_OVERLAY(self->widget)));
 }
 
 static void _lib_navigation_clear_lighttable_surface(dt_lib_navigation_t *d)
@@ -267,10 +264,7 @@ void gui_init(dt_lib_module_t *self)
     g_signal_connect(zoom_gesture, "begin", G_CALLBACK(_lib_navigation_pinch_begin_callback), self);
     g_signal_connect(zoom_gesture, "scale-changed",
                      G_CALLBACK(_lib_navigation_pinch_scale_callback), self);
-    g_signal_connect(G_OBJECT(thumbnail), "motion-notify-event",
-                     G_CALLBACK(_lib_navigation_motion_notify_callback), self);
-    g_signal_connect(G_OBJECT(thumbnail), "leave-notify-event",
-                     G_CALLBACK(_lib_navigation_leave_notify_callback), self);
+    dt_gui_connect_motion(thumbnail, _lib_navigation_motion_notify_callback, NULL, NULL, self);
 
     /* set size of navigation draw area */
     // gtk_widget_set_size_request(thumbnail, -1, DT_PIXEL_APPLY_DPI(175));
@@ -315,7 +309,7 @@ void gui_init(dt_lib_module_t *self)
     gtk_widget_set_name(d->zoom, "nav-zoom");
 
     self->widget = gtk_overlay_new();
-    gtk_container_add(GTK_CONTAINER(self->widget), thumbnail);
+    dt_gui_overlay_set_child(GTK_OVERLAY(self->widget), thumbnail);
     gtk_overlay_add_overlay(GTK_OVERLAY(self->widget), d->zoom);
     dt_gui_add_class(self->widget, "dt_plugin_ui_main");
     gtk_widget_show_all(self->widget);
@@ -487,16 +481,17 @@ void _lib_navigation_set_position(dt_lib_module_t *self, const double x, const d
     }
 }
 
-static gboolean _lib_navigation_motion_notify_callback(GtkWidget *widget, GdkEventMotion *event,
-                                                       dt_lib_module_t *self)
+static void _lib_navigation_motion_notify_callback(GtkEventControllerMotion *controller, const double x,
+                                                   const double y, gpointer user_data)
 {
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
-        return FALSE;
+        return;
 
     GtkAllocation allocation;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(controller));
     gtk_widget_get_allocation(widget, &allocation);
-    _lib_navigation_set_position(self, event->x, event->y, allocation.width, allocation.height);
-    return TRUE;
+    _lib_navigation_set_position((dt_lib_module_t *)user_data, x, y, allocation.width,
+                                 allocation.height);
 }
 
 static void _zoom_changed(GtkWidget *widget, gpointer user_data)
@@ -597,25 +592,22 @@ static void _lib_navigation_scroll_callback(GtkEventControllerScroll *controller
     if (dt_view_get_current() != DT_VIEW_DARKROOM)
         return;
 
-    GdkEvent *event = gtk_get_current_event();
-    if (event)
+    dt_gui_controller_scroll_event_t event;
+    if (dt_gui_controller_get_current_scroll_event(GTK_EVENT_CONTROLLER(controller), &event))
     {
-        GdkDevice *device = gdk_event_get_source_device(event);
-        if (device && gdk_device_get_source(device) == GDK_SOURCE_TOUCHPAD &&
-            event->scroll.direction == GDK_SCROLL_SMOOTH)
+        if (event.device && gdk_device_get_source(event.device) == GDK_SOURCE_TOUCHPAD &&
+            event.direction == GDK_SCROLL_SMOOTH)
         {
             dt_dev_zoom_move(&darktable.develop->full, DT_ZOOM_MOVE, 15.0, 0, dx, dy, TRUE);
         }
         else
         {
-            const gboolean constrain = !dt_modifier_eq(controller, GDK_CONTROL_MASK);
-            gdouble x, y;
-            if (_lib_navigation_widget_to_center(GTK_EVENT_CONTROLLER(controller), event->scroll.x,
-                                                 event->scroll.y, &x, &y))
-                dt_dev_zoom_move(&darktable.develop->full, DT_ZOOM_SCROLL, 0.0f, dy < 0, x, y,
-                                 constrain);
+            const gboolean constrain = !dt_modifier_is(event.state, GDK_CONTROL_MASK);
+            if (_lib_navigation_widget_to_center(GTK_EVENT_CONTROLLER(controller), event.x, event.y,
+                                                 &event.x, &event.y))
+                dt_dev_zoom_move(&darktable.develop->full, DT_ZOOM_SCROLL, 0.0f, dy < 0, event.x,
+                                 event.y, constrain);
         }
-        gdk_event_free(event);
     }
 }
 
@@ -696,10 +688,4 @@ static gboolean _lib_navigation_button_release_callback(GtkWidget *widget, GdkEv
     d->dragging = 0;
 
     return dt_view_get_current() == DT_VIEW_DARKROOM;
-}
-
-static gboolean _lib_navigation_leave_notify_callback(GtkWidget *widget, GdkEventCrossing *event,
-                                                      dt_lib_module_t *self)
-{
-    return TRUE;
 }

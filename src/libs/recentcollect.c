@@ -207,7 +207,7 @@ static void _lib_recentcollection_updated(gpointer instance, dt_collection_chang
             pretty_print(line2, str, sizeof(str));
         gtk_widget_set_tooltip_text(item->button, str);
         gtk_button_set_label(GTK_BUTTON(item->button), str);
-        GtkWidget *child = gtk_bin_get_child(GTK_BIN(item->button));
+        GtkWidget *child = dt_gui_button_get_child(GTK_BUTTON(item->button));
         item->confid = k;
         if (child)
         {
@@ -245,7 +245,7 @@ void _menuitem_preferences(GtkMenuItem *menuitem, dt_lib_module_t *self)
         _("_cancel"), GTK_RESPONSE_NONE, _("_save"), GTK_RESPONSE_ACCEPT, NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_ACCEPT);
     dt_prefs_init_dialog_recentcollect(dialog);
-    g_signal_connect(dialog, "key-press-event", G_CALLBACK(dt_handle_dialog_enter), NULL);
+    dt_gui_connect_key_bubble(dialog, dt_handle_dialog_enter, NULL);
 
 #ifdef GDK_WINDOWING_QUARTZ
     dt_osx_disallow_fullscreen(dialog);

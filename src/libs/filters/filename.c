@@ -63,13 +63,16 @@ static void _filename_changed(GtkWidget *widget, gpointer user_data)
     g_free(value);
 }
 
-static gboolean _filename_focus_out(GtkWidget *entry, GdkEventFocus *event, gpointer user_data)
+static void _filename_focus_out(GtkWidget *entry, GParamSpec *pspec, gpointer user_data)
 {
+    (void)pspec;
+    if (gtk_widget_has_focus(entry))
+        return;
+
     _widgets_filename_t *filename = (_widgets_filename_t *)user_data;
     if (filename->rule->cleaning)
-        return FALSE;
+        return;
     _filename_changed(entry, user_data);
-    return FALSE;
 }
 
 void _filename_tree_update(_widgets_filename_t *filename)
@@ -224,9 +227,14 @@ static void _filename_update_selection(_widgets_filename_t *filename)
     filename->internal_change--;
 }
 
-static gboolean _filename_press(GtkWidget *w, GdkEventButton *e, _widgets_filename_t *filename)
+static void _filename_press(GtkGestureSingle *gesture, int n_press, double x, double y,
+                            gpointer user_data)
 {
-    if (e->button == GDK_BUTTON_SECONDARY)
+    (void)x;
+    (void)y;
+    GtkWidget *w = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    _widgets_filename_t *filename = (_widgets_filename_t *)user_data;
+    if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_SECONDARY)
     {
         _filename_tree_update_visibility(w, filename);
         gtk_popover_set_default_widget(GTK_POPOVER(filename->pop), w);
@@ -236,14 +244,13 @@ static gboolean _filename_press(GtkWidget *w, GdkEventButton *e, _widgets_filena
         _filename_update_selection(filename);
 
         gtk_widget_show_all(filename->pop);
-        return TRUE;
+        dt_gui_claim(gesture);
     }
-    else if (e->button == GDK_BUTTON_PRIMARY && e->type == GDK_2BUTTON_PRESS)
+    else if (gtk_gesture_single_get_current_button(gesture) == GDK_BUTTON_PRIMARY && n_press == 2)
     {
         gtk_entry_set_text(GTK_ENTRY(w), "");
         _filename_changed(w, filename);
     }
-    return FALSE;
 }
 
 static gboolean _filename_update(dt_lib_filtering_rule_t *rule)
@@ -354,10 +361,9 @@ static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
                                                   "\nright-click to get existing filenames"));
     gtk_box_pack_start(GTK_BOX(hb), filename->name, TRUE, TRUE, 0);
     g_signal_connect(G_OBJECT(filename->name), "activate", G_CALLBACK(_filename_changed), filename);
-    g_signal_connect(G_OBJECT(filename->name), "focus-out-event", G_CALLBACK(_filename_focus_out),
+    g_signal_connect(G_OBJECT(filename->name), "notify::has-focus", G_CALLBACK(_filename_focus_out),
                      filename);
-    g_signal_connect(G_OBJECT(filename->name), "button-press-event", G_CALLBACK(_filename_press),
-                     filename);
+    dt_gui_connect_click_all(filename->name, _filename_press, NULL, filename);
 
     filename->ext = dt_ui_entry_new(0);
     gtk_widget_set_can_default(filename->ext, TRUE);
@@ -369,17 +375,16 @@ static void _filename_widget_init(dt_lib_filtering_rule_t *rule,
                                   "\nright-click to get existing extensions"));
     gtk_box_pack_start(GTK_BOX(hb), filename->ext, TRUE, TRUE, 0);
     g_signal_connect(G_OBJECT(filename->ext), "activate", G_CALLBACK(_filename_changed), filename);
-    g_signal_connect(G_OBJECT(filename->ext), "focus-out-event", G_CALLBACK(_filename_focus_out),
+    g_signal_connect(G_OBJECT(filename->ext), "notify::has-focus", G_CALLBACK(_filename_focus_out),
                      filename);
-    g_signal_connect(G_OBJECT(filename->ext), "button-press-event", G_CALLBACK(_filename_press),
-                     filename);
+    dt_gui_connect_click_all(filename->ext, _filename_press, NULL, filename);
     // the popup
     filename->pop = gtk_popover_new(filename->name);
     gtk_widget_set_size_request(filename->pop, 250, 400);
     g_signal_connect(G_OBJECT(filename->pop), "closed", G_CALLBACK(_filename_popup_closed),
                      filename);
     hb = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(filename->pop), hb);
+    dt_gui_popover_set_child(GTK_POPOVER(filename->pop), hb);
 
     // the name tree
     GtkTreeModel *model = GTK_TREE_MODEL(

@@ -125,7 +125,7 @@ static void _local_copy_widget_init(dt_lib_filtering_rule_t *rule,
 
     local_copy->combo = dt_bauhaus_combobox_new_full(
         DT_ACTION(self), N_("rules"), N_("local copy"), _("local copied state filter"), 0,
-        (GtkCallback)_local_copy_changed, local_copy, _local_copy_names);
+        (dt_gui_widget_callback_t)_local_copy_changed, local_copy, _local_copy_names);
     dt_bauhaus_widget_hide_label(local_copy->combo);
 
     gtk_box_pack_start(GTK_BOX(rule->w_special_box), local_copy->combo, TRUE, TRUE, 0);

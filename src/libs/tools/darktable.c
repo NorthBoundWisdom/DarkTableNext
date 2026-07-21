@@ -49,10 +49,11 @@ typedef struct dt_lib_darktable_t
 } dt_lib_darktable_t;
 
 /* expose function for darktable module */
-static gboolean _lib_darktable_draw_callback(GtkWidget *widget, cairo_t *cr, dt_lib_module_t *self);
+static void _lib_darktable_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, int height,
+                                         gpointer user_data);
 /* button press callback */
-static gboolean _lib_darktable_button_press_callback(GtkWidget *widget, GdkEventButton *event,
-                                                     dt_lib_module_t *self);
+static void _lib_darktable_button_press_callback(GtkGestureSingle *gesture, int n_press, double x,
+                                                  double y, gpointer user_data);
 
 const char *name(dt_lib_module_t *self)
 {
@@ -86,13 +87,12 @@ void gui_init(dt_lib_module_t *self)
     self->data = (void *)d;
 
     /* create drawing area */
-    self->widget = gtk_event_box_new();
+    self->widget = gtk_drawing_area_new();
 
     /* connect callbacks */
-    g_signal_connect(G_OBJECT(self->widget), "draw", G_CALLBACK(_lib_darktable_draw_callback),
-                     self);
-    g_signal_connect(G_OBJECT(self->widget), "button-press-event",
-                     G_CALLBACK(_lib_darktable_button_press_callback), self);
+    dt_gui_drawing_area_set_draw_func(GTK_DRAWING_AREA(self->widget), _lib_darktable_draw_callback,
+                                      self, NULL);
+    dt_gui_connect_click_all(self->widget, _lib_darktable_button_press_callback, NULL, self);
 
     /* create a cairo surface of dt icon */
 
@@ -187,24 +187,34 @@ void gui_cleanup(dt_lib_module_t *self)
     self->data = NULL;
 }
 
-static gboolean _lib_darktable_draw_callback(GtkWidget *widget, cairo_t *cr, dt_lib_module_t *self)
+static void _lib_darktable_draw_callback(GtkDrawingArea *area, cairo_t *cr, int width, int height,
+                                         gpointer user_data)
 {
+    GtkWidget *widget = GTK_WIDGET(area);
+    dt_lib_module_t *self = user_data;
     dt_lib_darktable_t *d = self->data;
 
+#if !GTK_CHECK_VERSION(4, 0, 0)
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
-
-    GtkAllocation allocation;
-    gtk_widget_get_allocation(widget, &allocation);
-    gtk_render_background(context, cr, 0, 0, allocation.width, allocation.height);
+    gtk_render_background(context, cr, 0, 0, width, height);
+#else
+    (void)width;
+    (void)height;
+#endif
 
     // Get the normal foreground color from the CSS stylesheet
-    GdkRGBA *tmpcolor;
-    gtk_style_context_get(context, GTK_STATE_FLAG_NORMAL, "color", &tmpcolor, NULL);
+    GdkRGBA tmpcolor;
+    dt_gui_widget_get_color(widget, &tmpcolor);
 
-    GtkStateFlags state = gtk_widget_get_state_flags(widget);
-
-    PangoFontDescription *font_desc = NULL;
+    PangoFontDescription *font_desc;
+#if GTK_CHECK_VERSION(4, 0, 0)
+    font_desc =
+        pango_font_description_copy(pango_context_get_font_description(gtk_widget_get_pango_context(widget)));
+#else
+    const GtkStateFlags state = gtk_widget_get_state_flags(widget);
+    font_desc = NULL;
     gtk_style_context_get(context, state, "font", &font_desc, NULL);
+#endif
 
     /* paint icon image */
     if (d->image)
@@ -237,7 +247,7 @@ static gboolean _lib_darktable_draw_callback(GtkWidget *widget, cairo_t *cr, dt_
         pango_layout_set_font_description(layout, font_desc);
 
         pango_layout_set_text(layout, PACKAGE_NAME, -1);
-        cairo_set_source_rgba(cr, tmpcolor->red, tmpcolor->green, tmpcolor->blue, 0.7);
+        cairo_set_source_rgba(cr, tmpcolor.red, tmpcolor.green, tmpcolor.blue, 0.7);
         cairo_move_to(cr, d->image_width + DT_PIXEL_APPLY_DPI(3.0), DT_PIXEL_APPLY_DPI(5.0));
         pango_cairo_show_layout(cr, layout);
     }
@@ -250,21 +260,23 @@ static gboolean _lib_darktable_draw_callback(GtkWidget *widget, cairo_t *cr, dt_
     pango_layout_set_font_description(layout, font_desc);
     pango_layout_set_text(layout, txt, -1);
     cairo_move_to(cr, d->image_width + DT_PIXEL_APPLY_DPI(4.0), DT_PIXEL_APPLY_DPI(32.0));
-    cairo_set_source_rgba(cr, tmpcolor->red, tmpcolor->green, tmpcolor->blue, 0.7);
+    cairo_set_source_rgba(cr, tmpcolor.red, tmpcolor.green, tmpcolor.blue, 0.7);
     pango_cairo_show_layout(cr, layout);
     g_free(txt);
     /* cleanup */
-    gdk_rgba_free(tmpcolor);
     g_object_unref(layout);
     pango_font_description_free(font_desc);
-
-    return TRUE;
 }
 
-static gboolean _lib_darktable_button_press_callback(GtkWidget *widget, GdkEventButton *event,
-                                                     dt_lib_module_t *self)
+static void _lib_darktable_button_press_callback(GtkGestureSingle *gesture, int n_press, double x,
+                                                  double y, gpointer user_data)
 {
+    dt_lib_module_t *self = user_data;
     /* show about box */
     darktable_show_about_dialog();
-    return TRUE;
+    (void)gesture;
+    (void)n_press;
+    (void)x;
+    (void)y;
+    (void)self;
 }
