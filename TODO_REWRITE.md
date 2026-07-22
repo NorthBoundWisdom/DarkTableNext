@@ -119,7 +119,7 @@ services/engine 拥有的抽象端口，并只在 composition root 中装配。d
 ```text
 ravo inspect <input> --json
 ravo operations --json
-ravo recipe import-xmp <legacy.xmp> --output <recipe>
+ravo recipe import-xmp <legacy.xmp> --asset-id <id> --input <input-uri> --output <recipe>
 ravo recipe validate <recipe>
 ravo render <input> --recipe <recipe> --output <image> --backend cpu
 ravo --version --json
@@ -191,8 +191,9 @@ Ravo/
       单元，写特征测试和所有权说明，再移植或以独立库引入；不得让新核心反向包含 `src/` 内部头文件。
 - [ ] 每个新目录有明确 owner、公开头文件边界和禁止依赖清单；跨层 include 在 code review 中失败。
 - [ ] 新旧依赖都继续遵守 FreeCM 源根工作流，不使用网络下载、FetchContent 或未固定的源码复制。
-- [ ] 阶段 3 出口前，构建图中不存在 `desktop` target 或 UI toolkit 依赖；CLI target 自身不包含算法
-      源文件，只链接 engine facade 和必要 adapters。
+- [ ] 阶段 3 出口前，构建图中不存在 `desktop` target、Qt GUI/QML/Widgets 或其他 UI toolkit 依赖；
+      `Qt6::Core` 仅允许作为私有文件系统 adapter。CLI target 自身不包含算法源文件，只链接 engine
+      facade 和必要 adapters。
 
 ## 旧测试的真实基线与复用方式
 

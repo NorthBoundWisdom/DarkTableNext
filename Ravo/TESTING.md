@@ -28,10 +28,21 @@ rg -n '^[[:space:]]*add_iop\(' src/iop/CMakeLists.txt | wc -l
 All new Ravo C++ unit, contract, and integration tests use GoogleTest;
 GoogleMock is permitted when a port interaction itself is the contract under
 test. CMocka is a legacy `src/tests` dependency only and must not be linked by
-a Ravo target. GoogleTest 1.17.0 is installed for this Windows workspace, but
-there is not yet a Ravo target or a command to run it. The first CMake change
-must document its fixed dependency source and the actual test invocation
-without adding `FetchContent` or a network download.
+a Ravo target. The Phase 1 CMake graph finds the already installed
+`gtest:x64-windows` 1.17.0 package through the existing vcpkg toolchain; it
+does not use `FetchContent`, a CMake network download, or a legacy library.
+
+The Windows adapter test graph also requires Qt 6.11.1 `Core`, discovered from
+the FreeCM-generated root CMake preset. Qt is linked privately by
+`ravo_adapters` and its runtime is copied beside `ravo` and contract tests on
+Windows so test discovery does not depend on a global `PATH`. The actual
+commands are in [Ravo/README.md](README.md#构建与测试). Current labels are
+`ravo-unit` and `ravo-contract`; regression, legacy-diff, sanitizer and
+performance labels remain future work.
+
+Current contract coverage includes versioned JSON/exit semantics, Unicode
+local paths through the Qt adapter, atomic recipe output, empty-history legacy
+XMP import, and the explicit rejection of each unmapped legacy operation.
 
 ## 测试层次
 
@@ -94,4 +105,5 @@ mask 语义和色彩空间不允许以浮点差异为理由变化。
 - `ravo-sanitizer`：ASan/UBSan，平台可用时增加 TSan；
 - `ravo-performance`：报告型或带经批准门槛的代表性工作负载。
 
-当前没有这些 target 或命令。创建时必须同步更新本文件，不得把计划中的 CI 写成已经通过。
+当前已建立 `ravo-unit` 和 `ravo-contract` target/命令；其余标签在相应测试和 CI 入口实际存在前仍不得
+描述为已通过。

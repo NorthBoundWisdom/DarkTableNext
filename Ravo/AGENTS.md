@@ -7,7 +7,8 @@
 1. 运行 `git status --short --branch`，保留用户已有改动。
 2. 阅读 `Ravo/README.md`、`ARCHITECTURE.md`、`MIGRATION.md`、`TESTING.md` 和相关 ADR。
 3. 涉及旧行为或算法时，阅读对应 `src/` 实现和 fixture；不得根据上游 darktable 习惯猜测。
-4. 确认本次工作属于当前阶段。阶段 3 出口前不得创建 desktop target 或 UI toolkit 依赖。
+4. 确认本次工作属于当前阶段。阶段 3 出口前不得创建 desktop target 或 UI toolkit 依赖；
+   `Qt6::Core` 仅可作为 `adapters` 私有的路径/文件 I/O 实现，禁止 Qt GUI、QML、Widgets 类型或 target。
 5. 写明所有权、生命周期、线程边界、错误/取消路径和最小验证集后再跨层修改。
 
 ## 当前技术边界

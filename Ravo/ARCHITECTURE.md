@@ -40,14 +40,14 @@ Ravo Studio ──▶ Application Services ──▶ 同一个 Ravo Engine Facad
 | `ravo_foundation` | errors、IDs、任务、取消、基础资源契约 | 标准库 | recipe、engine、CLI、数据库、UI |
 | `ravo_recipe` | recipe、operation schema、mask/blend、版本升级 | foundation | codec、像素执行、数据库、UI |
 | `ravo_engine` | inspect、registry、render facade、CPU pixelpipe | foundation、recipe、抽象端口 | CLI、catalog、UI、旧 `src` |
-| `ravo_adapters` | codec、文件系统、平台实现 | 对应端口、固定第三方依赖 | 业务/UI 状态 |
+| `ravo_adapters` | codec、文件系统、平台实现 | 对应端口、固定第三方依赖；`Qt6::Core` 仅限私有文件系统实现 | 业务/UI 状态、Qt GUI/QML/Widgets 类型 |
 | `ravo_cli` | 参数、流、日志、JSON、退出码、composition root | engine facade、adapters | 算法源码、engine 私有头、旧核心 |
 | `ravo_domain`（后续） | catalog、版本、history、styles | foundation、recipe、仓库端口 | UI、数据库实现 |
 | `ravo_services`（后续） | 桌面用例与任务编排 | domain、engine | widget、SQL、算法内部 |
 | `ravo_desktop`（后续） | 窗口、输入、可访问性和呈现 | services、预览资源 API | SQL、算法、engine 私有头 |
 
-第三方依赖不是架构层。LibRaw、lcms、Exiv2、SQLite 或平台 API 必须由私有 adapter 包装，裸句柄、宏、
-异常和头文件不能泄漏到公开契约。
+第三方依赖不是架构层。LibRaw、lcms、Exiv2、SQLite、`Qt6::Core` 或平台 API 必须由私有 adapter
+包装，裸句柄、宏、异常和头文件不能泄漏到公开契约。
 
 ## 核心数据契约
 
@@ -113,7 +113,8 @@ CLI 不负责：
 
 ## 阶段性非目标
 
-- 阶段 0–3 不实现桌面 UI、widget、catalog 或旧界面复刻。
+- 阶段 0–3 不实现桌面 UI、widget、catalog 或旧界面复刻。`Qt6::Core` 仅作为 adapter 私有的路径与
+  文件 I/O 实现；Qt GUI、QML、Widgets 和任何 desktop target 仍被禁止。
 - CPU 正确性完成前不实现 GPU backend。
 - 不追求逐行翻译 0.9，也不以源码行数作为迁移完成度。
 - 不恢复已从产品范围删除的插件、格式、在线服务或历史 ABI。
