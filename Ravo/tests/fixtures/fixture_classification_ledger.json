@@ -1,0 +1,958 @@
+{
+  "classification_ledger_schema_version": 1,
+  "entries": [
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0000-nop",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0001-exposure",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0002-local-contrast",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0003-denoise-bilateral",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0004-masks",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0005-orientation-minus-90",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0006-orientation-plus-90",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0007-orientation-180",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0011-gdnd-90",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0012-gdnd-45",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0013-denoiseprofile-wavelets",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0014-filmic-rgb",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0015-shadhi-bilateral",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0016-lowpass-bilateral",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0017-monochrome",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0018-perspective-corr",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0019-color-mapping",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0020-denoise-nlmeans",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0021-retouch-wavelets",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0022-color-zones",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0024-contrast-equalizer",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0025-exposure-guided-filter",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0026-haze-removal",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0027-denoiseprofile-nlmeans",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0028-highpass-overlay",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0029-color-correction",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0030-framing",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0032-watermark",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0033-blending-modes-uniform",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0034-blending-modes-parametric",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0036-liquify",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0037-filmic-reconstruction",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0038-colorcontrast",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0043-dithering-fs",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0044-dithering-random",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0045-vignetting",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0046-demosaic-greens",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0047-demosaic-amaze",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0048-demosaic-vng",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0049-rawdenoise",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0050-bloom",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0051-soften",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0052-color-reconstruction",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0054-rgblevels-linked",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0055-rgblevels-indep",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0057-colorize",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0059-grain",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0060-rgbcurve-indep",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0061-lowlight",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0062-splittoning",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0063-velvia",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0064-demosaic-xtrans-vng",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0065-demosaic-mark1",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0066-demosaic-mark3",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0067-demosaic-fdc",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0068-rawdenoise-xtrans",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0069-tonecurve-rgb-linked",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0070-tonecurve-xyz-linked",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0071-tonecurve-lab-linked",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0072-tonecurve-lab-indep",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0074-retouch-clone",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0075-retouch-heal",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0076-retouch-blur-fill",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0078-basecurve-fusion",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0079-toneequal-gf",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0080-toneequal-eigf",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0081-mask-groups",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0082-demosaic-rcd",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0083-colorbalancergb",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0084-cacorrect",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0085-channelmixerrgb",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0086-diffuse",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0087-blendif-and-or",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0088-blendif-diff-excl",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0089-blurs",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0090-mask-combine",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0091-mask-combine-intersection-inverted",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0092-filmicrgb-v6",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0093-colorbalancergb-ucs",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0094-highlight-segmentation",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0095-highlight-opposed",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0096-lensfun",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0097-sigmoid",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0098-colorchecker",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0099-surfblur-small-radius",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0101-lowpass-gaussian",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0102-censorize",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0107-colorin-gamma",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0108-colorin-clip",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0109-colorin-gamma-and-clip",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0110-perspective-bilinear",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0111-perspective-lanczos2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0112-perspective-lanczos3",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0113-resample-bilinear",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0114-resample-bicubic",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0115-resample-lanczos2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0116-blending-rgb-display-1",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0117-blending-rgb-display-2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0118-blending-rgb-display-3",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0119-blending-rgb-scene-1",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0120-blending-rgb-scene-2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0121-blending-rgb-scene-3",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0122-blending-lab-1",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0123-blending-lab-2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0124-blending-lab-3",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0125-blending-lab-4",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0126-CAT-linear-Bradford",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0127-CAT-nonlinear-Bradford",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0128-CAT-adapt-XYZ",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0129-toneeq-RGB-average",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0130-toneeq-HSL-lightness",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0131-toneeq-RGB-max",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0132-toneeq-RGB-sum",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0133-toneeq-power",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0134-toneeq-geomean",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0135-negadoctor",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0136-posterize",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0137-shadhi-gauss",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0138-filmic-v7",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0139-filmicrgb-v3-nochroma",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0140-filmicrgb-v4-nochroma",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0141-filmicrgb-v5-nochroma",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0142-filmicrgb-v6-euclidean",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0143-denoiseprofiled-wave-rgb",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0144-masks-combine-sum",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0145-lens-metadata-xtransIV-modversion-6",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0146-lens-metadata-xtransIV-modversion-7",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0147-liquify-grow-shrink",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0148-filmicv7-gamut-mapping",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0149-gdnd-neg",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0150-detail-mask",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0151-sigmoid-no-hue-preservation",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0152-rgb-primaries",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0153-hl-reconstruct-filmicrgb",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0154-framing-100",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0155-framing-line-169",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0156-exposure-guided-filter-new-feather",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0157-enlarge-canvas",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0158-coloreq-no-guided-filter",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0159-coloreq-guided-filter",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0160-overlay",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0161-overlay-modules-before-after",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0162-demosaic-lmmse",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0163-demosaic-rcd-vng4",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0164-demosaic-amaze-vng4",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0165-demosaic-markesteijn-vng",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0166-haze-removal-v2",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0167-raster-mask",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0168-lut3d-srgb-pyramid",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0169-lut3d-adobe-trilinear",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0170-lut3d-prophoto-tetrahedral",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0171-capture-sharpen",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0172-capture-dual-rcd",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0173-capture-dual-markesteijn",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0174-agx-default",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0175-agx",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0176-color-harmonizer",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    },
+    {
+      "classification": "unclassified",
+      "evidence": [],
+      "id": "0177-bayer4",
+      "rationale": "No product disposition or Ravo CPU acceptance evidence is recorded; static fixture presence is complete."
+    }
+  ],
+  "entry_count": 158,
+  "fixture_index_sha256": "8d2dc67b1bb15b3ce68513c9c05d94788028b37091f3d54816c11f406371359d",
+  "ledger_state": "classification-pending",
+  "legacy_manifest_schema_version": 1,
+  "notice": "This ledger is pre-acceptance evidence only. A classification does not certify a legacy CPU result or an accepted Ravo image result."
+}

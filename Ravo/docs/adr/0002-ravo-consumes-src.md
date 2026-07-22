@@ -16,7 +16,7 @@ incremental old-side adapters and capability-by-capability deletion strategy.
 ## Decision
 
 - 迁移以 capability/operation 为单位，并为每项建立旧 CPU 基线和新契约。
-- Ravo 生产代码永不依赖 `src`；差分只通过 fixture 或独立旧进程完成。
+- Ravo 生产代码永不依赖 `src`；验证只读取冻结 fixture，不配置、编译或运行独立旧进程。
 - 必要过渡依赖只能是 `src` → Ravo 稳定 facade，而且必须带来可衡量的旧代码删除。
 - 一项能力只有在 Ravo 验收、消费者切换、旧源码/构建/资源/配置/文档删除后才算迁移完成。
 - 最终发行切换后删除旧应用入口和剩余 `src`，Ravo 成为唯一受支持实现。

@@ -40,11 +40,11 @@ int cli_exit_code(const ErrorCode code) noexcept
     case ErrorCode::kUnsupported:
         return 5;
     case ErrorCode::kIo:
+    case ErrorCode::kConflict:
         return 6;
     case ErrorCode::kCancelled:
         return 7;
     case ErrorCode::kInternal:
-    case ErrorCode::kConflict:
         return 70;
     }
     return 70;

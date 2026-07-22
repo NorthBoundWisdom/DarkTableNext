@@ -1,0 +1,58 @@
+{
+  "fixtures": [
+    {
+      "expected_png": {
+        "path": "darktable-tests/0000-nop/expected.png",
+        "sha256": "207ecde1f59eadea107d830bf0b6b9fd33147db333e46d86e122f6bf3c5221d5",
+        "size_bytes": 5146216
+      },
+      "id": "0000-nop",
+      "legacy_cpu_status": "not-run-by-policy",
+      "role": "neutral",
+      "xmp": {
+        "path": "darktable-tests/0000-nop/nop.xmp",
+        "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
+        "size_bytes": 4495
+      }
+    },
+    {
+      "expected_png": {
+        "path": "darktable-tests/0001-exposure/expected.png",
+        "sha256": "48906ecaca2a32f1eeb45237f8aed3b9a9c60b296661c669ed3be79607d83c1b",
+        "size_bytes": 5146216
+      },
+      "id": "0001-exposure",
+      "legacy_cpu_status": "not-run-by-policy",
+      "role": "visible-operation",
+      "xmp": {
+        "path": "darktable-tests/0001-exposure/exposure.xmp",
+        "sha256": "6bc9f5f2ae684b84ff374e97990c99fa4086875fc4a4f4cb43185866e26a5401",
+        "size_bytes": 4889
+      }
+    }
+  ],
+  "notice": "This is a complete manifest-backed static input candidate. Old CPU execution is prohibited; this is not an accepted Ravo image result.",
+  "plan_schema_version": 1,
+  "ravo_mapping": {
+    "ravo.core.exposure": {
+      "canonical_recipe": null,
+      "constraints": [
+        "legacy XMP schema 6",
+        "exposure module version 5",
+        "manual mode",
+        "zero black-level correction",
+        "no blend data",
+        "no mask history",
+        "singleton exposure history"
+      ],
+      "legacy_operation": "exposure",
+      "status": "restricted-proven"
+    }
+  },
+  "source_image": {
+    "path": "darktable-tests/images/mire1.cr2",
+    "sha256": "578dc1b45add995be167802f9f874a95de3113d2f133cc86d2cf931448f76f3f",
+    "size_bytes": 15855600
+  },
+  "state": "candidate-not-frozen"
+}

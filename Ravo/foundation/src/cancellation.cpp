@@ -1,7 +1,9 @@
 #include "ravo/foundation/cancellation.h"
 
 #include <atomic>
+#include <chrono>
 #include <mutex>
+#include <optional>
 #include <utility>
 
 namespace ravo::detail
@@ -10,6 +12,7 @@ namespace ravo::detail
 struct CancellationState
 {
     std::atomic_bool requested = false;
+    std::optional<std::chrono::steady_clock::time_point> deadline;
     mutable std::mutex mutex;
     std::string reason;
 };
@@ -26,7 +29,15 @@ CancellationToken::CancellationToken(std::shared_ptr<detail::CancellationState> 
 
 bool CancellationToken::is_cancellation_requested() const noexcept
 {
-    return state_ != nullptr && state_->requested.load(std::memory_order_acquire);
+    if (state_ == nullptr)
+    {
+        return false;
+    }
+    if (state_->requested.load(std::memory_order_acquire))
+    {
+        return true;
+    }
+    return state_->deadline.has_value() && std::chrono::steady_clock::now() >= *state_->deadline;
 }
 
 std::string CancellationToken::reason() const
@@ -34,6 +45,11 @@ std::string CancellationToken::reason() const
     if (state_ == nullptr)
     {
         return {};
+    }
+    if (!state_->requested.load(std::memory_order_acquire) && state_->deadline.has_value() &&
+        std::chrono::steady_clock::now() >= *state_->deadline)
+    {
+        return "deadline_exceeded";
     }
     std::lock_guard lock(state_->mutex);
     return state_->reason;
@@ -54,6 +70,18 @@ CancellationSource::CancellationSource()
 {
 }
 
+CancellationSource::CancellationSource(const std::chrono::steady_clock::time_point deadline)
+    : CancellationSource()
+{
+    state_->deadline = deadline;
+}
+
+CancellationSource
+CancellationSource::with_deadline(const std::chrono::steady_clock::time_point deadline)
+{
+    return CancellationSource{deadline};
+}
+
 CancellationToken CancellationSource::token() const
 {
     return CancellationToken{state_};
@@ -61,6 +89,7 @@ CancellationToken CancellationSource::token() const
 
 bool CancellationSource::cancel(std::string reason)
 {
+    std::lock_guard lock(state_->mutex);
     bool expected = false;
     if (!state_->requested.compare_exchange_strong(expected, true, std::memory_order_release,
                                                    std::memory_order_relaxed))
@@ -68,7 +97,6 @@ bool CancellationSource::cancel(std::string reason)
         return false;
     }
 
-    std::lock_guard lock(state_->mutex);
     state_->reason = std::move(reason);
     return true;
 }

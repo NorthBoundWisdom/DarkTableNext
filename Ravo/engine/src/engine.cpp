@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include "raw_pipeline.h"
+
 namespace ravo
 {
 
@@ -20,8 +22,8 @@ Result<EngineFacade> EngineFacade::create_phase1()
     return EngineFacade{std::move(registry).value()};
 }
 
-Result<AssetDescriptor> EngineFacade::inspect(const std::string_view input_uri,
-                                              const CancellationToken &cancellation) const
+Result<InspectionResult> EngineFacade::inspect(const std::string_view input_uri,
+                                               const CancellationToken &cancellation) const
 {
     auto cancelled = cancellation.check();
     if (!cancelled)
@@ -33,9 +35,14 @@ Result<AssetDescriptor> EngineFacade::inspect(const std::string_view input_uri,
         return make_error(ErrorCode::kInvalidArgument,
                           "Input URI must not be empty for inspection");
     }
-    return make_error(ErrorCode::kUnsupported,
-                      "Input inspection requires the Phase 2 codec adapter",
-                      {{"input_uri", std::string(input_uri)}});
+    auto raw = decode_raw(input_uri);
+    if (!raw)
+    {
+        return raw.error();
+    }
+    return InspectionResult{
+        std::string(input_uri), "raw", raw.value().make, raw.value().model, raw.value().width,
+        raw.value().height,     true};
 }
 
 const std::vector<OperationDescriptor> &EngineFacade::operations() const noexcept
@@ -80,7 +87,35 @@ Result<RenderResult> EngineFacade::render(const RenderRequest &request,
     {
         progress_sink->on_progress({request.correlation_id, "validation_complete", 1, 1});
     }
-    return make_error(ErrorCode::kUnsupported, "CPU rendering requires the Phase 2 pixel engine");
+    if (request.output_uri.empty())
+    {
+        return make_error(ErrorCode::kInvalidArgument, "Render output URI must not be empty");
+    }
+    auto decoded = decode_raw(request.asset.input_uri);
+    if (!decoded)
+    {
+        return decoded.error();
+    }
+    if (progress_sink != nullptr)
+    {
+        progress_sink->on_progress({request.correlation_id, "decode_complete", 1, 1});
+    }
+    auto rendered = render_raw(decoded.value(), request);
+    if (!rendered)
+    {
+        return rendered.error();
+    }
+    auto written = write_png_atomically(request.output_uri, rendered.value());
+    if (!written)
+    {
+        return written.error();
+    }
+    if (progress_sink != nullptr)
+    {
+        progress_sink->on_progress({request.correlation_id, "output_complete", 1, 1});
+    }
+    return RenderResult{request.correlation_id, request.output_uri, rendered.value().width,
+                        rendered.value().height};
 }
 
 } // namespace ravo

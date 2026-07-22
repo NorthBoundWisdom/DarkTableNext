@@ -92,6 +92,11 @@ Result<void> write_utf8_text_file_atomically(const std::string_view path_utf8,
     {
         return make_error(ErrorCode::kInvalidArgument, "Output content is too large");
     }
+    if (QFileInfo(path.value()).exists())
+    {
+        return make_error(ErrorCode::kConflict, "Output path already exists",
+                          {{"path", std::string(path_utf8)}});
+    }
 
     QSaveFile output(path.value());
     if (!output.open(QIODevice::WriteOnly))

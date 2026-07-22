@@ -1,27 +1,25 @@
 # Ravo Testing Strategy
 
-## 当前旧基线
+## 当前静态基线
 
 截至 2026-07-21：
 
-- `src/tests` 注册 3 个 CTest target；其中一个 sample 不执行断言；
-- `darktable-tests/` 有 158 组 XMP + `expected.png` 图像回归；
+- 冻结的 `src/tests` 清单注册 3 个历史 CTest target；其中一个 sample 不执行断言；
+- `darktable-tests/` 有 158 组 XMP + `expected.png` 静态图像 fixture；
 - fixture 覆盖 68 个 operation 名；当前 IOP CMake 清单有 76 个非注释注册项，部分受条件控制；
 - 保留的图像回归明确排除了 UI 测试。
 
-重跑统计：
+以下 Python 检查验证清单、哈希与冻结边界，不配置或执行旧 target：
 
-```sh
-rg -n 'add_test\(|add_cmocka_test\(' src/tests
-find darktable-tests -mindepth 1 -maxdepth 1 -type d -name '[0-9][0-9][0-9][0-9]-*' | wc -l
-find darktable-tests -mindepth 2 -maxdepth 2 -type f -name '*.xmp' | wc -l
-find darktable-tests -mindepth 2 -maxdepth 2 -type f -name 'expected.png' | wc -l
-rg -o 'operation="[^"]+"' darktable-tests -g '*.xmp' | sed 's/.*operation="//;s/"$//' | sort -u | wc -l
-rg -n '^[[:space:]]*add_iop\(' src/iop/CMakeLists.txt | wc -l
+```powershell
+python Ravo/tools/freeze_legacy_manifest.py --check
+python Ravo/tools/check_capability_inventory.py
+python Ravo/tools/check_freeze_reference.py
 ```
 
-这些数字是测试资产盘点，不是覆盖率。旧图像测试适合作为端到端 oracle，但不能替代新模型、参数、
-边界、所有权和错误路径测试。
+这些数字是静态资产盘点，不是覆盖率。旧工程、旧 CLI、旧 CTest 和 `darktable-tests/run` 全部冻结且
+禁止运行；已提交 fixture 只能作为 Ravo 端到端输出的只读参考，不能替代新模型、参数、边界、所有权
+和错误路径测试。
 
 ## Test framework boundary
 
@@ -32,17 +30,22 @@ a Ravo target. The Phase 1 CMake graph finds the already installed
 `gtest:x64-windows` 1.17.0 package through the existing vcpkg toolchain; it
 does not use `FetchContent`, a CMake network download, or a legacy library.
 
-The Windows adapter test graph also requires Qt 6.11.1 `Core`, discovered from
-the FreeCM-generated root CMake preset. Qt is linked privately by
-`ravo_adapters` and its runtime is copied beside `ravo` and contract tests on
-Windows so test discovery does not depend on a global `PATH`. The actual
+The Windows test graph also requires Qt 6.11.1 `Core`, discovered from the
+FreeCM-generated root CMake preset. QtCore is an allowed Ravo dependency and
+its runtime is copied beside `ravo` and contract tests on Windows so test
+discovery does not depend on a global `PATH`. The actual
 commands are in [Ravo/README.md](README.md#构建与测试). Current labels are
-`ravo-unit` and `ravo-contract`; regression, legacy-diff, sanitizer and
+`ravo-unit` and `ravo-contract`; regression, sanitizer and
 performance labels remain future work.
 
 Current contract coverage includes versioned JSON/exit semantics, Unicode
 local paths through the Qt adapter, atomic recipe output, empty-history legacy
-XMP import, and the explicit rejection of each unmapped legacy operation.
+XMP import, the narrowly proven manual exposure-v5 mapping, and the explicit
+rejection of unmapped legacy operations, blend/mask state, and multi-entry
+history. It also covers real `mire1.cr2` inspection, strict absorption of the
+frozen `nop.xmp` baseline, bounded non-empty PNG output, output conflict,
+memory/cancellation paths, command-line input binding, and the visible
+brightness increase from `+1 EV`.
 
 ## 测试层次
 
@@ -52,20 +55,23 @@ XMP import, and the explicit rejection of each unmapped legacy operation.
 | Contract | target 与公开契约 | facade、CLI JSON/退出码、codec/FS 端口、错误、取消 |
 | Synthetic image | 可定位像素行为 | 小图、边缘、alpha、NaN/Inf、mask、几何、分块 |
 | Legacy mapping | 旧数据读取 | XMP operation/version/params → canonical recipe 或显式拒绝 |
-| Differential/golden | 新旧 CPU 一致性 | 真实 RAW、最终 PNG/TIFF、32-bit float、metadata、容差 |
+| Golden/reference | Ravo CPU 对冻结 fixture | 真实 RAW、已提交 PNG、Ravo 32-bit float、metadata、容差 |
 | Integration | 完整无头工作流 | inspect → import XMP → validate → render → atomic output |
 | Performance/resource | 可交付性 | 延迟、吞吐、峰值内存、长批处理、取消、磁盘满 |
 | UI（后续） | 桌面行为 | service contract、焦点、输入、快速切图、销毁、可访问性 |
 
-## 旧回归复用
+## 冻结 fixture 复用
 
-- 开工前用固定旧构建、依赖、线程、内存和 CPU backend 实跑全部 fixture。
-- 只冻结实际通过且原图齐全的基线；基线失败或平台波动必须分类，不能默认标绿。
-- 保存原图、XMP、`expected.png`、必要的 32-bit float 输出、元数据摘要、命令配置和容差。
-- 新实现期间禁止用 Ravo 输出执行 `--update-expected`。
-- legacy wrapper 可以转换命令行调用，但不能修改 XMP、暗加参数、放宽容差或转发到旧 CLI。
-- 同一 fixture 独立运行旧 CPU 和 Ravo CPU；比较像素、NaN/Inf、尺寸/ROI、alpha、色彩、metadata
-  和错误状态。
+- 开工前运行 Python 静态检查，确认 158 组 fixture、5 个原图、哈希与冻结树一致。
+- 不配置、编译或执行旧工程、旧 CLI、旧 CTest、旧打包 target 或 `darktable-tests/run`；Windows 辅助
+  脚本只使用 Python 或 PowerShell。
+- `tests/fixtures/fixture_classification_ledger.json` 必须与 `legacy_manifest.json` 的 fixture ID 集合完全一致；
+  初始 `unclassified` 不是缺少输入或 skip。后续分类只能为 `frozen_fixture_reference`、`missing_asset`、
+  `product_approved_incompatibility`、`deferred_ravo_operation` 或 `unclassified`，且非 `unclassified` 项必须
+  链接可读静态、产品决定或 Ravo 验收证据。
+- 已提交原图、XMP 和 `expected.png` 是权威冻结参考输入；Ravo 自有 32-bit float 输出、元数据摘要、
+  配置和容差作为新证据另存，不覆盖冻结资产。
+- 每个保留 fixture 只运行 Ravo CPU，比较像素、NaN/Inf、尺寸/ROI、alpha、色彩、metadata 和错误状态。
 - 已从 Ravo 产品范围删除的 fixture 只有在兼容性决定记录后才能排除，并必须测试可读的拒绝错误。
 
 ## 每个 operation 的最低验收
@@ -94,16 +100,17 @@ XMP import, and the explicit rejection of each unmapped legacy operation.
 确定性不要求所有浮点位跨架构完全相同，但每项允许差异必须有可解释容差。NaN/Inf、几何、操作顺序、
 mask 语义和色彩空间不允许以浮点差异为理由变化。
 
-## CI 门槛
+## 本地测试标签
 
 首个构建骨架落地时，应建立独立 Ravo 标签，至少分为：
 
 - `ravo-unit`：快速、纯 C++、无旧库和 UI；
 - `ravo-contract`：facade、adapter 和 CLI；
 - `ravo-regression`：选定 RAW/金样；
-- `ravo-legacy-diff`：需要旧 CLI/fixture 的隔离任务；
 - `ravo-sanitizer`：ASan/UBSan，平台可用时增加 TSan；
 - `ravo-performance`：报告型或带经批准门槛的代表性工作负载。
 
-当前已建立 `ravo-unit` 和 `ravo-contract` target/命令；其余标签在相应测试和 CI 入口实际存在前仍不得
-描述为已通过。
+当前已建立本地 `ravo-unit` 和 `ravo-contract` target/命令；后者还运行只读的 manifest、vertical-slice
+candidate、capability inventory、fixture classification ledger、freeze-reference 与 production
+dependency-boundary Python contract check。本轮只维护本机 Windows/MSVC 配置与编译，不新增 CI/CD；
+其余标签在相应本地测试实际存在前仍不得描述为已通过。

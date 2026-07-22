@@ -7,8 +7,8 @@
 1. 运行 `git status --short --branch`，保留用户已有改动。
 2. 阅读 `Ravo/README.md`、`ARCHITECTURE.md`、`MIGRATION.md`、`TESTING.md` 和相关 ADR。
 3. 涉及旧行为或算法时，阅读对应 `src/` 实现和 fixture；不得根据上游 darktable 习惯猜测。
-4. 确认本次工作属于当前阶段。阶段 3 出口前不得创建 desktop target 或 UI toolkit 依赖；
-   `Qt6::Core` 仅可作为 `adapters` 私有的路径/文件 I/O 实现，禁止 Qt GUI、QML、Widgets 类型或 target。
+4. 确认本次工作属于当前阶段。阶段 3 出口前不得创建 desktop target；`Qt6::Core` 是允许的新工程
+   基础依赖，Qt GUI、QML、Widgets 类型或 target 仍被禁止。
 5. 写明所有权、生命周期、线程边界、错误/取消路径和最小验证集后再跨层修改。
 
 ## 当前技术边界
@@ -23,11 +23,12 @@
 
 - `foundation` 不依赖 recipe、engine、CLI、catalog、UI 或平台实现。
 - `recipe` 只依赖 foundation；它不知道像素执行器、数据库或 UI。
-- `engine` 依赖 foundation/recipe 及自己声明的端口；第三方裸类型只出现在私有 adapter。
+- `engine` 依赖 foundation/recipe 及自己声明的端口；可以直接使用 QtCore，其他第三方裸类型优先留在
+  私有 adapter。
 - `cli` 依赖 engine facade 和 adapter composition；不得包含算法源码或访问 engine 私有状态。
 - 后续 services 依赖 engine/domain；desktop 只依赖 services 和只读预览资源契约。
-- Ravo 生产代码不得包含 `src/` 头、链接旧库、`dlopen` 旧模块或读取旧全局状态。测试只能把旧 CLI
-  当独立进程 oracle，或读取已冻结 fixture。
+- Ravo 生产代码不得包含 `src/` 头、链接旧库、`dlopen` 旧模块或读取旧全局状态。测试只能读取已冻结
+  fixture 与源码；不得配置、编译或运行旧 CLI、旧 CTest 或 `darktable-tests/run`。
 - 冻结的旧应用不复用 Ravo，也不增加 adapter；生产依赖必须保持完全独立，直到 Ravo 达到发行切换
   门槛后整体退役旧应用。
 
@@ -42,9 +43,9 @@
 
 ## 算法迁移
 
-- 迁移单位是可验收的 capability/operation，不是目录或行数。
-- 先冻结旧 CPU 特征和容差，再实现 Ravo 版本；开发期间不得用新输出覆盖旧金样。
-- 可以保留经验证的数学思想或移植纯算法，但不得连带复制 GUI、旧 module lifecycle、配置 shim、
+- 迁移单位是可由 CLI 观察的 capability/operation 批次，不是目录或行数。
+- 直接阅读冻结 C 源码并重写 C++20 行为；用聚焦 Ravo UT 覆盖旧实现的关键分支，但不得编译或运行旧 UT。
+- 可以移植可理解的数学思想或纯算法，但不得连带复制 GUI、旧 module lifecycle、配置 shim、
   动态注册、OpenCL 类型或无消费者代码。
 - Ravo 通过完整产品验收并完成发行切换后，才在阶段 7 删除 `src` 所有权。删除必须覆盖 CMake、
   资源、配置、文档与测试，并以全仓搜索证明没有可达消费者；迁移期间不逐项修改冻结的旧实现。
@@ -52,12 +53,16 @@
 
 ## 验证与交付
 
+- Windows 上的新工程辅助工具只使用 Python 或 PowerShell；不得引入旧应用 runner。CMake/MSVC 只配置
+  和编译 `Ravo/` target。
+
 - 纯文档：检查真实路径、相对链接、命令、术语、diff 和 `git diff --check`。
 - 新 C++ 单元：只链接 Ravo target，并运行相关 unit/contract 标签和 sanitizer 可行集。
-- operation：运行参数/schema、合成边界、旧 XMP 映射、真实 RAW 差分及数值/元数据比较。
+- operation：运行参数/schema、合成边界、旧 XMP 映射，并把 Ravo 输出与已提交 RAW/PNG/metadata
+  fixture 比较；不启动旧进程生成即时差分。
 - 公共头或调度广泛改动：运行完整 Ravo unit/contract、保留 fixture 和跨平台可行构建。
 - 不把未运行测试写成通过，不把 macOS 构建写成全平台通过。
 - 未经明确要求，不提交、amend、rebase 或 push。
 
-当前尚无 Ravo 构建命令。创建首个 CMake target 时，必须在同一变更中把真实命令加入 README 和
-TESTING；在此之前不要编造占位命令。
+Ravo 的 Windows/MSVC 构建命令和 FreeCM 项目命令分别记录在 `README.md` 与
+`../configs/freecm.commands.jsonc`；这些入口只能配置、构建、运行和测试 Ravo。

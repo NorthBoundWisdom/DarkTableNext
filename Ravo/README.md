@@ -3,17 +3,20 @@
 Ravo 是 DarkTableNext 仓库中的下一代照片处理内核。它将先作为无头 C++20 图像引擎和正式 CLI
 交付，后续 catalog、应用服务与桌面 UI 只能建立在同一套 engine facade 之上。
 
-当前状态：**Phase 0 文档、决策记录和 fixture 清单已冻结；Phase 1 已建立独立的 C++20
-foundation、recipe、engine、adapter、CLI 和 GoogleTest target。** `ravo --version --json`、
-`ravo operations --json` 与 `ravo recipe validate <recipe> --json` 已实现并受测试保护。RAW inspect、
-CPU render 仍返回结构化 `unsupported`，不得当作已实现的像素工作流。legacy XMP import 目前只接受空
-history；任何旧 operation 都返回 `unsupported_legacy_operation`，直到其 canonical 参数映射经过验证。
+当前状态：**Phase 0 静态基线与 Phase 1 工程骨架已建立，Phase 2 的首个 RAW/CLI 纵切片已经可运行。**
+`ravo inspect` 可读取 LibRaw 支持的 16-bit Bayer RAW；`ravo render` 可执行 nop 与
+`ravo.core.exposure`，应用裁剪、black/white 归一化、camera white balance、LibRaw camera-to-sRGB
+矩阵、基础 3×3 Bayer 插值和 sRGB 编码，并原子写出有界 PNG。该结果是继续批量重写 pixelpipe 的
+可工作起点，尚未通过冻结 `expected.png`、浮点金样、完整 ICC/metadata 或全尺寸性能门槛。
+
+legacy XMP import 接受空 history，严格吸收冻结 `nop.xmp` 中完全匹配的内建 RAW 基线项，并支持
+schema-6/v5、手动模式、zero-black、无 blend/mask 的单条 exposure history；完整 exposure fixture
+历史、实际 mask/blend 和其他旧 operation 仍返回结构化不兼容错误，直到 canonical 映射经过验证。
 
 ## 构建与测试
 
-先运行仓库根目录的 `python3 configs/source_root_workflow.py --update`，它会从活动锁生成根
-`CMakePresets.json`，其中包含 Windows Qt SDK 的 `CMAKE_PREFIX_PATH`。随后从已加载 MSVC 环境的
-终端运行：
+先运行仓库根目录的 `python configs/source_root_workflow.py --update`，它会从活动锁生成当前主机的
+根 `CMakePresets.json`。Windows/MSVC 从已加载编译器环境的终端运行：
 
 ```powershell
 Set-Location Ravo
@@ -22,16 +25,32 @@ cmake --build --preset ravo_win_msvc_debug --parallel
 ctest --preset ravo_win_msvc_debug
 ```
 
-`Ravo/CMakePresets.json` 只继承根目录生成的 Windows preset，不复制 Qt SDK 路径。`Qt6::Core` 只在
-`ravo_adapters` 私有实现中处理 UTF-8 本地路径、文件 I/O 与未来原子输出；它不把 Qt 类型暴露给
-engine/recipe/CLI 头文件，也不引入 Qt GUI、QML、Widgets 或 desktop target。Qt 的版本、许可证和
-运行时部署决定见 [ADR-0005](docs/adr/0005-qtcore-filesystem-adapter.md)。
+macOS/Linux 的 FreeCM 项目命令通过 `tools/freecm_project.py` 读取各自主机 preset 并配置同一 Ravo
+源码；三平台可以并行开发。本页当前只记录 Windows/MSVC 已实测通过，不能据此声称其他平台已通过。
+
+`Ravo/CMakePresets.json` 只继承根目录生成的 Windows preset，不复制 Qt SDK 路径。`Qt6::Core` 是 Ravo
+允许的基础依赖，可在能简化 Unicode、文件、JSON、时间和运行时实现的 target 中直接使用；Qt GUI、
+QML、Widgets 和 desktop target 仍不进入无头阶段。Qt 的版本、许可证和运行时部署决定见
+[ADR-0005](docs/adr/0005-qtcore-filesystem-adapter.md)。
 
 当前的 XMP 导入命令要求调用者显式提供资产身份，不从 sidecar 路径猜测：
 
 ```text
 ravo recipe import-xmp <legacy.xmp> --asset-id <id> --input <input-uri> --output <recipe> --json
 ```
+
+`import-xmp` never overwrites an existing output file: it returns the versioned `conflict` error and
+exit status `6`, leaving that file untouched.
+
+当前 RAW/PNG 纵切片命令为：
+
+```text
+ravo inspect <input> --json
+ravo render <input> --recipe <recipe> --output <png> --backend cpu [--width N] [--height N] --json
+```
+
+`render` 的 `<input>` 是本次实际解码源；recipe 中的 asset ID 与其 operation 快照仍用于验证和执行。
+已有输出路径返回 `conflict`，不会被隐式覆盖。
 
 ## 名称与产物
 

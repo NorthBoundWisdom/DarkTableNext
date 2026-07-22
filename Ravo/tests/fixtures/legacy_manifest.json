@@ -6589,5 +6589,5 @@
       "size_bytes": 30844144
     }
   ],
-  "state": "inventory-only"
+  "state": "frozen-static-reference"
 }

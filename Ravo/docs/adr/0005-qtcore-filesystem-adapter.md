@@ -1,15 +1,14 @@
-# ADR-0005: Use Qt6 Core for private filesystem adapters
+# ADR-0005: Allow Qt6 Core throughout the headless project
 
 - Status: Accepted
 - Date: 2026-07-22
 
 ## Context
 
-Ravo's CLI, recipe model, and engine need one deterministic boundary for
-UTF-8 input paths, native filesystem encodings, bounded reads, error mapping,
-and later atomic output. Letting each CLI command translate paths through
-`std::filesystem` would duplicate Windows wide-character handling and make
-the engine's portable contract depend on platform path types.
+Ravo's CLI, recipe model, and engine need dependable Unicode paths, files,
+JSON, time, and general runtime primitives. Restricting QtCore to one adapter
+would create forwarding interfaces even when a direct QtCore implementation is
+clearer and faster to migrate.
 
 The sibling RobimPCR repository already uses Qt 6.11.1's `QString`, `QFile`,
 `QFileInfo`, and `QSaveFile` for this class of adapter work. The local Windows
@@ -18,10 +17,11 @@ toolchain has the same Qt SDK installed at configuration time.
 ## Decision
 
 - Ravo requires Qt 6.11 or newer with the `Core` component only.
-- `Qt6::Core` is linked privately by `ravo_adapters`; no Qt header or type may
-  appear in foundation, recipe, engine, CLI, or a public Ravo adapter header.
-- The adapter accepts an unretained UTF-8 path string, creates a private
-  `QString`, and maps `QFile`/`QFileInfo` failures to Ravo `TaskError` values.
+- Any Ravo target may link and use `Qt6::Core` when it simplifies the
+  implementation. Do not create an adapter whose only purpose is hiding a
+  straightforward QtCore value or utility.
+- Stable recipes and machine JSON remain versioned data contracts; they do not
+  serialize Qt object memory layouts.
 - FreeCM's generated root CMake preset supplies the Qt SDK location. The Ravo
   preset inherits it rather than hard-coding a path.
 - Windows CMake copies the `Qt6::Core` runtime beside `ravo` and the contract
@@ -38,8 +38,8 @@ toolchain has the same Qt SDK installed at configuration time.
 - The build needs the FreeCM-managed Qt CMake prefix in addition to the
   existing vcpkg test toolchain. CMake does not download Qt, and Ravo adds no
   production dependency on the frozen `src` graph.
-- Future atomic recipe/export writes use `QSaveFile` in the same adapter layer
-  instead of reimplementing platform replacement behavior per command.
+- Future atomic recipe/export writes can use `QSaveFile` directly from the
+  owning Ravo implementation instead of reimplementing platform replacement.
 
 ## Rejected alternatives
 

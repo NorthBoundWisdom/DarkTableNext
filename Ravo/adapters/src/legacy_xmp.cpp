@@ -1,7 +1,15 @@
 #include "ravo/adapters/legacy_xmp.h"
 
+#include <algorithm>
+#include <array>
+#include <bit>
+#include <cmath>
+#include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
@@ -28,6 +36,259 @@ namespace
     return {};
 }
 
+[[nodiscard]] Result<std::string> required_attribute(const QXmlStreamAttributes &attributes,
+                                                     const QStringView name,
+                                                     const std::string_view operation)
+{
+    for (const auto &attribute : attributes)
+    {
+        if (attribute.name() == name && !attribute.value().isEmpty())
+        {
+            return utf8(attribute.value());
+        }
+    }
+    return make_error(ErrorCode::kUnsupported,
+                      "Legacy XMP operation is missing a required attribute",
+                      {{"attribute", utf8(name)},
+                       {"legacy_operation", std::string(operation)},
+                       {"reason", "unsupported_legacy_operation"}});
+}
+
+[[nodiscard]] bool has_attribute(const QXmlStreamAttributes &attributes, const QStringView name)
+{
+    for (const auto &attribute : attributes)
+    {
+        if (attribute.name() == name)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+[[nodiscard]] bool has_supported_xmp_schema(const QXmlStreamAttributes &attributes)
+{
+    for (const auto &attribute : attributes)
+    {
+        if (attribute.name() == u"xmp_version")
+        {
+            return attribute.value() == u"6";
+        }
+    }
+    return false;
+}
+
+[[nodiscard]] int hex_value(const char value) noexcept
+{
+    if (value >= '0' && value <= '9')
+    {
+        return value - '0';
+    }
+    if (value >= 'a' && value <= 'f')
+    {
+        return value - 'a' + 10;
+    }
+    if (value >= 'A' && value <= 'F')
+    {
+        return value - 'A' + 10;
+    }
+    return -1;
+}
+
+[[nodiscard]] Result<std::array<std::uint8_t, 20>>
+decode_exposure_v5_parameters(const std::string_view encoded)
+{
+    if (encoded.size() != 40U)
+    {
+        return make_error(ErrorCode::kUnsupported,
+                          "Legacy exposure v5 parameters have an unexpected length",
+                          {{"expected_hex_bytes", "40"},
+                           {"legacy_operation", "exposure"},
+                           {"reason", "unsupported_legacy_exposure_parameters"}});
+    }
+
+    std::array<std::uint8_t, 20> decoded{};
+    for (std::size_t index = 0; index < decoded.size(); ++index)
+    {
+        const auto high = hex_value(encoded[index * 2U]);
+        const auto low = hex_value(encoded[index * 2U + 1U]);
+        if (high < 0 || low < 0)
+        {
+            return make_error(
+                ErrorCode::kValidation, "Legacy exposure parameters are not hexadecimal",
+                {{"legacy_operation", "exposure"}, {"reason", "invalid_legacy_parameters"}});
+        }
+        decoded[index] = static_cast<std::uint8_t>((high << 4) | low);
+    }
+    return decoded;
+}
+
+[[nodiscard]] std::uint32_t read_little_endian_word(const std::array<std::uint8_t, 20> &data,
+                                                    const std::size_t word_index) noexcept
+{
+    const auto offset = word_index * 4U;
+    return static_cast<std::uint32_t>(data[offset]) |
+           (static_cast<std::uint32_t>(data[offset + 1U]) << 8U) |
+           (static_cast<std::uint32_t>(data[offset + 2U]) << 16U) |
+           (static_cast<std::uint32_t>(data[offset + 3U]) << 24U);
+}
+
+[[nodiscard]] Result<OperationInstance> map_exposure_v5(const QXmlStreamAttributes &attributes,
+                                                        const std::size_t history_index)
+{
+    const auto version = required_attribute(attributes, u"modversion", "exposure");
+    if (!version)
+    {
+        return version.error();
+    }
+    if (version.value() != "5")
+    {
+        return make_error(ErrorCode::kUnsupported,
+                          "Legacy exposure module version is not supported",
+                          {{"legacy_operation", "exposure"},
+                           {"legacy_version", version.value()},
+                           {"reason", "unsupported_legacy_exposure_version"}});
+    }
+
+    const auto enabled = required_attribute(attributes, u"enabled", "exposure");
+    if (!enabled)
+    {
+        return enabled.error();
+    }
+    if (enabled.value() != "0" && enabled.value() != "1")
+    {
+        return make_error(
+            ErrorCode::kValidation, "Legacy exposure enabled flag is invalid",
+            {{"legacy_operation", "exposure"}, {"reason", "invalid_legacy_parameters"}});
+    }
+    if (has_attribute(attributes, u"blendop_params"))
+    {
+        return make_error(
+            ErrorCode::kUnsupported, "Legacy exposure blend data has no canonical mask mapping",
+            {{"legacy_operation", "exposure"}, {"reason", "unsupported_legacy_blend"}});
+    }
+
+    const auto encoded = required_attribute(attributes, u"params", "exposure");
+    if (!encoded)
+    {
+        return encoded.error();
+    }
+    const auto decoded = decode_exposure_v5_parameters(encoded.value());
+    if (!decoded)
+    {
+        return decoded.error();
+    }
+
+    const auto mode = read_little_endian_word(decoded.value(), 0U);
+    const auto black_bits = read_little_endian_word(decoded.value(), 1U);
+    const auto exposure = std::bit_cast<float>(read_little_endian_word(decoded.value(), 2U));
+    if (mode != 0U)
+    {
+        return make_error(
+            ErrorCode::kUnsupported, "Legacy automatic exposure mode requires a histogram contract",
+            {{"legacy_operation", "exposure"}, {"reason", "unsupported_legacy_exposure_mode"}});
+    }
+    if (black_bits != 0U)
+    {
+        return make_error(
+            ErrorCode::kUnsupported,
+            "Legacy exposure black-level correction has no canonical mapping",
+            {{"legacy_operation", "exposure"}, {"reason", "unsupported_legacy_exposure_black"}});
+    }
+    if (!std::isfinite(exposure) || exposure < -10.0F || exposure > 10.0F)
+    {
+        return make_error(
+            ErrorCode::kUnsupported, "Legacy exposure value is outside the Ravo schema range",
+            {{"legacy_operation", "exposure"}, {"reason", "unsupported_legacy_exposure_value"}});
+    }
+
+    return OperationInstance{"ravo.core.exposure",
+                             1,
+                             "legacy-exposure-" + std::to_string(history_index),
+                             enabled.value() == "1",
+                             {{"exposure_ev", ParameterValue{static_cast<double>(exposure)}}},
+                             std::nullopt};
+}
+
+struct BuiltinRawOperation
+{
+    std::string_view id;
+    std::string_view version;
+    std::string_view parameters;
+};
+
+constexpr std::array kBuiltinRawOperations{
+    BuiltinRawOperation{"rawprepare", "1",
+                        "1e000000120000000600000002000000060406040204020420350000"},
+    BuiltinRawOperation{"temperature", "3", "006007400000803f0000b33f0000c07f"},
+    BuiltinRawOperation{"highlights", "2", "000000000000803f00000000000000000000803f"},
+    BuiltinRawOperation{"demosaic", "3", "0000000000000000000000000000000000000000"},
+    BuiltinRawOperation{"colorin", "6", "gz48eJzjYRgFowABWAbaAaNgwAEAPRQAEQ=="},
+    BuiltinRawOperation{"colorout", "5", "gz35eJxjZBgFo4CBAQAEEAAC"},
+    BuiltinRawOperation{"gamma", "1", "0000000000000000"},
+    BuiltinRawOperation{"flip", "2", "ffffffff"},
+};
+
+constexpr std::string_view kDefaultBlendParameters =
+    "gz11eJxjYGBgkGAAgRNODGiAEV0AJ2iwh+CRyscOAAdeGQQ=";
+
+[[nodiscard]] Result<bool> absorb_builtin_raw_operation(const std::string_view operation,
+                                                        const QXmlStreamAttributes &attributes)
+{
+    const auto contract = std::find_if(kBuiltinRawOperations.begin(), kBuiltinRawOperations.end(),
+                                       [operation](const BuiltinRawOperation &candidate)
+                                       { return candidate.id == operation; });
+    if (contract == kBuiltinRawOperations.end())
+    {
+        return false;
+    }
+
+    const auto version = required_attribute(attributes, u"modversion", operation);
+    const auto enabled = required_attribute(attributes, u"enabled", operation);
+    const auto parameters = required_attribute(attributes, u"params", operation);
+    const auto blend = required_attribute(attributes, u"blendop_params", operation);
+    if (!version || !enabled || !parameters || !blend)
+    {
+        return !version    ? version.error() :
+               !enabled    ? enabled.error() :
+               !parameters ? parameters.error() :
+                             blend.error();
+    }
+    if (version.value() != contract->version || enabled.value() != "1" ||
+        parameters.value() != contract->parameters || blend.value() != kDefaultBlendParameters)
+    {
+        return make_error(ErrorCode::kUnsupported,
+                          "Legacy built-in RAW operation differs from the frozen nop contract",
+                          {{"legacy_operation", std::string(operation)},
+                           {"reason", "unsupported_legacy_builtin_parameters"}});
+    }
+    return true;
+}
+
+[[nodiscard]] Result<void> consume_empty_mask_history(QXmlStreamReader &reader)
+{
+    std::size_t depth = 1;
+    while (depth > 0 && !reader.atEnd())
+    {
+        reader.readNext();
+        if (reader.isStartElement())
+        {
+            ++depth;
+            if (reader.name() == u"li")
+            {
+                return make_error(ErrorCode::kUnsupported,
+                                  "Legacy XMP mask history has no canonical mask mapping",
+                                  {{"reason", "unsupported_legacy_mask"}});
+            }
+        }
+        else if (reader.isEndElement())
+        {
+            --depth;
+        }
+    }
+    return {};
+}
+
 } // namespace
 
 Result<Recipe> import_legacy_xmp(const LegacyXmpImportRequest &request)
@@ -47,6 +308,9 @@ Result<Recipe> import_legacy_xmp(const LegacyXmpImportRequest &request)
     QXmlStreamReader reader(source);
     bool found_description = false;
     bool in_history = false;
+    bool has_supported_schema = false;
+    std::vector<OperationInstance> operations;
+    std::size_t history_index = 0;
     while (!reader.atEnd())
     {
         reader.readNext();
@@ -55,6 +319,16 @@ Result<Recipe> import_legacy_xmp(const LegacyXmpImportRequest &request)
             if (reader.name() == u"Description")
             {
                 found_description = true;
+                has_supported_schema = has_supported_xmp_schema(reader.attributes());
+            }
+            if (reader.name() == u"masks_history")
+            {
+                auto masks = consume_empty_mask_history(reader);
+                if (!masks)
+                {
+                    return masks.error();
+                }
+                continue;
             }
             if (reader.name() == u"history")
             {
@@ -65,16 +339,48 @@ Result<Recipe> import_legacy_xmp(const LegacyXmpImportRequest &request)
             {
                 continue;
             }
-            for (const auto &attribute : reader.attributes())
+            const auto operation = required_attribute(reader.attributes(), u"operation", "unknown");
+            if (!operation)
             {
-                if (attribute.name() == u"operation")
-                {
-                    return make_error(ErrorCode::kUnsupported,
-                                      "Legacy XMP operation has no proven canonical recipe mapping",
-                                      {{"legacy_operation", utf8(attribute.value())},
-                                       {"reason", "unsupported_legacy_operation"}});
-                }
+                return operation.error();
             }
+            if (!has_supported_schema)
+            {
+                return make_error(ErrorCode::kUnsupported,
+                                  "Legacy XMP schema has no proven canonical recipe mapping",
+                                  {{"legacy_operation", operation.value()},
+                                   {"reason", "unsupported_legacy_xmp_schema"}});
+            }
+            auto absorbed = absorb_builtin_raw_operation(operation.value(), reader.attributes());
+            if (!absorbed)
+            {
+                return absorbed.error();
+            }
+            if (absorbed.value())
+            {
+                ++history_index;
+                continue;
+            }
+            if (operation.value() != "exposure")
+            {
+                return make_error(ErrorCode::kUnsupported,
+                                  "Legacy XMP operation has no proven canonical recipe mapping",
+                                  {{"legacy_operation", operation.value()},
+                                   {"reason", "unsupported_legacy_operation"}});
+            }
+            if (!operations.empty())
+            {
+                return make_error(
+                    ErrorCode::kUnsupported,
+                    "Multiple legacy history entries have no canonical singleton mapping",
+                    {{"legacy_operation", "exposure"}, {"reason", "unsupported_legacy_history"}});
+            }
+            auto mapped = map_exposure_v5(reader.attributes(), history_index++);
+            if (!mapped)
+            {
+                return mapped.error();
+            }
+            operations.push_back(std::move(mapped).value());
         }
         else if (reader.isEndElement() && reader.name() == u"history")
         {
@@ -92,7 +398,7 @@ Result<Recipe> import_legacy_xmp(const LegacyXmpImportRequest &request)
     {
         return make_error(ErrorCode::kValidation, "Legacy XMP does not contain an RDF description");
     }
-    return Recipe{1, request.asset, {}, {}};
+    return Recipe{1, request.asset, std::move(operations), {}};
 }
 
 } // namespace ravo

@@ -1,3 +1,4 @@
+#include <chrono>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -42,6 +43,17 @@ TEST(CancellationTest, FirstCancellationWinsAndTokensKeepTheReason)
     ASSERT_FALSE(checked);
     EXPECT_EQ(checked.error().code, ErrorCode::kCancelled);
     EXPECT_EQ(checked.error().context.at("reason"), "user_requested");
+}
+
+TEST(CancellationTest, ExpiredDeadlineCancelsWithAStructuredReason)
+{
+    const auto source = CancellationSource::with_deadline(std::chrono::steady_clock::now() -
+                                                          std::chrono::milliseconds{1});
+    const auto checked = source.token().check();
+
+    ASSERT_FALSE(checked);
+    EXPECT_EQ(checked.error().code, ErrorCode::kCancelled);
+    EXPECT_EQ(checked.error().context.at("reason"), "deadline_exceeded");
 }
 
 } // namespace

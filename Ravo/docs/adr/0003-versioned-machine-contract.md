@@ -31,9 +31,9 @@ compatibility work untestable.
   progress, and verbose logs use stderr.  Keys are emitted in stable order so
   command snapshots are meaningful.
 - Exit status is part of the protocol: `0` success, `2` command usage, `3`
-  input/not-found, `4` validation, `5` unsupported capability, `6` I/O,
-  `7` cancelled, and `70` internal failure.  The numeric values are asserted
-  by contract tests.
+  input/not-found, `4` validation, `5` unsupported capability, `6` I/O or an
+  output-path conflict, `7` cancelled, and `70` internal failure. The numeric
+  values are asserted by contract tests.
 - Stage 1 deliberately publishes no binary C++ ABI.  Public C++ headers offer
   source-level contracts within a single checkout only.  A stable embedding
   ABI requires a later ADR after engine lifetime, allocator, exceptions, and

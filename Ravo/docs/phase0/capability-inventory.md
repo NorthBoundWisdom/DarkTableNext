@@ -54,36 +54,36 @@ struct bytes or call the old dynamic module ABI.
 | `cacorrectrgb` | no | defer with RAW geometry capability |
 | `censorize` | yes | product decision pending; no Phase 1 implementation |
 | `channelmixerrgb` | yes | defer until colour operation policy exists |
-| `colorbalance` | no | defer until colour operation policy exists |
+| `colorbalance` | yes | defer until colour operation policy exists |
 | `colorbalancergb` | yes | defer until colour operation policy exists |
 | `colorchecker` | yes | defer until colour operation policy exists |
 | `colorcontrast` | yes | defer until colour operation policy exists |
 | `colorcorrection` | yes | defer until colour operation policy exists |
 | `colorequal` | yes | defer until colour operation policy exists |
 | `colorharmonizer` | yes | product decision pending; no Phase 1 implementation |
-| `colorin` | yes | reserved `ravo.color.input`; execution deferred to Phase 2 |
+| `colorin` | yes | reserved `ravo.color.input`; the exact frozen nop baseline is absorbed by the first RAW slice, but general profile mapping remains deferred |
 | `colorize` | yes | defer until colour operation policy exists |
 | `colormapping` | yes | defer until colour operation policy exists |
-| `colorout` | yes | reserved `ravo.color.output`; execution deferred to Phase 2 |
+| `colorout` | yes | reserved `ravo.color.output`; the first RAW slice has a fixed sRGB target, while general profile mapping remains deferred |
 | `colorreconstruct` | yes | defer with RAW reconstruction capability |
 | `colorzones` | yes | defer until colour operation policy exists |
-| `crop` | no | defer until geometry/ROI contract exists |
-| `demosaic` | yes | reserved `ravo.raw.demosaic`; execution deferred to Phase 2 |
+| `crop` | yes | defer until geometry/ROI contract exists |
+| `demosaic` | yes | reserved `ravo.raw.demosaic`; the exact frozen nop baseline currently selects the first 3×3 Bayer implementation only |
 | `denoiseprofile` | yes | defer until denoise model and fixtures exist |
 | `diffuse` | yes | defer until shared denoise facilities exist |
 | `dither` | yes | defer until output quantisation contract exists |
 | `enlargecanvas` | yes | defer until geometry/ROI contract exists |
-| `exposure` | yes | reserved `ravo.core.exposure`; execution deferred to Phase 2 |
+| `exposure` | yes | reserved `ravo.core.exposure`; schema-6/v5 manual, zero-black, unblended, mask-free singleton history maps to `exp2(exposure_ev)` CPU execution; full fixture history and golden comparison remain incomplete |
 | `filmicrgb` | yes | defer until colour operation policy exists |
-| `finalscale` | no | reserved `ravo.output.scale`; execution deferred to Phase 2 |
-| `flip` | no | defer until geometry/ROI contract exists |
-| `gamma` | no | defer until colour operation policy exists |
+| `finalscale` | no | reserved `ravo.output.scale`; render width/height currently drive the first bounded nearest-sample output path, not a complete scaling operation |
+| `flip` | yes | defer until geometry/ROI contract exists |
+| `gamma` | yes | defer until colour operation policy exists |
 | `graduatednd` | yes | defer until mask/blend contract exists |
 | `grain` | yes | product decision pending; no Phase 1 implementation |
 | `hazeremoval` | yes | defer until shared dehaze facilities exist |
 | `highlights` | yes | defer with RAW reconstruction capability |
 | `highpass` | yes | defer until shared blur facilities exist |
-| `hotpixels` | no | defer with RAW decode capability |
+| `hotpixels` | yes | defer with RAW decode capability |
 | `lens` | yes | defer until lens database adapter is designed |
 | `liquify` | yes | product decision pending; no Phase 1 implementation |
 | `lowlight` | yes | defer until colour operation policy exists |
@@ -97,21 +97,21 @@ struct bytes or call the old dynamic module ABI.
 | `overlay` | yes | product decision pending; no Phase 1 implementation |
 | `primaries` | yes | defer until colour operation policy exists |
 | `profile_gamma` | no | defer until colour operation policy exists |
-| `rasterfile` | yes | defer until raster adapter and mask contract exist |
+| `rasterfile` | no | defer until raster adapter and mask contract exist |
 | `rawdenoise` | yes | defer with RAW decode capability |
 | `rawoverexposed` | no | diagnostics-only legacy behaviour; no Phase 1 implementation |
-| `rawprepare` | yes | reserved `ravo.raw.prepare`; execution deferred to Phase 2 |
+| `rawprepare` | yes | reserved `ravo.raw.prepare`; the exact frozen nop baseline is absorbed into crop and black/white normalization in the first RAW slice |
 | `retouch` | yes | product decision pending; no Phase 1 implementation |
 | `rgbcurve` | yes | defer until curve schema and colour policy exist |
 | `rgblevels` | yes | defer until colour operation policy exists |
 | `rotatepixels` | no | defer until geometry/ROI contract exists |
 | `scalepixels` | no | defer until geometry/ROI contract exists |
 | `shadhi` | yes | defer until shared denoise facilities exist |
-| `sharpen` | no | defer until shared convolution facilities exist |
+| `sharpen` | yes | defer until shared convolution facilities exist |
 | `sigmoid` | yes | defer until colour operation policy exists |
 | `soften` | yes | product decision pending; no Phase 1 implementation |
 | `splittoning` | yes | product decision pending; no Phase 1 implementation |
-| `temperature` | no | defer with RAW colour capability |
+| `temperature` | yes | defer with RAW colour capability |
 | `tonecurve` | yes | defer until curve schema and colour policy exist |
 | `toneequal` | yes | defer until colour operation policy exists |
 | `velvia` | yes | product decision pending; no Phase 1 implementation |
@@ -120,12 +120,12 @@ struct bytes or call the old dynamic module ABI.
 
 ## Data and export inventory
 
-| Capability | Phase 1 decision | Rationale |
+| Capability | Current Ravo state | Rationale |
 | --- | --- | --- |
 | Legacy XMP input | Parse only a bounded XML subset; return structured incompatibility outside proven mappings | Prevent old module ABI or opaque bytes from crossing the boundary |
 | Canonical recipe | Version 1 JSON, immutable snapshots, explicit schema upgrades | Required by every future client |
-| RAW/JPEG/PNG/TIFF decode | Not implemented | Requires codec adapters and fixture-backed behaviour in Phase 2 |
-| JPEG/PNG/TIFF/original export | Not implemented | Requires atomic file and metadata contracts in Phase 2 |
+| RAW/JPEG/PNG/TIFF decode | 16-bit Bayer RAW inspect/decode implemented through fixed LibRaw; raster inputs remain unsupported | Real `mire1.cr2` contract coverage exists, but other sensors and JPEG/PNG/TIFF still need fixture-backed behaviour |
+| JPEG/PNG/TIFF/original export | Atomic RGB PNG implemented for the first RAW slice; other outputs remain unsupported | Existing-target conflict and bounded output are tested; bit depth, metadata, ICC, disk-full, JPEG/TIFF and original copy remain open |
 | Masks and blending | Modelled as versioned data only | Pixel semantics require dedicated CPU tests and ROI rules |
 | Catalog, history, styles | Explicitly out of Phase 1 | No database or desktop target before the headless exit |
 | GPU/OpenCL/Metal | Explicitly out of Phase 1 | CPU-only reference work precedes any backend adapter |

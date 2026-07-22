@@ -3,8 +3,8 @@
 ## 项目定位
 
 DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作流与 RAW 编辑基线。
-它保留当前图像处理核心、GTK 前端和 OpenCL 实现，只作为行为、fixture 与兼容性 oracle；新增产品
-实现、功能收缩和架构演进统一进入 Ravo。
+它保留当前图像处理核心、GTK 前端、OpenCL 实现和 fixture，只允许静态读取源码与已提交测试资产；
+不再配置、编译、运行或修改旧工程。新增产品实现、功能收缩和架构演进统一进入 Ravo。
 
 仓库根目录下的约定适用于整个仓库。`Ravo/` 是下一代 C++20 无头内核与 CLI 的独立所有权边界，
 并由它自己的 `AGENTS.md` 增加约束；`FreeCM/` 是独立子模块并由它自己的 `AGENTS.md` 管理。所有
@@ -25,8 +25,8 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作
 
 - `Ravo/` 先交付 C++20 Ravo Engine 与正式 `ravo` CLI；无头阶段验收前不创建 desktop target、
   UI toolkit 依赖或 catalog 数据库。
-- Ravo 生产代码不得依赖 `src/` 私有头、旧库、动态 IOP、GTK 类型或全局 `darktable` 状态。差分验证
-  只能读取冻结 fixture，或把旧 CLI 当独立进程执行。
+- Ravo 生产代码不得依赖 `src/` 私有头、旧库、动态 IOP、GTK 类型或全局 `darktable` 状态。验证只能
+  静态读取冻结源码与 fixture；不得配置、编译或执行旧 CLI/旧测试工程。
 - 迁移期间 Ravo 与冻结的 `src` 独立并行；不创建 `src` → Ravo 或 Ravo → `src` 的生产依赖。只有
   Ravo 全产品达到切换门槛后，才在退役阶段删除旧实现、构建项、资源、配置和重复测试。
 - 在 `Ravo/` 工作前必须阅读 `Ravo/AGENTS.md`、`Ravo/ARCHITECTURE.md`、`Ravo/MIGRATION.md` 和
@@ -52,8 +52,8 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作
 
 - GTK 前端、dtgtk/Bauhaus 控件、Lighttable、Darkroom、导入、导出、catalog、history、masks、
   色彩空间和 pixelpipe 保留为只读旧实现；新 UI/服务工作只进入 Ravo 的后续阶段。
-- 不在旧 UI 中增加入口、运行时、工具包、adapter 或 Ravo 调用。需要的行为通过只读源码研究、fixture
-  或独立旧进程取证。
+- 不在旧 UI 中增加入口、运行时、工具包、adapter 或 Ravo 调用。需要的行为只通过只读源码研究和
+  已提交 fixture 取证，不运行独立旧进程。
 
 ## FreeCM 与依赖源码
 
@@ -66,6 +66,20 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作
 - 不使用 `FetchContent`、CMake 网络下载、submodule 或源码复制绕过已有工作流。
 
 ## 构建与验证
+
+旧 0.9 构建、CTest、图像 runner 和打包 target 全部冻结，不再运行。Windows 当前只配置和编译
+`Ravo/`；Windows 辅助脚本只使用 Python 或 PowerShell。
+
+Windows Ravo 构建：
+
+```powershell
+python configs/source_root_workflow.py --update
+Set-Location Ravo
+cmake --preset ravo_win_msvc_debug -DBUILD_TESTING=ON
+cmake --build --preset ravo_win_msvc_debug --parallel
+```
+
+以下旧应用构建说明仅用于历史平台约束，不是当前允许执行的验证路径。
 
 首次准备工作区：
 

@@ -23,6 +23,7 @@ struct RenderRequest
 {
     AssetDescriptor asset;
     Recipe recipe;
+    std::string output_uri;
     std::optional<std::uint32_t> output_width;
     std::optional<std::uint32_t> output_height;
     std::uint64_t memory_budget_bytes = 0;
@@ -36,6 +37,20 @@ struct RenderRequest
 struct RenderResult
 {
     std::string correlation_id;
+    std::string output_uri;
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+};
+
+struct InspectionResult
+{
+    std::string input_uri;
+    std::string format;
+    std::string make;
+    std::string model;
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    bool is_raw = false;
 };
 
 struct ProgressEvent
@@ -59,8 +74,8 @@ public:
     [[nodiscard]] static Result<EngineFacade> create_phase1();
 
     // The facade does not retain input_uri or token after this synchronous call.
-    [[nodiscard]] Result<AssetDescriptor> inspect(std::string_view input_uri,
-                                                  const CancellationToken &cancellation) const;
+    [[nodiscard]] Result<InspectionResult> inspect(std::string_view input_uri,
+                                                   const CancellationToken &cancellation) const;
     [[nodiscard]] const std::vector<OperationDescriptor> &operations() const noexcept;
     [[nodiscard]] Result<Recipe> upgrade(Recipe recipe) const;
     [[nodiscard]] Result<void> validate(const Recipe &recipe) const;

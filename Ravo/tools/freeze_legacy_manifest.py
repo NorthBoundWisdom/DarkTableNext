@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build a deterministic inventory of the legacy image-regression assets.
 
-The manifest deliberately records committed inputs and reference files without
-claiming that the current legacy executable reproduced them.  Runtime evidence
-belongs in the accompanying phase-0 baseline report.
+The manifest deliberately records the complete committed static reference set.
+It never configures, builds, or invokes the frozen legacy project; runtime
+acceptance evidence belongs to Ravo.
 """
 
 from __future__ import annotations
@@ -103,7 +103,7 @@ def build_manifest(repository_root: Path) -> dict[str, Any]:
     ]
     return {
         "manifest_schema_version": 1,
-        "state": "inventory-only",
+        "state": "frozen-static-reference",
         "notice": (
             "Hashes identify committed legacy assets. They do not certify that a legacy "
             "CPU run reproduced expected_png; consult Ravo/docs/phase0/legacy-baseline-2026-07-21.md."
@@ -130,14 +130,26 @@ def main() -> int:
         default=None,
         help="manifest path (default: Ravo/tests/fixtures/legacy_manifest.json)",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="verify that the existing manifest matches the committed fixture assets without writing",
+    )
     arguments = parser.parse_args()
     repository_root = arguments.repository_root.resolve()
     output = arguments.output or repository_root / "Ravo" / "tests" / "fixtures" / "legacy_manifest.json"
+    manifest_text = json.dumps(build_manifest(repository_root), indent=2, sort_keys=True) + "\n"
+    if arguments.check:
+        if not output.is_file():
+            print(f"legacy manifest is missing: {output}")
+            return 1
+        if output.read_text(encoding="utf-8") != manifest_text:
+            print(f"legacy manifest differs from committed fixture assets: {output}")
+            return 1
+        return 0
+
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
-        json.dumps(build_manifest(repository_root), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    output.write_text(manifest_text, encoding="utf-8")
     return 0
 
 

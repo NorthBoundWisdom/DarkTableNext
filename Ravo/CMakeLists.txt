@@ -13,6 +13,38 @@ include(GNUInstallDirs)
 option(BUILD_TESTING "Build Ravo unit and contract tests" OFF)
 
 find_package(Qt6 6.11 REQUIRED COMPONENTS Core)
+find_package(PNG REQUIRED)
+find_package(ZLIB REQUIRED)
+
+if(NOT DEFINED ENV{LIBRAW_SOURCE_ROOT})
+  message(FATAL_ERROR "LIBRAW_SOURCE_ROOT is required; run the FreeCM source-root update")
+endif()
+
+file(TO_CMAKE_PATH "$ENV{LIBRAW_SOURCE_ROOT}" _ravo_libraw_root)
+file(GLOB_RECURSE _ravo_libraw_sources CONFIGURE_DEPENDS
+  "${_ravo_libraw_root}/src/*.cpp")
+file(GLOB_RECURSE _ravo_libraw_placeholders CONFIGURE_DEPENDS
+  "${_ravo_libraw_root}/src/*_ph.cpp")
+list(REMOVE_ITEM _ravo_libraw_sources ${_ravo_libraw_placeholders})
+
+add_library(ravo_libraw STATIC ${_ravo_libraw_sources})
+target_include_directories(ravo_libraw SYSTEM PUBLIC "${_ravo_libraw_root}")
+target_compile_definitions(ravo_libraw
+  PUBLIC LIBRAW_NODLL
+  PRIVATE LIBRAW_NOTHREADS USE_ZLIB)
+target_compile_options(ravo_libraw PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/w>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-w>)
+target_link_libraries(ravo_libraw PRIVATE ZLIB::ZLIB)
+set_target_properties(ravo_libraw PROPERTIES POSITION_INDEPENDENT_CODE ON)
+if(WIN32)
+  target_compile_definitions(ravo_libraw PRIVATE
+    LIBRAW_BUILDLIB
+    _CRT_SECURE_NO_WARNINGS)
+  target_link_libraries(ravo_libraw PRIVATE ws2_32)
+elseif(UNIX)
+  target_link_libraries(ravo_libraw PRIVATE m)
+endif()
 
 function(ravo_configure_target target)
   target_compile_features(${target} PUBLIC cxx_std_20)
@@ -52,8 +84,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  TARGETS ravo_foundation ravo_recipe ravo_engine ravo_adapters ravo_cli ravo
-  EXPORT RavoTargets
+  TARGETS ravo_foundation ravo_recipe ravo_engine ravo_adapters ravo_cli ravo_libraw ravo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -66,14 +97,11 @@ install(
     adapters/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(
-  EXPORT RavoTargets
-  FILE RavoTargets.cmake
-  NAMESPACE Ravo::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Ravo)
-
 if(WIN32)
   install(
-    IMPORTED_RUNTIME_ARTIFACTS Qt6::Core
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    DIRECTORY "$<TARGET_FILE_DIR:ravo>/"
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    FILES_MATCHING
+      PATTERN "*.dll"
+      PATTERN "CMakeFiles" EXCLUDE)
 endif()

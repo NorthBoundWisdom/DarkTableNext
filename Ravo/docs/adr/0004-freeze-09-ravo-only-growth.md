@@ -27,9 +27,10 @@ the very result that Ravo is meant to reproduce or explicitly reject.
   and eventual OpenCL removal—is owned by the corresponding Ravo phases.
 - The two production graphs remain independent. Neither `src` → Ravo nor Ravo
   → `src` adapters are allowed.
-- Ravo tests may read frozen fixtures or run an unchanged 0.9 executable as an
-  independent process. A legacy failure is recorded as an oracle limitation;
-  it is not fixed in `src` to advance Ravo.
+- Ravo tests may read frozen fixtures and source as static evidence. They do
+  not configure, compile, package, or run the 0.9 executable, CTest graph, or
+  image runner. A frozen-fixture limitation is recorded rather than fixed in
+  `src` to advance Ravo.
 - `src` is not deleted capability by capability during implementation. After
   Ravo satisfies the complete release-switch gate, Stage 7 retires the old
   application, including its OpenCL code, build entries, resources, config,

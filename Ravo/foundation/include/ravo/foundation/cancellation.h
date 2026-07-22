@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -37,10 +38,14 @@ class CancellationSource
 public:
     CancellationSource();
 
+    [[nodiscard]] static CancellationSource
+    with_deadline(std::chrono::steady_clock::time_point deadline);
     [[nodiscard]] CancellationToken token() const;
     [[nodiscard]] bool cancel(std::string reason = "cancelled");
 
 private:
+    explicit CancellationSource(std::chrono::steady_clock::time_point deadline);
+
     std::shared_ptr<detail::CancellationState> state_;
 };
 

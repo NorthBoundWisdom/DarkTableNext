@@ -1,5 +1,8 @@
 #include "ravo/cli/application.h"
 
+#include <charconv>
+#include <cstdint>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -74,6 +77,113 @@ parse_arguments(const std::span<const std::string_view> arguments)
                              {"ok", false},
                              {"type", "ravo.cli.result"},
                              {"version", JsonValue::number("1")}};
+}
+
+struct RenderCliArguments
+{
+    std::string_view input;
+    std::string_view recipe;
+    std::string_view output;
+    std::string_view backend = "cpu";
+    bool backend_specified = false;
+    std::optional<std::uint32_t> width;
+    std::optional<std::uint32_t> height;
+};
+
+[[nodiscard]] Result<std::uint32_t> parse_dimension(const std::string_view text,
+                                                    const std::string_view option)
+{
+    std::uint32_t value = 0;
+    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
+    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size() || value == 0)
+    {
+        return make_error(ErrorCode::kInvalidArgument,
+                          "Render dimension must be a positive integer",
+                          {{"option", std::string(option)}, {"value", std::string(text)}});
+    }
+    return value;
+}
+
+[[nodiscard]] Result<RenderCliArguments>
+parse_render_arguments(const std::span<const std::string_view> positional)
+{
+    if (positional.size() < 2 || positional[0] != "render" || positional[1].starts_with("--"))
+    {
+        return make_error(
+            ErrorCode::kInvalidArgument,
+            "Usage: ravo render <input> --recipe <recipe> --output <png> [--backend cpu]");
+    }
+
+    RenderCliArguments result{positional[1], {}, {}, "cpu", false, std::nullopt, std::nullopt};
+    for (std::size_t index = 2; index < positional.size(); ++index)
+    {
+        const auto option = positional[index];
+        if (option != "--recipe" && option != "--output" && option != "--backend" &&
+            option != "--width" && option != "--height")
+        {
+            return make_error(ErrorCode::kInvalidArgument, "Unknown render option",
+                              {{"option", std::string(option)}});
+        }
+        if (index + 1 >= positional.size() || positional[index + 1].starts_with("--"))
+        {
+            return make_error(ErrorCode::kInvalidArgument, "Render option requires a value",
+                              {{"option", std::string(option)}});
+        }
+        const auto value = positional[++index];
+        if (option == "--recipe")
+        {
+            if (!result.recipe.empty())
+            {
+                return make_error(ErrorCode::kInvalidArgument, "Render recipe was specified twice");
+            }
+            result.recipe = value;
+        }
+        else if (option == "--output")
+        {
+            if (!result.output.empty())
+            {
+                return make_error(ErrorCode::kInvalidArgument, "Render output was specified twice");
+            }
+            result.output = value;
+        }
+        else if (option == "--backend")
+        {
+            if (result.backend_specified)
+            {
+                return make_error(ErrorCode::kInvalidArgument,
+                                  "Render backend was specified twice");
+            }
+            result.backend = value;
+            result.backend_specified = true;
+        }
+        else
+        {
+            auto dimension = parse_dimension(value, option);
+            if (!dimension)
+            {
+                return dimension.error();
+            }
+            auto &target = option == "--width" ? result.width : result.height;
+            if (target.has_value())
+            {
+                return make_error(ErrorCode::kInvalidArgument,
+                                  "Render dimension was specified twice",
+                                  {{"option", std::string(option)}});
+            }
+            target = dimension.value();
+        }
+    }
+    if (result.recipe.empty() || result.output.empty())
+    {
+        return make_error(ErrorCode::kInvalidArgument,
+                          "Render requires --recipe and --output options");
+    }
+    if (result.backend != "cpu")
+    {
+        return make_error(ErrorCode::kUnsupported, "Only the CPU render backend is available",
+                          {{"backend", std::string(result.backend)}});
+    }
+    return result;
 }
 
 void write_human_error(std::ostream &stream, const TaskError &error)
@@ -215,11 +325,63 @@ int CliApplication::run(const std::span<const std::string_view> arguments) const
                          JsonValue::number(std::to_string(recipe.value().schema_version))}}},
                     json);
     }
-    if (positional.front() == "inspect" || positional.front() == "render")
+    if (positional.front() == "inspect")
     {
-        return emit(make_error(ErrorCode::kUnsupported,
-                               "The requested command requires a later Ravo phase",
-                               {{"command", std::string(positional.front())}}),
+        if (positional.size() != 2)
+        {
+            return emit(make_error(ErrorCode::kInvalidArgument, "Usage: ravo inspect <input>"),
+                        json);
+        }
+        auto inspected = engine_.inspect(positional[1], CancellationToken{});
+        if (!inspected)
+        {
+            return emit(inspected.error(), json);
+        }
+        return emit(JsonValue{JsonValue::Object{
+                        {"format", inspected.value().format},
+                        {"height", JsonValue::number(std::to_string(inspected.value().height))},
+                        {"input_uri", inspected.value().input_uri},
+                        {"is_raw", inspected.value().is_raw},
+                        {"make", inspected.value().make},
+                        {"model", inspected.value().model},
+                        {"width", JsonValue::number(std::to_string(inspected.value().width))}}},
+                    json);
+    }
+    if (positional.front() == "render")
+    {
+        auto parsed_render = parse_render_arguments(positional);
+        if (!parsed_render)
+        {
+            return emit(parsed_render.error(), json);
+        }
+        auto recipe_text = read_utf8_text_file(parsed_render.value().recipe);
+        if (!recipe_text)
+        {
+            return emit(recipe_text.error(), json);
+        }
+        auto recipe = parse_recipe_json(recipe_text.value());
+        if (!recipe)
+        {
+            return emit(recipe.error(), json);
+        }
+        RenderRequest request;
+        request.recipe = std::move(recipe).value();
+        request.recipe.asset.input_uri = std::string(parsed_render.value().input);
+        request.asset = request.recipe.asset;
+        request.output_uri = std::string(parsed_render.value().output);
+        request.output_width = parsed_render.value().width;
+        request.output_height = parsed_render.value().height;
+        request.correlation_id = "cli-render";
+        const auto rendered = engine_.render(request);
+        if (!rendered)
+        {
+            return emit(rendered.error(), json);
+        }
+        return emit(JsonValue{JsonValue::Object{
+                        {"correlation_id", rendered.value().correlation_id},
+                        {"height", JsonValue::number(std::to_string(rendered.value().height))},
+                        {"output", rendered.value().output_uri},
+                        {"width", JsonValue::number(std::to_string(rendered.value().width))}}},
                     json);
     }
     return emit(make_error(ErrorCode::kInvalidArgument, "Invalid Ravo command"), json);
