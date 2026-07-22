@@ -25,6 +25,11 @@ cmake --build --preset ravo_win_msvc_debug --parallel
 ctest --preset ravo_win_msvc_debug
 ```
 
+第三方依赖联调必须修改仓库根被忽略的活动锁，使用 `depsMode=manual` 与单个
+`depsManualPath` 指向真实 checkout；不得修改 `build/dependency_source_roots/*`。活动锁变化后先在根目录
+运行 `--update`，再配置 Ravo。完整的模式、离线语义、依赖发布顺序和排障见
+[FreeCM source-root 依赖联调工作流](../DevDocs/Dependency_Workflow.md)。
+
 macOS/Linux 的 FreeCM 项目命令通过 `tools/freecm_project.py` 读取各自主机 preset 并配置同一 Ravo
 源码；三平台可以并行开发。本页当前只记录 Windows/MSVC 已实测通过，不能据此声称其他平台已通过。
 

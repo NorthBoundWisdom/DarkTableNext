@@ -21,6 +21,12 @@
 
 ## 依赖规则
 
+- 第三方 source-root 状态由仓库根活动锁管理。修改或排查依赖前先按
+  `../DevDocs/Dependency_Workflow.md` 运行 `show`、`resolve` 和 `verify`；不得只看模板或直接修改
+  `../build/dependency_source_roots/*`。
+- 本地依赖联调只在被忽略的 `../source_roots.lock.jsonc` 中使用 `depsMode=manual` 与对应
+  `depsManualPath`，运行根 `configs/source_root_workflow.py --update` 确认接线后再 configure/build。
+  依赖提交必须先发布并验证远端 SHA，之后才能更新 tracked template。
 - `foundation` 不依赖 recipe、engine、CLI、catalog、UI 或平台实现。
 - `recipe` 只依赖 foundation；它不知道像素执行器、数据库或 UI。
 - `engine` 依赖 foundation/recipe 及自己声明的端口；可以直接使用 QtCore，其他第三方裸类型优先留在

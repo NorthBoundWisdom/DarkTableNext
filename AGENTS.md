@@ -57,69 +57,68 @@ DarkTableNext 0.9 是跨 macOS、Windows 与 Linux、GPLv3 的冻结照片工作
 
 ## FreeCM 与依赖源码
 
-- `source_roots.lock.jsonc.in` 是受版本控制的直接依赖基线。永久依赖变更只修改模板、
-  `configs/source_roots.py` 和消费它们的 CMake 源码。
-- `source_roots.lock.jsonc`、`CMakePresets.json`、`.freecm/` 与 `build/dependency_*`
-  是本地状态，不提交，也不手工修补为永久方案。
-- `python3 configs/source_root_workflow.py --init` 是唯一允许联网的依赖步骤；`--update`
-  必须从活动锁离线物化并生成预设。
-- 不使用 `FetchContent`、CMake 网络下载、submodule 或源码复制绕过已有工作流。
+- 当前 checkout 的 source-root 真相源首先是被忽略的活动锁 `source_roots.lock.jsonc`；开始依赖排查前
+  先运行 `python configs/source_roots.py show --format json`、`resolve --format json` 和 `verify`，
+  不得只根据 committed template 猜测当前实际路径或 mode。
+- `source_roots.lock.jsonc.in` 是受版本控制的直接依赖 pinned 基线。永久依赖、公共 CMake 默认值或
+  source-root API 变化只修改模板、`configs/source_roots.py` 和消费它们的 CMake 源码；根锁只声明
+  direct dependencies，transitive closure 从本地 seed 中的依赖模板递归解析。
+- `pinned` 使用精确 commit；`latest` 只解析 seed 中本地可见的最新提交；`manual` 对非空的
+  `depsManualPath.<dependency>` 使用真实 checkout，空项回退到受管解析。`manual`/`latest` 与机器路径
+  只属于活动锁，不得进入发布模板。
+- 联调依赖时不得修改 `build/dependency_source_roots/*`。先把活动锁切到 `depsMode=manual`，将对应
+  `depsManualPath` 指向开发者提供的真实 checkout（或经明确确认、干净且被当作真实仓库使用的 seed），
+  再运行 `python configs/source_root_workflow.py --update` 并用 `show`/`resolve`/`verify` 确认接线。
+- `python configs/source_root_workflow.py --init` 是唯一允许联网、克隆 seed 或准备远端资产的依赖步骤；
+  `--update` 必须纯离线，只读取活动锁和现有 seed、解析/物化 closure、生成根 `CMakePresets.json`，
+  不 fetch、不编译依赖，也不隐式配置或测试 Ravo。
+- `source_roots.lock.jsonc`、`CMakePresets.json`、`.freecm/` 与 `build/dependency_*` 是本地状态，不提交，
+  不手工修补为永久方案。活动锁或 manual path 变化后必须先 `--update`，再配置/编译 Ravo。
+- 依赖仓提交必须先按拓扑顺序 push，并用 `git ls-remote <remote> <published-ref>` 确认已发布的
+  branch/tag 返回目标 SHA，之后才能更新父仓库模板或 gitlink；禁止提交依赖尚未发布的本机 SHA。
+- 不使用 `FetchContent`、CMake 网络下载、替代 submodule、源码复制或生成目录补丁绕过工作流。完整
+  联调步骤见 `DevDocs/Dependency_Workflow.md`。
 
 ## 构建与验证
 
-旧 0.9 构建、CTest、图像 runner 和打包 target 全部冻结，不再运行。Windows 当前只配置和编译
-`Ravo/`；Windows 辅助脚本只使用 Python 或 PowerShell。
+旧 0.9 构建、CTest、图像 runner 和打包 target 全部冻结，不再运行。所有 configure/build/run/test/
+install 动作只允许进入 `Ravo/`；Windows 辅助脚本只使用 Python 或 PowerShell。
 
-Windows Ravo 构建：
+首次准备工作区时运行：
+
+```text
+git submodule update --init FreeCM
+python configs/source_root_workflow.py --init
+python configs/source_root_workflow.py --update
+```
+
+依赖已准备后，Windows 使用 Ravo PowerShell 入口：
 
 ```powershell
-python configs/source_root_workflow.py --update
-Set-Location Ravo
-cmake --preset ravo_win_msvc_debug -DBUILD_TESTING=ON
-cmake --build --preset ravo_win_msvc_debug --parallel
+& .\Ravo\tools\freecm_project.ps1 -Action Configure -Configuration Debug
+& .\Ravo\tools\freecm_project.ps1 -Action Build -Configuration Debug
 ```
 
-以下旧应用构建说明仅用于历史平台约束，不是当前允许执行的验证路径。
-
-首次准备工作区：
+macOS/Linux 使用同一 Ravo 项目的 Python 入口：
 
 ```sh
-git submodule update --init FreeCM
-python3 configs/source_root_workflow.py --init
-python3 configs/source_root_workflow.py --update
+python3 Ravo/tools/freecm_project.py --action Configure --configuration Debug
+python3 Ravo/tools/freecm_project.py --action Build --configuration Debug
 ```
 
-默认开发构建：
-
-```sh
-cmake --preset mac_clang_debug
-cmake --build --preset mac_clang_debug
-```
-
-在 macOS 上，同一项变更需要同时验证 Debug 与 Release 时，必须交叉覆盖两套编译器：默认使用
-`mac_gcc_debug` 与 `mac_clang_release`；也可根据任务使用 `mac_clang_debug` 与
-`mac_gcc_release`。不要用同一编译器同时完成 Debug、Release 两项验证；单元测试运行在
-所选的 Debug preset 上。此配对规则仅适用于 `mac_*` preset，不外推为其他平台的验证要求。
-
-涉及跨平台构建、公共头或平台分支的改动，除本机验证外，应在可用的 Windows 和 Linux
-工具链上分别完成 configure/build；当前环境缺少相应工具链时，执行可行的静态检查并明确
-报告未验证的平台，不能将 macOS 结果表述为全平台通过。
-
-测试默认关闭。涉及可测试 C/C++ 行为时：
-
-```sh
-cmake --preset mac_clang_debug -DBUILD_TESTING=ON
-cmake --build --preset mac_clang_debug
-ctest --test-dir build/mac_clang_debug --output-on-failure -L unit
-```
+涉及跨平台构建、公共头或平台分支的改动，应在可用的 Windows、macOS 和 Linux 工具链上分别完成
+Ravo configure/build；当前环境缺少相应工具链时，执行可行的静态检查并明确报告未验证的平台，不能
+把单一平台结果表述为全平台通过。测试只运行 Ravo 自有 unit/contract 入口；不得运行旧 CTest、旧 CLI
+或 `darktable-tests/run`。
 
 验证应与风险成比例：
 
 - 纯 Markdown/代理说明：检查链接、命令、路径与 diff；无需强行完整编译。
-- CMake/依赖图：至少运行 `--update` 和受影响 preset 的 configure。
-- C/C++ 核心：构建受影响目标并运行相关 CTest；公共头或广泛改动运行完整 unit 标签。
-- GTK/UI：构建应用并运行对应手工路径；涉及线程或状态时验证取消、错误和销毁路径。
-- GPU/图像算法：除单元测试外，遵循 `DevDocs/GPU_Baseline.md` 的 CPU 金样和性能门槛。
+- CMake/依赖图：至少运行离线 `--update`、Ravo configure 和受影响 target 的 build。
+- C/C++ 核心：构建受影响 Ravo target；任务要求行为验证时运行相关 Ravo unit/contract，公共头或广泛
+  改动运行完整 Ravo 测试集。
+- CLI/服务：验证结构化错误、取消、输出冲突和资源销毁路径，不启动旧进程作即时 oracle。
+- GPU/图像算法：除 Ravo 单元/fixture 验证外，遵循 `DevDocs/GPU_Baseline.md` 的 CPU 金样和性能门槛。
 
 如果环境缺依赖或测试数据，应先做所有仍可执行的静态/局部验证，并准确报告未运行项
 及原因；不要把“未运行”写成“通过”。

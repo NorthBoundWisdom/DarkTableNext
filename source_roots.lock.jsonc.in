@@ -68,7 +68,7 @@
   "dependencies": {
     "rawspeed": {
       "remote": "https://github.com/NorthBoundWisdom/rawspeed.git",
-      "commit": "d77571487ab94fc17a1a5005d1057343a4170cb9",
+      "commit": "dfbd5090cd28d5d201249cb493c0d26932275107",
       "repoName": "rawspeed"
     },
     "OpenCL": {

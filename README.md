@@ -89,9 +89,31 @@ packages are not fallback build paths on any platform.
 
 ## Dependency management
 
-`source_roots.lock.jsonc.in` is the version-controlled dependency baseline.
-FreeCM generates the local active lock and CMake presets; do not hand-edit or
-commit these generated files and directories:
+The current checkout is governed by the machine-local active
+`source_roots.lock.jsonc`; the version-controlled `source_roots.lock.jsonc.in`
+is the reviewed pinned baseline. Inspect the effective roots before dependency
+work:
+
+```text
+python configs/source_roots.py show --format json
+python configs/source_roots.py resolve --format json
+python configs/source_roots.py verify
+```
+
+The supported modes are `pinned` for exact commits, `latest` for the latest
+commit already visible in local seeds, and `manual` for per-dependency paths in
+`depsManualPath`. Local joint development belongs in the ignored active lock:
+set `depsMode` to `manual`, point only the dependency being edited at a real
+checkout, then run `python configs/source_root_workflow.py --update`. Never edit
+`build/dependency_source_roots/*`; it is replaceable materialized output.
+
+`--init` is the only workflow step that may use the network or prepare seeds.
+`--update` is offline: it reads the active lock and existing seed closure,
+resolves/materializes source roots, and regenerates the root
+`CMakePresets.json`. It does not fetch dependencies, compile them, configure
+Ravo, or run tests.
+
+FreeCM-generated local state must not be committed:
 
 - `source_roots.lock.jsonc`
 - `CMakePresets.json`
@@ -101,7 +123,10 @@ commit these generated files and directories:
 
 Do not add CMake download steps, vendored dependency copies, or replacement
 submodules. Permanent dependency changes belong in the lock template,
-`configs/source_roots.py`, and the CMake code that consumes them.
+`configs/source_roots.py`, and the CMake code that consumes them. Publish and
+verify dependency commits before updating the parent pin. The complete manual
+checkout, offline update, publication-order, and troubleshooting rules are in
+[DevDocs/Dependency_Workflow.md](DevDocs/Dependency_Workflow.md).
 
 ## Repository guide
 
