@@ -43,11 +43,24 @@ def expand_parent_environment(value: str, environment: dict[str, str]) -> str:
     )
 
 
+def expand_preset_variables(
+    value: str,
+    *,
+    repository_root: Path,
+    preset_name: str,
+) -> str:
+    return (
+        value.replace("${sourceDir}", str(repository_root))
+        .replace("${presetName}", preset_name)
+    )
+
+
 def run(command: list[str], *, cwd: Path, environment: dict[str, str]) -> None:
     subprocess.run(command, cwd=cwd, env=environment, check=True)
 
 
 def configure_command(
+    repository_root: Path,
     ravo_root: Path,
     build_directory: Path,
     preset: dict[str, Any],
@@ -64,7 +77,12 @@ def configure_command(
     ]
     for name, value in preset.get("cacheVariables", {}).items():
         if value is not None:
-            command.append(f"-D{name}={value}")
+            resolved_value = expand_preset_variables(
+                str(value),
+                repository_root=repository_root,
+                preset_name=str(preset["name"]),
+            )
+            command.append(f"-D{name}={resolved_value}")
     command.append(f"-DBUILD_TESTING={'ON' if testing else 'OFF'}")
     return command
 
@@ -94,6 +112,7 @@ def main() -> int:
     if arguments.action == "Configure":
         run(
             configure_command(
+                repository_root,
                 ravo_root,
                 build_directory,
                 host_preset,
@@ -128,7 +147,13 @@ def main() -> int:
         )
     elif arguments.action == "Test":
         run(
-            configure_command(ravo_root, build_directory, host_preset, True),
+            configure_command(
+                repository_root,
+                ravo_root,
+                build_directory,
+                host_preset,
+                True,
+            ),
             cwd=repository_root,
             environment=environment,
         )

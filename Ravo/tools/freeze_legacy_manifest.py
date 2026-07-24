@@ -21,14 +21,19 @@ OPERATION_PATTERN = re.compile(r'operation="([^"]+)"')
 # <darktable> XML element. Record that actual legacy XMP version so a fixture
 # hash cannot conceal a schema change.
 SCHEMA_PATTERN = re.compile(r'darktable:xmp_version="([^"]+)"')
+TEXT_FIXTURE_NAMES = frozenset({"cpugpu.maxpix"})
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def canonical_fixture_bytes(path: Path) -> bytes:
+    """Return fixture bytes with Git-style line endings for text references."""
+    contents = path.read_bytes()
+    if path.suffix == ".xmp" or path.name in TEXT_FIXTURE_NAMES:
+        return contents.replace(b"\r\n", b"\n")
+    return contents
+
+
+def sha256(contents: bytes) -> str:
+    return hashlib.sha256(contents).hexdigest()
 
 
 def relative(root: Path, path: Path) -> str:
@@ -36,10 +41,11 @@ def relative(root: Path, path: Path) -> str:
 
 
 def file_record(root: Path, path: Path) -> dict[str, Any]:
+    contents = canonical_fixture_bytes(path)
     return {
         "path": relative(root, path),
-        "sha256": sha256(path),
-        "size_bytes": path.stat().st_size,
+        "sha256": sha256(contents),
+        "size_bytes": len(contents),
     }
 
 

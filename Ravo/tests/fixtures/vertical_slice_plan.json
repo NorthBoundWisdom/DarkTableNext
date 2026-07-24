@@ -11,8 +11,8 @@
       "role": "neutral",
       "xmp": {
         "path": "darktable-tests/0000-nop/nop.xmp",
-        "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
-        "size_bytes": 4495
+        "sha256": "fb8f07afa73b073661bc7022927d9ae216b93d852d1b499d2072ee497af2811d",
+        "size_bytes": 4374
       }
     },
     {
@@ -26,8 +26,8 @@
       "role": "visible-operation",
       "xmp": {
         "path": "darktable-tests/0001-exposure/exposure.xmp",
-        "sha256": "6bc9f5f2ae684b84ff374e97990c99fa4086875fc4a4f4cb43185866e26a5401",
-        "size_bytes": 4889
+        "sha256": "16f6db156279fce27667b3cd6a86b49c4906227346fd2e55a08b9ed16b3817ac",
+        "size_bytes": 4758
       }
     }
   ],

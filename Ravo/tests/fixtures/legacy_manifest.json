@@ -6,8 +6,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0000-nop/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -35,8 +35,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
-          "size_bytes": 4495
+          "sha256": "fb8f07afa73b073661bc7022927d9ae216b93d852d1b499d2072ee497af2811d",
+          "size_bytes": 4374
         }
       ]
     },
@@ -45,8 +45,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0001-exposure/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -75,8 +75,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "6bc9f5f2ae684b84ff374e97990c99fa4086875fc4a4f4cb43185866e26a5401",
-          "size_bytes": 4889
+          "sha256": "16f6db156279fce27667b3cd6a86b49c4906227346fd2e55a08b9ed16b3817ac",
+          "size_bytes": 4758
         }
       ]
     },
@@ -85,8 +85,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0002-local-contrast/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -116,8 +116,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "625162d7de1ec6af93d27cb75e7b57acd682d92f4fe1c96179183c8638ec7a37",
-          "size_bytes": 5281
+          "sha256": "4bd9d60a65a25a084405d976673ab9de6904191732c11dd35222ed7678f6f542",
+          "size_bytes": 5140
         }
       ]
     },
@@ -126,8 +126,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0003-denoise-bilateral/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -157,8 +157,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "df0d5805e7385ae2a0a3c6c2811b83231847ebcbf308d52df157eecc2177697d",
-          "size_bytes": 5209
+          "sha256": "076ccbcaef1d7f46e1d14c7aa2755c01f5a0fb3e3f64b5b34c38646271bd96cb",
+          "size_bytes": 5071
         }
       ]
     },
@@ -167,8 +167,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0004-masks/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -197,8 +197,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b23f4785edc96f7020b7caf5b2b170a024e3b867b09f4120fee37c1461faac4f",
-          "size_bytes": 13414
+          "sha256": "784677401972a35266ab8d2cbcddc0dd473fe77ed77a0220217d0c9ab3edea83",
+          "size_bytes": 13114
         }
       ]
     },
@@ -207,8 +207,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0005-orientation-minus-90/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -236,8 +236,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "dd1dcceeedb5e8722a116e01a7a323a5e46cfe0b0da2e8851d127476c7b335cf",
-          "size_bytes": 12967
+          "sha256": "ae0d0b207e6b6504caea4ee27bdd4537917cc51f47ffef69ad9f53989b2488ea",
+          "size_bytes": 12677
         }
       ]
     },
@@ -246,8 +246,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0006-orientation-plus-90/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -275,8 +275,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ba77b0ab220dbffff0c4bbbff3528a2ddc325b4e8f4c14e0df5c04841e46e595",
-          "size_bytes": 12967
+          "sha256": "e3245932b1c49af99dae54ba1f86d82fa29cfc757b6708b83248159fe89e5fd2",
+          "size_bytes": 12677
         }
       ]
     },
@@ -285,8 +285,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0007-orientation-180/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -314,8 +314,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5c87bfc09ac450449a3d337a05d310b3e740ae71b776fa18bd6086b9ee40fa79",
-          "size_bytes": 13326
+          "sha256": "5ef4a75dd9ef49751fc1c36250f25d700daf41ded788325e936d4db67f375e82",
+          "size_bytes": 13026
         }
       ]
     },
@@ -324,8 +324,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0011-gdnd-90/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -353,8 +353,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e01690d8c784ab6822c52ad59b0468a24b6ef544be042e739697f33fc40057ad",
-          "size_bytes": 4264
+          "sha256": "6d810be7d1f57ad1fa561fe76066c57dbb54116db616a84032379dd602a292ae",
+          "size_bytes": 4152
         }
       ]
     },
@@ -363,8 +363,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0012-gdnd-45/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -392,8 +392,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7cdb4a730c2b45ffe267ddadfc630039c9668f89b85b2d8315b6b6b804138e08",
-          "size_bytes": 4669
+          "sha256": "525db2fe770234fa4d116f596faa7f86cff9cc9448078f86d38ff0bcf43d6d5e",
+          "size_bytes": 4547
         }
       ]
     },
@@ -402,8 +402,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0013-denoiseprofile-wavelets/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -432,8 +432,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "8332158d6ee5f6a37daf9a2e0ffa34e7441af91bf432b4958a1137656eadd550",
-          "size_bytes": 4951
+          "sha256": "a51f54b8d99dcd8bdfe904b119a87d49c3bd680d28307808577857fb2ebbf82d",
+          "size_bytes": 4823
         }
       ]
     },
@@ -442,8 +442,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0014-filmic-rgb/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -471,8 +471,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4ac86ade49c1729c5ffc5d011310e776cb128a396b61db056a2488f4c4815840",
-          "size_bytes": 4318
+          "sha256": "18ff74b56d27bad8dd856f3b000876f60c34dbff7bbf19d8d48ae6f8ff9eeb59",
+          "size_bytes": 4206
         }
       ]
     },
@@ -481,8 +481,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0015-shadhi-bilateral/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -512,8 +512,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5068c1ed1a38e9ab552282c1b657027be3aac9276a688326cf35e145f6da0f2a",
-          "size_bytes": 6337
+          "sha256": "74958ca1ed472c38588ab059128d7e6106cc118623ce38c3bd5d7ee8f34d41e4",
+          "size_bytes": 6180
         }
       ]
     },
@@ -522,8 +522,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0016-lowpass-bilateral/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -553,8 +553,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "8828386ef6c126d12533558b31f7f06d8cf0cde2cd6cb0910bec583a8dd11d83",
-          "size_bytes": 6298
+          "sha256": "3a53d85d9a68c601812a548fcc1df5433f2e98fb524003acea0b52417899de26",
+          "size_bytes": 6141
         }
       ]
     },
@@ -563,8 +563,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0017-monochrome/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -594,8 +594,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ecfcb93604e50acd9aafcca9c4ec83e2635dd5846761f03807e50ad1363679fe",
-          "size_bytes": 6277
+          "sha256": "ef07bc59230f2f5e12a48078c870ab05ec496ecc76d6ba3444fef3e0f8e880d0",
+          "size_bytes": 6120
         }
       ]
     },
@@ -604,8 +604,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0018-perspective-corr/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -635,8 +635,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
-          "size_bytes": 6361
+          "sha256": "96ac1c36fab1480572c26ac93a7ea359d40c04229c5310bfa9cf65677392ee0f",
+          "size_bytes": 6204
         }
       ]
     },
@@ -645,8 +645,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0019-color-mapping/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -676,8 +676,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "1bca7b63fcdeaaed6e8eed221f26e3879cb0a5ba3c5adb2e250938fdb30abde6",
-          "size_bytes": 12087
+          "sha256": "cd701394479a404af3ad58484b2d9c69380414207d9a16a16a59abf5e9eb3163",
+          "size_bytes": 11930
         }
       ]
     },
@@ -686,8 +686,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0020-denoise-nlmeans/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -716,8 +716,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d089e7dff4dcc02eedf9ac2f3cefbbbd3c7c5d3a2a257e945cd8f1a89ada231f",
-          "size_bytes": 4839
+          "sha256": "fb3df7203403cfc135191510b8b1951157232cfa97247b3ead7b1117157bb545",
+          "size_bytes": 4711
         }
       ]
     },
@@ -726,8 +726,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0021-retouch-wavelets/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -756,8 +756,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "6bb78a897c85b7be129c26cfafcfa65357b897895ac7baf6487003eb0e37ae90",
-          "size_bytes": 6003
+          "sha256": "2bf0497355ab72ef27d5b7fb52b34f5c18c4e59ab7aba1a34eb14673b0de0397",
+          "size_bytes": 5856
         }
       ]
     },
@@ -766,8 +766,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0022-color-zones/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -798,8 +798,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "82af6acca79859e49b0d3db5f7a9631ccfbfa7ff52a1d5796166e66c555e571b",
-          "size_bytes": 5605
+          "sha256": "f43c7b24fd18a0c20e2dd55c6635b5e92f3bd51627000e7b776bd30a5d21340b",
+          "size_bytes": 5463
         }
       ]
     },
@@ -808,8 +808,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0024-contrast-equalizer/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -838,8 +838,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "601200032535fa60239599e62aea2b76106ba9625037deab331dfbfd798af2b7",
-          "size_bytes": 4878
+          "sha256": "a5ad4c01f5b7b2c8142b07da1a22ddd4cce010d7f63f9919e5ca992494072d4c",
+          "size_bytes": 4750
         }
       ]
     },
@@ -848,8 +848,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0025-exposure-guided-filter/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -878,8 +878,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "bf372f0dcd2ea0677361b6577f9a42400945a3acb3d89b0d050d0d6febf929fa",
-          "size_bytes": 6097
+          "sha256": "4f09346f3d8b499053ab1dfa73cfe42a02ec4176c119ccb35a4778ea513baaa3",
+          "size_bytes": 5947
         }
       ]
     },
@@ -888,8 +888,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0026-haze-removal/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -919,8 +919,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "af06fb024385e837792e4422e1274a3f4052aa3c1e89623f08bed367371613eb",
-          "size_bytes": 6262
+          "sha256": "100bd38bdd54687c91ee888ed314491dc7a567f6a8cf84a1d977d0edd0a1e767",
+          "size_bytes": 6105
         }
       ]
     },
@@ -929,8 +929,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0027-denoiseprofile-nlmeans/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -958,8 +958,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d3406317d7aafc425a813172bc953f6cbc74cba30061eeccab111687599cf323",
-          "size_bytes": 4347
+          "sha256": "dd50d652afbc699d843e16fbee2efd6843c11ca9f77103b7b4b73f28b7779ae5",
+          "size_bytes": 4235
         }
       ]
     },
@@ -968,8 +968,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0028-highpass-overlay/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1001,8 +1001,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "aef91def465863a1099a7b9fc454fcce562a2f62e9ebb23f13430de643155fa6",
-          "size_bytes": 6525
+          "sha256": "63554457763868f7e1285d7c1c77ab80206ca4a9e64b02a1ab80060a2db72394",
+          "size_bytes": 6373
         }
       ]
     },
@@ -1011,8 +1011,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0029-color-correction/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1044,8 +1044,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4aca95856362c996a328ad90ae23ae769db436be80afa2f0f61e8509e5028cbb",
-          "size_bytes": 6216
+          "sha256": "20fde2da83900c2aaa5b5fa3a40edd3586563b5495f07c742a370ce49a04ed65",
+          "size_bytes": 6064
         }
       ]
     },
@@ -1054,8 +1054,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0030-framing/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1084,8 +1084,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5177f4f0ea2fc09fc3e08aa3031b9be314fda2a598688c761d9ecc715203bf39",
-          "size_bytes": 5075
+          "sha256": "56d8892dda4a275bcae7325f50b25388d8001a0958e99417de8e1dfc8e67a692",
+          "size_bytes": 4953
         }
       ]
     },
@@ -1094,8 +1094,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0032-watermark/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1124,8 +1124,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "741deb1660ba137dd4c7f0287d2387298e3a5eba098280a72c0f76a68f27b1e7",
-          "size_bytes": 5037
+          "sha256": "0d8fd1fb2a2a64b0f790d8310f2f91168f9bb220517c6dfb75809a569183d107",
+          "size_bytes": 4915
         }
       ]
     },
@@ -1134,8 +1134,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0033-blending-modes-uniform/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -1164,8 +1164,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9c747fbc7cdcbd6e5275c3d083c53ef9fc3806cb9bcadeda69bacb164c1a2fdd",
-          "size_bytes": 8338
+          "sha256": "5cfe029e24a4345bd47af0e72af3e49e64801642867996c83f16df21d9f695ad",
+          "size_bytes": 8159
         }
       ]
     },
@@ -1174,8 +1174,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0034-blending-modes-parametric/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -1204,8 +1204,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9f6cf52d42ffcd6c55d2b250a06cb3d42fff2d1c1f0f4d6b3490dfb557f4f704",
-          "size_bytes": 8622
+          "sha256": "8c43901e0eac4765a24b5b4debb4ef2c0e248b3a99048766441c95194d8caae1",
+          "size_bytes": 8443
         }
       ]
     },
@@ -1214,8 +1214,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0036-liquify/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1244,8 +1244,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0f905728ee019e677810e081ee915be202cf0e548f1aa4d968e486ed6efd88c8",
-          "size_bytes": 5703
+          "sha256": "a2ad0ab443576d2e337db2abff9c4a6c5bd708b71032f1865f78e66610e5f5c9",
+          "size_bytes": 5581
         }
       ]
     },
@@ -1254,8 +1254,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0037-filmic-reconstruction/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1285,8 +1285,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b2b53354c770cf22d73c9d67a19a2a961a35ddbfd2cea58d82c024f0219aac66",
-          "size_bytes": 5492
+          "sha256": "994f2c92c2fca184738a2326464daa3c1c8521c3a16f1443e35199ffd6ddc6d6",
+          "size_bytes": 5354
         }
       ]
     },
@@ -1295,8 +1295,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0038-colorcontrast/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1326,8 +1326,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4839163a96b6d6259b0bd0bea786800d7539dc26bc58e9d69a2b5b7c1b7f3345",
-          "size_bytes": 6255
+          "sha256": "58a2c67fec8be680e6b9c9ca079f74b32823641e212e2478b0f2ccbd8644ca6d",
+          "size_bytes": 6098
         }
       ]
     },
@@ -1336,8 +1336,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0043-dithering-fs/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1367,8 +1367,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ff36c5e078cc97c65a7c8e75dd1ae386053975146f5570e0c67d0bc9c32a8ecc",
-          "size_bytes": 6268
+          "sha256": "18567d8bacf452397ab256428d018b59beeb896e1fc0e3934d232df52ae212bf",
+          "size_bytes": 6111
         }
       ]
     },
@@ -1377,8 +1377,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0044-dithering-random/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1408,8 +1408,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "42bcd4c9efa0e75a64968cbd134ce6f2f827984d8728e5f0786de65415b1cb52",
-          "size_bytes": 6268
+          "sha256": "3870ec6fc1a46fb24b916edc84634a6ec995022a0c0dbde1c5a5405f5e30d0bc",
+          "size_bytes": 6111
         }
       ]
     },
@@ -1418,8 +1418,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0045-vignetting/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1449,8 +1449,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "cd9648bc165101688af3e7bdd5cff6d2c615b37a07967ae4ec9ad4e789dbdd96",
-          "size_bytes": 6658
+          "sha256": "71b25225e9cdf6e12a11345ea033a91cb0463eae25e2201f20cf7180efd13978",
+          "size_bytes": 6491
         }
       ]
     },
@@ -1459,8 +1459,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0046-demosaic-greens/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1489,8 +1489,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0e3dd2a67ae1828ac791d5ee6dd8466d531204b4255134ebcdf4efa6d9646f82",
-          "size_bytes": 6606
+          "sha256": "7157f7ead34c5ddcb2bd02a09fcc5e842b1065be4f84d5a3c37cedffa0500d35",
+          "size_bytes": 6439
         }
       ]
     },
@@ -1499,8 +1499,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0047-demosaic-amaze/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1529,8 +1529,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5e190515c36458607f88b2ada9e50d82f663ffa9bed535df6775883286f8dd52",
-          "size_bytes": 7002
+          "sha256": "639254d1c4c29634b6bde4e2ec8d9e0a02a598a17d5603e7356d4d7781ec4076",
+          "size_bytes": 6825
         }
       ]
     },
@@ -1539,8 +1539,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0048-demosaic-vng/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1569,8 +1569,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4f450913de6926ef9d3ccf20f058a9d58d70b015a428563bd71994801304c9d5",
-          "size_bytes": 7398
+          "sha256": "b3c469d13bf30a3f04ace43c5ad897df4a1f0b1b6b9e8dcbb64709a0d750c17a",
+          "size_bytes": 7211
         }
       ]
     },
@@ -1579,8 +1579,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0049-rawdenoise/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1610,8 +1610,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "032754cbe542cb9c7bc1b1f83c4ef399663d6af75aa642e969d531df78026e45",
-          "size_bytes": 6692
+          "sha256": "5a9029f496abd167e62dca6f80ae77e2aa3ff0c885d158aa50754b95fc91ec38",
+          "size_bytes": 6525
         }
       ]
     },
@@ -1620,8 +1620,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0050-bloom/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1650,8 +1650,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d6e3c05ecfd69c4152e10972edb258d44c56a7568c983579ffe699a1a03fa697",
-          "size_bytes": 4823
+          "sha256": "e134be28c14c0a1e6954c2ab4d2fea563047ad683baf38339b5589baae03d3b8",
+          "size_bytes": 4695
         }
       ]
     },
@@ -1660,8 +1660,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0051-soften/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1690,8 +1690,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "da9cb8ec7b233b10195e5608cb2f1abafa53c2bf737d7f2fb3d6a80a548f8f78",
-          "size_bytes": 4832
+          "sha256": "7198b724dd43e846415c7c36401b8eaabd916080d33a9098100ceb518d88e796",
+          "size_bytes": 4704
         }
       ]
     },
@@ -1700,8 +1700,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0052-color-reconstruction/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1730,8 +1730,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5b83af1e0145f4731fee79d53312ecf8c60fb44b68d507e2c5909fd8997d8d71",
-          "size_bytes": 4850
+          "sha256": "b0a6ef15bfeecfbd9299ea8c6c1621e67079c8db65ac72058b4c7c15e1902bb8",
+          "size_bytes": 4722
         }
       ]
     },
@@ -1740,8 +1740,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0054-rgblevels-linked/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1770,8 +1770,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b57f7bfeeec2d6292cadd8bda638b7e9668e445fa6db423236ab22018f768bae",
-          "size_bytes": 4891
+          "sha256": "7bda68b0aa8717bf2fa080d444eed25cd4cdaea25482161844c1cd4c3f9b8372",
+          "size_bytes": 4763
         }
       ]
     },
@@ -1780,8 +1780,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0055-rgblevels-indep/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1810,8 +1810,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0cac2433ed9c5d1f4b196b4d720c56f107171849a49d322b1974b58fb4f417f8",
-          "size_bytes": 5340
+          "sha256": "d5dbd1016511ae487ffe91c8459a44e3d1582b412ff8a5acd3f02c52936a9d7c",
+          "size_bytes": 5202
         }
       ]
     },
@@ -1820,8 +1820,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0057-colorize/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1850,8 +1850,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "169883782b72d3c7e5e7b19f03952cf74c2025e11d4b3ed5e0ed7306fccf54c4",
-          "size_bytes": 4842
+          "sha256": "1c281ee74fb0f5bd8a37c05d9cda6a7da6aad87f005083eec54a617417baf208",
+          "size_bytes": 4714
         }
       ]
     },
@@ -1860,8 +1860,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0059-grain/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1890,8 +1890,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "aba97b6878b017214ac54574e0d63f54a2f63b6ed1649394a81b052708060280",
-          "size_bytes": 4831
+          "sha256": "255173d9504ee43da54113a45ef2fab480a70c7a88032b9b91a34bb6502f55ed",
+          "size_bytes": 4703
         }
       ]
     },
@@ -1900,8 +1900,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0060-rgbcurve-indep/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1930,8 +1930,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "821294a9ced36ae0e15942463b8f9c3bcbafc456f352e8e3fb39fc740384c8db",
-          "size_bytes": 5006
+          "sha256": "282b86e920f4d15545e30bcebdda9dbc086def220f99bd46ae1dde38b2b6b5bd",
+          "size_bytes": 4878
         }
       ]
     },
@@ -1940,8 +1940,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0061-lowlight/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -1970,8 +1970,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9427ea812f9e118535db87f09c3ce281fb0587ff6ee91adffc8b6f31fd2d5da6",
-          "size_bytes": 4906
+          "sha256": "f01db8227cd472bdb01f57adedbd624793ceed195c546624b73b182e7fdf45ff",
+          "size_bytes": 4778
         }
       ]
     },
@@ -1980,8 +1980,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0062-splittoning/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2010,8 +2010,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ae41f57bcef38bc232a07ff6dfe2fa2b5283481d103c25ad8cc1ff410e9b9da7",
-          "size_bytes": 4853
+          "sha256": "4c435b138cf6addd887cc0cb88cb12142b755e3499daf4e17c040b096aeaff4b",
+          "size_bytes": 4725
         }
       ]
     },
@@ -2020,8 +2020,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0063-velvia/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2050,8 +2050,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "77f4430736e594de0e4782649ba2255e2153627166f7b7d3d14c513d37325fc2",
-          "size_bytes": 4816
+          "sha256": "6b38251e6eb2b76518d4953a16387b1dbd82c4d1f982ccfe2eb372bb4e11268f",
+          "size_bytes": 4688
         }
       ]
     },
@@ -2060,8 +2060,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0064-demosaic-xtrans-vng/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2089,8 +2089,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "6985b8e85dd853865965ebbd0302c7b4be350474c2629b4b43871985b9211525",
-          "size_bytes": 5665
+          "sha256": "3a9b5a1c45075193caf3de48ba7284e7bb92673341be70510b3785f3bcff0455",
+          "size_bytes": 5523
         }
       ]
     },
@@ -2099,8 +2099,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0065-demosaic-mark1/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2128,8 +2128,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "11dfd6da4e16c15203ae8ac9933366604b65f3613c812ed161c4c8b594545db1",
-          "size_bytes": 4865
+          "sha256": "e2057f2eed1bdf2dfe5f8288b692146da6a97413fa3b524f301de50821eb3113",
+          "size_bytes": 4743
         }
       ]
     },
@@ -2138,8 +2138,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0066-demosaic-mark3/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2167,8 +2167,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e8f1f3bc913595ba2efaad7f4d6bda5692252206eb5b18cd8cd0e3ad3807ed78",
-          "size_bytes": 5269
+          "sha256": "9cd373ad2289d4728d20cd534438035113427cef97a3199f88bba22a00d6591f",
+          "size_bytes": 5137
         }
       ]
     },
@@ -2177,8 +2177,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0067-demosaic-fdc/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2206,8 +2206,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e89192036e6d5d459b764d66e086519c3d8ad716035a55b288419d802f0c7cbf",
-          "size_bytes": 6061
+          "sha256": "0c95dff3d7b67a93accb85728b7410cb561e164ed2aced044854ce3649346735",
+          "size_bytes": 5909
         }
       ]
     },
@@ -2216,8 +2216,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0068-rawdenoise-xtrans/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2246,8 +2246,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f2ba56d71933e8f8d3a6ce35cdd5823d912b867194f9682888f292fa60c39084",
-          "size_bytes": 5432
+          "sha256": "7b01d00c56b769c4201d1daef7c506ade470ad417c6c855f3da7ff562209a338",
+          "size_bytes": 5304
         }
       ]
     },
@@ -2256,8 +2256,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0069-tonecurve-rgb-linked/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2286,8 +2286,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "438a85726743d94945b11296d4ed1a40d3dc0d5efb367e69eadbc0b4a2072680",
-          "size_bytes": 5142
+          "sha256": "e3cb996e55f287e4b73606e26a41a713a0ea678f9478c863e94894274ad53923",
+          "size_bytes": 5020
         }
       ]
     },
@@ -2296,8 +2296,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0070-tonecurve-xyz-linked/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2326,8 +2326,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7ecb4bf33a9674ca531d5228fda54ecd9eafb594e2fb0d2cc49fe4b62906b483",
-          "size_bytes": 5498
+          "sha256": "e7cfe947abe035953951797428a7fd734f0a73369d48984b6758e3bbfbadaa7c",
+          "size_bytes": 5366
         }
       ]
     },
@@ -2336,8 +2336,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0071-tonecurve-lab-linked/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2366,8 +2366,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7da6b84b5f06ee5a76fbfbecb2359b0e949c655caa1ad1d5a67bb538458b47af",
-          "size_bytes": 5498
+          "sha256": "204d8150b5fe90d6cfc9c20f3c88f8e1e963c5b1735f4006cfb1dd050dc5beb7",
+          "size_bytes": 5366
         }
       ]
     },
@@ -2376,8 +2376,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0072-tonecurve-lab-indep/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2406,8 +2406,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "173ccdc8e51c80c06cb6f8d117170ac897d6996257d27ccc51f6635c64e9f1b4",
-          "size_bytes": 5546
+          "sha256": "5e6e7ed93e8a067627391b13834cc3acbab1c0fd9a8c90925b7a5c4ff683d75a",
+          "size_bytes": 5414
         }
       ]
     },
@@ -2416,8 +2416,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0074-retouch-clone/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2447,8 +2447,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "70256bb36dc555c599096f6d0a91ec7d12f618379788897edd736a36a3e23592",
-          "size_bytes": 8391
+          "sha256": "e616db2fe014093719788c8ae7d2f7c21ad062a3b827ea6aa673bde1398b3bbf",
+          "size_bytes": 8213
         }
       ]
     },
@@ -2457,8 +2457,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0075-retouch-heal/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2488,8 +2488,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7b48034e96a5d55de597fb10419e355501830fd9c10fe4baebf46b901af9cab6",
-          "size_bytes": 10915
+          "sha256": "38e7c8ff56fc35016df3bae89314f7b676e1313422e73132f2d86e0498f8d226",
+          "size_bytes": 10692
         }
       ]
     },
@@ -2498,8 +2498,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0076-retouch-blur-fill/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2529,8 +2529,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "c139b0771da8bc988d2b0d52cd39705a505c80845c2a97802f80b723b9a3726c",
-          "size_bytes": 19821
+          "sha256": "04124062f1e8520a2c798f8d89eeadb6545150a0ff7ad7b3348fc0b3cd695078",
+          "size_bytes": 19434
         }
       ]
     },
@@ -2539,8 +2539,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0078-basecurve-fusion/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2569,8 +2569,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3de2fb24002a7b6f03e2820efeec2a73aec50b7ae3bbee3fe5887ee97a89a1f3",
-          "size_bytes": 5134
+          "sha256": "d6ba5c70becd01312aba23baabfce86b0d4d718afc4dac2a12316a54cba39c5d",
+          "size_bytes": 4999
         }
       ]
     },
@@ -2579,8 +2579,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0079-toneequal-gf/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2609,8 +2609,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ce8662478231d07ca53324b486ab463768556353e815b1435d29c33d599d49e3",
-          "size_bytes": 5182
+          "sha256": "3bb6f85d9ff6c7372412fcf2429600ef1134aaab0bec606ae9fce8d131a0da5a",
+          "size_bytes": 5047
         }
       ]
     },
@@ -2619,8 +2619,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0080-toneequal-eigf/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2649,8 +2649,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f7e2a9cc3add9794e2388653602156c81a5648ebfc29d4128e812c508751b8a2",
-          "size_bytes": 5699
+          "sha256": "5a7c1eaebc36d4485fd206ecdbcac90d6eb905c26759937aa502a524bc1516a9",
+          "size_bytes": 5554
         }
       ]
     },
@@ -2659,8 +2659,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0081-mask-groups/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -2690,8 +2690,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0ca5b1923a29a5fb154d82288f15e3ca9e17207ea3fa296a23fd362022cddd97",
-          "size_bytes": 9532
+          "sha256": "39f5ee30a6741df3b3ffd937d0b686a298ec8cdf24be66f9d9b95a1dd02a72f7",
+          "size_bytes": 9321
         }
       ]
     },
@@ -2700,8 +2700,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0082-demosaic-rcd/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2732,8 +2732,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e115114e62a7d25ae287672984ed3e8f1321bd23dab051048608caa6db8fe2dc",
-          "size_bytes": 5601
+          "sha256": "845c147687daa4aba70be466ce4ceed1e48dd7224b761d971b509261ab23aad2",
+          "size_bytes": 5459
         }
       ]
     },
@@ -2742,8 +2742,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0083-colorbalancergb/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2775,8 +2775,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "741c0578b3862042e3249164b1779b21869bd3283fe00a8eb4f25955feaedfbf",
-          "size_bytes": 6189
+          "sha256": "b59818d3f036ea6a8ff050cb0328bebc1b8dbac8642925fbb675b606e5cef1df",
+          "size_bytes": 6037
         }
       ]
     },
@@ -2785,8 +2785,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0084-cacorrect/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2818,8 +2818,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b33208c111158fb1c7bf59dfa50bb62e6612197d531ae5900ffcca653e07d79f",
-          "size_bytes": 5999
+          "sha256": "d686e15b5d6b3c5308c90ec87ef333a81bed18261e4af04ba2b0af78b116b0ad",
+          "size_bytes": 5847
         }
       ]
     },
@@ -2828,8 +2828,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0085-channelmixerrgb/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2860,8 +2860,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5f4638e83310661c74140a53dafcb4da1662bc97d5f6346f83c948e86017fe28",
-          "size_bytes": 6129
+          "sha256": "8cb77e08bd7eb51e3fa0a9b9fe2d708cf5d0e3c79922e5ada5d8039d5ba34499",
+          "size_bytes": 5977
         }
       ]
     },
@@ -2870,8 +2870,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0086-diffuse/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2907,8 +2907,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "13a23e5c5ac34f8cbe373353112bbdeb362946c4d27cbbc0b796d63aebbf8117",
-          "size_bytes": 25280
+          "sha256": "48a3a85603efa1769d35a145286b3a194dc3eb4ed8b443558f1df19b0bba1bbb",
+          "size_bytes": 25082
         }
       ]
     },
@@ -2917,8 +2917,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0087-blendif-and-or/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2949,8 +2949,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e4e1051e5a9661343defb28791d525b04fa8f23fc8590b6395c9136e2c3dedf8",
-          "size_bytes": 11439
+          "sha256": "7b387d6818667fd8859ede8c5ca4b0cd8abf23239f1995b9cd0db927c1c556a4",
+          "size_bytes": 11188
         }
       ]
     },
@@ -2959,8 +2959,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0088-blendif-diff-excl/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -2990,8 +2990,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9ca918248f4430aff7a91203705758694ababad87ea8636277c6f02746b774fd",
-          "size_bytes": 11407
+          "sha256": "6aaf1e5ebc8a0c1b40376f680d1139935c33a8a292fc1b74e57b542ad7f20358",
+          "size_bytes": 11156
         }
       ]
     },
@@ -3000,8 +3000,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0089-blurs/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3033,8 +3033,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "724718eec9164585cf566a877e099d0dc0e095d3dd01ffd1545388f6cb68ba63",
-          "size_bytes": 7162
+          "sha256": "9ed5f79ca3ba8315064955668b08ddeec94c2594338cdc449814a1ce3af28305",
+          "size_bytes": 6982
         }
       ]
     },
@@ -3043,8 +3043,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0090-mask-combine/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3079,8 +3079,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "c1ca4bc8ad9e5ed34c54404c2247374d2fbfc53a3b05087686bbd93299066235",
-          "size_bytes": 27989
+          "sha256": "a4bd981916bca73ce5f027776059c55618ca69e43a9c78b0d0cfba15af4976eb",
+          "size_bytes": 27281
         }
       ]
     },
@@ -3089,8 +3089,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0091-mask-combine-intersection-inverted/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3122,8 +3122,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "13fbebbfa5fc9c6e8d90d0b60056602b4c2ded3cd1efbdf44e49fc2972e98441",
-          "size_bytes": 8982
+          "sha256": "6e547d279833a37231bbba8089cd7b24746c246b435472cb9d94bc8ef50a6947",
+          "size_bytes": 8756
         }
       ]
     },
@@ -3132,8 +3132,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0092-filmicrgb-v6/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3166,8 +3166,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0a5699aab1f53302d98c2bff5a81dfbbab2d3836f220d95cb08e37587148a467",
-          "size_bytes": 7591
+          "sha256": "77b65eaf4120dcd522cf8c3e0598c251419597995016cb0662c8a21489faf000",
+          "size_bytes": 7429
         }
       ]
     },
@@ -3176,8 +3176,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0093-colorbalancergb-ucs/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3210,8 +3210,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "70a02eedbecbc9c000a280f2da18ff4c61278d5e91449ed0a281a4b725e8073f",
-          "size_bytes": 6613
+          "sha256": "ce9fe33a12f72b97ed954ce153a5333a561583b21cf81c95584a1c78c9ca5b92",
+          "size_bytes": 6452
         }
       ]
     },
@@ -3220,8 +3220,8 @@
         {
           "maximum_differing_pixels": "86",
           "path": "darktable-tests/0094-highlight-segmentation/cpugpu.maxpix",
-          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
-          "size_bytes": 4
+          "sha256": "816c83d0ac08a94e91547a30df27dbbe88c7643cfa3c99d33120fd361173759a",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3253,8 +3253,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "87c6b63464a40a7b26bce9528ea4008426c7b742667bd724837500cf061d7a51",
-          "size_bytes": 7331
+          "sha256": "df842015ffc40781f8e145c685227a0fb801a63494186094125c27d8405f1469",
+          "size_bytes": 7137
         }
       ]
     },
@@ -3263,8 +3263,8 @@
         {
           "maximum_differing_pixels": "86",
           "path": "darktable-tests/0095-highlight-opposed/cpugpu.maxpix",
-          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
-          "size_bytes": 4
+          "sha256": "816c83d0ac08a94e91547a30df27dbbe88c7643cfa3c99d33120fd361173759a",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3296,8 +3296,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "eec199c35db65b4715b78572772b6acfa876d0d5036b29c387b11288e0bf59ac",
-          "size_bytes": 6873
+          "sha256": "8cbd6ba973bccd93fda4ad4f1b522dc7c38b05bc48b0d1b2ef13f6a9718e259b",
+          "size_bytes": 6689
         }
       ]
     },
@@ -3306,8 +3306,8 @@
         {
           "maximum_differing_pixels": "86",
           "path": "darktable-tests/0096-lensfun/cpugpu.maxpix",
-          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
-          "size_bytes": 4
+          "sha256": "816c83d0ac08a94e91547a30df27dbbe88c7643cfa3c99d33120fd361173759a",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3339,8 +3339,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "a1dbbbca762a4f929910fc800ea05409f700a01fb505661497c42d89c035c4ec",
-          "size_bytes": 6984
+          "sha256": "4c00041754838845ab683938711e41e40941d4334b9ed066e97ec0fd532135b0",
+          "size_bytes": 6799
         }
       ]
     },
@@ -3349,8 +3349,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0097-sigmoid/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3384,8 +3384,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7974ba80e1a0fe3e1b0db4c802eb6a28b04066090ee59c6d4b96f91745bbd196",
-          "size_bytes": 7463
+          "sha256": "a339031b7a1f272664b84c72e97047daa4e7ffabb98f84059f3ae048a95e5506",
+          "size_bytes": 7283
         }
       ]
     },
@@ -3394,8 +3394,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0098-colorchecker/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3424,8 +3424,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "450d3e6320e66aa54bb2f323556df984c34b9493d5c537fc48c416162cc8379c",
-          "size_bytes": 5289
+          "sha256": "a5dfd27d13b921c18055fa5ec326706b98534455bb7b9a8a35a11113cddba6f4",
+          "size_bytes": 5163
         }
       ]
     },
@@ -3434,8 +3434,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0099-surfblur-small-radius/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3464,8 +3464,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "eee2216a9bbc479d85bbc665c99e23c23fca8f1108379d843aaeaf70c70c1e78",
-          "size_bytes": 6342
+          "sha256": "4966a1b937fd4e9d82c5a4b51f4b933c15ad5299a805b5ca4592e08523ca4147",
+          "size_bytes": 6178
         }
       ]
     },
@@ -3474,8 +3474,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0101-lowpass-gaussian/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3505,8 +3505,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "fbcfa88c0d8c3d0845f9d574fb080eedc6b8f614be8de89ec476fc710c879d16",
-          "size_bytes": 11116
+          "sha256": "c0351a401ed3d9796478dd5b9125132bc8d9f8c584d8ec446efc02748e75c2d1",
+          "size_bytes": 10872
         }
       ]
     },
@@ -3515,8 +3515,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0102-censorize/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3546,8 +3546,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "e81dbba9ee10a7558c7754ad6b252d858155d9bc45e2d3b3707ceb6164f49e58",
-          "size_bytes": 6779
+          "sha256": "ecfd742f66fe5b60a9848fbd2680d00be212d16bd14f5583fd5c55f16b8bc555",
+          "size_bytes": 6609
         }
       ]
     },
@@ -3556,8 +3556,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0107-colorin-gamma/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3586,8 +3586,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "526f5b06d3f6c2f518f0ebdf71776dd44becccc38e40535ef46f93c19cfcfeca",
-          "size_bytes": 6711
+          "sha256": "4e7b38a5ce9c881aff3bf97a6696ad08a7378868f157616cfc512ff5c251d243",
+          "size_bytes": 6548
         }
       ]
     },
@@ -3596,8 +3596,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0108-colorin-clip/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3626,8 +3626,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3abbb0ac98e3cd38787819d263048034c0c181f0d5d66c30d613257c56306000",
-          "size_bytes": 7150
+          "sha256": "6d1d62e123d7fe7bd7b18190034b553a71a983f3c3f52b3ba8bdd81ddbb99a47",
+          "size_bytes": 6976
         }
       ]
     },
@@ -3636,8 +3636,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0109-colorin-gamma-and-clip/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3666,8 +3666,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "20c756707df41c251de7590b9837545947361ff79cb5a05f9d4b3cabf3d9bf6f",
-          "size_bytes": 7589
+          "sha256": "31e431c2274f34ed696691189644ce33ae59facb230c725c9a87bf57064097b0",
+          "size_bytes": 7404
         }
       ]
     },
@@ -3676,8 +3676,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0110-perspective-bilinear/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3707,8 +3707,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
-          "size_bytes": 6361
+          "sha256": "96ac1c36fab1480572c26ac93a7ea359d40c04229c5310bfa9cf65677392ee0f",
+          "size_bytes": 6204
         }
       ]
     },
@@ -3717,8 +3717,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0111-perspective-lanczos2/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3748,8 +3748,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
-          "size_bytes": 6361
+          "sha256": "96ac1c36fab1480572c26ac93a7ea359d40c04229c5310bfa9cf65677392ee0f",
+          "size_bytes": 6204
         }
       ]
     },
@@ -3758,8 +3758,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0112-perspective-lanczos3/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3789,8 +3789,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "43cbb39da40fd4147ca62b782b88e26fc765fb465c8e7261a9ed9ed5a68e2c86",
-          "size_bytes": 6361
+          "sha256": "96ac1c36fab1480572c26ac93a7ea359d40c04229c5310bfa9cf65677392ee0f",
+          "size_bytes": 6204
         }
       ]
     },
@@ -3799,8 +3799,8 @@
         {
           "maximum_differing_pixels": "96",
           "path": "darktable-tests/0113-resample-bilinear/cpugpu.maxpix",
-          "sha256": "5a0081df5238d2726e6dd73f3b4c8be269b0120e82313d8a05152b86423c28fd",
-          "size_bytes": 4
+          "sha256": "d93844f8f37e55564be3f194656bf33b5d0fb5e589a0fe17eb7c2d4e8593ec9c",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3828,8 +3828,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
-          "size_bytes": 4495
+          "sha256": "fb8f07afa73b073661bc7022927d9ae216b93d852d1b499d2072ee497af2811d",
+          "size_bytes": 4374
         }
       ]
     },
@@ -3838,8 +3838,8 @@
         {
           "maximum_differing_pixels": "106",
           "path": "darktable-tests/0114-resample-bicubic/cpugpu.maxpix",
-          "sha256": "bf5bf3cd1c59ae7ae1d174d870561e3c6a393575352753468859967cc66a0d8f",
-          "size_bytes": 5
+          "sha256": "79f0cdc11a64b21e76816c25cc0d066a873134770fba891b54e01445c2620c4c",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3867,8 +3867,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
-          "size_bytes": 4495
+          "sha256": "fb8f07afa73b073661bc7022927d9ae216b93d852d1b499d2072ee497af2811d",
+          "size_bytes": 4374
         }
       ]
     },
@@ -3877,8 +3877,8 @@
         {
           "maximum_differing_pixels": "107",
           "path": "darktable-tests/0115-resample-lanczos2/cpugpu.maxpix",
-          "sha256": "1faa00f8717f19d85577fa51d29cb48c752cea8fe4653d6ea1c4d23ad22883ac",
-          "size_bytes": 5
+          "sha256": "bcea5d7d8b256f1bda5f90a3ede41899e94b89fccb4e4d2786073b5bfaa0002a",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -3906,8 +3906,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3c5ecc5a159048bed7795e68211c6cee9b4e32015d58103baa494e70108186f2",
-          "size_bytes": 4495
+          "sha256": "fb8f07afa73b073661bc7022927d9ae216b93d852d1b499d2072ee497af2811d",
+          "size_bytes": 4374
         }
       ]
     },
@@ -3916,8 +3916,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0116-blending-rgb-display-1/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3946,8 +3946,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f9328fcaa5f5ad26020f00e3856d0153cc24f59106d247bb249326313cffafcf",
-          "size_bytes": 8132
+          "sha256": "9594ceccead83e2d64dc0a48a9e2d3abc3ad164f9ce0d67bea49e2fb4563ca63",
+          "size_bytes": 7963
         }
       ]
     },
@@ -3956,8 +3956,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0117-blending-rgb-display-2/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -3986,8 +3986,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "df775e33feb19887a8aa842ae5b947801f7ec35eb5dbad58946f2a1ba390545b",
-          "size_bytes": 8078
+          "sha256": "b9d62813d81c390776776e71adf3e1c899744b3d2cedcde3502619182769f1a3",
+          "size_bytes": 7910
         }
       ]
     },
@@ -3996,8 +3996,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0118-blending-rgb-display-3/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4026,8 +4026,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "94c1f6cbe6edd0690959b25b35b6de97d5cd96033eb50e6274654b228aa6ce8b",
-          "size_bytes": 8129
+          "sha256": "b25b4777a3f3986fb109f1b3571f70ec6c069938669a8414da1f6f193a0e47ee",
+          "size_bytes": 7960
         }
       ]
     },
@@ -4036,8 +4036,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0119-blending-rgb-scene-1/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4066,8 +4066,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "59601912d9b060a6f5c8416fd473e476a30f65d7a16cca44a8a94e11de030493",
-          "size_bytes": 8009
+          "sha256": "a1fae96ff4f055d16b8dfbb18a8e4ebc132b60260a83a6217852b719f1c3f16d",
+          "size_bytes": 7840
         }
       ]
     },
@@ -4076,8 +4076,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0120-blending-rgb-scene-2/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4106,8 +4106,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "6346b7170282c2771d7aa28798ca39717cb29e7da96918fad9bde04d2f3de2e9",
-          "size_bytes": 8033
+          "sha256": "38014b1ff0a5992d9ca663415da4288e6bfcbf0f08e50b9840720118b1e60d52",
+          "size_bytes": 7864
         }
       ]
     },
@@ -4116,8 +4116,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0121-blending-rgb-scene-3/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4146,8 +4146,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "c44b917fdde1f46ac1815141b2c325d32d7465dd71ea002812e48579b89aa9d2",
-          "size_bytes": 8093
+          "sha256": "02786d2f47d4b96ab6a1ceb1c4319f6a93a916c2c66fd1ff07f9741ace787389",
+          "size_bytes": 7924
         }
       ]
     },
@@ -4156,8 +4156,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0122-blending-lab-1/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4187,8 +4187,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "19109443bd360759ec4d5547dce69dbba66065e382e45f3eba3900f1e5998949",
-          "size_bytes": 8378
+          "sha256": "b65b6c9feced0e03e0ba6f76bb055a5a946d5b7d00284f19fe22f0214ea8176d",
+          "size_bytes": 8202
         }
       ]
     },
@@ -4197,8 +4197,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0123-blending-lab-2/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4228,8 +4228,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ea4ea6f22c719269cc54073ca151e5bbda16ee0c9c590984871f67ac8f0e2fc4",
-          "size_bytes": 8375
+          "sha256": "c1bb6ca23bd604df247148149788ce5364c55721ca47443a54dd5576e25b92d5",
+          "size_bytes": 8199
         }
       ]
     },
@@ -4238,8 +4238,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0124-blending-lab-3/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4269,8 +4269,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f4dc63af6a00ab7de94a728e3b6566b2188ed951aa803e95892e72690e91f07c",
-          "size_bytes": 8374
+          "sha256": "a4df6501197147a4aff52ca8aa2a2260c58fde252c49b114febc7f9dfbaae24c",
+          "size_bytes": 8198
         }
       ]
     },
@@ -4279,8 +4279,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0125-blending-lab-4/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4310,8 +4310,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b5001f92a6786370ff6bed159f86b4dd78defa483f4e5c6155589ac64bc183ba",
-          "size_bytes": 8374
+          "sha256": "30ebd8758e0f66e788d1ac637c7f030b0eca05c828596147e4c27b0e8c993663",
+          "size_bytes": 8198
         }
       ]
     },
@@ -4320,8 +4320,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0126-CAT-linear-Bradford/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4351,8 +4351,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "85239f7b0f9349e15b9eed9280de9a920ad56ea1d32a87fcb7f1392950a1065b",
-          "size_bytes": 5736
+          "sha256": "2155676a56df750fff475be364f4a02cf2a495ae5b52fe750a68c5ee87cd1f7f",
+          "size_bytes": 5594
         }
       ]
     },
@@ -4361,8 +4361,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0127-CAT-nonlinear-Bradford/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4392,8 +4392,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "46cc058567fb5540b57c1f41b9e06ee80df1dcf0b15f141274087e5b2d82a64b",
-          "size_bytes": 6283
+          "sha256": "ff8ff8c32c8b707c7c5bec365b305ed62d00000a60a2f171b301e0124c909791",
+          "size_bytes": 6130
         }
       ]
     },
@@ -4402,8 +4402,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0128-CAT-adapt-XYZ/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4433,8 +4433,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4c51013dd96f2b27c55789b7a4d59aedd42b21776343d07aa63ed9cbac096dc4",
-          "size_bytes": 6834
+          "sha256": "58f57ad5a849385c89f24cb0fb27215c25d3fbd276057030d27a8f7b14cbdd59",
+          "size_bytes": 6670
         }
       ]
     },
@@ -4443,8 +4443,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0129-toneeq-RGB-average/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4473,8 +4473,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9a288b304f6980e0f0d328f6de25c5244173a791f44876f29315e81dd5fbee28",
-          "size_bytes": 5201
+          "sha256": "c5f7090003eb74ebf3d380b956dd831e7704312050098b621dc416c38a265ab1",
+          "size_bytes": 5071
         }
       ]
     },
@@ -4483,8 +4483,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0130-toneeq-HSL-lightness/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4513,8 +4513,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "76f7ff45c9dd04bd25e86e63c3a0519bdd2f3d9ccf3cc1858aae932dc13dc43b",
-          "size_bytes": 5762
+          "sha256": "41a4c554d14d5cbb3661ae9a9b9b7a63d15cf8b111e2421b29f7a55c0f24202b",
+          "size_bytes": 5621
         }
       ]
     },
@@ -4523,8 +4523,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0131-toneeq-RGB-max/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4553,8 +4553,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "c76f4be17050a51d0ee1c302272d92702fd1b994af0d8975d63f2656ccc77a31",
-          "size_bytes": 6323
+          "sha256": "b01f0bee478e7aae25900f683fdbf546bd45f6fde8aa57e4b09db312238f22d7",
+          "size_bytes": 6171
         }
       ]
     },
@@ -4563,8 +4563,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0132-toneeq-RGB-sum/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4593,8 +4593,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "303124ac39a821b55a023e7acea3cd5999cfe5f018ed85eccbccd9e692d81f86",
-          "size_bytes": 6884
+          "sha256": "2e52dc5237866d94b40e95b7d74c1d6443fe5fd91a2461d6377e96809411f2e8",
+          "size_bytes": 6721
         }
       ]
     },
@@ -4603,8 +4603,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0133-toneeq-power/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4633,8 +4633,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "47399b08047b93986665e6f474c254d66db642d184a5f723246ce9b5022efe26",
-          "size_bytes": 5201
+          "sha256": "9b00f232bd307c29fc3e24683dfb378203b6833a4c436e5259ac1de06089ba16",
+          "size_bytes": 5071
         }
       ]
     },
@@ -4643,8 +4643,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0134-toneeq-geomean/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4673,8 +4673,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "1a2bf71dd664146d985c4e433235515185a9704578019f276d0e1a804911c48c",
-          "size_bytes": 5201
+          "sha256": "09124ff6228eb40447ababdf2e4d22ef428ffe302d2307d00f89784a895849fc",
+          "size_bytes": 5071
         }
       ]
     },
@@ -4683,8 +4683,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0135-negadoctor/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4713,8 +4713,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f66554f44866a1dbadbf73f3ceedac515d355515b0a27890abdaaaf8aab1f9c4",
-          "size_bytes": 5230
+          "sha256": "b54002373bcab9307a3942555fd3f4119ae3588ca8dfc0b6ef3b0decad670be4",
+          "size_bytes": 5099
         }
       ]
     },
@@ -4723,8 +4723,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0136-posterize/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4753,8 +4753,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "35fc0bf899183aa07fa17244b5c9f9d957ed5cfd0a5cd963c1872806714ea830",
-          "size_bytes": 5585
+          "sha256": "4a8e5ed0f96867617b91eceded9aeb33b0fe534432634d27d1e848eec7361358",
+          "size_bytes": 5441
         }
       ]
     },
@@ -4763,8 +4763,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0137-shadhi-gauss/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4793,8 +4793,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d1c3797b0d54fad28b5bd6633837390d6dc2772eb5860975de0c4ab9e782d0f3",
-          "size_bytes": 5605
+          "sha256": "747b88db638c154cf5515d3e78de70cb4f50b3c9fe5c23b00a5828b7c6a334fc",
+          "size_bytes": 5461
         }
       ]
     },
@@ -4803,8 +4803,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0138-filmic-v7/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4834,8 +4834,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7d5a7be37ccc83e791413943cdc614a527d485a68a96bc68e55383355a14e94c",
-          "size_bytes": 5679
+          "sha256": "1629e0dc4aa9fe2b18a154ae9517eb2ef8c8f9286d63e7371dbce99efdb1a999",
+          "size_bytes": 5538
         }
       ]
     },
@@ -4844,8 +4844,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0139-filmicrgb-v3-nochroma/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4874,8 +4874,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "8e691d254b7d93c6d9170dc7765bad4c750caa6dc9f031459ad182c3c1f8898d",
-          "size_bytes": 5722
+          "sha256": "359657fd98068886b8112cdef3b0b5ec5511e7a2a804d5c2f30d6a87fc020717",
+          "size_bytes": 5580
         }
       ]
     },
@@ -4884,8 +4884,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0140-filmicrgb-v4-nochroma/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -4914,8 +4914,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5c1ff1553da5ea5cb8f79be5411578ef705e463743dde5bdd445930b00f38981",
-          "size_bytes": 6049
+          "sha256": "b5ce6bc4bc8870e9a5e4e6cf734222eab2689c81641fd7843ad892fbb1781e38",
+          "size_bytes": 5907
         }
       ]
     },
@@ -4924,8 +4924,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0141-filmicrgb-v5-nochroma/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4955,8 +4955,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "acb09cb7d36da5acf6a3c485487d9ba06283a4f65f5abd2a6253dff18d99fde3",
-          "size_bytes": 7770
+          "sha256": "518bcbbfc46e5a13ee0f00146d8231913b4d57b03dfb7785fa77369f5ce02a76",
+          "size_bytes": 7605
         }
       ]
     },
@@ -4965,8 +4965,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0142-filmicrgb-v6-euclidean/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -4996,8 +4996,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "fe67710d92ee2fd814dd5cc1323f70904b1a86477df16cdb905d25c80961b8c5",
-          "size_bytes": 6715
+          "sha256": "1e894ec1f53858c5ac34ccdd3f0147da7d286f9f8c73d57b345388240388522b",
+          "size_bytes": 6573
         }
       ]
     },
@@ -5006,8 +5006,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0143-denoiseprofiled-wave-rgb/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5036,8 +5036,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "63d51fc7ecdeda3e4df5535f53b7cdb1e88e8265e03e33f295689458138c6614",
-          "size_bytes": 5214
+          "sha256": "fba1157cc0c5b299ed9e4ccabaf890bd9bae1ec4b17f382ceba9952eade0fc7b",
+          "size_bytes": 5084
         }
       ]
     },
@@ -5046,8 +5046,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0144-masks-combine-sum/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5080,8 +5080,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9430c6d4cffab6d50220e445bebfabe0ab74ce1fdd128f0835723a0d262fd030",
-          "size_bytes": 9211
+          "sha256": "6357cd94e22b38ba71dc21839a3887e811c8f57b4e24b80a6de673ff79b6d002",
+          "size_bytes": 8992
         }
       ]
     },
@@ -5090,8 +5090,8 @@
         {
           "maximum_differing_pixels": "443",
           "path": "darktable-tests/0145-lens-metadata-xtransIV-modversion-6/cpugpu.maxpix",
-          "sha256": "a62ffa3d82bb2c5d951d615c59cbf9e57d7cc2740cccf9f67ca1488b5a28365b",
-          "size_bytes": 5
+          "sha256": "d734748b0bf3989a28fd0e772805dc7bd2c526ab801c0b6500a12a5abd8b4a79",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5122,8 +5122,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "01538333a4986d38ef1fd144e06f41262a15fdd7b9a33e0442e941548dfcea6b",
-          "size_bytes": 5735
+          "sha256": "4d7d677b6ff9660d462d2f210c9423feaee6eb8751e05ac2534ab52988960437",
+          "size_bytes": 5593
         }
       ]
     },
@@ -5132,8 +5132,8 @@
         {
           "maximum_differing_pixels": "443",
           "path": "darktable-tests/0146-lens-metadata-xtransIV-modversion-7/cpugpu.maxpix",
-          "sha256": "a62ffa3d82bb2c5d951d615c59cbf9e57d7cc2740cccf9f67ca1488b5a28365b",
-          "size_bytes": 5
+          "sha256": "d734748b0bf3989a28fd0e772805dc7bd2c526ab801c0b6500a12a5abd8b4a79",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5165,8 +5165,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "b3b607c347addbb5b658354d8575217fd4668ffdd516a19417fbf5c23e5e7ddc",
-          "size_bytes": 6836
+          "sha256": "c5a156fd597c7c68ddf46575c2159b1e110daf9e39549654e26664db361dcce0",
+          "size_bytes": 6672
         }
       ]
     },
@@ -5175,8 +5175,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0147-liquify-grow-shrink/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5207,8 +5207,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "43b982b222555f8209700fe42a8a6e72cdfd419617f82e3297f6a5f803fa47c0",
-          "size_bytes": 6346
+          "sha256": "432d1f6724dbfe34bd144afce575f489914dc6ab79b1173b0e0defc87944ffd3",
+          "size_bytes": 6194
         }
       ]
     },
@@ -5217,8 +5217,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0148-filmicv7-gamut-mapping/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5249,8 +5249,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "773a8879e8cf07aef5a6547485254d834ce50f9f2ea2b9f2f6ab36a38d412081",
-          "size_bytes": 6739
+          "sha256": "ea8d24d94fc9edbbd049377139e006bc7353b06afbc40a4dac61bfc04c0ec75b",
+          "size_bytes": 6575
         }
       ]
     },
@@ -5259,8 +5259,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0149-gdnd-neg/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5291,8 +5291,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "31642deb1fa74d59df10bc4326f08cd8f061b7ca90868b0eee41c81acbba3c83",
-          "size_bytes": 5671
+          "sha256": "106ac92c38b116312a81a9d83767450006ddee8a7dd080cf0e666d680c22236c",
+          "size_bytes": 5529
         }
       ]
     },
@@ -5301,8 +5301,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0150-detail-mask/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5334,8 +5334,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "70de160c33f0511c0984ad747cb97a0f3168156b9f9fdbd38c2d943ccc38c45a",
-          "size_bytes": 6808
+          "sha256": "c88e97bc840e8685c4871c2c645bbe1ca204a85c5b15dbf904d6df65d36abc81",
+          "size_bytes": 6644
         }
       ]
     },
@@ -5344,8 +5344,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0151-sigmoid-no-hue-preservation/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5379,8 +5379,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9b8f378a2b2e5e93f439f8e194a882d849647a6580d228ebe4ae51725db7667d",
-          "size_bytes": 8772
+          "sha256": "e0c686d0903644692e947fa22f4c156a7ce6f3c29f65f5851b4e2233936282c3",
+          "size_bytes": 8564
         }
       ]
     },
@@ -5389,8 +5389,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0152-rgb-primaries/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5422,8 +5422,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d95cb84ed4e03832d8daefa8e0ee87d0a0b7ba9c456701bad0a546c1d8b17a68",
-          "size_bytes": 6787
+          "sha256": "3623a797dc1daee1155094ac2af4dae7568e3897dc894cb2aaddc24e08d48a30",
+          "size_bytes": 6623
         }
       ]
     },
@@ -5432,8 +5432,8 @@
         {
           "maximum_differing_pixels": "86",
           "path": "darktable-tests/0153-hl-reconstruct-filmicrgb/cpugpu.maxpix",
-          "sha256": "abca10e5c0ff2b657c09cd50d7aa667175fe7a1402550d6c43547ebf49fa71d6",
-          "size_bytes": 4
+          "sha256": "816c83d0ac08a94e91547a30df27dbbe88c7643cfa3c99d33120fd361173759a",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -5464,8 +5464,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "ded0880451a84c8eb45760612a9ff4f103d224428adadbae16be74a163004482",
-          "size_bytes": 8187
+          "sha256": "20da5cfa00254ac5bb3aaca2c141ad27c5adef5b83156236e5a4cd3a8b6dbd9b",
+          "size_bytes": 7981
         }
       ]
     },
@@ -5474,8 +5474,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0154-framing-100/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5507,8 +5507,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d7d57321ae97d95bb7cd75d61432b6eb2b7f168e0251e821945c3787485d92d4",
-          "size_bytes": 6823
+          "sha256": "b81037d15cfaa7e50ea6514ef6a3162fbbff55a2cc4a5c64329b87498511eb34",
+          "size_bytes": 6659
         }
       ]
     },
@@ -5517,8 +5517,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0155-framing-line-169/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5550,8 +5550,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4929421b671dbfa74161a744782ab8d928a6e743bdffd7db9938ca70df76e3f3",
-          "size_bytes": 6851
+          "sha256": "75a57008a2a5ddb1c29b4d0265b31eb0c9fb0e4ce7ddc129a8da6c3bd5e67195",
+          "size_bytes": 6687
         }
       ]
     },
@@ -5560,8 +5560,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0156-exposure-guided-filter-new-feather/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5590,8 +5590,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "a307b4f29410191c8422496eb2e733c3ff3d885834c17beb68ba1dcf0e04521d",
-          "size_bytes": 6766
+          "sha256": "f713d373dba838f9c4d379e5f9c73ec4f51de8c928d55364e9fb56ef4036ee7c",
+          "size_bytes": 6604
         }
       ]
     },
@@ -5600,8 +5600,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0157-enlarge-canvas/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5633,8 +5633,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "079e68198b883b6b3f89936c98aaac6a80932c21329a43a52b12450c4d927a71",
-          "size_bytes": 6973
+          "sha256": "1b95335dee42455595c9b0495a77c0130e6f212c6b99d92c06e608d7027cb539",
+          "size_bytes": 6807
         }
       ]
     },
@@ -5643,8 +5643,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0158-coloreq-no-guided-filter/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5676,8 +5676,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3b2e9d479f989e51695b4ad9c99be770312ec09f3205d14a735ac3d53c516291",
-          "size_bytes": 7663
+          "sha256": "8946b8495a72a8dab59b8c59a0c6e567ef3b6ccaa56d70156160d55724365300",
+          "size_bytes": 7485
         }
       ]
     },
@@ -5686,8 +5686,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0159-coloreq-guided-filter/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5719,8 +5719,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "73850c169329b70320246ba985a7e592d8cd92a281fcec8d83d9d9a02eefe024",
-          "size_bytes": 7113
+          "sha256": "e28b232aab3fc1ffb457969627fac50c2db83457bff4a8a4ec26af9500d00b6e",
+          "size_bytes": 6946
         }
       ]
     },
@@ -5729,8 +5729,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0160-overlay/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5763,8 +5763,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "34b3201f3640c6ba09d88255ac11bff74d857ec2da5e547577a326d30ec6eaf8",
-          "size_bytes": 9970
+          "sha256": "ce4dee9d2e944a5231c902e6075e645e28493b81ef983e4fd9fafe337b103d3b",
+          "size_bytes": 9733
         }
       ]
     },
@@ -5773,8 +5773,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0161-overlay-modules-before-after/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5809,8 +5809,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "f27f37c0e8a9941d41433fd93407c269122e0217b7e17dc94dedf4c761aa3c8f",
-          "size_bytes": 11530
+          "sha256": "10a1d5e73d7aba9b74ff1e7e2c9a3e34608ca7bbcdc2d55ca8736f4f4bac576e",
+          "size_bytes": 11259
         }
       ]
     },
@@ -5819,8 +5819,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0162-demosaic-lmmse/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5851,8 +5851,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "9cc5008f82b396f192fd760724d81beba2f61b44d8f695107895692177cdc933",
-          "size_bytes": 7347
+          "sha256": "0bee582d5f6c01fe48895b54938e4e4aa187cb00ad466706b9918e8d9da1bae4",
+          "size_bytes": 7168
         }
       ]
     },
@@ -5861,8 +5861,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0163-demosaic-rcd-vng4/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5893,8 +5893,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3d5ae8be2a0ded91c4a877a4813ec26b6b8fb27970b036642565120a7265c585",
-          "size_bytes": 7807
+          "sha256": "a576298aa4db0f1446d46cafd82ed9927fcdab9bdd5c0a4f22b42833a289bffc",
+          "size_bytes": 7617
         }
       ]
     },
@@ -5903,8 +5903,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0164-demosaic-amaze-vng4/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5935,8 +5935,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "75dc878b11c27b3aff59bafd6a91e4cd3b7aa6bea2a2d3df6cfe34c0df677c9f",
-          "size_bytes": 8267
+          "sha256": "94173c5c30db99de9f88ebd3eec08f4b86bc0ee960657b71b31ecaf3d0511503",
+          "size_bytes": 8066
         }
       ]
     },
@@ -5945,8 +5945,8 @@
         {
           "maximum_differing_pixels": "326",
           "path": "darktable-tests/0165-demosaic-markesteijn-vng/cpugpu.maxpix",
-          "sha256": "af02410a1b5d8690011448c7bf13af22f1e28351a1b30e3d264d7b72fd4ae643",
-          "size_bytes": 5
+          "sha256": "053d13be01c62c12cf00285bd279d058f6bd8c3307b6937f55f1729b513ddf92",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -5977,8 +5977,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "3a1461e54eef1effac6f3f93ece4446683f8f69287e7e4ed9c04502e4e44a796",
-          "size_bytes": 7240
+          "sha256": "f6f6d9d66858499cc29f349d689830bb1a501259e5b9daa52deb2b1277b41854",
+          "size_bytes": 7064
         }
       ]
     },
@@ -5987,8 +5987,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0166-haze-removal-v2/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6018,8 +6018,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "fecd50d30468f63922235711e0da56957891388b7d811df90f4b9cf083f0f272",
-          "size_bytes": 6226
+          "sha256": "266f7b48755e4e964af3b0fc1c85251ca7ce6fdf9a34e4f0bf7fab56d2c0a00b",
+          "size_bytes": 6068
         }
       ]
     },
@@ -6028,8 +6028,8 @@
         {
           "maximum_differing_pixels": "66",
           "path": "darktable-tests/0167-raster-mask/cpugpu.maxpix",
-          "sha256": "4410e1233468a479d21f029a0832b94fdd3a0bfb1300266ee5ea62d81aa371c8",
-          "size_bytes": 4
+          "sha256": "8e37bed9dff3949ffd23ae638260dff869f5cc26e551f2a9e5e289a8888949fa",
+          "size_bytes": 3
         }
       ],
       "expected_png": [
@@ -6062,8 +6062,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "660e5c181cb3962b20161e29a670aa7b5b9c1e2d304f328edf6a9bc798a0f65f",
-          "size_bytes": 9254
+          "sha256": "36cc2af239cc6c0a0b603dbaef24cee48598c2b8856999e5dbd6edcc6292338e",
+          "size_bytes": 9055
         }
       ]
     },
@@ -6072,8 +6072,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0168-lut3d-srgb-pyramid/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6102,8 +6102,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "659324ab4e6ca665df7bb1dac7c539a0cf75546a834db63ed5e82b7c539e310c",
-          "size_bytes": 19191
+          "sha256": "74a1b1ad9b3e740324342bd73fc1a2f8bc6a561f38a189a5450697e2336eb835",
+          "size_bytes": 19055
         }
       ]
     },
@@ -6112,8 +6112,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0169-lut3d-adobe-trilinear/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6142,8 +6142,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "8e9b6ccd015a685861d2529f23000429a0730a2946580de3e65fbdb1836f5478",
-          "size_bytes": 19199
+          "sha256": "be6a1bc822532088de0c0e695f2b02986a7b7bbe5d0771a96d80ac7a5cda4176",
+          "size_bytes": 19063
         }
       ]
     },
@@ -6152,8 +6152,8 @@
         {
           "maximum_differing_pixels": "110",
           "path": "darktable-tests/0170-lut3d-prophoto-tetrahedral/cpugpu.maxpix",
-          "sha256": "2872ae4dce7da4118df56c578813fbd9e401cae32d1c3460e630569b8080d5b1",
-          "size_bytes": 5
+          "sha256": "e00e6031fc5e7ef95c526573343419859e112cebd550f10e2089bf393f5ed2bd",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6182,8 +6182,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "5b2f5f7df44c776d365c44adb96eaa8bbfbaa7a95bd2c9d02a52f1977f1b6b6f",
-          "size_bytes": 19195
+          "sha256": "f712cbbc67589b8b6c51c09b1b59fba59ee284450dc46476f52218e6788b51fc",
+          "size_bytes": 19059
         }
       ]
     },
@@ -6192,8 +6192,8 @@
         {
           "maximum_differing_pixels": "220",
           "path": "darktable-tests/0171-capture-sharpen/cpugpu.maxpix",
-          "sha256": "25062b82bdadf69b7033151e00810c4af2757a2c0a21255246ff9677007b8bb4",
-          "size_bytes": 5
+          "sha256": "cbdd19a3980a0d492694d4805af33ac243c847017d8a73a1c02ed1d88c45cb3e",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6224,8 +6224,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "4aea3999bf35fcad5851668118a37aee8f5f73c1db3cf0c80bab1b0173f5c5c0",
-          "size_bytes": 8800
+          "sha256": "30312874447ab69b4c9ad25a241fb1b07822aabfb26d8bed3d8fa7b7e9880bdd",
+          "size_bytes": 8612
         }
       ]
     },
@@ -6234,8 +6234,8 @@
         {
           "maximum_differing_pixels": "220",
           "path": "darktable-tests/0172-capture-dual-rcd/cpugpu.maxpix",
-          "sha256": "25062b82bdadf69b7033151e00810c4af2757a2c0a21255246ff9677007b8bb4",
-          "size_bytes": 5
+          "sha256": "cbdd19a3980a0d492694d4805af33ac243c847017d8a73a1c02ed1d88c45cb3e",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6266,8 +6266,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "7d62c123872ac6667788f314eef723972d458a320813ce8caf382cc0b3fa0ded",
-          "size_bytes": 8800
+          "sha256": "bec7fee087de4d4106534f320ba1ae2bd4597806ce73bbfd3a947bf617e90665",
+          "size_bytes": 8612
         }
       ]
     },
@@ -6276,8 +6276,8 @@
         {
           "maximum_differing_pixels": "440",
           "path": "darktable-tests/0173-capture-dual-markesteijn/cpugpu.maxpix",
-          "sha256": "bcd453e4a7f97c683f284a517319cd084c940fb13b98ef111bb4f345f7d34c2a",
-          "size_bytes": 5
+          "sha256": "e2d1b6647866a6cd8fc5d8a8559d4e960a6c1f5e442c4b3d5af3b1743e47b7c6",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6308,8 +6308,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "0bcb411aae32c91a73bcd5819e41d642d922125e9458be06b3c2f8f79e8cb749",
-          "size_bytes": 7585
+          "sha256": "55c11113e7ec851ea992d7fa52baf5367fa0cb22a0e0a06a2f2880b382cdfd74",
+          "size_bytes": 7401
         }
       ]
     },
@@ -6318,8 +6318,8 @@
         {
           "maximum_differing_pixels": "187",
           "path": "darktable-tests/0174-agx-default/cpugpu.maxpix",
-          "sha256": "5c199e77c6d6a01d7d6c6057af58cb8adbe13a14d75689a2ae4d62aba86034d6",
-          "size_bytes": 5
+          "sha256": "32a3eb8a7e705be7a925ed34e3edfaa943216fca57c82616fe637811ebef66ce",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6350,8 +6350,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "342b40ce9361de2223b7b0ffb75064fa77e5f6ef83bab81466e4d16a4a2cf71b",
-          "size_bytes": 8198
+          "sha256": "446ad080ac1384963946dc1597c8a8f38f4d7c994a97f98d5ea57428a4fc7421",
+          "size_bytes": 8024
         }
       ]
     },
@@ -6360,8 +6360,8 @@
         {
           "maximum_differing_pixels": "255",
           "path": "darktable-tests/0175-agx/cpugpu.maxpix",
-          "sha256": "a730e9f4fecef62a7023b1b3b6b11312e9689ef5a5c2109737bc7e12db929948",
-          "size_bytes": 5
+          "sha256": "ce8bafb38615aeb5d44ebbabe78ec14ac35a5de87bdc5ad5ea82a72656024ce4",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6392,8 +6392,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "d8e0fec282b0ce80e25f97cf01e65a28c6397df162970f262009e458c4db2154",
-          "size_bytes": 7858
+          "sha256": "31fe9431065303acc00f14568b9585397297f883835dc975a11322fb543c1879",
+          "size_bytes": 7670
         }
       ]
     },
@@ -6402,8 +6402,8 @@
         {
           "maximum_differing_pixels": "612",
           "path": "darktable-tests/0176-color-harmonizer/cpugpu.maxpix",
-          "sha256": "b325d16da76b0876b2f61257659a8da671609324392b42c34f007958c10a2995",
-          "size_bytes": 5
+          "sha256": "b1fd0bf659abf177e912b8bab5330c9efda2b4d0851aa7937ed7f16f8d0dca9e",
+          "size_bytes": 4
         }
       ],
       "expected_png": [
@@ -6436,8 +6436,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "bd7985b499523b78df4b9524953de5ea4788c1515729a2e08878c643a92e781f",
-          "size_bytes": 9967
+          "sha256": "da92f3c2e5b522e571cb071e2bfd43cccea3f4976c343ef6932c2a8966685031",
+          "size_bytes": 9757
         }
       ]
     },
@@ -6446,8 +6446,8 @@
         {
           "maximum_differing_pixels": "16897",
           "path": "darktable-tests/0177-bayer4/cpugpu.maxpix",
-          "sha256": "1c992a7ec40e7fdcb732244595fc6c6b38eb635b2a39726cc3921350e0f6896d",
-          "size_bytes": 7
+          "sha256": "7679339de69f033dfa6682f8e0969828689a52d6f1a225435eb59e77e9faff97",
+          "size_bytes": 6
         }
       ],
       "expected_png": [
@@ -6481,8 +6481,8 @@
           "schema_versions": [
             "6"
           ],
-          "sha256": "79da1883abd6174a504b052a3b2263f18dd922ec8dbb5efb1b0816c33fd48449",
-          "size_bytes": 8967
+          "sha256": "f24ecfe1d69ea777cc01d90cb51c6967c958e577e3f2e84d8975eebeaa9204d3",
+          "size_bytes": 8749
         }
       ]
     }

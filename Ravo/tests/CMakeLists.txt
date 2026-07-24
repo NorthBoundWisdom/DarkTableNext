@@ -29,7 +29,7 @@ ravo_configure_target(ravo_contract_tests)
 ravo_deploy_qt_core(ravo_contract_tests)
 gtest_discover_tests(ravo_contract_tests PROPERTIES LABELS "ravo-contract")
 
-ravo_add_phase0_check(ravo_fixture_manifest freeze_legacy_manifest.py)
+ravo_add_phase0_check(ravo_fixture_manifest freeze_legacy_manifest.py --check)
 ravo_add_phase0_check(ravo_capability_inventory check_capability_inventory.py)
 ravo_add_phase0_check(ravo_dependency_boundary check_ravo_dependency_boundary.py)
 ravo_add_phase0_check(ravo_vertical_slice_plan check_vertical_slice_plan.py)

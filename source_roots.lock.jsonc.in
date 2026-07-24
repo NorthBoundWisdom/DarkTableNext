@@ -25,11 +25,7 @@
       "X_VCPKG_APPLOCAL_DEPS_SERIALIZED": "ON"
     },
     "mac": {
-      "CURL_INCLUDE_DIR": "/opt/homebrew/opt/curl/include",
-      "CURL_LIBRARY": "/opt/homebrew/opt/curl/lib/libcurl.dylib",
-      "SQLite3_INCLUDE_DIR": "/opt/homebrew/opt/sqlite/include",
-      "SQLite3_LIBRARY": "/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib",
-      "ZLIB_ROOT": "/opt/homebrew/opt/zlib",
+      "CMAKE_PREFIX_PATH": "/Users/henrykang/vcpkg/installed/arm64-osx;/Users/henrykang/vcpkg/installed/arm64-osx/debug;/Users/henrykang/Qt/6.11.1/macos;/opt/homebrew",
       "CMAKE_C_COMPILER_LAUNCHER": "ccache",
       "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
     }
@@ -83,7 +79,7 @@
     },
     "exiv2": {
       "remote": "https://github.com/Exiv2/exiv2.git",
-      "commit": "d63f11ed2543331843f275586f17283c057af092",
+      "commit": "111bfa4b3571cecef0f3762ca078e2bb1f1ca484",
       "repoName": "exiv2"
     },
     "Imath": {

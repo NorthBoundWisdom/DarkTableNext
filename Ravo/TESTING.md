@@ -112,5 +112,5 @@ mask 语义和色彩空间不允许以浮点差异为理由变化。
 
 当前已建立本地 `ravo-unit` 和 `ravo-contract` target/命令；后者还运行只读的 manifest、vertical-slice
 candidate、capability inventory、fixture classification ledger、freeze-reference 与 production
-dependency-boundary Python contract check。本轮只维护本机 Windows/MSVC 配置与编译，不新增 CI/CD；
-其余标签在相应本地测试实际存在前仍不得描述为已通过。
+dependency-boundary Python contract check。Windows/MSVC 与本机 macOS/Clang 的配置、编译和现有测试命令
+均已验证，不新增 CI/CD；其余标签在相应本地测试实际存在前仍不得描述为已通过。

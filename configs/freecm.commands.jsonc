@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "commands": {
     "config": [
       {
@@ -9,7 +9,16 @@
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Configure", "-Configuration", "Debug"],
         "platforms": ["win32"],
-        "default": true
+        "default": true,
+        "defaults": {
+          "build": "ravo-win-msvc-debug",
+          "run": "ravo-win-msvc-debug-cli",
+          "test": "ravo-win-msvc-debug-tests"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_win_msvc_debug/CMakeCache.txt"]
+        }
       },
       {
         "id": "ravo-win-msvc-release",
@@ -17,7 +26,16 @@
         "description": "Configure only the Ravo C++20 release project",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Configure", "-Configuration", "Release"],
-        "platforms": ["win32"]
+        "platforms": ["win32"],
+        "defaults": {
+          "build": "ravo-win-msvc-release",
+          "run": "ravo-win-msvc-release-cli",
+          "package": "ravo-win-msvc-release-install"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_win_msvc_release/CMakeCache.txt"]
+        }
       },
       {
         "id": "ravo-mac-clang-debug",
@@ -26,7 +44,16 @@
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Configure", "--configuration", "Debug"],
         "platforms": ["darwin"],
-        "default": true
+        "default": true,
+        "defaults": {
+          "build": "ravo-mac-clang-debug",
+          "run": "ravo-mac-clang-debug-cli",
+          "test": "ravo-mac-clang-debug-tests"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_mac_clang_debug/CMakeCache.txt"]
+        }
       },
       {
         "id": "ravo-mac-clang-release",
@@ -34,7 +61,16 @@
         "description": "Configure only the Ravo C++20 release project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Configure", "--configuration", "Release"],
-        "platforms": ["darwin"]
+        "platforms": ["darwin"],
+        "defaults": {
+          "build": "ravo-mac-clang-release",
+          "run": "ravo-mac-clang-release-cli",
+          "package": "ravo-mac-clang-release-install"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_mac_clang_release/CMakeCache.txt"]
+        }
       },
       {
         "id": "ravo-linux-clang-debug",
@@ -43,7 +79,16 @@
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Configure", "--configuration", "Debug"],
         "platforms": ["linux"],
-        "default": true
+        "default": true,
+        "defaults": {
+          "build": "ravo-linux-clang-debug",
+          "run": "ravo-linux-clang-debug-cli",
+          "test": "ravo-linux-clang-debug-tests"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_linux_clang_debug/CMakeCache.txt"]
+        }
       },
       {
         "id": "ravo-linux-clang-release",
@@ -51,7 +96,16 @@
         "description": "Configure only the Ravo C++20 release project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Configure", "--configuration", "Release"],
-        "platforms": ["linux"]
+        "platforms": ["linux"],
+        "defaults": {
+          "build": "ravo-linux-clang-release",
+          "run": "ravo-linux-clang-release-cli",
+          "package": "ravo-linux-clang-release-install"
+        },
+        "readiness": {
+          "inputs": ["Ravo/CMakeLists.txt", "CMakePresets.json", "source_roots.lock.jsonc"],
+          "outputs": ["build/ravo_linux_clang_release/CMakeCache.txt"]
+        }
       }
     ],
     "build": [
@@ -61,8 +115,7 @@
         "description": "Build only the configured Ravo debug project",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Build", "-Configuration", "Debug"],
-        "platforms": ["win32"],
-        "default": true
+        "configurations": ["ravo-win-msvc-debug"]
       },
       {
         "id": "ravo-win-msvc-release",
@@ -70,7 +123,7 @@
         "description": "Build only the configured Ravo release project",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Build", "-Configuration", "Release"],
-        "platforms": ["win32"]
+        "configurations": ["ravo-win-msvc-release"]
       },
       {
         "id": "ravo-mac-clang-debug",
@@ -78,8 +131,7 @@
         "description": "Build only the configured Ravo debug project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Build", "--configuration", "Debug"],
-        "platforms": ["darwin"],
-        "default": true
+        "configurations": ["ravo-mac-clang-debug"]
       },
       {
         "id": "ravo-mac-clang-release",
@@ -87,7 +139,7 @@
         "description": "Build only the configured Ravo release project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Build", "--configuration", "Release"],
-        "platforms": ["darwin"]
+        "configurations": ["ravo-mac-clang-release"]
       },
       {
         "id": "ravo-linux-clang-debug",
@@ -95,8 +147,7 @@
         "description": "Build only the configured Ravo debug project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Build", "--configuration", "Debug"],
-        "platforms": ["linux"],
-        "default": true
+        "configurations": ["ravo-linux-clang-debug"]
       },
       {
         "id": "ravo-linux-clang-release",
@@ -104,7 +155,7 @@
         "description": "Build only the configured Ravo release project",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Build", "--configuration", "Release"],
-        "platforms": ["linux"]
+        "configurations": ["ravo-linux-clang-release"]
       }
     ],
     "run": [
@@ -114,8 +165,7 @@
         "description": "Build and run the Ravo debug CLI version command",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Run", "-Configuration", "Debug"],
-        "platforms": ["win32"],
-        "default": true
+        "configurations": ["ravo-win-msvc-debug"]
       },
       {
         "id": "ravo-win-msvc-release-cli",
@@ -123,7 +173,7 @@
         "description": "Build and run the Ravo release CLI version command",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Run", "-Configuration", "Release"],
-        "platforms": ["win32"]
+        "configurations": ["ravo-win-msvc-release"]
       },
       {
         "id": "ravo-mac-clang-debug-cli",
@@ -131,8 +181,7 @@
         "description": "Build and run the Ravo debug CLI version command",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Run", "--configuration", "Debug"],
-        "platforms": ["darwin"],
-        "default": true
+        "configurations": ["ravo-mac-clang-debug"]
       },
       {
         "id": "ravo-mac-clang-release-cli",
@@ -140,7 +189,7 @@
         "description": "Build and run the Ravo release CLI version command",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Run", "--configuration", "Release"],
-        "platforms": ["darwin"]
+        "configurations": ["ravo-mac-clang-release"]
       },
       {
         "id": "ravo-linux-clang-debug-cli",
@@ -148,8 +197,7 @@
         "description": "Build and run the Ravo debug CLI version command",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Run", "--configuration", "Debug"],
-        "platforms": ["linux"],
-        "default": true
+        "configurations": ["ravo-linux-clang-debug"]
       },
       {
         "id": "ravo-linux-clang-release-cli",
@@ -157,7 +205,7 @@
         "description": "Build and run the Ravo release CLI version command",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Run", "--configuration", "Release"],
-        "platforms": ["linux"]
+        "configurations": ["ravo-linux-clang-release"]
       }
     ],
     "test": [
@@ -167,8 +215,7 @@
         "description": "Build and run only Ravo unit and contract tests",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Test", "-Configuration", "Debug"],
-        "platforms": ["win32"],
-        "default": true
+        "configurations": ["ravo-win-msvc-debug"]
       },
       {
         "id": "ravo-mac-clang-debug-tests",
@@ -176,8 +223,7 @@
         "description": "Build and run only Ravo unit and contract tests",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Test", "--configuration", "Debug"],
-        "platforms": ["darwin"],
-        "default": true
+        "configurations": ["ravo-mac-clang-debug"]
       },
       {
         "id": "ravo-linux-clang-debug-tests",
@@ -185,8 +231,7 @@
         "description": "Build and run only Ravo unit and contract tests",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Test", "--configuration", "Debug"],
-        "platforms": ["linux"],
-        "default": true
+        "configurations": ["ravo-linux-clang-debug"]
       }
     ],
     "package": [
@@ -196,8 +241,7 @@
         "description": "Build and stage only the Ravo release CLI and libraries",
         "command": "powershell.exe",
         "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "Ravo/tools/freecm_project.ps1", "-Action", "Install", "-Configuration", "Release"],
-        "platforms": ["win32"],
-        "default": true
+        "configurations": ["ravo-win-msvc-release"]
       },
       {
         "id": "ravo-mac-clang-release-install",
@@ -205,8 +249,7 @@
         "description": "Build and stage only the Ravo release CLI and libraries",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Install", "--configuration", "Release"],
-        "platforms": ["darwin"],
-        "default": true
+        "configurations": ["ravo-mac-clang-release"]
       },
       {
         "id": "ravo-linux-clang-release-install",
@@ -214,8 +257,7 @@
         "description": "Build and stage only the Ravo release CLI and libraries",
         "command": "python3",
         "args": ["Ravo/tools/freecm_project.py", "--action", "Install", "--configuration", "Release"],
-        "platforms": ["linux"],
-        "default": true
+        "configurations": ["ravo-linux-clang-release"]
       }
     ]
   }

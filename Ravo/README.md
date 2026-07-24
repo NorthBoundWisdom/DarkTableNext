@@ -31,11 +31,12 @@ ctest --preset ravo_win_msvc_debug
 [FreeCM source-root 依赖联调工作流](../DevDocs/Dependency_Workflow.md)。
 
 macOS/Linux 的 FreeCM 项目命令通过 `tools/freecm_project.py` 读取各自主机 preset 并配置同一 Ravo
-源码；三平台可以并行开发。本页当前只记录 Windows/MSVC 已实测通过，不能据此声称其他平台已通过。
+源码；三平台可以并行开发。Windows/MSVC 与本机 macOS/Clang 已实测通过；Linux 仍须在目标主机验证。
 
-`Ravo/CMakePresets.json` 只继承根目录生成的 Windows preset，不复制 Qt SDK 路径。`Qt6::Core` 是 Ravo
-允许的基础依赖，可在能简化 Unicode、文件、JSON、时间和运行时实现的 target 中直接使用；Qt GUI、
-QML、Widgets 和 desktop target 仍不进入无头阶段。Qt 的版本、许可证和运行时部署决定见
+`Ravo/CMakePresets.json` 只继承根目录生成的主机 preset，不复制 Qt SDK 路径。macOS 的 Qt 路径由根目录
+锁文件中的 `cmakeCacheVariables.mac.CMAKE_PREFIX_PATH` 提供：模板给出组织默认值，活动锁必须改为当前主机
+的实际 SDK 位置。`Qt6::Core` 是 Ravo 允许的基础依赖，可在能简化 Unicode、文件、JSON、时间和运行时实现的
+target 中直接使用；Qt GUI、QML、Widgets 和 desktop target 仍不进入无头阶段。Qt 的版本、许可证和运行时部署决定见
 [ADR-0005](docs/adr/0005-qtcore-filesystem-adapter.md)。
 
 当前的 XMP 导入命令要求调用者显式提供资产身份，不从 sidecar 路径猜测：
